@@ -13,6 +13,7 @@ classdef OsirisConfig
 
         Path = ''; % Path to data directory
         File = ''; % Config file within data directory
+        Raw  = {};
 
         % Variables
         Variables = struct;
@@ -37,9 +38,11 @@ classdef OsirisConfig
         
         function obj = OsirisConfig()
             
-            obj.Variables.Constants  = struct;
-            obj.Variables.Simulation = struct;
-            obj.Variables.Plasma     = struct;
+            obj.Variables.Constants   = struct;
+            obj.Variables.Simulation  = struct;
+            obj.Variables.Plasma      = struct;
+            obj.Variables.Convert.SI  = struct;
+            obj.Variables.Convert.CGS = struct;
             
             % Set constants
             obj.Variables.Constants.SpeedOfLight       = 2.99792458e8;    %m/s
@@ -113,6 +116,9 @@ classdef OsirisConfig
 
                 obj.File = obj.Files{iFile};
                 fprintf('Config file set: %s\n', obj.File);
+                
+                obj = obj.fReadFile();
+
                 obj = obj.fGetSimulationVariables();
                 obj = obj.fGetPlasmaVariables();
                 
@@ -128,13 +134,128 @@ classdef OsirisConfig
     
     methods (Access = 'private')
         
+        function obj = fReadFile(obj)
+            
+            oFile   = fopen(strcat(obj.Path, '/', obj.File), 'r');
+            sConfig = fread(oFile,'*char');
+            fclose(oFile);
+            
+            % Remove comments and line breaks
+            sConfig = regexprep(sprintf(sConfig),'\!.*?\n','\n');
+            sConfig = regexprep(sprintf(sConfig),'[\n|\r]','');
+            
+            % Add linebreaks after curly brackets and split into struct
+            sConfig = regexprep(sprintf(sConfig),'\}','\n');
+            sConfig = strrep(sConfig,' ','');
+            aLines  = strsplit(sConfig,'\n');
+            
+            aConfig = {};
+            
+            for i=1:length(aLines)-1
+                
+                sLine = aLines{i};
+                
+                iName   = 0;
+                sName   = '';
+                iComma  = 1;
+                iPar    = 0;
+
+                for c=1:length(sLine)
+                    
+                    if sLine(c) == '('
+                        iPar = 1;
+                    end % if
+                    
+                    if sLine(c) == ')'
+                        iPar = 0;
+                    end % if
+
+                    % Get name of set
+                    if iName == 0
+                        if sLine(c) ~= '{'
+                            sName = [sName,sLine(c)];
+                        else
+                            aBreaks = [c];
+                            iName   = 1;
+                            continue;
+                        end % if
+                    end % if
+                    
+                    if iName == 1
+                        if sLine(c) == ',' && iPar == 0
+                            iComma = c;
+                        end % if
+                        if sLine(c) == '='
+                            if iComma > 1
+                                aBreaks(end+1) = iComma;
+                            end % if
+                        end % if
+                    end % if
+                end % for
+                
+                aBreaks(end+1) = c;
+                for k=2:length(aBreaks)
+                    aValue = strsplit(sLine(aBreaks(k-1)+1:aBreaks(k)),'=');
+                    aConfig(end+1,1) = {sName};
+                    if ~isempty(aValue)
+                        aConfig(end,2) = aValue(1);
+                        if length(aValue) > 1
+                           aConfig(end,3) = aValue(2);
+                        end % if
+                    end % if
+                end % for
+
+            end % for
+            
+            obj.Raw = aConfig;
+            
+        end % function
+
+        function sValues = fExtractVariables(obj, sType, sName, sLabel)
+            
+            
+            
+        end % function
+        
         function obj = fGetSimulationVariables(obj)
             
-            obj.Variables.Simulation.BoxLength = 680;
-            obj.Variables.Simulation.BoxNZ     = 13600;
-            obj.Variables.Simulation.BoxRadius = 8;
-            obj.Variables.Simulation.BoxNR     = 320;
-            obj.Variables.Simulation.Length    = 20000;
+            % From config file
+
+            dBoxX1Min =     0.0;
+            dBoxX1Max =   680.0;
+            dBoxX2Min =     0.0;
+            dBoxX2Max =     8.0;
+            dBoxX3Min =     0.0;
+            dBoxX3Max =     0.0;
+
+            iBoxNX1   = 13600;
+            iBoxNX2   =   320;
+            iBoxNX3   =     0;
+            
+            dTMin     =     0.0;
+            dTMax     = 20000.0;
+                        
+            dTimeStep =     0.0158;
+            iNDump    =  7500;
+            
+            % Store variables
+            
+            obj.Variables.Simulation.BoxX1Min  = dBoxX1Min;
+            obj.Variables.Simulation.BoxX1Max  = dBoxX1Max;
+            obj.Variables.Simulation.BoxX2Min  = dBoxX2Min;
+            obj.Variables.Simulation.BoxX2Max  = dBoxX2Max;
+            obj.Variables.Simulation.BoxX3Min  = dBoxX3Min;
+            obj.Variables.Simulation.BoxX3Max  = dBoxX3Max;
+
+            obj.Variables.Simulation.BoxNX1    = iBoxNX1;
+            obj.Variables.Simulation.BoxNX2    = iBoxNX2;
+            obj.Variables.Simulation.BoxNX3    = iBoxNX3;
+
+            obj.Variables.Simulation.TMin      = dTMin;
+            obj.Variables.Simulation.TMax      = dTMax;
+
+            obj.Variables.Simulation.TimeStep  = dTimeStep;
+            obj.Variables.Simulation.NDumo     = iNDump;
             
             obj.Variables.Simulation.TimeStep  = 0.0158;
             obj.Variables.Simulation.NDump     = 7500;
@@ -192,7 +313,7 @@ classdef OsirisConfig
             end % for
             
             if dPEnd < 0.0
-                dPEnd = obj.Variables.Simulation.Length;
+                dPEnd = obj.Variables.Simulation.TMax;
             end % if
             
             obj.Variables.Plasma.ProfileFZ   = aFZ;
