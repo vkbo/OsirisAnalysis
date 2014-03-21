@@ -8,6 +8,8 @@
 %  oData      :: OsirisData object
 %  aGradients :: Energy gradients
 %  aRZ        :: Evolution in energy gradient
+%  aRValues   :: R-values to show
+%  aZValues   :: Z-values to show
 %
 %  Output:
 % ---------
@@ -16,28 +18,22 @@
 
 function fPlotEnergyGradient(oData, aGradients, aRZ, aRValues, aZValues)
 
-    % Constants
-    dC          = oData.Config.Variables.Constants.SpeedOfLight;
-
-    % Time
-    dTimeStep   = oData.Config.Variables.Simulation.TimeStep;
-    iNDump      = oData.Config.Variables.Simulation.NDump;
-
     % Plasma
     dPStart     = oData.Config.Variables.Plasma.PlasmaStart;
     dPEnd       = oData.Config.Variables.Plasma.PlasmaEnd;
-    dOmegaP     = oData.Config.Variables.Plasma.OmegaP;
-    dE0         = oData.Config.Variables.Plasma.E0;
+    dE0         = oData.Config.Variables.Convert.SI.E0;
 
     % Simulation
-    dBoxLength  = oData.Config.Variables.Simulation.BoxLength;
-    iBoxNZ      = oData.Config.Variables.Simulation.BoxNZ;
-    dBoxRadius  = oData.Config.Variables.Simulation.BoxRadius;
-    iBoxNR      = oData.Config.Variables.Simulation.BoxNR;
+    dBoxLength  = oData.Config.Variables.Simulation.BoxX1Max;
+    iBoxNZ      = oData.Config.Variables.Simulation.BoxNX1;
+    dBoxRadius  = oData.Config.Variables.Simulation.BoxX2Max;
+    iBoxNR      = oData.Config.Variables.Simulation.BoxNX2;
+
+    % Factors
+    dTFactor    = oData.Config.Variables.Convert.SI.TimeFac;
+    dLFactor    = oData.Config.Variables.Convert.SI.LengthFac;
 
     % Runtime variables
-    dTFactor    = dTimeStep*iNDump;
-    dLFactor    = dC / dOmegaP;
     iDumpPS     = ceil(dPStart/dTFactor);
     iDumpPE     = floor(dPEnd/dTFactor);
     iTSteps     = iDumpPE-iDumpPS+1;

@@ -14,32 +14,28 @@
 %  Matrix of dimension length(aRValues) x BoxNZ
 %
 
-function [aGradients, aRZ, aRValues, aZValues, aEnergy] = fGetEnergyGradient(oData, sField, aRValues, aZValues)
+function [aGradients, aRZ, aRValues, aZValues] = fGetEnergyGradient(oData, sField, aRValues, aZValues)
 
-    % Extracting simulation information
-    
-    dC          = oData.Config.Variables.Constants.SpeedOfLight;
-
-    dBoxLength  = oData.Config.Variables.Simulation.BoxLength;
-    iBoxNZ      = oData.Config.Variables.Simulation.BoxNZ;
-    dBoxRadius  = oData.Config.Variables.Simulation.BoxRadius;
-    iBoxNR      = oData.Config.Variables.Simulation.BoxNR;
-    dTimeStep   = oData.Config.Variables.Simulation.TimeStep;
-    iNDump      = oData.Config.Variables.Simulation.NDump;
-
+    % Plasma
     dPStart     = oData.Config.Variables.Plasma.PlasmaStart;
     dPEnd       = oData.Config.Variables.Plasma.PlasmaEnd;
-    dOmegaP     = oData.Config.Variables.Plasma.OmegaP;
-    dE0         = oData.Config.Variables.Plasma.E0;
+    dE0         = oData.Config.Variables.Convert.SI.E0;
 
-    dTimeFactor = dTimeStep*iNDump;
-    dLFactor    = dC / dOmegaP;
+    % Simulation
+    dBoxLength  = oData.Config.Variables.Simulation.BoxX1Max;
+    iBoxNZ      = oData.Config.Variables.Simulation.BoxNX1;
+    dBoxRadius  = oData.Config.Variables.Simulation.BoxX2Max;
+    iBoxNR      = oData.Config.Variables.Simulation.BoxNX2;
+
+    % Factors
+    dTFactor    = oData.Config.Variables.Convert.SI.TimeFac;
+    dLFactor    = oData.Config.Variables.Convert.SI.LengthFac;
     
     dBoxRFac    = dBoxRadius/iBoxNR * dLFactor;
     dBoxZFac    = dBoxLength/iBoxNZ * dLFactor;
 
-    iDumpPS     = ceil(dPStart/dTimeFactor);
-    iDumpPE     = floor(dPEnd/dTimeFactor);
+    iDumpPS     = ceil(dPStart/dTFactor);
+    iDumpPE     = floor(dPEnd/dTFactor);
     iTSteps     = iDumpPE-iDumpPS+1;
     
     
@@ -47,7 +43,7 @@ function [aGradients, aRZ, aRValues, aZValues, aEnergy] = fGetEnergyGradient(oDa
     
     fprintf('\n');
     fprintf('Extraxting data from dump %d (t=%0.1f) to dump %d (t=%0.1f) ... ', ...
-        iDumpPS, iDumpPS*dTimeFactor, iDumpPE, iDumpPE*dTimeFactor);
+        iDumpPS, iDumpPS*dTFactor, iDumpPE, iDumpPE*dTFactor);
     
     if aZValues(1) ~= 0
         aZValues = [0,0];
@@ -56,7 +52,7 @@ function [aGradients, aRZ, aRValues, aZValues, aEnergy] = fGetEnergyGradient(oDa
     aEnergy    = zeros(iBoxNZ, length(aRValues), iTSteps);
     aGradients = zeros(iBoxNZ, length(aRValues));
     
-    dScaleFac = dE0*dTimeFactor*dLFactor*1e-9;  % Gives results in GV/m
+    dScaleFac = dE0*dTFactor*dLFactor*1e-9;  % Gives results in GV/m
 
     for t=1:iTSteps
         h5Data = oData.Data(t+iDumpPS-1, oData.Elements.FLD.(sField));
@@ -99,10 +95,10 @@ function [aGradients, aRZ, aRValues, aZValues, aEnergy] = fGetEnergyGradient(oDa
             aTemp(end+1) = idxMax;
             
             if idxMax > idxMin
-                [dZero, idxZero] = min(abs(aGradients(idxMin:idxMax,r)));
+                [~, idxZero] = min(abs(aGradients(idxMin:idxMax,r)));
                 idxZero = idxMin + idxZero - 1;
             else
-                [dZero, idxZero] = min(abs(aGradients(idxMax:idxMin,r)));
+                [~, idxZero] = min(abs(aGradients(idxMax:idxMin,r)));
                 idxZero = idxMax + idxZero - 1;
             end % if
             fprintf('Zero : %+7.3f at %d\n', aGradients(idxZero,r), idxZero);

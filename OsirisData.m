@@ -11,11 +11,27 @@ classdef OsirisData
     
     properties (GetAccess = 'public', SetAccess = 'public')
 
-        Path     = '';
-        Elements = struct;
-        Config   = OsirisConfig();
+        Path      = ''; % Path to dataset
+        Elements  = {}; % Struct of all datafiles in dataset ('MS/' subfolder)
+        RawFields = {}; % Column labels for RAW data matrix
+        Config    = []; % Content of the config files and extraction of all runtime variables
 
     end % properties
+    
+    %
+    % Constructor
+    %
+    
+    methods
+        
+        function obj = OsirisData()
+    
+            obj.RawFields = {'x1','x2','x3','p1','p2','p3','ene','q','tag1','tag2'};
+            obj.Config    = OsirisConfig();
+            
+        end % function
+        
+    end % methods
     
     %
     % Setters an Getters
@@ -108,7 +124,7 @@ classdef OsirisData
             obj.Config.Path = obj.Path;
 
         end % function
-        
+
         function obj = set.Elements(obj, stElements)
             obj.Elements = stElements;
         end % function
@@ -177,7 +193,7 @@ classdef OsirisData
             end % if
             
             sLoad  = char(strcat(sDataRoot, sFolder, sFile));
-            %fprintf('File: %s\n', sLoad);
+            fprintf('File: %s\n', sLoad);
             
             if strcmp(sType, 'RAW')
         
@@ -201,9 +217,10 @@ classdef OsirisData
                 aP1    = h5read(sLoad, '/p1');
                 aP2    = h5read(sLoad, '/p2');
                 aP3    = h5read(sLoad, '/p3');
+                aE     = h5read(sLoad, '/ene');
                 aQ     = h5read(sLoad, '/q');
                 aTag   = h5read(sLoad, '/tag');
-                h5Data = ([aX1, aX2, aX3, aP1, aP2, aP3, aQ, transpose(aTag)]);
+                h5Data = ([aX1, aX2, aX3, aP1, aP2, aP3, aE, aQ, double(transpose(aTag))]);
 
             else
                 

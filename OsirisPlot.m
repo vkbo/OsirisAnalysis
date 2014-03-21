@@ -130,10 +130,10 @@ classdef OsirisPlot
             dSimLength  = dSimTime*dLFactor;
             
             % Simulation
-            dBoxLength  = obj.Data.Config.Variables.Simulation.BoxLength;
-            iBoxNZ      = obj.Data.Config.Variables.Simulation.BoxNZ;
-            dBoxRadius  = obj.Data.Config.Variables.Simulation.BoxRadius;
-            iBoxNR      = obj.Data.Config.Variables.Simulation.BoxNR;
+            dBoxLength  = obj.Data.Config.Variables.Simulation.BoxX1Max;
+            iBoxNZ      = obj.Data.Config.Variables.Simulation.BoxNX1;
+            dBoxRadius  = obj.Data.Config.Variables.Simulation.BoxX2Max;
+            iBoxNR      = obj.Data.Config.Variables.Simulation.BoxNX2;
             
             % Prepare axes
             aXAxis      = linspace(0,dBoxLength*dLFactor,iBoxNZ);
