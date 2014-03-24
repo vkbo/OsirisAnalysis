@@ -12,9 +12,21 @@ classdef OsirisData
     properties (GetAccess = 'public', SetAccess = 'public')
 
         Path      = ''; % Path to dataset
+        PathID    = ''; % Path as ID instead of free text input
         Elements  = {}; % Struct of all datafiles in dataset ('MS/' subfolder)
         RawFields = {}; % Column labels for RAW data matrix
         Config    = []; % Content of the config files and extraction of all runtime variables
+
+    end % properties
+
+    %
+    % Private Properties
+    %
+    
+    properties (GetAccess = 'private', SetAccess = 'private')
+
+        DefaultPath = {}; % Default data folder
+        DefaultData = {}; % Data in default folder
 
     end % properties
     
@@ -29,6 +41,23 @@ classdef OsirisData
             obj.RawFields = {'x1','x2','x3','p1','p2','p3','ene','q','tag1','tag2'};
             obj.Config    = OsirisConfig();
             
+            obj.DefaultPath{1} = '/scratch/Data';
+            obj.DefaultPath{2} = '/media/vkbo/External/Work/Data';
+            fprintf('Scanning default data folder(s)\n');
+
+            for f=1:length(obj.DefaultPath)
+                if isdir(obj.DefaultPath{f})
+                    fprintf('Scanning %s\n',obj.DefaultPath{f});
+                    stDir = dir(obj.DefaultPath{f});
+                    for i = 1:length(stDir)
+                        if stDir(i).isdir && ~strcmp(stDir(i).name, '.') && ~strcmp(stDir(i).name, '..')
+                            obj.DefaultData{end+1} = sprintf('%s/%s', obj.DefaultPath{f}, stDir(i).name);
+                            fprintf('(%d) %s\n', length(obj.DefaultData), stDir(i).name);
+                        end % if
+                    end % for
+                end % if
+            end % for
+
         end % function
         
     end % methods
@@ -46,6 +75,7 @@ classdef OsirisData
             end % if
 
             obj.Path = sPath;
+            fprintf('Path is %s\n', obj.Path);
             
             % Scanning first level
 
@@ -122,7 +152,19 @@ classdef OsirisData
 
             % Set path in OsirisConfig object
             obj.Config.Path = obj.Path;
+            
 
+        end % function
+        
+        function obj = set.PathID(obj, iID)
+            
+            if iID > 0 && iID <= length(obj.DefaultData)
+                obj.PathID = iID;
+                obj.Path   = obj.DefaultData{iID};
+            else
+                fprintf('Error: Folder with ID %d is not in the list.\n', iID);
+            end % if
+            
         end % function
 
         function obj = set.Elements(obj, stElements)

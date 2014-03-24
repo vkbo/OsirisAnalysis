@@ -124,7 +124,7 @@ classdef OsirisPlot
             dSimTime    = iTime*dTimeFactor;
 
             % Plasma
-            dE0         = obj.Data.Config.Variables.Plasma.E0;
+            dE0         = obj.Data.Config.Variables.Convert.SI.E0;
             dOmegaP     = obj.Data.Config.Variables.Plasma.OmegaP;
             dLFactor    = dC / dOmegaP;
             dSimLength  = dSimTime*dLFactor;
