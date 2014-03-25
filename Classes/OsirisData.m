@@ -59,6 +59,17 @@ classdef OsirisData
             end % for
 
         end % function
+
+        function PlasmaInfo(obj)
+            
+            dPStart = obj.Config.Variables.Plasma.PlasmaStart;
+            dPEnd   = obj.Config.Variables.Plasma.PlasmaEnd;
+            dTFac   = obj.Config.Variables.Convert.SI.TimeFac;
+            
+            fprintf('Plasma Start: %7.1f @ Dump %03d:%03d\n', dPStart, floor(dPStart/dTFac), ceil(dPStart/dTFac));
+            fprintf('Plasma End:   %7.1f @ Dump %03d:%03d\n', dPEnd,   floor(dPEnd/dTFac),   ceil(dPEnd/dTFac));
+            
+        end % function
         
     end % methods
     

@@ -249,14 +249,7 @@ classdef OsirisConfig
 
                     if strcmpi(aConfig{k,1},'species') && strcmpi(aConfig{k,2},'name')
                         sSpecies = strrep(aConfig{k,6},'"','');
-                        switch (lower(sSpecies))
-                            case 'electrons'
-                                sSpecies = 'PlasmaElectrons';
-                            case 'proton_beam'
-                                sSpecies = 'ProtonBeam';
-                            case 'electron_beam'
-                                sSpecies = 'ElectronBeam';
-                        end % switch
+                        sSpecies = fTranslateSpecies(sSpecies);
                     end % if
                 
                     aConfig{k,7} = sSpecies;
@@ -445,6 +438,10 @@ classdef OsirisConfig
             
             if dPEnd < 0.0
                 dPEnd = obj.Variables.Simulation.TMax;
+            end % if
+            
+            if dPEnd > aX1(end)
+                dPEnd = aX1(end);
             end % if
             
             obj.Variables.Plasma.ProfileFX1   = aFX1;

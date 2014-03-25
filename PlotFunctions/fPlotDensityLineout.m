@@ -15,8 +15,28 @@
 %  None
 %
 
-function fPlotDensityLineout(oData, sSpecies, iTime, iR)
+function fPlotDensityLineout(oData, iTime, sSpecies, iR)
 
+    % Help output
+
+    if nargin == 0
+        fprintf('\n');
+        fprintf(' Usage: fPlotDensityLineout(oData, iTime, sSpecies, iR)\n');
+        fprintf('\n');
+        fprintf(' Input:\n');
+        fprintf(' oData    :: OsirisData object\n');
+        fprintf(' iTime    :: Dump number\n');
+        fprintf(' sSpecies :: Which species\n');
+        fprintf(' iR       :: R-value\n');
+        fprintf('\n');
+        fprintf(' Output:\n');
+        fprintf(' None\n');
+        fprintf('\n');
+        return;
+    end % if
+
+    
+    
     % Plasma
     dPStart     = oData.Config.Variables.Plasma.PlasmaStart;
     dPEnd       = oData.Config.Variables.Plasma.PlasmaEnd;
