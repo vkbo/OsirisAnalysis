@@ -1,18 +1,18 @@
 %
 %  Function: fPlotEnergyGradient
 % *******************************
-%  Plot the energy gradient form OsirisData
+%  Plots the energy gradient form OsirisData
 %
-%  Input:
-% --------
+%  Inputs:
+% =========
 %  oData      :: OsirisData object
 %  aGradients :: Energy gradients
 %  aRZ        :: Evolution in energy gradient
 %  aRValues   :: R-values to show
 %  aZValues   :: Z-values to show
 %
-%  Output:
-% ---------
+%  Outputs:
+% ==========
 %  None
 %
 

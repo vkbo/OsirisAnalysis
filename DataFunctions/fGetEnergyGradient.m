@@ -3,15 +3,20 @@
 % ******************************
 %  Extracts the energy gradient form OsirisData
 %
-%  Input:
-% --------
+%  Inputs:
+% =========
 %  oData    :: OsirisData object
 %  sField   :: What field to analyse. Ex 'e1'
 %  aRValues :: Array of R-coordinates to extract
+%  aZValues :: Array of Z-coordinates to extraxt
+%              [0] generates an array of min, max and zero
 %
-%  Output:
-% ---------
-%  Matrix of dimension length(aRValues) x BoxNZ
+%  Outputs:
+% ==========
+%  aGradients :: Matrix of integrated vectors along all R-values
+%  aRZ        :: The evolution of each specified R and Z coordinate
+%  aRValues   :: A return of the R-values
+%  aZValues   :: A retunr of the Z-values
 %
 
 function [aGradients, aRZ, aRValues, aZValues] = fGetEnergyGradient(oData, sField, aRValues, aZValues)
@@ -129,7 +134,7 @@ function [aGradients, aRZ, aRValues, aZValues] = fGetEnergyGradient(oData, sFiel
 
     % Clean-up
     
-    %clear aEnergy;
+    clear aEnergy;
     clear h5Data;
 
 end % function

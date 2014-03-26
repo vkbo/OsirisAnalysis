@@ -1,41 +1,22 @@
 %
 %  Function: fPlotDensityLineout
 % *******************************
-%  Plot the density for a given t and r
+%  Plots the density for a given t and r
 %
-%  Input:
-% --------
+%  Inputs:
+% =========
 %  oData    :: OsirisData object
-%  sSpecies :: Which species
 %  iTime    :: Dump number
+%  sSpecies :: Which species
 %  iR       :: R-value
 %
-%  Output:
-% ---------
+%  Outputs:
+% ==========
 %  None
 %
 
 function fPlotDensityLineout(oData, iTime, sSpecies, iR)
 
-    % Help output
-
-    if nargin == 0
-        fprintf('\n');
-        fprintf(' Usage: fPlotDensityLineout(oData, iTime, sSpecies, iR)\n');
-        fprintf('\n');
-        fprintf(' Input:\n');
-        fprintf(' oData    :: OsirisData object\n');
-        fprintf(' iTime    :: Dump number\n');
-        fprintf(' sSpecies :: Which species\n');
-        fprintf(' iR       :: R-value\n');
-        fprintf('\n');
-        fprintf(' Output:\n');
-        fprintf(' None\n');
-        fprintf('\n');
-        return;
-    end % if
-
-    
     
     % Plasma
     dPStart     = oData.Config.Variables.Plasma.PlasmaStart;

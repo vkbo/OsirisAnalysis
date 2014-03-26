@@ -1,35 +1,30 @@
 %
 %  Function: fPlotDensity
 % ************************
-%  Plot density
+%  Plots density plot
+%
+%  Inputs:
+% =========
+%  oData    :: OsirisData object
+%  sTime    :: Time dump
+%  sSpecies :: Which species to look at
+%
+%  Optional Inputs:
+% ==================
+%  sSave    :: 'save' will save plot to file
+%
+%  Outputs:
+% ==========
+%  None
 %
 
-function fPlotDensity(oData, iTime, sSpecies, iSave)
+function fPlotDensity(oData, iTime, sSpecies, sSave)
 
-    % Help output
-
-    if nargin == 0
-        fprintf('\n');
-        fprintf(' Usage: fPlotDensity(oData, sTime, sSpecies)\n');
-        fprintf('\n');
-        fprintf(' Input:\n');
-        fprintf(' oData    :: OsirisData object\n');
-        fprintf(' sTime    :: Time dump.\n');
-        fprintf(' sSpecies :: Which species to look at\n');
-        fprintf(' iSave    :: Optional. 1 will save\n');
-        fprintf('\n');
-        fprintf(' Output:\n');
-        fprintf(' None\n');
-        fprintf('\n');
-        return;
-    end % if
-    
+    % Input
     if nargin < 4
-        iSave = 0;
+        sSave = '';
     end % if
 
-
-    
     % Simulation
     dBoxLength  = oData.Config.Variables.Simulation.BoxX1Max;
     iBoxNZ      = oData.Config.Variables.Simulation.BoxNX1;
@@ -59,8 +54,10 @@ function fPlotDensity(oData, iTime, sSpecies, iSave)
     xlabel('$z \;\mbox{[mm]}$','interpreter','LaTex','FontSize',16);
     ylabel('$r \;\mbox{[mm]}$','interpreter','LaTex','FontSize',16);
     
-    if iSave
-        saveas(fig1, 'Plots/PlotDensityFigure1.eps','epsc');
+    % Save plot
+    if strcmp(sSave, 'save')
+        [sPath, ~, ~] = fileparts(mfilename('fullpath'));
+        saveas(fig1, sprintf('%s/../Plots/PlotDensityFigure1.eps',sPath),'epsc');
     end % if
 
 end

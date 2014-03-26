@@ -60,17 +60,6 @@ classdef OsirisData
 
         end % function
 
-        function PlasmaInfo(obj)
-            
-            dPStart = obj.Config.Variables.Plasma.PlasmaStart;
-            dPEnd   = obj.Config.Variables.Plasma.PlasmaEnd;
-            dTFac   = obj.Config.Variables.Convert.SI.TimeFac;
-            
-            fprintf('Plasma Start: %7.1f @ Dump %03d:%03d\n', dPStart, floor(dPStart/dTFac), ceil(dPStart/dTFac));
-            fprintf('Plasma End:   %7.1f @ Dump %03d:%03d\n', dPEnd,   floor(dPEnd/dTFac),   ceil(dPEnd/dTFac));
-            
-        end % function
-        
     end % methods
     
     %
@@ -80,6 +69,11 @@ classdef OsirisData
     methods
     
         function obj = set.Path(obj, sPath)
+            
+            %
+            %  Sets obj.Path and scan data tree
+            % **********************************
+            %
 
             if ~isdir(sPath)
                 return;
@@ -88,82 +82,11 @@ classdef OsirisData
             obj.Path = sPath;
             fprintf('Path is %s\n', obj.Path);
             
-            % Scanning first level
-
-            aDirs1 = dir(strcat(obj.Path, '/MS/'));
-            for i=1:length(aDirs1)
-            
-                if aDirs1(i).isdir && ~strcmp(aDirs1(i).name, '.') && ~strcmp(aDirs1(i).name, '..')
-                
-                    sName1  = strrep(aDirs1(i).name, '-', '_');
-                    sPath   = aDirs1(i).name;
-                    iFiles1 = 0;
-                    
-                    obj.Elements.(sName1) = struct('Path', sPath, 'Files', 0);
-                    
-                    % Scanning second level
-
-                    aDirs2  = dir(strcat(obj.Path, '/MS/', sName1, '/'));
-                    for j=1:length(aDirs2)
-                    
-                        if aDirs2(j).isdir && ~strcmp(aDirs2(j).name, '.') && ~strcmp(aDirs2(j).name, '..')
-
-                            sName2  = strrep(aDirs2(j).name, '-', '_');
-                            sPath   = strcat(aDirs1(i).name, '/', aDirs2(j).name);
-                            iFiles2 = 0;
-
-                            obj.Elements.(sName1).(sName2) = struct('Path', sPath, 'Files', 0);
-                            
-                            % Scanning third level
-
-                            aDirs3  = dir(strcat(obj.Path, '/MS/', sName1, '/', sName2, '/'));
-                            for k=1:length(aDirs3)
-
-                                if aDirs3(k).isdir && ~strcmp(aDirs3(k).name, '.') && ~strcmp(aDirs3(k).name, '..')
-                                
-                                    sName3  = strrep(aDirs3(k).name, '-', '_');
-                                    sPath   = strcat(aDirs1(i).name, '/', aDirs2(j).name, '/', aDirs3(k).name); 
-                                    iFiles3 = 0;                            
-
-                                    obj.Elements.(sName1).(sName2).(sName3) = struct('Path', sPath);
-                                    
-                                    % Counting files in fourth level
-
-                                    aDirs4  = dir(strcat(obj.Path, '/MS/', sName1, '/', sName2, '/', sName3, '/'));
-                                    for l=1:length(aDirs4)
-                                        if ~aDirs4(l).isdir
-                                            iFiles3 = iFiles3 + 1;
-                                        end % if
-                                    end % for
-                                    obj.Elements.(sName1).(sName2).(sName3).Files = iFiles3;
-
-                                elseif ~aDirs3(k).isdir
-                                
-                                    iFiles2 = iFiles2 + 1;
-                                
-                                end % if
-
-                                obj.Elements.(sName1).(sName2).Files = iFiles2;
-
-                            end % for
-                            
-                        elseif ~aDirs2(j).isdir
-                            
-                            iFiles1 = iFiles1 + 1;
-                            
-                        end % if
-
-                    end % for
-
-                    obj.Elements.(sName1).Files = iFiles1;
-
-                end % if
-
-            end % for
+            % Scanning MS folder
+            obj.Elements = obj.fScanFolder([obj.Path,'/MS'],'');
 
             % Set path in OsirisConfig object
-            obj.Config.Path = obj.Path;
-            
+            obj.Config.Path = obj.Path;            
 
         end % function
         
@@ -190,7 +113,48 @@ classdef OsirisData
     
     methods (Access = 'public')
         
+        function PlasmaInfo(obj)
+            
+            %
+            %  Prints basic plasma info extracted from Config object
+            % *******************************************************
+            %
+            
+            dPStart = obj.Config.Variables.Plasma.PlasmaStart;
+            dPEnd   = obj.Config.Variables.Plasma.PlasmaEnd;
+            dTFac   = obj.Config.Variables.Convert.SI.TimeFac;
+            
+            fprintf('Plasma Start: %7.1f @ Dump %03d:%03d\n', dPStart, floor(dPStart/dTFac), ceil(dPStart/dTFac));
+            fprintf('Plasma End:   %7.1f @ Dump %03d:%03d\n', dPEnd,   floor(dPEnd/dTFac),   ceil(dPEnd/dTFac));
+            
+        end % function
+
         function h5Data = Data(obj, iTime, sVal1, sVal2, sVal3)
+            
+            %
+            %  Data-extraction function
+            % **************************
+            %  
+            
+            if nargin == 1
+                
+                fprintf('\n');
+                fprintf(' object.Data(iTime, *)\n');
+                fprintf('***********************\n');
+                fprintf('\n');
+                fprintf(' Input Option 1:\n');
+                fprintf(' iTime    :: Time dump to extract\n');
+                fprintf(' sType    :: Data type [DENSITY, FLD, PHA, RAW]\n');
+                fprintf(' sSet     :: Data set i.e. charge, x1p1, etc\n');
+                fprintf(' sSpecies :: Particle species\n');
+                fprintf('\n');
+                fprintf(' Input Option 2:\n');
+                fprintf(' iTime    :: Time dump to extract\n');
+                fprintf(' oEPath   :: object.Elements path\n');
+                fprintf('\n');
+                return;
+
+            end % if
             
             if nargin > 3
 
@@ -205,48 +169,60 @@ classdef OsirisData
                     case 'DENSITY'
                         sFolder = strcat(sSpecies, '/', sSet, '/');
                         sFile   = strcat(sSet, '-', sSpecies, '-', sTimeNExt);
+                        iFiles  = obj.Elements.(sType).(sSpecies).(sSet).Info.Files;
                     case 'FLD'
                         sFolder = strcat(sSet, '/');
                         sFile   = strcat(sSet, '-', sTimeNExt);
+                        iFiles  = obj.Elements.(sType).(sSet).Info.Files;
                     case 'PHA'
                         sFolder = strcat(sSet, '/', sSpecies, '/');
                         sFile   = strcat(sSet, '-', sSpecies, '-', sTimeNExt);
+                        iFiles  = obj.Elements.(sType).(sSet).(sSpecies).Info.Files;
                     case 'RAW'
                         sFolder = strcat(sSpecies, '/');
                         sFile   = strcat(sType, '-', sSpecies, '-', sTimeNExt);
+                        iFiles  = obj.Elements.(sType).(sSpecies).Info.Files;
                 end % switch
 
             else
                 
-                aPath = strsplit(char(sVal1.Path), '/');
-                sType = aPath{1};
-                sSet  = '';
+                aPath  = strsplit(char(sVal1.Info.Path), '/');
+                iFiles = sVal1.Info.Files;
+                sType  = aPath{2};
+                sSet   = '';
 
                 sTimeNExt = strcat(sprintf('%06d', iTime), '.h5');
                 sDataRoot = strcat(obj.Path, '/MS/', sType, '/');
 
                 switch (sType)
                     case 'DENSITY'
-                        sFolder = strcat(aPath(2), '/', aPath(3), '/');
-                        sFile   = strcat(aPath(3), '-', aPath(2), '-', sTimeNExt);
-                        sSet    = aPath{3};
+                        sFolder = strcat(aPath(3), '/', aPath(4), '/');
+                        sFile   = strcat(aPath(4), '-', aPath(3), '-', sTimeNExt);
+                        sSet    = aPath{4};
                     case 'FLD'
-                        sFolder = strcat(aPath(2), '/');
-                        sFile   = strcat(aPath(2), '-', sTimeNExt);
-                        sSet    = aPath{2};
+                        sFolder = strcat(aPath(3), '/');
+                        sFile   = strcat(aPath(3), '-', sTimeNExt);
+                        sSet    = aPath{3};
                     case 'PHA'
-                        sFolder = strcat(aPath(2), '/', aPath(3), '/');
-                        sFile   = strcat(aPath(2), '-', aPath(3), '-', sTimeNExt);
-                        sSet    = aPath{2};
+                        sFolder = strcat(aPath(3), '/', aPath(4), '/');
+                        sFile   = strcat(aPath(3), '-', aPath(4), '-', sTimeNExt);
+                        sSet    = aPath{3};
                     case 'RAW'
-                        sFolder = strcat(aPath(2), '/');
-                        sFile   = strcat(aPath(1), '-', aPath(2), '-', sTimeNExt);
+                        sFolder = strcat(aPath(3), '/');
+                        sFile   = strcat(aPath(2), '-', aPath(3), '-', sTimeNExt);
                 end % switch
 
             end % if
             
+            h5Data = [];
+            
+            if iTime >= iFiles
+                fprintf('Error: Dump %d does not exist. Last dump is %d.\n', iTime, iFiles-1);
+                return;
+            end % if
+            
             sLoad  = char(strcat(sDataRoot, sFolder, sFile));
-            fprintf('File: %s\n', sLoad);
+            %fprintf('File: %s\n', sLoad);
             
             if strcmp(sType, 'RAW')
         
@@ -291,6 +267,43 @@ classdef OsirisData
     
     methods (Access = 'private')
         
+        function stReturn = fScanFolder(obj, sScanRoot, sScanPath)
+            
+            %
+            %  Recursive function that scans a folder tree
+            % *********************************************
+            %  sScanRoot :: Root of folder tree
+            %  sScanPath :: First folder to scan from
+            %               Use '' to start from sScanRoot
+            %
+            
+            stReturn.Info = struct('Path', sScanPath, 'Dirs', 0, 'Files', 0);
+
+            aDir     = dir(strcat(sScanRoot, sScanPath));
+            iDirs    = 0;
+            iFiles   = 0;
+
+            for i=1:length(aDir)
+                    
+                if aDir(i).isdir && ~strcmp(aDir(i).name, '.') && ~strcmp(aDir(i).name, '..')
+
+                    iDirs            = iDirs + 1;
+                    sName            = strrep(aDir(i).name, '-', '_');
+                    sNextPath        = strcat(sScanPath, '/', aDir(i).name);
+                    stReturn.(sName) = obj.fScanFolder(sScanRoot, sNextPath);
+
+                elseif ~aDir(i).isdir
+                            
+                    iFiles = iFiles + 1;
+                            
+                end % if
+
+            end % for
+            
+            stReturn.Info.Dirs  = iDirs;
+            stReturn.Info.Files = iFiles;
+        
+        end % function
         
     end % methods
     

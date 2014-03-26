@@ -11,10 +11,11 @@ classdef OsirisConfig
     
     properties (GetAccess = 'public', SetAccess = 'public')
 
-        Path      = ''; % Path to data directory
-        File      = ''; % Config file within data directory
-        Raw       = {}; % Matrix of config file data
-        Variables = {}; % Struct for all variables
+        Path      = '';  % Path to data directory
+        File      = '';  % Config file within data directory
+        Raw       = {};  % Matrix of config file data
+        Variables = {};  % Struct for all variables
+        N0        = 0.0; % N0
 
     end % properties
 
@@ -36,21 +37,28 @@ classdef OsirisConfig
         
         function obj = OsirisConfig()
             
+            % Setting default N0
+            
+            obj.N0 = 7.0e20;
+            
             % Initialising variable structs
             
             obj.Variables.Constants   = struct;
             obj.Variables.Simulation  = struct;
+            obj.Variables.Species     = struct;
             obj.Variables.Plasma      = struct;
+            obj.Variables.Beam        = struct;
             obj.Variables.Convert.SI  = struct;
             obj.Variables.Convert.CGS = struct;
             
             % Setting constants
 
-            obj.Variables.Constants.SpeedOfLight       = 2.99792458e8;      %m/s
-            obj.Variables.Constants.ElectronMass       = 9.10938291e-31;    %kg
-            obj.Variables.Constants.ElementaryCharge   = 1.602176565e-19;   %C
-            obj.Variables.Constants.VacuumPermitivity  = 8.854187817e-12;   %F/m 
-            obj.Variables.Constants.VacuumPermeability = 1.2566370614e-6;   %N/A^2
+            obj.Variables.Constants.SpeedOfLight       = 2.99792458e8;      % m/s
+            obj.Variables.Constants.ElectronMass       = 9.10938291e-31;    % kg
+            obj.Variables.Constants.ElectronVolt       = 1.782662e-36;      % kg
+            obj.Variables.Constants.ElementaryCharge   = 1.602176565e-19;   % C
+            obj.Variables.Constants.VacuumPermitivity  = 8.854187817e-12;   % F/m 
+            obj.Variables.Constants.VacuumPermeability = 1.2566370614e-6;   % N/A^2
             obj.Variables.Constants.PI                 = 3.141592653589793;
             obj.Variables.Constants.TwoPI              = 6.283185307179586;
 
@@ -122,7 +130,9 @@ classdef OsirisConfig
                 obj = obj.fReadFile();
 
                 obj = obj.fGetSimulationVariables();
+                obj = obj.fGetSpecies();
                 obj = obj.fGetPlasmaVariables();
+                obj = obj.fGetBeamVariables();
                 
             end % if
 
@@ -326,31 +336,31 @@ classdef OsirisConfig
             
             % Store variables
             
-            aValue = obj.fExtractFixedNum('', 'grid','nx_p', [0,0,0]);
+            aValue = obj.fExtractFixedNum('','grid','nx_p',[0,0,0]);
             obj.Variables.Simulation.BoxNX1    = int64(aValue(1));
             obj.Variables.Simulation.BoxNX2    = int64(aValue(2));
             obj.Variables.Simulation.BoxNX3    = int64(aValue(3));
 
-            aValue = obj.fExtractFixedNum('', 'space','xmin', [0.0,0.0,0.0]);
+            aValue = obj.fExtractFixedNum('','space','xmin',[0.0,0.0,0.0]);
             obj.Variables.Simulation.BoxX1Min  = double(aValue(1));
             obj.Variables.Simulation.BoxX2Min  = double(aValue(2));
             obj.Variables.Simulation.BoxX3Min  = double(aValue(3));
 
-            aValue = obj.fExtractFixedNum('', 'space','xmax', [0.0,0.0,0.0]);
+            aValue = obj.fExtractFixedNum('','space','xmax',[0.0,0.0,0.0]);
             obj.Variables.Simulation.BoxX1Max  = double(aValue(1));
             obj.Variables.Simulation.BoxX2Max  = double(aValue(2));
             obj.Variables.Simulation.BoxX3Max  = double(aValue(3));
 
-            aValue = obj.fExtractFixedNum('', 'time','tmin', [0.0]);
+            aValue = obj.fExtractFixedNum('','time','tmin',[0.0]);
             obj.Variables.Simulation.TMin      = double(aValue(1));
 
-            aValue = obj.fExtractFixedNum('', 'time','tmax', [0.0]);
+            aValue = obj.fExtractFixedNum('','time','tmax',[0.0]);
             obj.Variables.Simulation.TMax      = double(aValue(1));
 
-            aValue = obj.fExtractFixedNum('', 'time_step','dt', [0.0]);
+            aValue = obj.fExtractFixedNum('','time_step','dt',[0.0]);
             obj.Variables.Simulation.TimeStep  = double(aValue(1));
 
-            aValue = obj.fExtractFixedNum('', 'time_step','ndump', [0]);
+            aValue = obj.fExtractFixedNum('','time_step','ndump',[0]);
             obj.Variables.Simulation.NDump     = double(aValue(1));
             
             % Extract variables
@@ -361,6 +371,30 @@ classdef OsirisConfig
             % Calculate scaling variables
             
             obj.Variables.Convert.SI.TimeFac   = dTimeStep*iNDump;
+            
+        end % function
+        
+        function obj = fGetSpecies(obj)
+            
+            aSpecies.Beam   = {};
+            aSpecies.Plasma = {};
+            [iRows,~] = size(obj.Raw);
+            
+            sPrev = '';
+            
+            for i=1:iRows
+                sBeam = obj.Raw{i,7};
+                if ~strcmp(sBeam,sPrev)
+                    if strcmpi(sBeam(1:6), 'Plasma')
+                        aSpecies.Plasma{end+1,1} = sBeam;
+                    else
+                        aSpecies.Beam{end+1,1} = sBeam;
+                    end % if
+                    sPrev = obj.Raw{i,7};
+                end % if
+            end % for
+            
+            obj.Variables.Species = aSpecies;
             
         end % function
 
@@ -379,7 +413,7 @@ classdef OsirisConfig
 
             % Calculating plasma variables
 
-            dN0       = 7e20;
+            dN0       = obj.N0;
             dOmegaP   = sqrt((dN0 * dECharge^2) / (dEMass * dEpsilon0));
             dLambdaP  = d2Pi * dC / dOmegaP;
 
@@ -457,6 +491,70 @@ classdef OsirisConfig
             
             obj.Variables.Plasma.PlasmaStart  = dPStart;
             obj.Variables.Plasma.PlasmaEnd    = dPEnd;
+            
+        end % function
+        
+        function obj = fGetBeamVariables(obj)
+            
+            [iRows,~] = size(obj.Variables.Species.Beam);
+            
+            for i=1:iRows
+                
+                sBeam = obj.Variables.Species.Beam{i,1};
+                
+                obj.Variables.Beam.(sBeam) = {};
+                
+                % Species
+
+                aValue = obj.fExtractFixedNum(sBeam,'species','rqm',[0]);
+                obj.Variables.Beam.(sBeam).RQM       = double(aValue(1));
+
+                aValue = obj.fExtractFixedNum(sBeam,'udist','uth',[0.0,0.0,0.0]);
+                obj.Variables.Beam.(sBeam).Spread1   = double(aValue(1));
+                obj.Variables.Beam.(sBeam).Spread2   = double(aValue(2));
+                obj.Variables.Beam.(sBeam).Spread3   = double(aValue(3));
+
+                aValue = obj.fExtractFixedNum(sBeam,'udist','ufl',[0.0,0.0,0.0]);
+                obj.Variables.Beam.(sBeam).Momentum1 = double(aValue(1));
+                obj.Variables.Beam.(sBeam).Momentum2 = double(aValue(2));
+                obj.Variables.Beam.(sBeam).Momentum3 = double(aValue(3));
+
+                % Space output
+                
+                aValue = obj.fExtractFixedNum(sBeam,'diag_species','ps_xmin',[0.0,0.0,0.0]);
+                obj.Variables.Beam.(sBeam).DiagX1Min = double(aValue(1));
+                obj.Variables.Beam.(sBeam).DiagX2Min = double(aValue(2));
+                obj.Variables.Beam.(sBeam).DiagX3Min = double(aValue(3));
+
+                aValue = obj.fExtractFixedNum(sBeam,'diag_species','ps_xmax',[0.0,0.0,0.0]);
+                obj.Variables.Beam.(sBeam).DiagX1Max = double(aValue(1));
+                obj.Variables.Beam.(sBeam).DiagX2Max = double(aValue(2));
+                obj.Variables.Beam.(sBeam).DiagX3Max = double(aValue(3));
+
+                aValue = obj.fExtractFixedNum(sBeam,'diag_species','ps_nx',[0,0,0]);
+                obj.Variables.Beam.(sBeam).DiagNX1   = int64(aValue(1));
+                obj.Variables.Beam.(sBeam).DiagNX2   = int64(aValue(2));
+                obj.Variables.Beam.(sBeam).DiagNX3   = int64(aValue(3));
+
+                % Momentum output
+                
+                aValue = obj.fExtractFixedNum(sBeam,'diag_species','ps_pmin',[0.0,0.0,0.0]);
+                obj.Variables.Beam.(sBeam).DiagP1Min = double(aValue(1));
+                obj.Variables.Beam.(sBeam).DiagP2Min = double(aValue(2));
+                obj.Variables.Beam.(sBeam).DiagP3Min = double(aValue(3));
+
+                aValue = obj.fExtractFixedNum(sBeam,'diag_species','ps_pmax',[0.0,0.0,0.0]);
+                obj.Variables.Beam.(sBeam).DiagP1Max = double(aValue(1));
+                obj.Variables.Beam.(sBeam).DiagP2Max = double(aValue(2));
+                obj.Variables.Beam.(sBeam).DiagP3Max = double(aValue(3));
+
+                aValue = obj.fExtractFixedNum(sBeam,'diag_species','ps_np',[0,0,0]);
+                obj.Variables.Beam.(sBeam).DiagNP1   = int64(aValue(1));
+                obj.Variables.Beam.(sBeam).DiagNP2   = int64(aValue(2));
+                obj.Variables.Beam.(sBeam).DiagNP3   = int64(aValue(3));
+
+                
+            end % for
             
         end % function
         
