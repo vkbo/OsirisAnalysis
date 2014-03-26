@@ -52,15 +52,17 @@ classdef OsirisConfig
             obj.Variables.Convert.CGS = struct;
             
             % Setting constants
+            
+            sConstants;
 
-            obj.Variables.Constants.SpeedOfLight       = 2.99792458e8;      % m/s
-            obj.Variables.Constants.ElectronMass       = 9.10938291e-31;    % kg
-            obj.Variables.Constants.ElectronVolt       = 1.782662e-36;      % kg
-            obj.Variables.Constants.ElementaryCharge   = 1.602176565e-19;   % C
-            obj.Variables.Constants.VacuumPermitivity  = 8.854187817e-12;   % F/m 
-            obj.Variables.Constants.VacuumPermeability = 1.2566370614e-6;   % N/A^2
-            obj.Variables.Constants.PI                 = 3.141592653589793;
-            obj.Variables.Constants.TwoPI              = 6.283185307179586;
+            obj.Variables.Constants.SpeedOfLight       = Constants.Nature.SpeedOfLight;
+            obj.Variables.Constants.ElectronMass       = Constants.Particles.Electron.Mass;
+            obj.Variables.Constants.ElectronVolt       = Constants.Units.ElectronVolt.Mass;
+            obj.Variables.Constants.ElementaryCharge   = Constants.Nature.ElementaryCharge;
+            obj.Variables.Constants.VacuumPermitivity  = Constants.Nature.VacuumPermitivity;
+            obj.Variables.Constants.VacuumPermeability = Constants.Nature.VacuumPermeability;
+            obj.Variables.Constants.PI                 = Constants.Math.Pi;
+            obj.Variables.Constants.TwoPI              = Constants.Math.TwoPi;
 
         end % function
         
