@@ -18,16 +18,20 @@
 %  aTrack   :: Particle track
 %
 
-function aTrack = fPlotParticleTrack(oData, sSpecies, sAxis, sOrder, sFilter, iSample, iReturn)
+function aTrack = fPlotParticleTrack(oData, sSpecies, sAxis, sOrder, sFilter, dLMax, iSample, iReturn)
 
     % Input
     
-    if nargin < 7
+    if nargin < 8
         iReturn = 3;
     end % if
 
-    if nargin < 6
+    if nargin < 7
         iSample = 20;
+    end % if
+    
+    if nargin < 6
+        dLMax = -1;
     end % if
     
     if nargin < 5
@@ -66,6 +70,10 @@ function aTrack = fPlotParticleTrack(oData, sSpecies, sAxis, sOrder, sFilter, iS
     iDumpPS     = ceil(dPStart/dTFactor);
     iDumpPE     = floor(dPEnd/dTFactor);
     
+    if dLMax > -1
+        iDumpPE = ceil(dLMax/(dLFactor*dTFactor));
+    end % if
+
     if iDumpPE >= iFiles
         iDumpPE = iFiles - 1;
     end % if

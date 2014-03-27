@@ -35,19 +35,25 @@ function [aGradients, aRZ, aRValues, aZValues] = fGetEnergyGradient(oData, sFiel
     % Factors
     dTFactor    = oData.Config.Variables.Convert.SI.TimeFac;
     dLFactor    = oData.Config.Variables.Convert.SI.LengthFac;
+    iFiles      = oData.Elements.FLD.(sField).Info.Files;
     
     dBoxRFac    = dBoxRadius/iBoxNR * dLFactor;
     dBoxZFac    = dBoxLength/iBoxNZ * dLFactor;
 
     iDumpPS     = ceil(dPStart/dTFactor);
     iDumpPE     = floor(dPEnd/dTFactor);
+
+    if iDumpPE >= iFiles
+        iDumpPE = iFiles - 1;
+    end % if
+
     iTSteps     = iDumpPE-iDumpPS+1;
     
     
     % Extracting data for specified values of r
     
     fprintf('\n');
-    fprintf('Extraxting data from dump %d (t=%0.1f) to dump %d (t=%0.1f) ... ', ...
+    fprintf('Extraxting data from dump %d (t=%0.1f) to dump %d (t=%0.1f)\n', ...
         iDumpPS, iDumpPS*dTFactor, iDumpPE, iDumpPE*dTFactor);
     
     if aZValues(1) ~= 0
@@ -59,24 +65,22 @@ function [aGradients, aRZ, aRValues, aZValues] = fGetEnergyGradient(oData, sFiel
     
     dScaleFac = dE0*dTFactor*dLFactor*1e-9;  % Gives results in GeV/m
 
+    fprintf('Progress: %5.1f%%',0);
     for t=1:iTSteps
         h5Data = oData.Data(t+iDumpPS-1, oData.Elements.FLD.(sField));
         for r=1:length(aRValues)
             aEnergy(:,r,t) = h5Data(:,aRValues(r));
         end % for
+        fprintf('\b\b\b\b\b\b%5.1f%%',100.0*t/iTSteps);
     end % for
+    fprintf('\n\n');
 
-    fprintf('Done\n');
-
-    fprintf('Calculating integrals ... ');
-
+    fprintf('Calculating integrals\n');
     for z=1:iBoxNZ
         for r=1:length(aRValues)
             aGradients(z,r) = dScaleFac*trapz(aEnergy(z,r,:));
         end % for
     end % for
-
-    fprintf('Done\n');
 
 
     % If no Z-values are provided, use min/max and zero between min and max

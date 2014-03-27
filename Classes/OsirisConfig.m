@@ -39,7 +39,7 @@ classdef OsirisConfig
             
             % Setting default N0
             
-            obj.N0 = 7.0e20;
+            obj.N0 = 1.0e20;
             
             % Initialising variable structs
             
@@ -57,6 +57,7 @@ classdef OsirisConfig
 
             obj.Variables.Constants.SpeedOfLight       = Constants.Nature.SpeedOfLight;
             obj.Variables.Constants.ElectronMass       = Constants.Particles.Electron.Mass;
+            obj.Variables.Constants.ElectronMassMeV    = Constants.Particles.Electron.MassMeV;
             obj.Variables.Constants.ElectronVolt       = Constants.Units.ElectronVolt.Mass;
             obj.Variables.Constants.ElementaryCharge   = Constants.Nature.ElementaryCharge;
             obj.Variables.Constants.VacuumPermitivity  = Constants.Nature.VacuumPermitivity;
@@ -448,9 +449,9 @@ classdef OsirisConfig
 
             % Setting plasma variables
             
-            obj.Variables.Plasma.N0      = dN0;
-            obj.Variables.Plasma.OmegaP  = dOmegaP;
-            obj.Variables.Plasma.LambdaP = dLambdaP;
+            obj.Variables.Plasma.N0          = dN0;
+            obj.Variables.Plasma.NormOmegaP  = dOmegaP;
+            obj.Variables.Plasma.NormLambdaP = dLambdaP;
             
             
             % Calculating conversion variables
@@ -520,7 +521,16 @@ classdef OsirisConfig
             
             obj.Variables.Plasma.PlasmaStart  = dPStart;
             obj.Variables.Plasma.PlasmaEnd    = dPEnd;
+
+            dPlasmaMax = dMaxFX1 * dMaxFX2;
+            if dMaxFX3 > 0
+                dPlasmaMax = dPlasmaMax * dMaxFX3;
+            end % if
             
+            obj.Variables.Plasma.MaxPlasmaFac = dPlasmaMax;
+            obj.Variables.Plasma.MaxOmegaP    = dOmegaP  * sqrt(dPlasmaMax);
+            obj.Variables.Plasma.MaxLambdaP   = dLambdaP / sqrt(dPlasmaMax);
+
         end % function
         
         function obj = fGetBeamVariables(obj)

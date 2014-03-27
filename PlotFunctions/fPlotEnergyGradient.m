@@ -32,15 +32,21 @@ function fPlotEnergyGradient(oData, aGradients, aRZ, aRValues, aZValues)
     % Factors
     dTFactor    = oData.Config.Variables.Convert.SI.TimeFac;
     dLFactor    = oData.Config.Variables.Convert.SI.LengthFac;
+    iFiles      = oData.Elements.FLD.e1.Info.Files;
 
     % Runtime variables
     iDumpPS     = ceil(dPStart/dTFactor);
     iDumpPE     = floor(dPEnd/dTFactor);
+
+    if iDumpPE >= iFiles
+        iDumpPE = iFiles - 1;
+    end % if
+
     iTSteps     = iDumpPE-iDumpPS+1;
 
     % Prepare axes
     aXAxis1     = 1e3*linspace(0,dBoxLength*dLFactor,iBoxNZ);
-    aXAxis2     = dTFactor*dLFactor*linspace(iDumpPS,iDumpPE,iTSteps);
+    aXAxis2     = dTFactor.*dLFactor.*linspace(iDumpPS,iDumpPE,iTSteps);
     
     
     % Plot 1
@@ -48,7 +54,7 @@ function fPlotEnergyGradient(oData, aGradients, aRZ, aRValues, aZValues)
     fig1 = figure(1);
     clf;
 
-    cMap  = hsv(length(aRValues));
+    cMap  = hsv(length(aRValues)*length(aZValues));
     dMax  = 1.1*max(abs(aGradients(:)));
     dRFac = (dBoxRadius/iBoxNR)*dLFactor*1e6;
     dZFac = (dBoxLength/iBoxNZ)*dLFactor*1e3;

@@ -120,12 +120,37 @@ classdef OsirisData
             % *******************************************************
             %
             
-            dPStart = obj.Config.Variables.Plasma.PlasmaStart;
-            dPEnd   = obj.Config.Variables.Plasma.PlasmaEnd;
-            dTFac   = obj.Config.Variables.Convert.SI.TimeFac;
+            dPStart   = obj.Config.Variables.Plasma.PlasmaStart;
+            dPEnd     = obj.Config.Variables.Plasma.PlasmaEnd;
+            dTFac     = obj.Config.Variables.Convert.SI.TimeFac;
+            dLFac     = obj.Config.Variables.Convert.SI.LengthFac;
+
+            dN0       = obj.Config.Variables.Plasma.N0;
+            dNOmegaP  = obj.Config.Variables.Plasma.NormOmegaP;
+            dMOmegaP  = obj.Config.Variables.Plasma.MaxOmegaP;
+            dNLambdaP = obj.Config.Variables.Plasma.NormLambdaP;
+            dMLambdaP = obj.Config.Variables.Plasma.MaxLambdaP;
+            dPMax     = obj.Config.Variables.Plasma.MaxPlasmaFac;
             
-            fprintf('Plasma Start: %7.1f @ Dump %03d:%03d\n', dPStart, floor(dPStart/dTFac), ceil(dPStart/dTFac));
-            fprintf('Plasma End:   %7.1f @ Dump %03d:%03d\n', dPEnd,   floor(dPEnd/dTFac),   ceil(dPEnd/dTFac));
+            fprintf('\n');
+            fprintf(' Plasma Info\n');
+            fprintf('*************\n');
+            fprintf('\n');
+            fprintf(' Plasma Start:  %8.2f between dump %03d and %03d\n', dPStart, floor(dPStart/dTFac), ceil(dPStart/dTFac));
+            fprintf(' Plasma End:    %8.2f between dump %03d and %03d\n', dPEnd,   floor(dPEnd/dTFac),   ceil(dPEnd/dTFac));
+            fprintf('\n');
+            fprintf(' Plasma Start:  %8.2f m\n', dPStart*dLFac);
+            fprintf(' Plasma End:    %8.2f m\n', dPEnd*dLFac);
+            fprintf(' Plasma Length: %8.2f m\n', (dPEnd-dPStart)*dLFac);
+            fprintf('\n');
+            fprintf(' Nomralised Plasma Density:    %8.2e m^-3\n', dN0);
+            fprintf(' Normalised Plasma Frequency:  %8.2e s^-1\n', dNOmegaP);
+            fprintf(' Normalised Plasma Skin Depth: %8.2e mm\n',   dNLambdaP*1e3);
+            fprintf('\n');
+            fprintf(' Peak Plasma Density:          %8.2e m^-3\n', dN0*dPMax);
+            fprintf(' Peak Plasma Frequency:        %8.2e s^-1\n', dMOmegaP);
+            fprintf(' Peak Plasma Skin Depth:       %8.2e mm\n',   dMLambdaP*1e3);
+            fprintf('\n');
             
         end % function
         
@@ -140,7 +165,9 @@ classdef OsirisData
             dE        = obj.Config.Variables.Constants.ElementaryCharge;
             
             dN0       = obj.Config.Variables.Plasma.N0;
-            dOmegaP   = obj.Config.Variables.Plasma.OmegaP;
+            dNOmegaP  = obj.Config.Variables.Plasma.NormOmegaP;
+            dMOmegaP  = obj.Config.Variables.Plasma.MaxOmegaP;
+            dPMax     = obj.Config.Variables.Plasma.MaxPlasmaFac;
             dDensity  = obj.Config.Variables.Beam.(sSpecies).Density;
             
             sMathFunc = obj.Config.Variables.Beam.(sSpecies).ProfileFunction;
@@ -168,22 +195,22 @@ classdef OsirisData
                 fInt = @(x1,x2,x3) eval(sFunction);
                 dBeamInt = integral3(fInt,aLims(1),aLims(2),-aLims(4),aLims(4),-aLims(6),aLims(6));
                 
-                dBeamVol     = dBeamInt * dC^3/dOmegaP^3;
+                dBeamVol     = dBeamInt * dC^3/dNOmegaP^3;
                 dBeamNum     = dBeamVol * dDensity * dN0;
                 dBeamCharge  = dBeamNum * dE*1e9;
                 dBeamDensity = dBeamNum/dBeamVol;
-                dBeamPlasma  = dBeamDensity/dN0;
+                dBeamPlasma  = dBeamDensity/(dN0*dPMax);
                 
-                fprintf(' Plasma Density:      %0.3e m^-3\n', dN0);
-                fprintf(' Plasma Frequency:    %0.3e s^-1\n', dOmegaP);
+                fprintf(' Max Plasma Density:     %0.3e m^-3\n', dN0*dPMax);
+                fprintf(' Max Plasma Frequency:   %0.3e s^-1\n', dMOmegaP);
                 fprintf('\n');
-                fprintf(' Beam Integral:       %0.3e \n',     dBeamInt);
-                fprintf(' Beam Volume:         %0.3e m^3\n',  dBeamVol);
-                fprintf(' Beam Charge:         %0.3e nC\n',   dBeamCharge);
-                fprintf(' Beam Particle Count: %0.3e \n',     dBeamNum);
-                fprintf(' Beam Density:        %0.3e M^-3\n', dBeamDensity);
+                fprintf(' Beam Integral:          %0.3e \n',     dBeamInt);
+                fprintf(' Beam Volume:            %0.3e m^3\n',  dBeamVol);
+                fprintf(' Beam Charge:            %0.3e nC\n',   dBeamCharge);
+                fprintf(' Beam Particle Count:    %0.3e \n',     dBeamNum);
+                fprintf(' Beam Density:           %0.3e M^-3\n', dBeamDensity);
                 fprintf('\n');
-                fprintf(' Beam/Plasma Ratio:   %0.3e \n',     dBeamPlasma);
+                fprintf(' Beam/Plasma Ratio:      %0.3e \n',     dBeamPlasma);
 
             end % if
             
