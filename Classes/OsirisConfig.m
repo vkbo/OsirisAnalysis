@@ -39,7 +39,7 @@ classdef OsirisConfig
             
             % Setting default N0
             
-            obj.N0 = 1.0e20;
+            obj.N0 = 7.0e20;
             
             % Initialising variable structs
             

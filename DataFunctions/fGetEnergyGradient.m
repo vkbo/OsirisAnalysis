@@ -57,7 +57,7 @@ function [aGradients, aRZ, aRValues, aZValues] = fGetEnergyGradient(oData, sFiel
     aEnergy    = zeros(iBoxNZ, length(aRValues), iTSteps);
     aGradients = zeros(iBoxNZ, length(aRValues));
     
-    dScaleFac = dE0*dTFactor*dLFactor*1e-9;  % Gives results in GV/m
+    dScaleFac = dE0*dTFactor*dLFactor*1e-9;  % Gives results in GeV/m
 
     for t=1:iTSteps
         h5Data = oData.Data(t+iDumpPS-1, oData.Elements.FLD.(sField));

@@ -110,7 +110,13 @@ function aTrack = fPlotParticleTrack(oData, sSpecies, sAxis, sOrder, sFilter, iS
             iIndex = find(aTags==aFollow(i));
             if ~isempty(iIndex)
                 aIndex(i,s)  = iIndex;
-                aValues(i,s) = aData(iIndex,iAxis);
+                if iAxis == 1
+                    aValues(i,s) = aData(iIndex,iAxis);
+                    aValues(i,s) = aValues(i,s)-(i+iDumpPS-1)*dTFactor;
+                    %fprintf('Time: %d, Offset %d\n', i+iDumpPS-1, (i+iDumpPS-1)*dTFactor);
+                else
+                    aValues(i,s) = aData(iIndex,iAxis);
+                end % if
             else
                 aValues(i,s) = NaN;
             end % if
@@ -135,22 +141,17 @@ function aTrack = fPlotParticleTrack(oData, sSpecies, sAxis, sOrder, sFilter, iS
     sYLabel = '';
     dTrPFac = abs(dRQM)*dEMass;
     
-    sTAxis = '';
     switch(iAxis)
         case 1
-            sTAxis  = 'z';
             sYLabel = '$z \;\mbox{[mm]}$';
             aTrack  = aTrack.*dLFactor.*1e3;
         case 2
-            sTAxis  = 'r';
             sYLabel = '$r \;\mbox{[}\mu\mbox{m]}$';
             aTrack = aTrack.*dLFactor.*1e6;
         case 3
-            sTAxis  = '\theta';
             sYLabel = '$\theta \;\mbox{[}\mu\mbox{m]}$';
             aTrack = aTrack.*dLFactor.*1e6;
         case 4
-            sTAxis  = 'p_z';
             dTrMax = dTrMax*dTrPFac;
             if dTrMax > 1e9
                 dTrPFac = dTrPFac*1e-9;
@@ -161,7 +162,6 @@ function aTrack = fPlotParticleTrack(oData, sSpecies, sAxis, sOrder, sFilter, iS
             end % if
             aTrack = sqrt(aTrack.^2 + 1).*dTrPFac;
         case 5
-            sTAxis  = 'p_r';
             dTrMax = dTrMax*dTrPFac;
             if dTrMax > 1e9
                 dTrPFac = dTrPFac*1e-9;
@@ -172,7 +172,6 @@ function aTrack = fPlotParticleTrack(oData, sSpecies, sAxis, sOrder, sFilter, iS
             end % if
             aTrack = sqrt(aTrack.^2 + 1).*dTrPFac;
         case 6
-            sTAxis  = 'p_{\theta}';
             dTrMax = dTrMax*dTrPFac;
             if dTrMax > 1e9
                 dTrPFac = dTrPFac*1e-9;
@@ -184,22 +183,6 @@ function aTrack = fPlotParticleTrack(oData, sSpecies, sAxis, sOrder, sFilter, iS
             aTrack = sqrt(aTrack.^2 + 1).*dTrPFac;
     end % switch
 
-    sTOrder = '';
-    switch(iOrder)
-        case 1
-            sTOrder = 'z';
-        case 2
-            sTOrder = 'r';
-        case 3
-            sTOrder = '\theta';
-        case 4
-            sTOrder = 'p_z';
-        case 5
-            sTOrder = 'p_r';
-        case 6
-            sTOrder = 'p_{\theta}';
-    end % switch
-    
     % Plot
     fig1 = figure(1);
     cMap = hsv(iReturn);
@@ -223,9 +206,9 @@ function aTrack = fPlotParticleTrack(oData, sSpecies, sAxis, sOrder, sFilter, iS
 
     xlim([dXMin,dXMax]);
     
-    sTitle = sprintf('$%s \\mbox{ as a function of S for %s}%s$',sTAxis,sTFilter,sTOrder);
+    sTitle = sprintf('%s as a function of S for %s %s',sAxis,sTFilter,sOrder);
     
-    title(sTitle,'interpreter','LaTex','FontSize',18);
+    title(sTitle,'FontSize',18);
     xlabel('$S \;\mbox{[m]}$','interpreter','LaTex','FontSize',16);
     ylabel(sYLabel,           'interpreter','LaTex','FontSize',16);
     

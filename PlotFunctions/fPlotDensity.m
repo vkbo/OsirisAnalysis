@@ -36,6 +36,9 @@ function fPlotDensity(oData, iTime, sSpecies, sSave)
     dLFactor    = oData.Config.Variables.Convert.SI.LengthFac;
     dE0         = oData.Config.Variables.Convert.SI.E0;
 
+    % Plasma
+    dPStart     = oData.Config.Variables.Plasma.PlasmaStart;
+    
     % Prepare axes
     aXAxis      = linspace(0,dBoxLength*dLFactor*1e3,iBoxNZ);
     aYAxis      = linspace(-dBoxRadius*dLFactor*1e3,dBoxRadius*dLFactor*1e3,2*iBoxNR);
@@ -45,19 +48,25 @@ function fPlotDensity(oData, iTime, sSpecies, sSave)
 
     % Plot
     fig1 = figure(1);
+    clf
 
     imagesc(aXAxis, aYAxis, dE0*transpose([fliplr(h5Data),h5Data]));
+    colormap(jet);
     colorbar();
 
-    sTitle = sprintf('%s - Dump %d - S=%0.2f m', sSpecies, iTime, iTime*dTFactor*dLFactor);
+    dPosition = (iTime*dTFactor - dPStart)*dLFactor;
+    sTitle    = sprintf('Density after %0.2f metres of plasma (Dump %d)',dPosition,iTime);
+
     title(sTitle,'FontSize',18);
     xlabel('$z \;\mbox{[mm]}$','interpreter','LaTex','FontSize',16);
     ylabel('$r \;\mbox{[mm]}$','interpreter','LaTex','FontSize',16);
     
     % Save plot
     if strcmp(sSave, 'save')
+        pbaspect([1.0,0.5,1.0]);
         [sPath, ~, ~] = fileparts(mfilename('fullpath'));
         saveas(fig1, sprintf('%s/../Plots/PlotDensityFigure1.eps',sPath),'epsc');
+        pbaspect('auto');
     end % if
 
 end
