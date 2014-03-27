@@ -39,7 +39,7 @@ classdef OsirisConfig
             
             % Setting default N0
             
-            obj.N0 = 7.0e20;
+            obj.N0 = 1.0e20;
             
             % Initialising variable structs
             
@@ -274,6 +274,27 @@ classdef OsirisConfig
             
         end % function
 
+        function sReturn = fExtractRaw(obj, sSpecies, sName, sLabel, iIndex)
+            
+            if nargin < 5
+                iIndex = 0;
+            end % if
+            
+            [iRows,~] = size(obj.Raw);
+            
+            sReturn = '';
+            
+            for i=1:iRows
+                if   strcmpi(obj.Raw{i,1},sName)    ...
+                  && strcmpi(obj.Raw{i,2},sLabel)   ...
+                  && strcmpi(obj.Raw{i,7},sSpecies) ...
+                  && obj.Raw{i,5} == iIndex
+                    sReturn = obj.Raw{i,6};
+                end % if
+            end % for
+            
+        end % function
+
         function aValue = fExtractVariables(obj, sSpecies, sName, sLabel, iIndex)
             
             if nargin < 5
@@ -294,7 +315,7 @@ classdef OsirisConfig
             end % for
             
         end % function
-        
+
         function aReturn = fExtractFixedNum(obj, sSpecies, sName, sLabel, aReturn, iIndex)
             
             if nargin < 6
@@ -339,32 +360,38 @@ classdef OsirisConfig
             % Store variables
             
             aValue = obj.fExtractFixedNum('','grid','nx_p',[0,0,0]);
-            obj.Variables.Simulation.BoxNX1    = int64(aValue(1));
-            obj.Variables.Simulation.BoxNX2    = int64(aValue(2));
-            obj.Variables.Simulation.BoxNX3    = int64(aValue(3));
+            obj.Variables.Simulation.BoxNX1      = int64(aValue(1));
+            obj.Variables.Simulation.BoxNX2      = int64(aValue(2));
+            obj.Variables.Simulation.BoxNX3      = int64(aValue(3));
 
             aValue = obj.fExtractFixedNum('','space','xmin',[0.0,0.0,0.0]);
-            obj.Variables.Simulation.BoxX1Min  = double(aValue(1));
-            obj.Variables.Simulation.BoxX2Min  = double(aValue(2));
-            obj.Variables.Simulation.BoxX3Min  = double(aValue(3));
+            obj.Variables.Simulation.BoxX1Min    = double(aValue(1));
+            obj.Variables.Simulation.BoxX2Min    = double(aValue(2));
+            obj.Variables.Simulation.BoxX3Min    = double(aValue(3));
 
             aValue = obj.fExtractFixedNum('','space','xmax',[0.0,0.0,0.0]);
-            obj.Variables.Simulation.BoxX1Max  = double(aValue(1));
-            obj.Variables.Simulation.BoxX2Max  = double(aValue(2));
-            obj.Variables.Simulation.BoxX3Max  = double(aValue(3));
+            obj.Variables.Simulation.BoxX1Max    = double(aValue(1));
+            obj.Variables.Simulation.BoxX2Max    = double(aValue(2));
+            obj.Variables.Simulation.BoxX3Max    = double(aValue(3));
 
             aValue = obj.fExtractFixedNum('','time','tmin',[0.0]);
-            obj.Variables.Simulation.TMin      = double(aValue(1));
+            obj.Variables.Simulation.TMin        = double(aValue(1));
 
             aValue = obj.fExtractFixedNum('','time','tmax',[0.0]);
-            obj.Variables.Simulation.TMax      = double(aValue(1));
+            obj.Variables.Simulation.TMax        = double(aValue(1));
 
             aValue = obj.fExtractFixedNum('','time_step','dt',[0.0]);
-            obj.Variables.Simulation.TimeStep  = double(aValue(1));
+            obj.Variables.Simulation.TimeStep    = double(aValue(1));
 
             aValue = obj.fExtractFixedNum('','time_step','ndump',[0]);
-            obj.Variables.Simulation.NDump     = double(aValue(1));
-            
+            obj.Variables.Simulation.NDump       = double(aValue(1));
+
+            aValue = obj.fExtractFixedNum('','grid','nx_p',[0]);
+            obj.Variables.Simulation.Dimensions  = length(aValue);
+
+            sValue = obj.fExtractRaw('','grid','coordinates');
+            obj.Variables.Simulation.Coordinates = strrep(sValue,'"','');
+
             % Extract variables
 
             dTimeStep = obj.Variables.Simulation.TimeStep;
@@ -554,8 +581,18 @@ classdef OsirisConfig
                 obj.Variables.Beam.(sBeam).DiagNP1   = int64(aValue(1));
                 obj.Variables.Beam.(sBeam).DiagNP2   = int64(aValue(2));
                 obj.Variables.Beam.(sBeam).DiagNP3   = int64(aValue(3));
-
                 
+                % Beam Profile
+                
+                sValue = obj.fExtractRaw(sBeam, 'profile', 'profile_type');
+                obj.Variables.Beam.(sBeam).ProfileType     = strrep(sValue, '"', '');
+                
+                sValue = obj.fExtractRaw(sBeam, 'profile', 'math_func_expr');
+                obj.Variables.Beam.(sBeam).ProfileFunction = strrep(sValue, '"', '');
+                
+                aValue = obj.fExtractFixedNum(sBeam,'profile','density',[0]);
+                obj.Variables.Beam.(sBeam).Density         = double(aValue(1));
+
             end % for
             
         end % function

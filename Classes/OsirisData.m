@@ -128,6 +128,68 @@ classdef OsirisData
             fprintf('Plasma End:   %7.1f @ Dump %03d:%03d\n', dPEnd,   floor(dPEnd/dTFac),   ceil(dPEnd/dTFac));
             
         end % function
+        
+        function BeamInfo(obj, sSpecies)
+            
+            %
+            %  Attempts to calculate beam data
+            % *********************************
+            %
+            
+            dC        = obj.Config.Variables.Constants.SpeedOfLight;
+            dE        = obj.Config.Variables.Constants.ElementaryCharge;
+            
+            dN0       = obj.Config.Variables.Plasma.N0;
+            dOmegaP   = obj.Config.Variables.Plasma.OmegaP;
+            dDensity  = obj.Config.Variables.Beam.(sSpecies).Density;
+            
+            sMathFunc = obj.Config.Variables.Beam.(sSpecies).ProfileFunction;
+            iDim      = obj.Config.Variables.Simulation.Dimensions;
+            sCoords   = obj.Config.Variables.Simulation.Coordinates;
+            dX1Min    = obj.Config.Variables.Simulation.BoxX1Min;
+            dX1Max    = obj.Config.Variables.Simulation.BoxX1Max;
+            dX2Min    = obj.Config.Variables.Simulation.BoxX2Min;
+            dX2Max    = obj.Config.Variables.Simulation.BoxX2Max;
+            dX3Min    = obj.Config.Variables.Simulation.BoxX3Min;
+            dX3Max    = obj.Config.Variables.Simulation.BoxX3Max;
+            
+            fprintf('\n');
+            fprintf(' Beam Info for %s\n',sSpecies);
+            fprintf('************************************\n');
+
+            [stEqs, aLims] = fExtractEq(sMathFunc, iDim, [dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max]);
+            
+            if strcmpi(sCoords, 'cylindrical')
+
+                sFunction = sprintf('pi.*%s.*%s.*%s', stEqs{1}, stEqs{2}, stEqs{3});
+                fprintf(' EQ: %s\n', sFunction);
+                fprintf('\n');
+                
+                fInt = @(x1,x2,x3) eval(sFunction);
+                dBeamInt = integral3(fInt,aLims(1),aLims(2),-aLims(4),aLims(4),-aLims(6),aLims(6));
+                
+                dBeamVol     = dBeamInt * dC^3/dOmegaP^3;
+                dBeamNum     = dBeamVol * dDensity * dN0;
+                dBeamCharge  = dBeamNum * dE*1e9;
+                dBeamDensity = dBeamNum/dBeamVol;
+                dBeamPlasma  = dBeamDensity/dN0;
+                
+                fprintf(' Plasma Density:      %0.3e m^-3\n', dN0);
+                fprintf(' Plasma Frequency:    %0.3e s^-1\n', dOmegaP);
+                fprintf('\n');
+                fprintf(' Beam Integral:       %0.3e \n',     dBeamInt);
+                fprintf(' Beam Volume:         %0.3e m^3\n',  dBeamVol);
+                fprintf(' Beam Charge:         %0.3e nC\n',   dBeamCharge);
+                fprintf(' Beam Particle Count: %0.3e \n',     dBeamNum);
+                fprintf(' Beam Density:        %0.3e M^-3\n', dBeamDensity);
+                fprintf('\n');
+                fprintf(' Beam/Plasma Ratio:   %0.3e \n',     dBeamPlasma);
+
+            end % if
+            
+            fprintf('\n');
+            
+        end % function
 
         function h5Data = Data(obj, iTime, sVal1, sVal2, sVal3)
             
