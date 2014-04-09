@@ -62,8 +62,6 @@ classdef OsirisConfig
             obj.Variables.Constants.ElementaryCharge   = Constants.Nature.ElementaryCharge;
             obj.Variables.Constants.VacuumPermitivity  = Constants.Nature.VacuumPermitivity;
             obj.Variables.Constants.VacuumPermeability = Constants.Nature.VacuumPermeability;
-            obj.Variables.Constants.PI                 = Constants.Math.Pi;
-            obj.Variables.Constants.TwoPI              = Constants.Math.TwoPi;
 
         end % function
         
@@ -437,15 +435,13 @@ classdef OsirisConfig
             dEMass    = obj.Variables.Constants.ElectronMass;
             dEpsilon0 = obj.Variables.Constants.VacuumPermitivity;
             dMu0      = obj.Variables.Constants.VacuumPermeability;
-            dPi       = obj.Variables.Constants.PI;
-            d2Pi      = obj.Variables.Constants.TwoPI;
             
 
             % Calculating plasma variables
 
             dN0       = obj.N0;
             dOmegaP   = sqrt((dN0 * dECharge^2) / (dEMass * dEpsilon0));
-            dLambdaP  = d2Pi * dC / dOmegaP;
+            dLambdaP  = 2*pi * dC / dOmegaP;
 
             % Setting plasma variables
             
@@ -456,7 +452,7 @@ classdef OsirisConfig
             
             % Calculating conversion variables
             
-            dSIE0 = 1e-7 * dEMass * dC^3 * dOmegaP * 4*dPi*dEpsilon0 / dECharge;
+            dSIE0 = 1e-7 * dEMass * dC^3 * dOmegaP * 4*pi*dEpsilon0 / dECharge;
 
             % Setting conversion variables
             

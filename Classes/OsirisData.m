@@ -184,16 +184,16 @@ classdef OsirisData
             fprintf(' Beam Info for %s\n',sSpecies);
             fprintf('************************************\n');
 
-            [stEqs, aLims] = fExtractEq(sMathFunc, iDim, [dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max]);
+            stInt = fExtractEq(sMathFunc, iDim, [dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max]);
             
             if strcmpi(sCoords, 'cylindrical')
 
-                sFunction = sprintf('pi.*%s.*%s.*%s', stEqs{1}, stEqs{2}, stEqs{3});
+                sFunction = sprintf('%s.*%s.*x2', stInt.Equations{1}, stInt.Equations{2});
                 fprintf(' EQ: %s\n', sFunction);
                 fprintf('\n');
                 
-                fInt = @(x1,x2,x3) eval(sFunction);
-                dBeamInt = integral3(fInt,aLims(1),aLims(2),-aLims(4),aLims(4),-aLims(6),aLims(6));
+                fInt = @(x1,x2) eval(sFunction);
+                dBeamInt = 2*pi*integral2(fInt,stInt.Lims{1},stInt.Lims{2},0,stInt.Lims{4});
                 
                 dBeamVol     = dBeamInt * dC^3/dNOmegaP^3;
                 dBeamNum     = dBeamVol * dDensity * dN0;
@@ -293,8 +293,8 @@ classdef OsirisData
                         sFile   = strcat(aPath(3), '-', sTimeNExt);
                         sSet    = aPath{3};
                     case 'PHA'
-                        sFolder = strcat(aPath(3), '/', aPath(4), '/');
-                        sFile   = strcat(aPath(3), '-', aPath(4), '-', sTimeNExt);
+                        sFolder = strcat(aPath(3), '/', aPath(2), '/');
+                        sFile   = strcat(aPath(3), '-', aPath(2), '-', sTimeNExt);
                         sSet    = aPath{3};
                     case 'RAW'
                         sFolder = strcat(aPath(3), '/');

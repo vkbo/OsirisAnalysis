@@ -14,9 +14,10 @@
 %  stEquations :: Struct of equations in 3D (for integration)
 %  
 
-function [stEquations, aLims] = fExtractEq(sEquation, iDim, aLims)
+function stReturn = fExtractEq(sEquation, iDim, aLims)
 
-    stEquations = {};
+    stReturn.Equations = {};
+    stReturn.Lims      = {};
 
     if strcmp(sEquation, '')
         return;
@@ -113,8 +114,8 @@ function [stEquations, aLims] = fExtractEq(sEquation, iDim, aLims)
     sX3Eq = strrep(sX3Eq,'^','.^');
     %sX3Eq = strrep(sX3Eq,'x3','z');
     
-    stEquations = {sX1Eq, sX2Eq, sX3Eq};
-    aLims       = [dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max];
+    stReturn.Equations = {sX1Eq, sX2Eq, sX3Eq};
+    stReturn.Lims      = {dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max};
 
     %fprintf('%s\n', sX1Eq);
     %fprintf('%s\n', sX2Eq);

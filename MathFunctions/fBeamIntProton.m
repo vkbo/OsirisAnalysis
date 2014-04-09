@@ -6,8 +6,11 @@
 
 function dBeamInt = fBeamIntProton(dX1Min, dX1Max, dN0, dDensity)
 
-    fFunction = @(x,y,z) pi*0.5.*(1.0+cos(5.5e-3.*(x-dX1Max))).*exp(-(y.^2.+z.^2)/0.284);
-    dBeamInt  = integral3(fFunction, dX1Min, dX1Max, -8, 8, -8, 8);
+    %fFunction = @(x,y,z) pi*0.5.*(1.0+cos(5.5e-3.*(x-dX1Max))).*exp(-(y.^2.+z.^2)/0.284);
+    %dBeamInt  = integral3(fFunction, dX1Min, dX1Max, -8, 8, -8, 8);
+    
+    fFunction = @(x,r) 2*pi*0.5.*(1.0+cos(5.5e-3.*(x-dX1Max))).*exp(-(r.^2)/0.284).*r;
+    dBeamInt  = integral2(fFunction, dX1Min, dX1Max, 0, 8);
     
     if nargin < 3
         return;
