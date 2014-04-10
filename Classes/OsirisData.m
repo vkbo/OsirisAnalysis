@@ -161,6 +161,9 @@ classdef OsirisData
             % *********************************
             %
             
+            sSpecies  = fTranslateSpecies(sSpecies);
+            fprintf('%s\n',sSpecies);
+            
             dC        = obj.Config.Variables.Constants.SpeedOfLight;
             dE        = obj.Config.Variables.Constants.ElementaryCharge;
             
@@ -293,8 +296,8 @@ classdef OsirisData
                         sFile   = strcat(aPath(3), '-', sTimeNExt);
                         sSet    = aPath{3};
                     case 'PHA'
-                        sFolder = strcat(aPath(3), '/', aPath(2), '/');
-                        sFile   = strcat(aPath(3), '-', aPath(2), '-', sTimeNExt);
+                        sFolder = strcat(aPath(3), '/', aPath(4), '/');
+                        sFile   = strcat(aPath(3), '-', aPath(4), '-', sTimeNExt);
                         sSet    = aPath{3};
                     case 'RAW'
                         sFolder = strcat(aPath(3), '/');

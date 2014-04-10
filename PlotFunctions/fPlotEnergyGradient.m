@@ -6,17 +6,35 @@
 %  Inputs:
 % =========
 %  oData      :: OsirisData object
-%  aGradients :: Energy gradients
-%  aRZ        :: Evolution in energy gradient
-%  aRValues   :: R-values to show
-%  aZValues   :: Z-values to show
+%  stData     :: Data strict from fGetEnergyGradients function
 %
 %  Outputs:
 % ==========
 %  None
 %
 
-function fPlotEnergyGradient(oData, aGradients, aRZ, aRValues, aZValues)
+function fPlotEnergyGradient(oData, stData)
+
+    % Help output
+    if nargin == 0
+        fprintf('\n');
+        fprintf('  Function: fPlotEnergyGradient\n');
+        fprintf(' *******************************\n');
+        fprintf('  Plots the energy gradient form OsirisData\n');
+        fprintf('\n');
+        fprintf('  Inputs:\n');
+        fprintf(' =========\n');
+        fprintf('  oData      :: OsirisData object\n');
+        fprintf('  stData     :: Data strict from fGetEnergyGradients function\n');
+        fprintf('\n');
+        return;
+    end % if
+
+    % Data
+    aGradients = stData.Gradients;
+    aRZ        = stData.RZ;
+    aRValues   = stData.RValues;
+    aZValues   = stData.ZValues;
 
     % Plasma
     dPStart     = oData.Config.Variables.Plasma.PlasmaStart;

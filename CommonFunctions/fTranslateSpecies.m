@@ -8,11 +8,17 @@ function sReturn = fTranslateSpecies(sInput)
 
     switch(lower(sInput))
         case 'electrons'
-            sSpecies = 'PlasmaElectrons';
+            sReturn = 'PlasmaElectrons';
         case 'proton_beam'
-            sSpecies = 'ProtonBeam';
+            sReturn = 'ProtonBeam';
         case 'electron_beam'
-            sSpecies = 'ElectronBeam';
+            sReturn = 'ElectronBeam';
+        case 'pe'
+            sReturn = 'PlasmaElectrons';
+        case 'pb'
+            sReturn = 'ProtonBeam';
+        case 'eb'
+            sReturn = 'ElectronBeam';
         otherwise
             sReturn = sInput;
     end % switch

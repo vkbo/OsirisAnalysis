@@ -13,13 +13,34 @@
 %
 %  Outputs:
 % ==========
-%  aGradients :: Matrix of integrated vectors along all R-values
-%  aRZ        :: The evolution of each specified R and Z coordinate
-%  aRValues   :: A return of the R-values
-%  aZValues   :: A retunr of the Z-values
+%  stReturn :: Data struct
 %
 
-function [aGradients, aRZ, aRValues, aZValues] = fGetEnergyGradient(oData, sField, aRValues, aZValues)
+function stReturn = fGetEnergyGradient(oData, sField, aRValues, aZValues)
+
+    % Help output
+    if nargin == 0
+        fprintf('\n');
+        fprintf('  Function: fGetEnergyGradient\n');
+        fprintf(' ******************************\n');
+        fprintf('  Extracts the energy gradient form OsirisData\n');
+        fprintf('\n');
+        fprintf('  Inputs:\n');
+        fprintf(' =========\n');
+        fprintf('  oData    :: OsirisData object\n');
+        fprintf('  sField   :: What field to analyse. Ex ''e1''\n');
+        fprintf('  aRValues :: Array of R-coordinates to extract\n');
+        fprintf('  aZValues :: Array of Z-coordinates to extraxt\n');
+        fprintf('              [0] generates an array of min, max and zero\n');
+        fprintf('\n');
+        fprintf('  Outputs:\n');
+        fprintf(' ==========\n');
+        fprintf('  stReturn :: Data struct\n');
+        fprintf('\n');
+        return;
+    end % if
+    
+    stReturn = {};
 
     % Plasma
     dPStart     = oData.Config.Variables.Plasma.PlasmaStart;
@@ -135,6 +156,11 @@ function [aGradients, aRZ, aRValues, aZValues] = fGetEnergyGradient(oData, sFiel
         end % for
     end % if
 
+    stReturn.Info      = {'EnergyGradient'};
+    stReturn.Gradients = aGradients;
+    stReturn.RZ        = aRZ;
+    stReturn.RValues   = aRValues;
+    stReturn.ZValues   = aZValues;
 
     % Clean-up
     
