@@ -19,7 +19,12 @@
 
 function fPlotPhase1D(oData, iTime, sSpecies, sAxis, aCount, dMin, dMax)
 
-    % Help output
+
+%
+    %  Function Init
+    % ***************
+    %
+
     if nargin == 0
        fprintf('\n');
        fprintf('  Function: fPlotPhase1D\n');
@@ -42,7 +47,6 @@ function fPlotPhase1D(oData, iTime, sSpecies, sAxis, aCount, dMin, dMax)
        return;
     end % if
     
-    % Check input
     if nargin < 5
         aCount = [0];
     end % if
@@ -62,28 +66,11 @@ function fPlotPhase1D(oData, iTime, sSpecies, sAxis, aCount, dMin, dMax)
         return;
     end % if
     
-    switch(sAxis)
-        case 'p1'
-            sXUnit  = 'MeV';
-            sXLabel = '$p_z \mbox{[MeV/c]}$';
-        case 'p2'
-            sXUnit  = 'keV';
-            sXLabel = '$p_r \mbox{[keV/c]}$';
-        case 'p3'
-            sXUnit  = 'keV';
-            sXLabel = '$p_{\theta} \mbox{[MeV/c]}$';
-        case 'x1'
-            sXUnit  = 'mm';
-            sXLabel = '$z \mbox{[mm]}$';
-        case 'x2'
-            sXUnit  = 'mm';
-            sXLabel = '$r \mbox{[mm]}$';
-        case 'x3'
-            sXUnit  = 'mm';
-            sXLabel = '$\theta$';
-        otherwise
-            return;
-    end % switch
+
+    %
+    %  Extracting Simulation Data
+    % ****************************
+    %
 
     % Beam diag
     iNP1    = oData.Config.Variables.Beam.(sSpecies).DiagNP1;
@@ -100,42 +87,100 @@ function fPlotPhase1D(oData, iTime, sSpecies, sAxis, aCount, dMin, dMax)
     dRQM    = oData.Config.Variables.Beam.(sSpecies).RQM;
     dEMass  = oData.Config.Variables.Constants.ElectronMassMeV;
     dCharge = oData.Config.Variables.Constants.ElementaryCharge;
-    dP1Init = oData.Config.Variables.Beam.(sSpecies).Momentum1*dEMass;
-    dP2Init = oData.Config.Variables.Beam.(sSpecies).Momentum2*dEMass;
-    dP3Init = oData.Config.Variables.Beam.(sSpecies).Momentum3*dEMass;
+    dPFac   = abs(dRQM)*dEMass;
+    dP1Init = oData.Config.Variables.Beam.(sSpecies).Momentum1*dPFac;
+    dP2Init = oData.Config.Variables.Beam.(sSpecies).Momentum2*dPFac;
+    dP3Init = oData.Config.Variables.Beam.(sSpecies).Momentum3*dPFac;
 
     % Factors
     dSign  = dRQM/abs(dRQM);
     
-    % Data
-    h5Data = oData.Data(iTime, oData.Elements.PHA.(sAxis).(sSpecies));
-    h5Data = h5Data;
-    fprintf('Sum: %.3e\n', sum(h5Data));
-    iLen   = length(h5Data);
+
+    %
+    %  Axis Conditions
+    % *****************
+    %
 
     switch(sAxis)
         case 'p1'
-            dPFac  = abs(dRQM)*dEMass;
-            dPMin  = sqrt(abs(dP1Min)^2 + 1)*dPFac*(dP1Min/abs(dP1Min));
-            dPMax  = sqrt(abs(dP1Max)^2 + 1)*dPFac*(dP1Max/abs(dP1Max));
-            dPInit = dP1Init;
+            if abs(dRQM) < 1000.0
+                sXUnit  = 'MeV';
+                sXLabel = '$p_z \mbox{[MeV/c]}$';
+                dScale  = 1.0;
+            else
+                sXUnit  = 'GeV';
+                sXLabel = '$p_z \mbox{[GeV/c]}$';
+                dScale  = 1.0e-3;
+            end % if
+        case 'p2'
+            if abs(dRQM) < 1000.0
+                sXUnit  = 'keV';
+                sXLabel = '$p_r \mbox{[keV/c]}$';
+                dScale  = 1.0e3;
+            else
+                sXUnit  = 'MeV';
+                sXLabel = '$p_r \mbox{[MeV/c]}$';
+                dScale  = 1.0;
+            end % if
+        case 'p3'
+            if abs(dRQM) < 1000.0
+                sXUnit  = 'keV';
+                sXLabel = '$p_{\theta} \mbox{[MeV/c]}$';
+                dScale  = 1.0e3;
+            else
+                sXUnit  = 'MeV';
+                sXLabel = '$p_{\theta} \mbox{[MeV/c]}$';
+                dScale  = 1.0;
+            end % if
+        case 'x1'
+            sXUnit  = 'mm';
+            sXLabel = '$z \mbox{[mm]}$';
+        case 'x2'
+            sXUnit  = 'mm';
+            sXLabel = '$r \mbox{[mm]}$';
+        case 'x3'
+            sXUnit  = 'mm';
+            sXLabel = '$\theta$';
+    end % switch
+
+    switch(sAxis)
+        case 'p1'
+            dPMin  = dP1Min;
+            dPMax  = dP1Max;
+            dPInit = dP1Init*dScale;
             iNP    = iNP1;
         case 'p2'
-            dPFac  = abs(dRQM)*dEMass*1e3;
-            dPMin  = sqrt(abs(dP2Min)^2 + 1)*dPFac*(dP2Min/abs(dP2Min));
-            dPMax  = sqrt(abs(dP2Max)^2 + 1)*dPFac*(dP2Max/abs(dP2Max));
-            dPInit = dP2Init;
+            dPMin  = dP2Min;
+            dPMax  = dP2Max;
+            dPInit = dP2Init*dScale;
             iNP    = iNP2;
         case 'p3'
-            dPFac  = abs(dRQM)*dEMass*1e3;
-            dPMin  = sqrt(abs(dP3Min)^2 + 1)*dPFac*(dP3Min/abs(dP3Min));
-            dPMax  = sqrt(abs(dP3Max)^2 + 1)*dPFac*(dP3Max/abs(dP3Max));
-            dPInit = dP3Init;
+            dPMin  = dP3Min;
+            dPMax  = dP3Max;
+            dPInit = dP3Init*dScale;
             iNP    = iNP3;
         otherwise
             return;
     end % switch
     
+    if abs(dPMin) > 0.0
+        dPMin = sqrt(abs(dPMin)^2 + 1)*dPFac*(dPMin/abs(dPMin))*dScale;
+    end % if
+    if abs(dPMax) > 0.0
+        dPMax = sqrt(abs(dPMax)^2 + 1)*dPFac*(dPMax/abs(dPMax))*dScale;
+    end % if
+    
+
+    %
+    %  Data Processing
+    % *****************
+    %
+
+    % Data
+    h5Data = oData.Data(iTime, oData.Elements.PHA.(sAxis).(sSpecies));
+    h5Data = h5Data/sum(abs(h5Data));
+    iLen   = length(h5Data);
+
     if strcmpi(sAxis, 'p1') || strcmpi(sAxis, 'p2') || strcmpi(sAxis, 'p3')
         
         % Axes
@@ -167,8 +212,8 @@ function fPlotPhase1D(oData, iTime, sSpecies, sAxis, aCount, dMin, dMax)
                 iXMax = iLen-i+1;
             end % if
         end % for
-        dXMin = aXAxis(iXMin)*0.95;
-        dXMax = aXAxis(iXMax)*1.05;
+        dXMin = aXAxis(iXMin)*0.9;
+        dXMax = aXAxis(iXMax)*1.1;
         
         fprintf('\n');
         fprintf('Momentum spread, min:   %6.1f %s\n', aXAxis(iXMin), sXUnit);
@@ -197,7 +242,7 @@ function fPlotPhase1D(oData, iTime, sSpecies, sAxis, aCount, dMin, dMax)
         if iXMax > iMax
             iXMax = iMax;
             dXMax = aXAxis(iXMax);
-            dYMax = max(dSign*h5Data(iXMin:iXMax))*1.05;
+            dYMax = max(dSign*h5Data(iXMin:iXMax));
         end % if
 
         % Calculate range for initial momentum
@@ -210,13 +255,13 @@ function fPlotPhase1D(oData, iTime, sSpecies, sAxis, aCount, dMin, dMax)
 
         for i=1:length(h5Data)
 
-            if aXAxis(i) < dP1Init-dXPM
+            if aXAxis(i) < dPInit-dXPM
                 dLInit = dLInit + abs(h5Data(i));
             end % if
-            if aXAxis(i) >= dP1Init-dXPM && aXAxis(i) <= dP1Init+dXPM
+            if aXAxis(i) >= dPInit-dXPM && aXAxis(i) <= dP1Init+dXPM
                 dAInit = dAInit + abs(h5Data(i));
             end % if
-            if aXAxis(i) > dP1Init+dXPM
+            if aXAxis(i) > dPInit+dXPM
                 dMInit = dMInit + abs(h5Data(i));
             end % if
             
@@ -243,18 +288,22 @@ function fPlotPhase1D(oData, iTime, sSpecies, sAxis, aCount, dMin, dMax)
     end % if
     
 
-    % Plot
+    %
+    %  Plotting
+    % **********
+    %
+
     fig1 = figure(1);
     clf;
     
     area(aXAxis,dSign*h5Data);
     
     xlim([dXMin,dXMax]);
-    ylim([dYMin,dYMax]);
+    ylim([dYMin,dYMax*1.05]);
 
     title(sprintf('1D Phase Plot for %s',sAxis),'FontSize',22);
     xlabel(sXLabel,'interpreter','LaTex','FontSize',16);
-    ylabel('$N$','interpreter','LaTex','FontSize',16);
+    ylabel('$R/\sum R$','interpreter','LaTex','FontSize',16);
 
 
 end
