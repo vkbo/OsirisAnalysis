@@ -37,12 +37,13 @@ classdef OsirisData
     methods
         
         function obj = OsirisData()
+            
+            LocalConfig;
     
             obj.RawFields = {'x1','x2','x3','p1','p2','p3','ene','q','tag1','tag2'};
             obj.Config    = OsirisConfig();
             
-            obj.DefaultPath{1} = '/scratch/Data';
-            obj.DefaultPath{2} = '/media/vkbo/External/Work/Data';
+            obj.DefaultPath = stFolders;
             fprintf('Scanning default data folder(s)\n');
 
             for f=1:length(obj.DefaultPath)
@@ -63,7 +64,7 @@ classdef OsirisData
     end % methods
     
     %
-    % Setters an Getters
+    % Setters and Getters
     %
 
     methods
