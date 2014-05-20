@@ -398,7 +398,7 @@ classdef OsirisConfig
             
             % Calculate scaling variables
             
-            obj.Variables.Convert.SI.TimeFac   = dTimeStep*iNDump;
+            obj.Variables.Convert.SI.TimeFac = dTimeStep*iNDump;
             
         end % function
         

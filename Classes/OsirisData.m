@@ -163,7 +163,6 @@ classdef OsirisData
             %
             
             sSpecies  = fTranslateSpecies(sSpecies);
-            fprintf('%s\n',sSpecies);
             
             dC        = obj.Config.Variables.Constants.SpeedOfLight;
             dE        = obj.Config.Variables.Constants.ElementaryCharge;
@@ -192,8 +191,11 @@ classdef OsirisData
             
             if strcmpi(sCoords, 'cylindrical')
 
-                sFunction = sprintf('%s.*%s.*x2', stInt.Equations{1}, stInt.Equations{2});
+                %sFunction = sprintf('%s.*%s.*x2', stInt.Equations{1}, stInt.Equations{2});
+                sFunction = sprintf('%s.*x2', stInt.Equations{4});
                 fprintf(' EQ: %s\n', sFunction);
+                fprintf(' X1: %d–%d\n', stInt.Lims{1}, stInt.Lims{2});
+                fprintf(' X2: %d–%d\n', stInt.Lims{3}, stInt.Lims{4});
                 fprintf('\n');
                 
                 fInt = @(x1,x2) eval(sFunction);

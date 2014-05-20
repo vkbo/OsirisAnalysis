@@ -114,7 +114,11 @@ function stReturn = fExtractEq(sEquation, iDim, aLims)
     sX3Eq = strrep(sX3Eq,'^','.^');
     %sX3Eq = strrep(sX3Eq,'x3','z');
     
-    stReturn.Equations = {sX1Eq, sX2Eq, sX3Eq};
+    sEquation = strrep(sEquation,'*','.*');
+    sEquation = strrep(sEquation,'/','./');
+    sEquation = strrep(sEquation,'^','.^');
+
+    stReturn.Equations = {sX1Eq, sX2Eq, sX3Eq, sEquation};
     stReturn.Lims      = {dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max};
 
     %fprintf('%s\n', sX1Eq);
