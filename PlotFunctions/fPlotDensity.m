@@ -20,10 +20,35 @@
 
 function fPlotDensity(oData, iTime, sSpecies, sSave)
 
-    % Input
+    %
+    %  Function Init
+    % ***************
+    %
+
+    if nargin == 0
+       fprintf('\n');
+       fprintf('  Function: fPlotDensity\n');
+       fprintf(' ************************\n');
+       fprintf('  Plots density plot\n');
+       fprintf('\n');
+       fprintf('  Inputs:\n');
+       fprintf(' =========\n');
+       fprintf('  oData    :: OsirisData object\n');
+       fprintf('  sTime    :: Time dump\n');
+       fprintf('  sSpecies :: Which species to look at\n');
+       fprintf('\n');
+       fprintf('  Optional Inputs:\n');
+       fprintf(' ==================\n');
+       fprintf('  sSave    :: ''save'' will save plot to file\n');
+       fprintf('\n');
+       return;
+    end % if
+    
     if nargin < 4
         sSave = '';
     end % if
+
+    sSpecies = fTranslateSpecies(sSpecies);
 
     % Simulation
     dBoxLength  = oData.Config.Variables.Simulation.BoxX1Max;

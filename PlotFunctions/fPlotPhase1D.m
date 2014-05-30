@@ -20,7 +20,7 @@
 function fPlotPhase1D(oData, iTime, sSpecies, sAxis, aCount, dMin, dMax)
 
 
-%
+    %
     %  Function Init
     % ***************
     %

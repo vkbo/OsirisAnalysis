@@ -20,7 +20,30 @@
 
 function fPlotField(oData, iTime, sAxis, sSave)
 
-    % Input
+    %
+    %  Function Init
+    % ***************
+    %
+
+    if nargin == 0
+       fprintf('\n');
+       fprintf('  Function: fPlotField\n');
+       fprintf(' **********************\n');
+       fprintf('  Plots a field from OsirisData\n');
+       fprintf('\n');
+       fprintf('  Inputs:\n');
+       fprintf(' =========\n');
+       fprintf('  oData    :: OsirisData object\n');
+       fprintf('  iTime    :: Which dump to look at\n');
+       fprintf('  sAxis    :: Which axis to plot\n');
+       fprintf('\n');
+       fprintf('  Optional Inputs:\n');
+       fprintf(' ==================\n');
+       fprintf('  sSave    :: ''save'' will save plot to file\n');
+       fprintf('\n');
+       return;
+    end % if
+
     if nargin < 4
         sSave = '';
     end % if
