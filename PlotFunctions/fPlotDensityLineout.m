@@ -15,7 +15,7 @@
 %  None
 %
 
-function fPlotDensityLineout(oData, iTime, sSpecies, iR)
+function fPlotDensityLineout(oData, iTime, iR, sSpecies1, sSpecies2)
 
 
     %
@@ -39,7 +39,23 @@ function fPlotDensityLineout(oData, iTime, sSpecies, iR)
        return;
     end % if
     
-    sSpecies = fTranslateSpecies(sSpecies);
+    if nargin < 5
+        sSpecies2 = '';
+    end % if
+    
+    % Check input variables
+    sSpecies1 = fTranslateSpecies(sSpecies1);
+    sSpecies2 = fTranslateSpecies(sSpecies2);
+    iTMax     = oData.Elements.DENSITY.(sSpecies1).charge.Info.Files - 1;
+    if iTime > iTMax
+        if iTMax == -1
+            fprintf('There is no data in this dataset.\n');
+            return;
+        else
+            fprintf('Specified time step is too large. Changed to %d\n', iTMax);
+            iTime = iTMax;
+        end % if
+    end % if
 
     % Plasma
     dPStart     = oData.Config.Variables.Plasma.PlasmaStart;
@@ -59,30 +75,46 @@ function fPlotDensityLineout(oData, iTime, sSpecies, iR)
     % Prepare axes
     aXAxis      = 1e3*linspace(0,dBoxLength*dLFactor,iBoxNZ);
 
-    h5Data = oData.Data(iTime, 'DENSITY', 'charge', sSpecies);
-    aCharge = h5Data(:,iR);
-    clear h5Data;
-
     fig1 = figure(1);
     clf;
-    
     hold on
-    plot(aXAxis, aCharge);
 
-    sSpecies = strrep(sSpecies, '_', ' ');
-    sSpecies = regexprep(sSpecies,'(\<[a-z])','${upper($1)}');
+    h5Data = oData.Data(iTime, 'DENSITY', 'charge', sSpecies1);
+    aCharge = abs(h5Data(:,iR));
+    aCharge = aCharge/max(aCharge);
+    clear h5Data;
+
+    plot(aXAxis, aCharge, 'color', 'blue');
+
+    sSpecies1   = strrep(sSpecies1, '_', ' ');
+    sSpecies1   = regexprep(sSpecies1,'(\<[a-z])','${upper($1)}');
+    stLegend{1} = sprintf('$\\mbox{%s}$', sSpecies1);
     
-    sTitle = sprintf('%s Density at R = %d cells and S = %0.2f m', sSpecies, iR, iTime*dTFactor*dLFactor);
+    if ~strcmp(sSpecies2, '')
+        h5Data = oData.Data(iTime, 'DENSITY', 'charge', sSpecies2);
+        aCharge = abs(h5Data(:,iR));
+        aCharge = aCharge/max(aCharge);
+        clear h5Data;
+
+        plot(aXAxis, aCharge, 'color', 'red');
+
+        sSpecies2   = strrep(sSpecies2, '_', ' ');
+        sSpecies2   = regexprep(sSpecies2,'(\<[a-z])','${upper($1)}');
+        stLegend{2} = sprintf('$\\mbox{%s}$', sSpecies2);
+    end % if
+
+    sTitle = sprintf('Beam Density at R = %d cells and S = %0.2f m', iR, iTime*dTFactor*dLFactor);
     title(sTitle,'FontSize',18);
     xlabel('$z \;\mbox{[mm]}$','interpreter','LaTex','FontSize',16);
-    ylabel('Density','FontSize',16);
+    ylabel('$|Q/Q_{max}|$','interpreter','LaTex','FontSize',16);
+    legend(stLegend,'interpreter','LaTex','Location','NW');
     
-    %axis([92.1, 95.6, 0.0, 0.18]);
+    axis([0.0, dBoxLength*dLFactor*1e3, -0.05, 1.05]);
     
     pbaspect([1.0,0.4,1.0]);
     hold off;
 
-    saveas(fig1, 'Plots/PlotDensityLineoutFigure1.eps','epsc');
+    %saveas(fig1, 'Plots/PlotDensityLineoutFigure1.eps','epsc');
 
 end
 

@@ -48,7 +48,18 @@ function fPlotDensity(oData, iTime, sSpecies, sSave)
         sSave = '';
     end % if
 
+    % Check input variables
     sSpecies = fTranslateSpecies(sSpecies);
+    iTMax    = oData.Elements.DENSITY.(sSpecies).charge.Info.Files - 1;
+    if iTime > iTMax
+        if iTMax == -1
+            fprintf('There is no data in this dataset.\n');
+            return;
+        else
+            fprintf('Specified time step is too large. Changed to %d\n', iTMax);
+            iTime = iTMax;
+        end % if
+    end % if
 
     % Simulation
     dBoxLength  = oData.Config.Variables.Simulation.BoxX1Max;

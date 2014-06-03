@@ -87,7 +87,7 @@ classdef OsirisData
             obj.Elements = obj.fScanFolder([obj.Path,'/MS'],'');
 
             % Set path in OsirisConfig object
-            obj.Config.Path = obj.Path;            
+            obj.Config.Path = obj.Path;
 
         end % function
         
