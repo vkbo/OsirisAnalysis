@@ -46,8 +46,9 @@ function aTrack = fPlotParticleTrack(oData, sSpecies, sAxis, sOrder, sFilter, dL
         sAxis = 'p1';
     end % if
     
-    iAxis  = fRawAxisToIndex(sAxis);
-    iOrder = fRawAxisToIndex(sOrder);
+    sSpecies = fTranslateSpecies(sSpecies);
+    iAxis    = fRawAxisToIndex(sAxis);
+    iOrder   = fRawAxisToIndex(sOrder);
 
     % Constants
     dEMass      = oData.Config.Variables.Constants.ElectronMass;
@@ -214,11 +215,11 @@ function aTrack = fPlotParticleTrack(oData, sSpecies, sAxis, sOrder, sFilter, dL
 
     xlim([dXMin,dXMax]);
     
-    sTitle = sprintf('%s as a function of S for %s %s',sAxis,sTFilter,sOrder);
+    sTitle = sprintf('%s as a function of S for %s %s', sAxis, sTFilter, sOrder);
     
-    title(sTitle,'FontSize',18);
-    xlabel('$S \;\mbox{[m]}$','interpreter','LaTex','FontSize',16);
-    ylabel(sYLabel,           'interpreter','LaTex','FontSize',16);
+    title(sTitle,'FontSize',16);
+    xlabel('$S \;\mbox{[m]}$','interpreter','LaTex','FontSize',14);
+    ylabel(sYLabel,           'interpreter','LaTex','FontSize',14);
     
     hold off;
     

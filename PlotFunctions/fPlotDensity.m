@@ -93,9 +93,9 @@ function fPlotDensity(oData, iTime, sSpecies, sSave)
     dPosition = (iTime*dTFactor - dPStart)*dLFactor;
     sTitle    = sprintf('Density after %0.2f metres of plasma (Dump %d)',dPosition,iTime);
 
-    title(sTitle,'FontSize',18);
-    xlabel('$z \;\mbox{[mm]}$','interpreter','LaTex','FontSize',16);
-    ylabel('$r \;\mbox{[mm]}$','interpreter','LaTex','FontSize',16);
+    title(sTitle,'FontSize',16);
+    xlabel('$z \;\mbox{[mm]}$','interpreter','LaTex','FontSize',14);
+    ylabel('$r \;\mbox{[mm]}$','interpreter','LaTex','FontSize',14);
     
     % Save plot
     if strcmp(sSave, 'save')

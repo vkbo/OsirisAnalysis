@@ -296,14 +296,16 @@ function fPlotPhase1D(oData, iTime, sSpecies, sAxis, aCount, dMin, dMax)
     fig1 = figure(1);
     clf;
     
-    area(aXAxis,dSign*h5Data);
+    area(aXAxis,dSign*h5Data, 'FaceColor', 'blue', 'EdgeColor', 'blue');
     
     xlim([dXMin,dXMax]);
     ylim([dYMin,dYMax*1.05]);
 
-    title(sprintf('1D Phase Plot for %s',sAxis),'FontSize',22);
-    xlabel(sXLabel,'interpreter','LaTex','FontSize',16);
-    ylabel('$R/\sum R$','interpreter','LaTex','FontSize',16);
+    sSpecies = strrep(sSpecies, '_', ' ');
+    sSpecies = regexprep(sSpecies,'(\<[a-z])','${upper($1)}');
+    title(sprintf('1D Phase Plot for %s for %s',sSpecies,sAxis),'FontSize',16);
+    xlabel(sXLabel,'interpreter','LaTex','FontSize',14);
+    ylabel('$R/\sum R$','interpreter','LaTex','FontSize',14);
 
 
 end

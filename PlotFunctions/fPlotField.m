@@ -92,7 +92,7 @@ function fPlotField(oData, iTime, sAxis, sSave)
     dPosition = (iTime*dTFac - dPSt)*dLFac;
     sTitle    = sprintf('Field %s in GeV after %0.2f metres of plasma (Dump %d)',sAxis,dPosition,iTime);
     
-    title(sTitle,'FontSize',18);
+    title(sTitle,'FontSize',16);
     xlabel('$z \;\mbox{[mm]}$',   'interpreter','LaTex','FontSize',16);
     ylabel('$r \;\mbox{[mm]}$',   'interpreter','LaTex','FontSize',16);
 

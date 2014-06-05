@@ -26,7 +26,9 @@ function aData = fPlotRawHist(oData, iTime, sSpecies, sAxis, iBinSize)
     if nargin < 5
         iBinSize = 1;
     end % if
-    
+
+    sSpecies = fTranslateSpecies(sSpecies);
+
 
     % Extract simulation variables
     
