@@ -9,16 +9,12 @@
 %  sTime    :: Time dump
 %  sSpecies :: Which species to look at
 %
-%  Optional Inputs:
-% ==================
-%  sSave    :: 'save' will save plot to file
-%
 %  Outputs:
 % ==========
 %  None
 %
 
-function fPlotDensity(oData, iTime, sSpecies, sSave)
+function fPlotDensity(oData, iTime, sSpecies)
 
     %
     %  Function Init
@@ -37,15 +33,7 @@ function fPlotDensity(oData, iTime, sSpecies, sSave)
        fprintf('  sTime    :: Time dump\n');
        fprintf('  sSpecies :: Which species to look at\n');
        fprintf('\n');
-       fprintf('  Optional Inputs:\n');
-       fprintf(' ==================\n');
-       fprintf('  sSave    :: ''save'' will save plot to file\n');
-       fprintf('\n');
        return;
-    end % if
-    
-    if nargin < 4
-        sSave = '';
     end % if
 
     % Check input variables
@@ -83,8 +71,6 @@ function fPlotDensity(oData, iTime, sSpecies, sSave)
     h5Data      = oData.Data(iTime, oData.Elements.DENSITY.(sSpecies).charge);
 
     % Plot
-    fig1 = figure(1);
-    clf
 
     imagesc(aXAxis, aYAxis, dE0*transpose([fliplr(h5Data),h5Data]));
     colormap(jet);
@@ -97,12 +83,4 @@ function fPlotDensity(oData, iTime, sSpecies, sSave)
     xlabel('$z \;\mbox{[mm]}$','interpreter','LaTex','FontSize',14);
     ylabel('$r \;\mbox{[mm]}$','interpreter','LaTex','FontSize',14);
     
-    % Save plot
-    if strcmp(sSave, 'save')
-        pbaspect([1.0,0.5,1.0]);
-        [sPath, ~, ~] = fileparts(mfilename('fullpath'));
-        saveas(fig1, sprintf('%s/../Plots/PlotDensityFigure1.eps',sPath),'epsc');
-        pbaspect('auto');
-    end % if
-
 end

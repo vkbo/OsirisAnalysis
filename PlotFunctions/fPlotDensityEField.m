@@ -5,10 +5,11 @@
 %
 %  Inputs:
 % =========
-%  oData    :: OsirisData object
-%  iTime    :: Dump number
-%  sSpecies :: Which species
-%  iR       :: R-value
+%  oData     :: OsirisData object
+%  iTime     :: Dump number
+%  iR        :: R-value
+%  sSpecies1 :: Beam 1
+%  sSpecies2 :: Beam 2
 %
 %  Outputs:
 % ==========
@@ -31,10 +32,11 @@ function fPlotDensityEField(oData, iTime, iR, sSpecies1, sSpecies2)
        fprintf('\n');
        fprintf('  Inputs:\n');
        fprintf(' =========\n');
-       fprintf('  oData    :: OsirisData object\n');
-       fprintf('  iTime    :: Dump number\n');
-       fprintf('  sSpecies :: Which species\n');
-       fprintf('  iR       :: R-value\n');
+       fprintf('  oData     :: OsirisData object\n');
+       fprintf('  iTime     :: Dump number\n');
+       fprintf('  iR        :: R-value\n');
+       fprintf('  sSpecies1 :: Beam 1\n');
+       fprintf('  sSpecies2 :: Beam 2\n');
        fprintf('\n');
        return;
     end % if
@@ -78,13 +80,11 @@ function fPlotDensityEField(oData, iTime, iR, sSpecies1, sSpecies2)
     cBeam1      = 'blue';
     cBeam2      = 'red';
 
-    fig1 = figure(1);
-    clf;
     hold on
 
     % EField
     h5Data = oData.Data(iTime, 'FLD', 'e1', '');
-    aEField = h5Data(:,iR)*dE0*1e-9;
+    aEField = mean(h5Data(:,iR-2:iR+2),2)*dE0*1e-9;
     aEField = fSmoothVector(aEField, 5);
     dScale  = abs(max(aEField));
     aEField = aEField/dScale;
@@ -94,9 +94,9 @@ function fPlotDensityEField(oData, iTime, iR, sSpecies1, sSpecies2)
     stLegend{1} = sprintf('E-Field [Max = %.3f GeV]', dScale);
 
     % Beam 1
-    h5Data = oData.Data(iTime, 'DENSITY', 'charge', sSpecies1);
-    aCharge = abs(h5Data(:,iR));
-    aCharge = fSmoothVector(aCharge, 5);
+    h5Data  = oData.Data(iTime, 'DENSITY', 'charge', sSpecies1);
+    aCharge = mean(abs(h5Data(:,iR-2:iR+2)),2);
+    %aCharge = fSmoothVector(aCharge, 5);
     dScale  = max(aCharge);
     aCharge = aCharge/dScale;
     clear h5Data;
@@ -109,9 +109,9 @@ function fPlotDensityEField(oData, iTime, iR, sSpecies1, sSpecies2)
     
     % Beam 2
     if ~strcmp(sSpecies2, '')
-        h5Data = oData.Data(iTime, 'DENSITY', 'charge', sSpecies2);
-        aCharge = abs(h5Data(:,iR));
-        aCharge = fSmoothVector(aCharge, 5);
+        h5Data  = oData.Data(iTime, 'DENSITY', 'charge', sSpecies2);
+        aCharge = mean(abs(h5Data(:,iR-2:iR+2)),2);
+        %aCharge = fSmoothVector(aCharge, 5);
         dScale  = max(aCharge);
         aCharge = aCharge/dScale;
         clear h5Data;
@@ -133,7 +133,6 @@ function fPlotDensityEField(oData, iTime, iR, sSpecies1, sSpecies2)
     
     axis([0.0, dBoxLength*dLFactor*1e3, -1.05, 1.05]);
     
-    pbaspect([1.0,0.4,1.0]);
     hold off;
 
     %saveas(fig1, 'Plots/PlotDensityLineoutFigure1.eps','epsc');
