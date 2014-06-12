@@ -3,6 +3,9 @@
 % Script to generate an animation of the evolution of the ElectronBeam
 %
 
+figMain = figure;
+set(figMain, 'Position', [200 200 1200 700]);
+
 iStart = 12;
 iEnd   = 116;
 
@@ -13,7 +16,6 @@ clear M;
 
 for k=iStart:iEnd
     
-    figMain = figure(1);
     clf;
     i = k-iStart+1;
 
@@ -27,8 +29,8 @@ for k=iStart:iEnd
     colormap(gray);
     fPlotPhase2D(od, k, 'EB', 'x1', 'p1');
     title('Electron Beam x1p1', 'FontSize', 14);
-    axis([xMin, xMax, -20, 500]);
-    caxis([0, 1e-5]);
+    axis([xMin, xMax, -20, 800]);
+    caxis([0, 1e-3]);
     freezeColors;
     
     % ElectronBeam Density
@@ -52,3 +54,12 @@ for k=iStart:iEnd
     M(i) = getframe(gcf);
 
 end % for
+
+movie2avi(M, sprintf('AnimElectronBeam-%s.avi', fTimeStamp), 'fps', 2);
+
+clear i;
+clear k;
+clear iEnd;
+clear iStart;
+clear xMin;
+clear xMax;
