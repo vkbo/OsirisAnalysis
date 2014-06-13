@@ -126,9 +126,9 @@ function fPlotDensityEField(oData, iTime, iR, sSpecies1, sSpecies2)
     dPosition = (iTime*dTFactor - dPStart)*dLFactor;
     sTitle = sprintf('Beam density and E-field after %0.2f metres of plasma (Dump %d)', dPosition, iTime);
     %sTitle = sprintf('Beam Density at R = %d cells and S = %0.2f m', iR, iTime*dTFactor*dLFactor);
-    title(sTitle,'FontSize',16);
-    xlabel('$z \;\mbox{[mm]}$','interpreter','LaTex','FontSize',14);
-    ylabel('$|Q/Q_{max}|\mbox{ or }E/E_{max}$','interpreter','LaTex','FontSize',14);
+    title(sTitle,'FontSize',14);
+    xlabel('$z \;\mbox{[mm]}$','interpreter','LaTex','FontSize',12);
+    ylabel('$|Q/Q_{max}|\mbox{ or }E/E_{max}$','interpreter','LaTex','FontSize',12);
     legend(stLegend,'Location','SE');
     
     axis([0.0, dBoxLength*dLFactor*1e3, -1.05, 1.05]);

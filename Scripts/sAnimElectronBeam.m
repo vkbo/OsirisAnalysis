@@ -7,7 +7,7 @@ figMain = figure;
 set(figMain, 'Position', [200 200 1200 700]);
 
 iStart = 12;
-iEnd   = 116;
+iEnd   = 20;
 
 xMin   = 185;
 xMax   = 189.2;
@@ -51,11 +51,15 @@ for k=iStart:iEnd
     title('Ez-Field', 'FontSize', 14);
     axis([xMin, xMax, -0.7, 0.7]);
     
-    M(i) = getframe(gcf);
+    drawnow;
+    
+    M(i) = getframe_nosteal_focus(figMain,[1200 700]);
 
 end % for
 
-movie2avi(M, sprintf('AnimElectronBeam-%s.avi', fTimeStamp), 'fps', 2);
+movie2avi(M, 'Movies/Temp.avi', 'fps', 2);
+[~,~] = system(sprintf('avconv -i Movies/Temp.avi -vcodec msmpeg4v2 -s 1200x700 -b 2000k Movies/AnimElectronBeam-%s.avi', fTimeStamp));
+[~,~] = system('rm Movies/Temp.avi');
 
 clear i;
 clear k;
