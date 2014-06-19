@@ -6,8 +6,8 @@
 figMain = figure;
 set(figMain, 'Position', [200 200 1200 700]);
 
-iStart = 12;
-iEnd   = 20;
+iStart = 0;
+iEnd   = 38;
 
 xMin   = 185;
 xMax   = 189.2;
@@ -22,7 +22,7 @@ for k=iStart:iEnd
     % Beam density lineout
     subplot(2,3,[1:2]);
     fPlotDensityEField(od, k, 5, 'PB', 'EB');
-    axis([xMin, xMax, -1.05, 1.05]);
+    %axis([xMin, xMax, -1.05, 1.05]);
     
     % Electron Beam x1p1
     subplot(2,3,3);
@@ -35,13 +35,13 @@ for k=iStart:iEnd
     
     % ElectronBeam Density
     subplot(2,3,4);
-    fPlotDensity(od, k, 'EB');
+    stEInfo = fPlotDensity(od, k, 'EB');
     title('Electron Beam Density', 'FontSize', 14);
     axis([xMin, xMax, -0.2, 0.2]);
 
     % ProtonBeam Density
     subplot(2,3,5);
-    fPlotDensity(od, k, 'PB');
+    stPInfo = fPlotDensity(od, k, 'PB');
     title('Proton Beam Density', 'FontSize', 14);
     axis([xMin, xMax, -0.2, 0.2]);
 

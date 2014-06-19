@@ -84,19 +84,17 @@ function fPlotDensityEField(oData, iTime, iR, sSpecies1, sSpecies2)
 
     % EField
     h5Data = oData.Data(iTime, 'FLD', 'e1', '');
-    aEField = mean(h5Data(:,iR-2:iR+2),2)*dE0*1e-9;
-    aEField = fSmoothVector(aEField, 5);
-    dScale  = abs(max(aEField));
+    aEField = mean(h5Data(:,iR-2:iR+2),2)*dE0*1e-6;
+    dScale  = max(abs(aEField));
     aEField = aEField/dScale;
     clear h5Data;
 
     area(aXAxis, aEField, 'FaceColor', cEField, 'EdgeColor', cEField);
-    stLegend{1} = sprintf('E-Field [Max = %.3f GeV]', dScale);
+    stLegend{1} = sprintf('E-Field [Max = %.2f MeV]', dScale);
 
     % Beam 1
     h5Data  = oData.Data(iTime, 'DENSITY', 'charge', sSpecies1);
     aCharge = mean(abs(h5Data(:,iR-2:iR+2)),2);
-    %aCharge = fSmoothVector(aCharge, 5);
     dScale  = max(aCharge);
     aCharge = aCharge/dScale;
     clear h5Data;
@@ -111,7 +109,6 @@ function fPlotDensityEField(oData, iTime, iR, sSpecies1, sSpecies2)
     if ~strcmp(sSpecies2, '')
         h5Data  = oData.Data(iTime, 'DENSITY', 'charge', sSpecies2);
         aCharge = mean(abs(h5Data(:,iR-2:iR+2)),2);
-        %aCharge = fSmoothVector(aCharge, 5);
         dScale  = max(aCharge);
         aCharge = aCharge/dScale;
         clear h5Data;
@@ -125,13 +122,16 @@ function fPlotDensityEField(oData, iTime, iR, sSpecies1, sSpecies2)
 
     dPosition = (iTime*dTFactor - dPStart)*dLFactor;
     sTitle = sprintf('Beam density and E-field after %0.2f metres of plasma (Dump %d)', dPosition, iTime);
-    %sTitle = sprintf('Beam Density at R = %d cells and S = %0.2f m', iR, iTime*dTFactor*dLFactor);
     title(sTitle,'FontSize',14);
     xlabel('$z \;\mbox{[mm]}$','interpreter','LaTex','FontSize',12);
     ylabel('$|Q/Q_{max}|\mbox{ or }E/E_{max}$','interpreter','LaTex','FontSize',12);
     legend(stLegend,'Location','SE');
     
     axis([0.0, dBoxLength*dLFactor*1e3, -1.05, 1.05]);
+    if dPStart > iTime*dTFactor && dPStart < iTime*dTFactor+dBoxLength
+        dPlasma = (dPStart-iTime*dTFactor)*dLFactor*1e3;
+        line([dPlasma dPlasma], [-1.05 1.05], 'LineStyle', '--', 'Color', [0.8 0 0.8]);
+    end % if
     
     hold off;
 

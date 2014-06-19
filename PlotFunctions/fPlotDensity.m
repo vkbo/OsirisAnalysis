@@ -14,7 +14,7 @@
 %  None
 %
 
-function fPlotDensity(oData, iTime, sSpecies)
+function stInfo = fPlotDensity(oData, iTime, sSpecies)
 
     %
     %  Function Init
@@ -48,6 +48,9 @@ function fPlotDensity(oData, iTime, sSpecies)
             iTime = iTMax;
         end % if
     end % if
+    
+    % Prepare output
+    stInfo = struct;
 
     % Constants
     dC          = oData.Config.Variables.Constants.SpeedOfLight;
@@ -56,9 +59,10 @@ function fPlotDensity(oData, iTime, sSpecies)
     % Simulation
     dBoxLength  = oData.Config.Variables.Simulation.BoxX1Max;
     iBoxNZ      = oData.Config.Variables.Simulation.BoxNX1;
+    dDeltaZ     = dBoxLength/double(iBoxNZ);
     dBoxRadius  = oData.Config.Variables.Simulation.BoxX2Max;
     iBoxNR      = oData.Config.Variables.Simulation.BoxNX2;
-    dBoxRScale  = dBoxRadius/double(iBoxNR);
+    dDeltaR     = dBoxRadius/double(iBoxNR);
     
     % Factors
     dTFactor    = oData.Config.Variables.Convert.SI.TimeFac;
@@ -76,17 +80,39 @@ function fPlotDensity(oData, iTime, sSpecies)
     % Get data
     h5Data      = oData.Data(iTime, oData.Elements.DENSITY.(sSpecies).charge);
     
+    % Find peak
+    aProjZ = zeros(iBoxNZ,1);
+    aProjR = zeros(iBoxNR,1);
+    for i=1:iBoxNZ
+        aProjZ(i) = sum(h5Data(i,:));
+    end % for
+    for i=1:iBoxNR
+        aProjR(i) = sum(h5Data(:,i));
+    end % for
+    
+    [dZMax, iZMax] = max(abs(aProjZ));
+    [dRMax, iRMax] = max(abs(aProjR));
+    
+    stInfo.ZPeakVal = dZMax;
+    stInfo.ZPeakInd = iZMax;
+    stInfo.RPeakVal = dRMax;
+    stInfo.RPeakInd = iRMax;
+    
     % Integrate beam
     dBeam = 0.0;
     for i=1:iBoxNR
+        %dBeam = dBeam + double(i)*sum(h5Data(:,i));
+        %dBeam = dBeam + (double(i)^2-(double(i)-1)^2)*sum(h5Data(:,i));
         dBeam = dBeam + double(i)*sum(h5Data(:,i));
     end % for
-    dBeam = dBeam*2*pi*dC*dE*dBoxRScale/dOmegaP;
+    %dBeam = dBeam*2*pi*dLFactor*dE*dBoxRScale*1e9;
+    %dBeam = dBeam*2*pi*dDeltaZ*dDeltaR^2*dE*1e9*dOmegaP^3/dC^3;
+    %dBeam = dBeam*2*pi;
     fprintf('Sum: %d\n', dBeam);
 
     % Plot
 
-    imagesc(aXAxis, aYAxis, dE0*transpose([fliplr(h5Data),h5Data]));
+    imagesc(aXAxis, aYAxis, transpose([fliplr(h5Data),h5Data]));
     colormap(jet);
     colorbar();
 
