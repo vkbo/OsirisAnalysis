@@ -82,7 +82,17 @@ function fPlotPhase1D(oData, iTime, sSpecies, sAxis, aCount, dMin, dMax)
     dP1Max  = oData.Config.Variables.Beam.(sSpecies).DiagP1Max;
     dP2Max  = oData.Config.Variables.Beam.(sSpecies).DiagP2Max;
     dP3Max  = oData.Config.Variables.Beam.(sSpecies).DiagP3Max;
-    
+
+    iNX1    = oData.Config.Variables.Beam.(sSpecies).DiagNX1;
+    iNX2    = oData.Config.Variables.Beam.(sSpecies).DiagNX2;
+    iNX3    = oData.Config.Variables.Beam.(sSpecies).DiagNX3;
+    dX1Min  = oData.Config.Variables.Beam.(sSpecies).DiagX1Min;
+    dX2Min  = oData.Config.Variables.Beam.(sSpecies).DiagX2Min;
+    dX3Min  = oData.Config.Variables.Beam.(sSpecies).DiagX3Min;
+    dX1Max  = oData.Config.Variables.Beam.(sSpecies).DiagX1Max;
+    dX2Max  = oData.Config.Variables.Beam.(sSpecies).DiagX2Max;
+    dX3Max  = oData.Config.Variables.Beam.(sSpecies).DiagX3Max;
+
     % Beam
     dRQM    = oData.Config.Variables.Beam.(sSpecies).RQM;
     dEMass  = oData.Config.Variables.Constants.ElectronMassMeV;
@@ -160,8 +170,17 @@ function fPlotPhase1D(oData, iTime, sSpecies, sAxis, aCount, dMin, dMax)
             dPInit = dP3Init*dScale;
             iNP    = iNP3;
         case 'x1'
+            dXMin = dX1Min;
+            dXMax = dX1Max;
+            iNX   = iNX1;
         case 'x2'
+            dXMin = dX2Min;
+            dXMax = dX2Max;
+            iNX   = iNX2;
         case 'x3'
+            dXMin = dX3Min;
+            dXMax = dX3Max;
+            iNX   = iNX3;
     end % switch
     
 
@@ -285,6 +304,10 @@ function fPlotPhase1D(oData, iTime, sSpecies, sAxis, aCount, dMin, dMax)
             fprintf(' %6.1f %s | %6.1f %s | %7.3f %%\n', aCount(j-1), sXUnit, aCount(j), sXUnit, 100*aTCount(j-1)/dSum);
         end % for
         fprintf('\n');
+        
+    else % For x1, x2 or x3
+        
+        aXAxis = linspace(dXMin,dXMax,iNX);
 
     end % if
     
@@ -297,16 +320,16 @@ function fPlotPhase1D(oData, iTime, sSpecies, sAxis, aCount, dMin, dMax)
     fig1 = figure(1);
     clf;
     
-    area(aXAxis,dSign*h5Data, 'FaceColor', 'blue', 'EdgeColor', 'blue');
+    area(aXAxis, dSign*h5Data, 'FaceColor', 'blue', 'EdgeColor', 'blue');
     
-    xlim([dXMin,dXMax]);
-    ylim([dYMin,dYMax*1.05]);
+    %xlim([dXMin, dXMax]);
+    %ylim([dYMin, dYMax*1.05]);
 
-    sSpecies = strrep(sSpecies, '_', ' ');
-    sSpecies = regexprep(sSpecies,'(\<[a-z])','${upper($1)}');
-    title(sprintf('1D Phase Plot for %s for %s',sSpecies,sAxis),'FontSize',16);
-    xlabel(sXLabel,'interpreter','LaTex','FontSize',14);
-    ylabel('$R/\sum R$','interpreter','LaTex','FontSize',14);
+    %sSpecies = strrep(sSpecies, '_', ' ');
+    %sSpecies = regexprep(sSpecies,'(\<[a-z])','${upper($1)}');
+    %title(sprintf('1D Phase Plot for %s for %s',sSpecies,sAxis),'FontSize',16);
+    %xlabel(sXLabel,'interpreter','LaTex','FontSize',14);
+    %ylabel('$R/\sum R$','interpreter','LaTex','FontSize',14);
 
 
 end
