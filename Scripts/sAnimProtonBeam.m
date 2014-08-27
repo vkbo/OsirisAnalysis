@@ -9,8 +9,8 @@ set(figMain, 'Position', [200 200 1200 700]);
 iStart = 0;
 iEnd   = 122;
 
-xMin   = 175;
-xMax   = 200;
+xMin   = 0;
+xMax   = 320;
 
 clear M;
 
@@ -21,7 +21,7 @@ for k=iStart:iEnd
 
     % Beam density lineout
     subplot(2,6,[1:4]);
-    fPlotDensityEField(od, k, 5, 'PB');
+    fPlotDensityEField(od, k, 11, 'PB');
     axis([xMin, xMax, -1.05, 1.05]);
     
     % Proton Beam x1p1

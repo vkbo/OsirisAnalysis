@@ -193,6 +193,8 @@ classdef OsirisData
 
                 %sFunction = sprintf('%s.*%s.*x2', stInt.Equations{1}, stInt.Equations{2});
                 sFunction = sprintf('%s.*x2', stInt.Equations{4});
+                %sFunction = strrep(sFunction, 'sin', 'fPosSin');
+                %sFunction = strrep(sFunction, 'cos', 'fPosCos');
                 fprintf(' EQ: %s\n', sFunction);
                 fprintf(' X1: %d–%d\n', stInt.Lims{1}, stInt.Lims{2});
                 fprintf(' X2: %d–%d\n', stInt.Lims{3}, stInt.Lims{4});

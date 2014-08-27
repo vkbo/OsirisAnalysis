@@ -58,7 +58,7 @@ function fPlotPhase1D(oData, iTime, sSpecies, sAxis, aCount, dMin, dMax)
     if nargin < 7
         dMax = 1.0e1000;
     end % if
-
+    
     sSpecies = fTranslateSpecies(sSpecies);
     aAllowed = {'p1','p2','p3','x1','x2','x3'};
     if ~ismember(sAxis, aAllowed)
@@ -159,16 +159,10 @@ function fPlotPhase1D(oData, iTime, sSpecies, sAxis, aCount, dMin, dMax)
             dPMax  = dP3Max;
             dPInit = dP3Init*dScale;
             iNP    = iNP3;
-        otherwise
-            return;
+        case 'x1'
+        case 'x2'
+        case 'x3'
     end % switch
-    
-    if abs(dPMin) > 0.0
-        dPMin = sqrt(abs(dPMin)^2 + 1)*dPFac*(dPMin/abs(dPMin))*dScale;
-    end % if
-    if abs(dPMax) > 0.0
-        dPMax = sqrt(abs(dPMax)^2 + 1)*dPFac*(dPMax/abs(dPMax))*dScale;
-    end % if
     
 
     %
@@ -177,12 +171,19 @@ function fPlotPhase1D(oData, iTime, sSpecies, sAxis, aCount, dMin, dMax)
     %
 
     % Data
-    h5Data = oData.Data(iTime, oData.Elements.PHA.(sAxis).(sSpecies));
+    h5Data = oData.Data(iTime, 'PHA', sAxis, sSpecies);
     h5Data = h5Data/sum(abs(h5Data));
     iLen   = length(h5Data);
 
     if strcmpi(sAxis, 'p1') || strcmpi(sAxis, 'p2') || strcmpi(sAxis, 'p3')
         
+        if abs(dPMin) > 0.0
+            dPMin = sqrt(abs(dPMin)^2 + 1)*dPFac*(dPMin/abs(dPMin))*dScale;
+        end % if
+        if abs(dPMax) > 0.0
+            dPMax = sqrt(abs(dPMax)^2 + 1)*dPFac*(dPMax/abs(dPMax))*dScale;
+        end % if
+    
         % Axes
         aXAxis = linspace(dPMin,dPMax,iNP);
 

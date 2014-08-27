@@ -290,7 +290,7 @@ function fPlotPhase2D(oData, iTime, sSpecies, sAxis1, sAxis2, sCAxis)
     set(gca,'YDir','Normal');
 
     sTitle = sprintf('2D Phase Plot for %s after %.2f m of Plasma', sAxis, dSP);
-    title(sTitle,'FontSize',18);
+    title(sTitle,'FontSize',16);
     xlabel(sXLabel,'interpreter','LaTex','FontSize',14);
     ylabel(sYLabel,'interpreter','LaTex','FontSize',14);
 

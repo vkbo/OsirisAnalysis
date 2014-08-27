@@ -21,7 +21,7 @@ for k=iStart:iEnd
 
     % Beam density lineout
     subplot(2,3,[1:2]);
-    fPlotDensityEField(od, k, 5, 'PB', 'EB');
+    fPlotDensityEField(od, k, 13, 'PB', 'EB');
     %axis([xMin, xMax, -1.05, 1.05]);
     
     % Electron Beam x1p1
@@ -29,7 +29,7 @@ for k=iStart:iEnd
     colormap(gray);
     fPlotPhase2D(od, k, 'EB', 'x1', 'p1');
     title('Electron Beam x1p1', 'FontSize', 14);
-    axis([xMin, xMax, -20, 800]);
+    axis([xMin, xMax, -20, 1500]);
     caxis([0, 1e-3]);
     freezeColors;
     

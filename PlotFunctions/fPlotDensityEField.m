@@ -84,7 +84,7 @@ function fPlotDensityEField(oData, iTime, iR, sSpecies1, sSpecies2)
 
     % EField
     h5Data = oData.Data(iTime, 'FLD', 'e1', '');
-    aEField = mean(h5Data(:,iR-2:iR+2),2)*dE0*1e-6;
+    aEField = mean(h5Data(:,iR-10:iR+10),2)*dE0*1e-6;
     dScale  = max(abs(aEField));
     aEField = aEField/dScale;
     clear h5Data;
@@ -94,7 +94,7 @@ function fPlotDensityEField(oData, iTime, iR, sSpecies1, sSpecies2)
 
     % Beam 1
     h5Data  = oData.Data(iTime, 'DENSITY', 'charge', sSpecies1);
-    aCharge = mean(abs(h5Data(:,iR-2:iR+2)),2);
+    aCharge = mean(abs(h5Data(:,iR-10:iR+10)),2);
     dScale  = max(aCharge);
     aCharge = aCharge/dScale;
     clear h5Data;
@@ -108,7 +108,7 @@ function fPlotDensityEField(oData, iTime, iR, sSpecies1, sSpecies2)
     % Beam 2
     if ~strcmp(sSpecies2, '')
         h5Data  = oData.Data(iTime, 'DENSITY', 'charge', sSpecies2);
-        aCharge = mean(abs(h5Data(:,iR-2:iR+2)),2);
+        aCharge = mean(abs(h5Data(:,iR-10:iR+10)),2);
         dScale  = max(aCharge);
         aCharge = aCharge/dScale;
         clear h5Data;
