@@ -21,8 +21,6 @@ classdef EField
     
     properties (GetAccess = 'private', SetAccess = 'private')
 
-        PlotTools = []; % Plot Toolbox
-
     end % properties
 
     %
@@ -33,8 +31,7 @@ classdef EField
         
         function obj = EField(oData)
             
-            obj.Data      = oData;
-            obj.PlotTools = PlotTools();
+            obj.Data = oData;
             
         end % function
         
@@ -54,7 +51,7 @@ classdef EField
     
     methods (Access = 'public')
         
-        function PlotSigmaEToEMean(obj, sStart, sStop)
+        function SigmaEToEMean(obj, sStart, sStop)
 
             if nargin < 2
                 sStart = 'Start';
@@ -64,8 +61,21 @@ classdef EField
                 sStop = 'End';
             end % if
             
-            fprintf('Test: %d\n', obj.PlotTools.StringToDump(obj.Data, 'PEnd'));
-         
+            fprintf('Test: %d\n', fStringToDump(obj.Data, 'End'));
+
+        end % function
+
+        function FieldEvolution(obj, sStart, sStop)
+
+            if nargin < 2
+                sStart = 'Start';
+            end % if
+
+            if nargin < 3
+                sStop = 'End';
+            end % if
+            
+        
         end % function
     
     end % methods

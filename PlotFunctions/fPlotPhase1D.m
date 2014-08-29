@@ -197,10 +197,10 @@ function fPlotPhase1D(oData, iTime, sSpecies, sAxis, aCount, dMin, dMax)
     if strcmpi(sAxis, 'p1') || strcmpi(sAxis, 'p2') || strcmpi(sAxis, 'p3')
         
         if abs(dPMin) > 0.0
-            dPMin = sqrt(abs(dPMin)^2 + 1)*dPFac*(dPMin/abs(dPMin))*dScale;
+            dPMin = sqrt(abs(dPMin)^2 + 1)*dPFac*(dPMin/abs(dPMin))*dScale
         end % if
         if abs(dPMax) > 0.0
-            dPMax = sqrt(abs(dPMax)^2 + 1)*dPFac*(dPMax/abs(dPMax))*dScale;
+            dPMax = sqrt(abs(dPMax)^2 + 1)*dPFac*(dPMax/abs(dPMax))*dScale
         end % if
     
         % Axes
@@ -325,11 +325,11 @@ function fPlotPhase1D(oData, iTime, sSpecies, sAxis, aCount, dMin, dMax)
     %xlim([dXMin, dXMax]);
     %ylim([dYMin, dYMax*1.05]);
 
-    %sSpecies = strrep(sSpecies, '_', ' ');
-    %sSpecies = regexprep(sSpecies,'(\<[a-z])','${upper($1)}');
-    %title(sprintf('1D Phase Plot for %s for %s',sSpecies,sAxis),'FontSize',16);
-    %xlabel(sXLabel,'interpreter','LaTex','FontSize',14);
-    %ylabel('$R/\sum R$','interpreter','LaTex','FontSize',14);
+    sSpecies = strrep(sSpecies, '_', ' ');
+    sSpecies = regexprep(sSpecies,'(\<[a-z])','${upper($1)}');
+    title(sprintf('1D Phase Plot for %s for %s',sSpecies,sAxis),'FontSize',16);
+    xlabel(sXLabel,'interpreter','LaTex','FontSize',14);
+    ylabel('$R/\sum R$','interpreter','LaTex','FontSize',14);
 
 
 end

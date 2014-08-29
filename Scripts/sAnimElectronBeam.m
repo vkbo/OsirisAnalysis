@@ -9,8 +9,8 @@ set(figMain, 'Position', [200 200 1200 700]);
 iStart = 0;
 iEnd   = 122;
 
-xMin   = 185;
-xMax   = 189.2;
+xMin   = 210;
+xMax   = 230;
 
 clear M;
 
@@ -21,8 +21,8 @@ for k=iStart:iEnd
 
     % Beam density lineout
     subplot(2,3,[1:2]);
-    fPlotDensityEField(od, k, 13, 'PB', 'EB');
-    %axis([xMin, xMax, -1.05, 1.05]);
+    fPlotDensityEField(od, k, [3,13], 'PB', 'EB');
+    axis([xMin, xMax, -1.05, 1.05]);
     
     % Electron Beam x1p1
     subplot(2,3,3);
