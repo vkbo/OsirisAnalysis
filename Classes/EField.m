@@ -75,6 +75,17 @@ classdef EField
                 sStop = 'End';
             end % if
             
+            iStart = fStringToDump(obj.Data, sStart);
+            iStop  = fStringToDump(obj.Data, sStop);
+            
+            aTAxis = obj.fGetTimeAxis;
+            aTAxis = aTAxis(iStart+1:iStop+1);
+            
+            for i=iStart:iStop
+                
+                
+                
+            end % for
         
         end % function
     
@@ -85,6 +96,18 @@ classdef EField
     %
     
     methods (Access = 'private')
+        
+        function aTAxis = fGetTimeAxis(obj);
+            
+            iDumps  = obj.Data.Elements.FLD.e1.Info.Files-1;
+            
+            dPStart = obj.Data.Config.Variables.Plasma.PlasmaStart;
+            dTFac   = obj.Data.Config.Variables.Convert.SI.TimeFac;
+            dLFac   = obj.Data.Config.Variables.Convert.SI.LengthFac;
+            
+            aTAxis = (linspace(0.0, dTFac*iDumps, iDumps+1)-dPStart)*dLFac;
+            
+        end % function
     
     end % methods
 
