@@ -114,6 +114,18 @@ classdef OsirisData
     
     methods (Access = 'public')
         
+        function Info(obj)
+            
+            fprintf('\n');
+            fprintf(' Dataset Info\n');
+            fprintf('**************\n');
+            fprintf('\n');
+            fprintf('Name: %s\n', obj.Config.Name);
+            fprintf('Path: %s\n', obj.Config.Path);
+            fprintf('\n');
+
+        end % function
+        
         function PlasmaInfo(obj)
             
             %

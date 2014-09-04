@@ -69,7 +69,9 @@ classdef Momentum
     
     methods (Access = 'public')
         
-        function SigmaEToEMean(obj, sStart, sStop)
+        function stReturn = SigmaEToEMean(obj, sStart, sStop)
+
+            stReturn = {};
 
             if nargin < 2
                 sStart = 'Start';
@@ -79,7 +81,37 @@ classdef Momentum
                 sStop = 'End';
             end % if
             
-            fprintf('Test: %d\n', fStringToDump(obj.Data, 'End'));
+            % Calculate range
+
+            iStart = fStringToDump(obj.Data, sStart);
+            iStop  = fStringToDump(obj.Data, sStop);
+            
+
+            % Calculate axes
+            
+            aTAxis = obj.fGetTimeAxis;
+            aTAxis = aTAxis(iStart+1:iStop+1);
+            
+            aMean  = zeros(1, length(aTAxis));
+            aSigma = zeros(1, length(aTAxis));
+            aData  = zeros(1, length(aTAxis));
+            
+            for i=iStart:iStop
+                
+                h5Data             = obj.Data.Data(i, 'RAW', '', obj.Beam);
+                aMean(i-iStart+1)  = obj.MomentumToEnergy(mean(h5Data(:,4)));
+                aSigma(i-iStart+1) = obj.MomentumToEnergy(std(h5Data(:,4)));
+                aData(i-iStart+1)  = aSigma(i-iStart+1)/aMean(i-iStart+1);
+                
+            end % for
+            
+            
+            % Return data
+            
+            stReturn.TimeAxis = aTAxis;
+            stReturn.Mean     = aMean;
+            stReturn.Sigma    = aSigma;
+            stReturn.Data     = aData;
 
         end % function
 
@@ -155,16 +187,33 @@ classdef Momentum
             aTAxis = aTAxis(iStart+1:iStop+1);
             aSAxis = obj.fGetSpaceAxis(sSDim);
             
+            aData  = zeros(length(aSAxis), length(aTAxis));
+            
             for i=iStart:iStop
                 
-                
+                h5Data       = obj.Data.Data(i, 'PHA', 'x1p1', obj.Beam);
+                aData(:,i+1) = max(h5Data);
                 
             end % for
             
             
+            % Return data
+            
             stReturn.TimeAxis  = aTAxis;
             stReturn.SpaceAxis = aSAxis;
+            stReturn.Data      = aData;
         
+        end % function
+        
+        function aReturn = MomentumToEnergy(obj, aMomentum)
+            
+            dRQM    = obj.Data.Config.Variables.Beam.(obj.Beam).RQM;
+            dEMass  = obj.Data.Config.Variables.Constants.ElectronMassMeV;
+
+            dPFac   = abs(dRQM)*dEMass;
+            %dSign   = dRQM/abs(dRQM);
+            aReturn = sqrt(abs(aMomentum).^2 + 1)*dPFac;
+            
         end % function
     
     end % methods

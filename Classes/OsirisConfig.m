@@ -13,6 +13,7 @@ classdef OsirisConfig
 
         Path      = '';  % Path to data directory
         File      = '';  % Config file within data directory
+        Name      = '';  % Name of the loaded dataset
         Raw       = {};  % Matrix of config file data
         Variables = {};  % Struct for all variables
         N0        = 0.0; % N0
@@ -80,6 +81,9 @@ classdef OsirisConfig
             end % if
 
             obj.Path = sPath;
+            aPath    = strsplit(obj.Path, '/');
+            obj.Name = aPath{end};
+
             aFiles = {};
 
             aDir = dir(sPath);

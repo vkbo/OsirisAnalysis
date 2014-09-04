@@ -7,7 +7,7 @@ figMain = figure;
 set(figMain, 'Position', [200 200 1200 700]);
 
 iStart = 0;
-iEnd   = 122;
+iEnd   = 110;
 
 xMin   = 210;
 xMax   = 230;
