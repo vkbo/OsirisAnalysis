@@ -7,10 +7,12 @@ figMain = figure;
 set(figMain, 'Position', [200 200 1200 700]);
 
 iStart = 0;
-iEnd   = 110;
+iEnd   = 120;
 
-xMin   = 210;
-xMax   = 230;
+%xMin   = 213;
+%xMax   = 221;
+xMin   = 185;
+xMax   = 189;
 
 clear M;
 
@@ -29,7 +31,7 @@ for k=iStart:iEnd
     colormap(gray);
     fPlotPhase2D(od, k, 'EB', 'x1', 'p1');
     title('Electron Beam x1p1', 'FontSize', 14);
-    axis([xMin, xMax, -20, 1500]);
+    axis([xMin, xMax, -20, 2000]);
     caxis([0, 1e-3]);
     freezeColors;
     
