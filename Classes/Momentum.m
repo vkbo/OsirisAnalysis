@@ -185,7 +185,7 @@ classdef Momentum
             
             aTAxis = obj.fGetTimeAxis;
             aTAxis = aTAxis(iStart+1:iStop+1);
-            aSAxis = obj.fGetSpaceAxis(sSDim);
+            aSAxis = obj.fGetDiagAxis(sSDim);
             
             aData  = zeros(length(aSAxis), length(aTAxis));
             
@@ -236,7 +236,7 @@ classdef Momentum
             
         end % function
 
-        function aReturn = fGetSpaceAxis(obj, sAxis)
+        function aReturn = fGetDiagAxis(obj, sAxis)
             
             switch sAxis
                 case 'x1'

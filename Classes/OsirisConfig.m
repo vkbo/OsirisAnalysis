@@ -592,6 +592,11 @@ classdef OsirisConfig
                 obj.Variables.Beam.(sBeam).DiagNP2   = int64(aValue(2));
                 obj.Variables.Beam.(sBeam).DiagNP3   = int64(aValue(3));
                 
+                % RAW output
+                
+                aValue = obj.fExtractFixedNum(sBeam,'diag_species','raw_fraction',[0]);
+                obj.Variables.Beam.(sBeam).RAWFraction = double(aValue(1));
+
                 % Beam Profile
                 
                 sValue = obj.fExtractRaw(sBeam, 'profile', 'profile_type');
