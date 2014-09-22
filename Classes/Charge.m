@@ -111,6 +111,7 @@ classdef Charge
             stReturn.Data  = aData;
             stReturn.ZAxis = aZAxis;
             stReturn.RAxis = aRAxis;
+            stReturn.Zeta  = obj.fGetZeta();
             
         end % function
         
@@ -118,34 +119,20 @@ classdef Charge
             
             stReturn = {};
             
-            aDensity = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Beam);
-            aProj    = obj.Data.Data(obj.Time, 'PHA', 'x1', obj.Beam);
             aRaw     = obj.Data.Data(obj.Time, 'RAW', '', obj.Beam);
             
-            dRQM     = obj.Data.Config.Variables.Beam.(obj.Beam).RQM;
-            dDensity = obj.Data.Config.Variables.Beam.(obj.Beam).Density;
             dRAWFrac = obj.Data.Config.Variables.Beam.(obj.Beam).RAWFraction;
+            dLFactor = obj.Data.Config.Variables.Convert.SI.LengthFac;
+            dECharge = obj.Data.Config.Variables.Constants.ElementaryCharge;
             
-            dQ = sum(aRaw(:,8));
-            %dQ = dQ*dRQM;
-            dQ = dQ*dRAWFrac;
-            %dQ = dQ/0.5;           % Raw factor
-            %dQ = dQ/0.25;          % Raw factor
-            %dQ = dQ*4;             % PPC
-            %dQ = dQ*-1;            % RQM
-            %dQ = dQ*1836.1527;     % RQM
-            %dQ = dQ*16.7056e-1;       % Density
-            %dQ = dQ*0.03922;       % Density
-            %dQ = dQ*2*pi;          % Geometry
-            %dQ = dQ*1.6022e-10;    % Elementary charge in nC
-            %dQ = dQ/(531.41e-6)^2; % c/omega_p
+            dQ = sum(aRaw(:,8));   % Sum of RAW field q
+            dQ = dQ/dRAWFrac;      % Correct for fraction of particles dumped
+            dQ = dQ/(dLFactor^3);  % Correct for unit of length
+            dQ = dQ*dECharge;      % Convert to coulomb
+            dQ = dQ/99.388;        % Correction factor 100 is uknonwn
+            dQ = dQ*1e9;           % Convert to nC
             
-            
-            stReturn.SumD = sum(aDensity(:));
-            stReturn.SumP = sum(aProj);
-            stReturn.Proj = aProj;
-            stReturn.Raw  = aRaw;
-            stReturn.Q    = dQ;
+            stReturn.QTotal = dQ;
             
         end % function
     
@@ -188,6 +175,16 @@ classdef Charge
 
             dLFac   = obj.Data.Config.Variables.Convert.SI.LengthFac;
             aReturn = linspace(dXMin, dXMax, iNX)*dLFac;
+            
+        end % function
+        
+        function dReturn = fGetZeta(obj)
+            
+            dLFactor = obj.Data.Config.Variables.Convert.SI.LengthFac;
+            dTFactor = obj.Data.Config.Variables.Convert.SI.TimeFac;
+            dPStart  = obj.Data.Config.Variables.Plasma.PlasmaStart;
+            
+            dReturn  = (obj.Time*dTFactor - dPStart)*dLFactor;
             
         end % function
 

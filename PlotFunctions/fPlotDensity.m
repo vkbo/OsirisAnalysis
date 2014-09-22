@@ -14,7 +14,7 @@
 %  None
 %
 
-function stInfo = fPlotDensity(oData, iTime, sSpecies)
+function fPlotDensity(oData, iTime, sSpecies, aZoom)
 
     %
     %  Function Init
@@ -35,6 +35,10 @@ function stInfo = fPlotDensity(oData, iTime, sSpecies)
        fprintf('\n');
        return;
     end % if
+    
+    if nargin < 4
+        aZoom = [];
+    end % if
 
     % Check input variables
     sSpecies = fTranslateSpecies(sSpecies);
@@ -49,78 +53,54 @@ function stInfo = fPlotDensity(oData, iTime, sSpecies)
         end % if
     end % if
     
-    % Prepare output
-    stInfo = struct;
+    
+    CH      = Charge(oData, sSpecies);
+    CH.Time = iTime;
+    stData  = CH.Density;
+    stQTot  = CH.BeamCharge;
+    
+    aData   = stData.Data;
+    aXAxis  = stData.ZAxis*1e3;
+    aYAxis  = stData.RAxis*1e3;
+    dZeta   = stData.Zeta;
+    dQ      = stQTot.QTotal;
+    
+    if length(aZoom) ~= 4
+        aZoom = [aXAxis(1), aXAxis(length(aXAxis)), aYAxis(1), aYAxis(length(aYAxis))];
+    end % if
 
-    % Constants
-    dC          = oData.Config.Variables.Constants.SpeedOfLight;
-    dE          = oData.Config.Variables.Constants.ElementaryCharge;
+    aProjZ  = -abs(sum(aData));
+    aProjZ  = 0.15*(aZoom(4)-aZoom(3))*aProjZ/max(abs(aProjZ(fGetIndex(aXAxis, aZoom(1)):fGetIndex(aXAxis, aZoom(2)))))+aZoom(4);
 
-    % Simulation
-    dBoxLength  = oData.Config.Variables.Simulation.BoxX1Max;
-    iBoxNZ      = oData.Config.Variables.Simulation.BoxNX1;
-    dDeltaZ     = dBoxLength/double(iBoxNZ);
-    dBoxRadius  = oData.Config.Variables.Simulation.BoxX2Max;
-    iBoxNR      = oData.Config.Variables.Simulation.BoxNX2;
-    dDeltaR     = dBoxRadius/double(iBoxNR);
+    if dQ < 1.0
+        sBeamCharge = sprintf('Q_{tot} = %.2f pC', dQ*1e3);
+    else
+        sBeamCharge = sprintf('Q_{tot} = %.2f nC', dQ);
+    end % if
     
-    % Factors
-    dTFactor    = oData.Config.Variables.Convert.SI.TimeFac;
-    dLFactor    = oData.Config.Variables.Convert.SI.LengthFac;
-    dE0         = oData.Config.Variables.Convert.SI.E0;
-
-    % Plasma
-    dPStart     = oData.Config.Variables.Plasma.PlasmaStart;
-    dOmegaP     = oData.Config.Variables.Plasma.NormOmegaP;
-    
-    % Prepare axes
-    aXAxis      = linspace(0,dBoxLength*dLFactor*1e3,iBoxNZ);
-    aYAxis      = linspace(-dBoxRadius*dLFactor*1e3,dBoxRadius*dLFactor*1e3,2*iBoxNR);
-
-    % Get data
-    h5Data      = oData.Data(iTime, oData.Elements.DENSITY.(sSpecies).charge);
-    
-    % Find peak
-    aProjZ = zeros(iBoxNZ,1);
-    aProjR = zeros(iBoxNR,1);
-    for i=1:iBoxNZ
-        aProjZ(i) = sum(h5Data(i,:));
-    end % for
-    for i=1:iBoxNR
-        aProjR(i) = sum(h5Data(:,i));
-    end % for
-    
-    [dZMax, iZMax] = max(abs(aProjZ));
-    [dRMax, iRMax] = max(abs(aProjR));
-    
-    stInfo.ZPeakVal = dZMax;
-    stInfo.ZPeakInd = iZMax;
-    stInfo.RPeakVal = dRMax;
-    stInfo.RPeakInd = iRMax;
-    
-    % Integrate beam
-    dBeam = 0.0;
-    for i=1:iBoxNR
-        %dBeam = dBeam + double(i)*sum(h5Data(:,i));
-        %dBeam = dBeam + (double(i)^2-(double(i)-1)^2)*sum(h5Data(:,i));
-        dBeam = dBeam + double(i)*sum(h5Data(:,i));
-    end % for
-    %dBeam = dBeam*2*pi*dLFactor*dE*dBoxRScale*1e9;
-    %dBeam = dBeam*2*pi*dDeltaZ*dDeltaR^2*dE*1e9*dOmegaP^3/dC^3;
-    %dBeam = dBeam*2*pi;
-    fprintf('Sum: %d\n', dBeam);
 
     % Plot
 
-    imagesc(aXAxis, aYAxis, transpose([fliplr(h5Data),h5Data]));
+    imagesc(aXAxis, aYAxis, aData);
     colormap(jet);
     colorbar();
 
-    dPosition = (iTime*dTFactor - dPStart)*dLFactor;
-    sTitle    = sprintf('Density after %0.2f metres of plasma (Dump %d)',dPosition,iTime);
+    hold on;
+    plot(aXAxis, aProjZ, 'White');
+    
+    h = legend(sBeamCharge, 'Location', 'NE');
+    legend(h, 'boxoff');
+    set(h,'TextColor', [1 1 1]);
+    set(findobj(h, 'type', 'line'), 'visible', 'off')
+
+    sTitle = sprintf('%s Density after %0.2f m of Plasma (Dump %d)', sSpecies, dZeta, iTime);
 
     title(sTitle,'FontSize',14);
-    xlabel('$z \;\mbox{[mm]}$','interpreter','LaTex','FontSize',12);
-    ylabel('$r \;\mbox{[mm]}$','interpreter','LaTex','FontSize',12);
+    xlabel('$$z \;\mbox{[mm]}$$','interpreter','LaTex','FontSize',12);
+    ylabel('$$r \;\mbox{[mm]}$$','interpreter','LaTex','FontSize',12);
+    
+    axis(aZoom);
+    
+    hold off;
     
 end

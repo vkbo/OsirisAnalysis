@@ -3,19 +3,16 @@ function iDump = fStringToDump(oData, sString)
     iDump = 0;
 
     if strcmp(sString, '')
-        fprintf('Empty\n');
         iDump = 0;
         return;
     end % if
 
     if strcmp(sString(end), 'm')
-        fprintf('Metres\n');
         iDump = 0;
         return;
     end % if
 
     if fIsInteger(sString)
-        fprintf('Number\n');
         iDump = str2num(sString);
         return;
     end % if

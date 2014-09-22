@@ -6,13 +6,15 @@
 figMain = figure;
 set(figMain, 'Position', [200 200 1200 700]);
 
-iStart = 0;
-iEnd   = 120;
+clear M;
 
-%xMin   = 213;
-%xMax   = 221;
-xMin   = 185;
-xMax   = 189;
+iStart = 0;
+iEnd   = 110;
+
+xMin   = 213;
+xMax   = 221;
+%xMin   = 185;
+%xMax   = 189;
 
 clear M;
 
@@ -32,20 +34,20 @@ for k=iStart:iEnd
     fPlotPhase2D(od, k, 'EB', 'x1', 'p1');
     title('Electron Beam x1p1', 'FontSize', 14);
     axis([xMin, xMax, -20, 2000]);
-    caxis([0, 1e-3]);
+    caxis([0, 1e-5]);
     freezeColors;
     
     % ElectronBeam Density
     subplot(2,3,4);
-    stEInfo = fPlotDensity(od, k, 'EB');
+    fPlotDensity(od, k, 'EB', [xMin, xMax, -0.2, 0.2]);
     title('Electron Beam Density', 'FontSize', 14);
-    axis([xMin, xMax, -0.2, 0.2]);
+    %axis([xMin, xMax, -0.2, 0.2]);
 
     % ProtonBeam Density
     subplot(2,3,5);
-    stPInfo = fPlotDensity(od, k, 'PB');
+    fPlotDensity(od, k, 'PB', [xMin, xMax, -0.2, 0.2]);
     title('Proton Beam Density', 'FontSize', 14);
-    axis([xMin, xMax, -0.2, 0.2]);
+    %axis([xMin, xMax, -0.2, 0.2]);
 
     % E-Field
     subplot(2,3,6);
@@ -55,12 +57,16 @@ for k=iStart:iEnd
     
     drawnow;
     
-    M(i) = getframe_nosteal_focus(figMain,[1200 700]);
+    set(figMain, 'PaperPosition', [1 1 1200/96 700/96]);
+    set(figMain, 'InvertHardCopy', 'Off');
+    print(figMain, '-dtiffnocompression', '-r96', 'Temp/print.tif');
+    M(i).cdata = imread('Temp/print.tif');
+    M(i).colormap = [];
 
 end % for
 
 movie2avi(M, 'Movies/Temp.avi', 'fps', 2);
-[~,~] = system(sprintf('avconv -i Movies/Temp.avi -vcodec msmpeg4v2 -s 1200x700 -b 2000k Movies/AnimElectronBeam-%s.avi', fTimeStamp));
+[~,~] = system(sprintf('avconv -i Movies/Temp.avi -s 1200x700 -b:v 5000k Movies/AnimElectronBeam-%s.mp4', fTimeStamp));
 [~,~] = system('rm Movies/Temp.avi');
 
 clear i;
