@@ -135,7 +135,66 @@ classdef Charge
             stReturn.QTotal = dQ;
             
         end % function
-    
+
+        function stReturn = Beamlets(obj, dThreshold)
+            
+            if nargin < 2
+                dThreshold = 0.01;
+            end % if
+            
+            stReturn = {};
+            
+            h5Data = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Beam);
+            
+            aData = abs(sum(h5Data,2));
+            aThreshold = aData/max(aData);
+            aThreshold = aThreshold > dThreshold;
+            
+            aBeamlets = [];
+            
+            iPrev = 0;
+            
+            for i=1:length(aData)
+                
+                if aThreshold(i) == 1 && iPrev == 0
+                    aBeamlets(1,end+1) = i;
+                end % if
+                
+                if aThreshold(1) == 0 && iPrev == 1
+                    aBeamlets(2,end) = i;
+                end % if
+                
+                iPrev = aThreshold(i);
+                
+            end % for
+            
+            if iPrev == 1
+                aBeamlet(2,end) = length(aData);
+            end % if
+            
+            dTotal = sum(aData);
+            
+            aFraction = [];
+            
+            for i=1:length(aBeamlets(1,:))
+                
+                aFraction(i) = sum(aData(aBeamlets(1,i):aBeamlets(2,i)))/dTotal;
+                
+            end % for
+            
+            dMissing = 1-sum(aFraction);
+            
+            %stReturn.RAWData   = h5Data;
+            %stReturn.Data      = aData;
+            %stReturn.Threshold = aThreshold;
+            stReturn.Beamlets  = aBeamlets;
+            stReturn.Count     = length(aBeamlets(1,:));
+            stReturn.Fraction  = aFraction;
+            stReturn.Total     = dTotal;
+            stReturn.Missing   = dMissing;
+            
+        end % function
+        
     end % methods
     
     %
