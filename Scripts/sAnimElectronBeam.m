@@ -60,7 +60,7 @@ for k=iStart:iEnd
     set(figMain, 'PaperPosition', [1 1 1200/96 700/96]);
     set(figMain, 'InvertHardCopy', 'Off');
     print(figMain, '-dtiffnocompression', '-r96', 'Temp/print.tif');
-    M(i).cdata = imread('Temp/print.tif');
+    M(i).cdata    = imread('Temp/print.tif');
     M(i).colormap = [];
 
 end % for
