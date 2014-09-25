@@ -6,4 +6,4 @@
 stFolders = {};
 
 stFolders{1} = '/scratch/OsirisData';
-stFolders{2} = '/media/vkbo/External/Work/Data';
+stFolders{2} = '/scratch/DataDrive/OsirisData';

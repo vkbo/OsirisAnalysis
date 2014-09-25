@@ -15,6 +15,10 @@ function sReturn = fTranslateSpecies(sInput)
             sReturn = 'ElectronBeam';
         case 'pe'
             sReturn = 'PlasmaElectrons';
+        case 'pp'
+            sReturn = 'PlasmaProtons';
+        case 'pi'
+            sReturn = 'PlasmaIons';
         case 'pb'
             sReturn = 'ProtonBeam';
         case 'eb'

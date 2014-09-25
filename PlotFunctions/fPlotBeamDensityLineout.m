@@ -1,6 +1,6 @@
 %
-%  Function: fPlotDensityLineout
-% *******************************
+%  Function: fPlotBeamDensityLineout
+% ***********************************
 %  Plots the density for a given t and r
 %
 %  Inputs:
@@ -16,7 +16,7 @@
 %  None
 %
 
-function fPlotDensityLineout(oData, iTime, iR, sSpecies1, sSpecies2)
+function fPlotBeamDensityLineout(oData, iTime, iR, sSpecies1, sSpecies2)
 
 
     %
@@ -26,8 +26,8 @@ function fPlotDensityLineout(oData, iTime, iR, sSpecies1, sSpecies2)
 
     if nargin == 0
        fprintf('\n');
-       fprintf('  Function: fPlotDensityLineout\n');
-       fprintf(' *******************************\n');
+       fprintf('  Function: fPlotBeamDensityLineout\n');
+       fprintf(' ***********************************\n');
        fprintf('  Plots the density for a given t and r\n');
        fprintf('\n');
        fprintf('  Inputs:\n');

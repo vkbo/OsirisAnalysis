@@ -1,6 +1,6 @@
 %
-%  Function: fPlotDensityEField
-% ******************************
+%  Function: fPlotBeamDensityEField
+% **********************************
 %  Plots the density for a given t and r
 %
 %  Inputs:
@@ -17,7 +17,7 @@
 %  None
 %
 
-function fPlotDensityEField(oData, iTime, vR, sSpecies1, sSpecies2, sEField)
+function fPlotBeamDensityEField(oData, iTime, vR, sSpecies1, sSpecies2, sEField)
 
 
     %
@@ -27,8 +27,8 @@ function fPlotDensityEField(oData, iTime, vR, sSpecies1, sSpecies2, sEField)
 
     if nargin == 0
        fprintf('\n');
-       fprintf('  Function: fPlotDensityEField\n');
-       fprintf(' ******************************\n');
+       fprintf('  Function: fPlotBeamDensityEField\n');
+       fprintf(' **********************************\n');
        fprintf('  Plots the density for a given t and r\n');
        fprintf('\n');
        fprintf('  Inputs:\n');
