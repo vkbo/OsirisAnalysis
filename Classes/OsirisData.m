@@ -126,6 +126,12 @@ classdef OsirisData
 
         end % function
         
+        function Reload(obj)
+            
+            obj.PathID = obj.PathID;
+            
+        end % function
+        
         function PlasmaInfo(obj)
             
             %
@@ -265,6 +271,12 @@ classdef OsirisData
 
             end % if
             
+            if strcmp(obj.Path, '')
+                fprintf(2, 'Error: No dataset has been loaded.\n');
+                h5Data = 0;
+                return;
+            end % if
+            
             if nargin > 3
 
                 sType     = upper(sVal1); % Type is always upper case
@@ -326,7 +338,8 @@ classdef OsirisData
             h5Data = [];
             
             if iTime >= iFiles
-                fprintf('Error: Dump %d does not exist. Last dump is %d.\n', iTime, iFiles-1);
+                fprintf(2, 'Error: Dump %d does not exist. Last dump is %d.\n', iTime, iFiles-1);
+                h5Data = 0;
                 return;
             end % if
             

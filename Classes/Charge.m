@@ -98,7 +98,7 @@ classdef Charge
     
     methods (Access = 'public')
         
-        function stReturn = Density(obj)
+        function stReturn = Density(obj, aLimits)
             
             stReturn = {};
             
@@ -107,6 +107,19 @@ classdef Charge
             aZAxis = obj.fGetBoxAxis('x1');
             aRAxis = obj.fGetBoxAxis('x2');
             aRAxis = [-fliplr(aRAxis),aRAxis];
+
+            if nargin == 2
+                if length(aLimits) == 4
+                    iZMin = fGetIndex(aZAxis,aLimits(1));
+                    iZMax = fGetIndex(aZAxis,aLimits(2));
+                    iRMin = fGetIndex(aRAxis,aLimits(3));
+                    iRMax = fGetIndex(aRAxis,aLimits(4));
+
+                    aData  = aData(iRMin:iRMax,iZMin:iZMax);
+                    aZAxis = aZAxis(iZMin:iZMax);
+                    aRAxis = aRAxis(iRMin:iRMax);
+                end % if 
+            end % if
             
             stReturn.Data  = aData;
             stReturn.ZAxis = aZAxis;
@@ -115,7 +128,7 @@ classdef Charge
             
         end % function
         
-        function stReturn = BeamCharge(obj)
+        function stReturn = BeamCharge(obj, aLimits)
             
             stReturn = {};
             
@@ -125,14 +138,49 @@ classdef Charge
             dLFactor = obj.Data.Config.Variables.Convert.SI.LengthFac;
             dECharge = obj.Data.Config.Variables.Constants.ElementaryCharge;
             
+            if nargin == 2 && length(aLimits) == 4
+
+                dZMin = aLimits(1)/dLFactor;
+                dZMax = aLimits(2)/dLFactor;
+                dRMin = aLimits(3)/dLFactor;
+                dRMax = aLimits(4)/dLFactor;
+                
+                aRaw(:,8) = aRaw(:,8).*(aRaw(:,1) >= dZMin & aRaw(:,1) <= dZMax);
+                aRaw(:,8) = aRaw(:,8).*(aRaw(:,2) >= dRMin & aRaw(:,2) <= dRMax);
+                
+            end % if
+
+            if nargin == 2 && length(aLimits) == 2
+
+                [~, iPeak] = max(abs(aRaw(:,8)));
+                
+                dZPos = aRaw(iPeak,1);
+                dRPos = aRaw(iPeak,2);
+                dZRad = aLimits(1)/dLFactor;
+                dRRad = aLimits(2)/dLFactor;
+                
+                aZ = aRaw(:,1)-dZPos;
+                aR = aRaw(:,2)-dRPos;
+                
+                aRaw(:,11) = aZ;
+                aRaw(:,12) = aR;
+                %aRaw(:,13) = 
+
+            end % if
+
             dQ = sum(aRaw(:,8));   % Sum of RAW field q
             dQ = dQ/dRAWFrac;      % Correct for fraction of particles dumped
-            dQ = dQ/(dLFactor^3);  % Correct for unit of length
+            dQ = dQ*1e20;
+            dQ = dQ*dLFactor^4;
+            %dQ = dQ*8.4083977;
+            dQ = dQ*2*pi*1.3382381; %8.4066;
+            %dQ = dQ/(dLFactor^3);  % Correct for unit of length
             dQ = dQ*dECharge;      % Convert to coulomb
-            dQ = dQ/99.388;        % Correction factor 100 is uknonwn
+            %dQ = dQ/99.388;        % Correction factor 100 is uknonwn
             dQ = dQ*1e9;           % Convert to nC
             
             stReturn.QTotal = dQ;
+            stReturn.RAW    = aRaw;
             
         end % function
 
