@@ -5,7 +5,9 @@
 %
 
 function dGamma = fGamma(dEnergy, sParticle)
-    
+
+    sConstants;
+
     dGamma = 0;
     
     if    strcmpi(sParticle, 'electron') ...
@@ -14,14 +16,22 @@ function dGamma = fGamma(dEnergy, sParticle)
        || strcmpi(sParticle, 'e-')       ...
        || strcmpi(sParticle, 'e+')
 
-        dGamma = dEnergy/0.51099891;
+        dGamma = dEnergy/Constants.Particles.Electron.MassMeV;
     end % if
 
-    if    strcmpi(sParticle, 'protons') ...
-       || strcmpi(sParticle, 'p')        ...
+    if    strcmpi(sParticle, 'proton') ...
+       || strcmpi(sParticle, 'p')
 
-        dGamma = dEnergy/938.272046;
+        dGamma = dEnergy/Constants.Particles.Proton.MassMeV;
     end % if
     
+    if    strcmpi(sParticle, 'muon') ...
+       || strcmpi(sParticle, 'm')    ...
+       || strcmpi(sParticle, 'm-')   ...
+       || strcmpi(sParticle, 'm+')
+
+        dGamma = dEnergy/Constants.Particles.Muon.MassMeV;
+    end % if
+
 end
 

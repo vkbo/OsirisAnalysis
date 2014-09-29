@@ -54,29 +54,30 @@ function fPlotBeamDensity(oData, sTime, sBeam, aLimits, aCharge)
     % Check Input
 
     sBeam = fTranslateSpecies(sBeam);
-    iTime = fStringToDump(oData, sTime);
+    iTime = fStringToDump(oData, num2str(sTime));
+
     
-
-    % Set Values
-    dZScale = 1e3; % millimetres
-    dRScale = 1e3; % millimetres
-
-
     % Prepare Data
-    
+
+    CH        = Charge(oData, sBeam);
+    CH.Time   = iTime;
+    CH.Units  = 'SI';
+    CH.ZScale = 'mm';
+    CH.RScale = 'mm';
+
     if length(aLimits) == 4
-        aLimits(1:2) = aLimits(1:2)/dZScale;
-        aLimits(3:4) = aLimits(3:4)/dRScale;
+        CH.ZLim = aLimits(1:2);
+        CH.RLim = aLimits(3:4);
+    else
+        fprintf(2, 'Warning: Limits specified, but must be of dimension 4.\n');
     end % if
 
-    CH      = Charge(oData, sBeam);
-    CH.Time = iTime;
-    stData  = CH.Density(aLimits);
+    stData    = CH.Density;
 
     aData   = stData.Data;
-    aZAxis  = stData.ZAxis*dZScale;
-    aRAxis  = stData.RAxis*dRScale;
-    dZeta   = stData.Zeta;
+    aZAxis  = stData.ZAxis;
+    aRAxis  = stData.RAxis;
+    dZPos   = stData.ZPos;
     
     aProjZ  = -abs(sum(aData));
     aProjZ  = 0.15*(aRAxis(end)-aRAxis(1))*aProjZ/max(abs(aProjZ))+aRAxis(end);
@@ -84,13 +85,15 @@ function fPlotBeamDensity(oData, sTime, sBeam, aLimits, aCharge)
     if length(aCharge) == 2
         [~,iZPeak] = max(sum(abs(aData),1));
         [~,iRPeak] = max(sum(abs(aData),2));
-        stQTot = CH.BeamCharge([aZAxis(iZPeak)/dZScale, aRAxis(iRPeak)/dZScale, aCharge(1)/dZScale, aCharge(2)/dRScale]);
+        stQTot = CH.BeamCharge('Ellipse', [aZAxis(iZPeak), 0, aCharge(1), aCharge(2)]);
+    elseif length(aCharge) == 4
+        stQTot = CH.BeamCharge('Ellipse', [aCharge(1), aCharge(2), aCharge(3), aCharge(4)]);
     else
         stQTot = CH.BeamCharge;
     end % if
     dQ = stQTot.QTotal;
-
-    if dQ < 1.0
+    
+    if abs(dQ) < 1.0
         sBeamCharge = sprintf('Q_{tot} = %.2f pC', dQ*1e3);
     else
         sBeamCharge = sprintf('Q_{tot} = %.2f nC', dQ);
@@ -115,12 +118,16 @@ function fPlotBeamDensity(oData, sTime, sBeam, aLimits, aCharge)
         dRX = aZAxis(iZPeak)-aCharge(1);
         dRY = aRAxis(iRPeak)-aCharge(2);
         rectangle('Position',[dRX,dRY,2*aCharge(1),2*aCharge(2)],'Curvature',[1,1],'EdgeColor','White','LineStyle','--');
+    elseif length(aCharge) == 4
+        dRX = aCharge(1)-aCharge(3);
+        dRY = aCharge(2)-aCharge(4);
+        rectangle('Position',[dRX,dRY,2*aCharge(3),2*aCharge(4)],'Curvature',[1,1],'EdgeColor','White','LineStyle','--');
     end % if
 
-    sTitle = sprintf('%s Density after %0.2f m of Plasma (Dump %d)', sBeam, dZeta, iTime);
+    sTitle = sprintf('%s Density after %0.2f m of Plasma (Dump %d)', sBeam, dZPos, iTime);
 
     title(sTitle,'FontSize',14);
-    xlabel('$$z \;\mbox{[mm]}$$','interpreter','LaTex','FontSize',12);
+    xlabel('$$\xi \;\mbox{[mm]}$$','interpreter','LaTex','FontSize',12);
     ylabel('$$r \;\mbox{[mm]}$$','interpreter','LaTex','FontSize',12);
     
     hold off;

@@ -97,7 +97,7 @@ classdef OsirisData
                 obj.PathID = iID;
                 obj.Path   = obj.DefaultData{iID};
             else
-                fprintf('Error: Folder with ID %d is not in the list.\n', iID);
+                fprintf(2, 'Error: Folder with ID %d is not in the list.\n', iID);
             end % if
             
         end % function

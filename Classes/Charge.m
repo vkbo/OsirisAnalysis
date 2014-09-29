@@ -11,9 +11,14 @@ classdef Charge
 
     properties (GetAccess = 'public', SetAccess = 'public')
         
-        Data = []; % OsirisData dataset
-        Beam = ''; % What beam to ananlyse
-        Time = 0;  % Current time (dumb number)
+        Data    = [];  % OsirisData dataset
+        Species = '';  % What species to ananlyse
+        Time    = 0;   % Current time (dumb number)
+        ZLim    = [];  % Z axis limits
+        RLim    = [];  % R axis limits
+        Units   = 'N'; % Unit of axes
+        ZScale  = 1.0; % Scale of Z axis
+        RScale  = 1.0; % Scale of R axis
         
     end % properties
 
@@ -22,6 +27,9 @@ classdef Charge
     %
     
     properties (GetAccess = 'private', SetAccess = 'private')
+        
+        ZFac = 1.0; % Z axis scale factor
+        RFac = 1.0; % R axis scale factor
 
     end % properties
 
@@ -31,14 +39,21 @@ classdef Charge
 
     methods
         
-        function obj = Charge(oData, sBeam)
+        function obj = Charge(oData, sSpecies)
             
             if nargin < 2
-                sBeam = 'EB';
+                sSpecies = 'EB';
             end % if
             
-            obj.Data = oData;
-            obj.Beam = fTranslateSpecies(sBeam);
+            obj.Data    = oData;
+            obj.Species = fTranslateSpecies(sSpecies);
+            
+            dBoxX1Min = obj.Data.Config.Variables.Simulation.BoxX1Min;
+            dBoxX1Max = obj.Data.Config.Variables.Simulation.BoxX1Max;
+            dBoxX2Max = obj.Data.Config.Variables.Simulation.BoxX2Max;
+            
+            obj.ZLim = [ dBoxX1Min, dBoxX1Max];
+            obj.RLim = [-dBoxX2Max, dBoxX2Max];
             
         end % function
         
@@ -56,9 +71,9 @@ classdef Charge
             
         end % function
         
-        function obj = set.Beam(obj, sBeam)
+        function obj = set.Species(obj, sSpecies)
             
-            obj.Beam = fTranslateSpecies(sBeam);
+            obj.Species = fTranslateSpecies(sSpecies);
             
         end % function
         
@@ -89,6 +104,86 @@ classdef Charge
             end % if
             
         end % function
+        
+        function obj = set.ZLim(obj, aZLim)
+            
+            if length(aZLim) ~= 2
+                fprintf(2, 'Error: Z limit needs to be a vector of dimension 2.\n');
+                return;
+            end % if
+            
+            obj.ZLim = aZLim/obj.ZScale;
+            
+        end % function
+        
+        function obj = set.RLim(obj, aRLim)
+
+            if length(aRLim) ~= 2
+                fprintf(2, 'Error: R limit needs to be a vector of dimension 2.\n');
+                return;
+            end % if
+            
+            if aRLim(1) < 0
+                aRLim(1) = 0;
+            end % if
+            
+            obj.RLim = aRLim/obj.RScale;
+            
+        end % function
+
+        function obj = set.Units(obj, sUnits)
+            
+            switch(lower(sUnits))
+                
+                case 'n'
+                    obj.Units = 'N';
+                case 'norm'
+                    obj.Units = 'N';
+                case 'normalised'
+                    obj.Units = 'N';
+                case 'normalized'
+                    obj.Units = 'N';
+                    
+                case 'si'
+                    obj.Units = 'SI';
+                    
+            end % switch
+            
+        end % function
+        
+        function obj = set.ZScale(obj, sUnit)
+            
+            dScale   = 1.0;
+            dLFactor = obj.Data.Config.Variables.Convert.SI.LengthFac;
+            
+            switch(obj.Units)
+                case 'N'
+                    dScale = dScale * 1.0;
+                case 'SI'
+                    dScale = dScale * dLFactor;
+            end % switch
+            
+            obj.ZFac = dScale * fLengthScale(sUnit);
+            obj.ZLim = obj.ZLim*obj.ZFac;
+            
+        end % function
+        
+        function obj = set.RScale(obj, sUnit)
+            
+            dScale   = 1.0;
+            dLFactor = obj.Data.Config.Variables.Convert.SI.LengthFac;
+            
+            switch(obj.Units)
+                case 'N'
+                    dScale = dScale * 1.0;
+                case 'SI'
+                    dScale = dScale * dLFactor;
+            end % switch
+            
+            obj.RFac = dScale * fLengthScale(sUnit);
+            obj.RLim = obj.RLim*obj.RFac;
+            
+        end % function
 
     end % methods
     
@@ -98,89 +193,127 @@ classdef Charge
     
     methods (Access = 'public')
         
-        function stReturn = Density(obj, aLimits)
+        function stReturn = Density(obj)
             
             stReturn = {};
             
-            h5Data = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Beam);
-            aData  = transpose([fliplr(h5Data),h5Data]);
+            h5Data = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
+            if obj.RLim(1) == 0
+                aData  = transpose([fliplr(h5Data),h5Data]);
+            else
+                aData  = transpose(h5Data);
+            end % if
             aZAxis = obj.fGetBoxAxis('x1');
             aRAxis = obj.fGetBoxAxis('x2');
-            aRAxis = [-fliplr(aRAxis),aRAxis];
-
-            if nargin == 2
-                if length(aLimits) == 4
-                    iZMin = fGetIndex(aZAxis,aLimits(1));
-                    iZMax = fGetIndex(aZAxis,aLimits(2));
-                    iRMin = fGetIndex(aRAxis,aLimits(3));
-                    iRMax = fGetIndex(aRAxis,aLimits(4));
-
-                    aData  = aData(iRMin:iRMax,iZMin:iZMax);
-                    aZAxis = aZAxis(iZMin:iZMax);
-                    aRAxis = aRAxis(iRMin:iRMax);
-                end % if 
+            if obj.RLim(1) == 0
+                aRAxis = [-fliplr(aRAxis),aRAxis];
             end % if
+
+            iZMin  = fGetIndex(aZAxis, obj.ZLim(1));
+            iZMax  = fGetIndex(aZAxis, obj.ZLim(2));
+            if obj.RLim(1) == 0
+                iRMin  = fGetIndex(aRAxis, -obj.RLim(2));
+            else
+                iRMin  = fGetIndex(aRAxis, obj.RLim(1));
+            end % if
+            iRMax  = fGetIndex(aRAxis, obj.RLim(2));
+
+            aData  = aData(iRMin:iRMax,iZMin:iZMax);
+            aZAxis = aZAxis(iZMin:iZMax);
+            aRAxis = aRAxis(iRMin:iRMax);
             
             stReturn.Data  = aData;
             stReturn.ZAxis = aZAxis;
             stReturn.RAxis = aRAxis;
-            stReturn.Zeta  = obj.fGetZeta();
+            stReturn.ZPos  = obj.fGetZPos();
             
         end % function
         
-        function stReturn = BeamCharge(obj, aLimits)
+        function stReturn = BeamCharge(obj, sTrack, aLimits)
             
             stReturn = {};
             
-            aRaw     = obj.Data.Data(obj.Time, 'RAW', '', obj.Beam);
-            
-            dRAWFrac = obj.Data.Config.Variables.Beam.(obj.Beam).RAWFraction;
-            dLFactor = obj.Data.Config.Variables.Convert.SI.LengthFac;
-            dECharge = obj.Data.Config.Variables.Constants.ElementaryCharge;
-            
-            if nargin == 2 && length(aLimits) == 4
-
-                dZMin = aLimits(1)/dLFactor;
-                dZMax = aLimits(2)/dLFactor;
-                dRMin = aLimits(3)/dLFactor;
-                dRMax = aLimits(4)/dLFactor;
-                
-                aRaw(:,8) = aRaw(:,8).*(aRaw(:,1) >= dZMin & aRaw(:,1) <= dZMax);
-                aRaw(:,8) = aRaw(:,8).*(aRaw(:,2) >= dRMin & aRaw(:,2) <= dRMax);
-                
+            if nargin < 3
+                aLimits = [];
             end % if
+            
+            if nargin < 2
+                sTrack = '';
+            end % if
+            
+            if ~isBeam(obj.Species)
+                fprintf(2, 'Error: Species %s is not a beam.\n', obj.Species);
+                return;
+            end % if
+            
+            dRAWFrac  = obj.Data.Config.Variables.Beam.(obj.Species).RAWFraction;
+            dLFactor  = obj.Data.Config.Variables.Convert.SI.LengthFac;
+            dECharge  = obj.Data.Config.Variables.Constants.ElementaryCharge;
+            dN0       = obj.Data.Config.Variables.Plasma.N0;
+            dTFactor  = obj.Data.Config.Variables.Convert.SI.TimeFac;
 
-            if nargin == 2 && length(aLimits) == 2
+            aRaw      = obj.Data.Data(obj.Time, 'RAW', '', obj.Species);
+            iCount    = length(aRaw(:,1));
+            aRaw(:,1) = aRaw(:,1) - dTFactor*obj.Time;
+            
+            obj.ZLim/obj.ZFac;
+            obj.RLim/obj.RFac;
+            
+            aRaw(:,8) = aRaw(:,8).*(aRaw(:,1) >= obj.ZLim(1)/obj.ZFac & aRaw(:,1) <= obj.ZLim(2)/obj.ZFac);
+            aRaw(:,8) = aRaw(:,8).*(aRaw(:,2) >= obj.RLim(1)/obj.RFac & aRaw(:,2) <= obj.RLim(2)/obj.RFac);
+            
+            if strcmpi(sTrack, 'peak') && length(aLimits) == 2
 
                 [~, iPeak] = max(abs(aRaw(:,8)));
                 
                 dZPos = aRaw(iPeak,1);
                 dRPos = aRaw(iPeak,2);
-                dZRad = aLimits(1)/dLFactor;
-                dRRad = aLimits(2)/dLFactor;
+                dZRad = aLimits(1)/obj.ZFac;
+                dRRad = aLimits(2)/obj.RFac;
                 
-                aZ = aRaw(:,1)-dZPos;
-                aR = aRaw(:,2)-dRPos;
+                % Applying condition:
+                % (X1 - ZPeak)^2 / ZRadius^2 + (X2 - Rpeak)^2 / RRadius^2 <= 1
+                aRaw(:,8) = aRaw(:,8).*(((aRaw(:,1)-dZPos).^2/dZRad^2 + (aRaw(:,2)-dRPos).^2/dRRad^2) <= 1);
                 
-                aRaw(:,11) = aZ;
-                aRaw(:,12) = aR;
-                %aRaw(:,13) = 
+                stReturn.Box    = 'Peak Ellipse';
+                stReturn.Coords = [dZPos, dRPos, dZRad, dRRad];
 
             end % if
 
+            if strcmpi(sTrack, 'ellipse') && length(aLimits) == 4
+
+                dZPos = aLimits(1)/obj.ZFac;
+                dRPos = aLimits(2)/obj.RFac;
+                dZRad = aLimits(3)/obj.ZFac;
+                dRRad = aLimits(4)/obj.RFac;
+
+                % Applying condition:
+                % (X1 - ZPeak)^2 / ZRadius^2 + (X2 - Rpeak)^2 / RRadius^2 <= 1
+                aRaw(:,8) = aRaw(:,8).*(((aRaw(:,1)-dZPos).^2/dZRad^2 + (aRaw(:,2)-dRPos).^2/dRRad^2) <= 1);
+
+                stReturn.Box    = 'Ellipse';
+                stReturn.Coords = [dZPos, dRPos, dZRad, dRRad];
+
+            end % if
+            
             dQ = sum(aRaw(:,8));   % Sum of RAW field q
             dQ = dQ/dRAWFrac;      % Correct for fraction of particles dumped
-            dQ = dQ*1e20;
-            dQ = dQ*dLFactor^4;
-            %dQ = dQ*8.4083977;
-            dQ = dQ*2*pi*1.3382381; %8.4066;
-            %dQ = dQ/(dLFactor^3);  % Correct for unit of length
+            dQ = dQ*dN0;           % Plasma density
+            dQ = dQ*dLFactor^4;    % Convert from normalised units to unitless
+            dQ = dQ*2*pi;          % Cylindrical factor
+            dQ = dQ*1.337952;      % Unknown correction factor, tuned to initial electron beam
             dQ = dQ*dECharge;      % Convert to coulomb
-            %dQ = dQ/99.388;        % Correction factor 100 is uknonwn
             dQ = dQ*1e9;           % Convert to nC
             
-            stReturn.QTotal = dQ;
-            stReturn.RAW    = aRaw;
+            iSelCount = nnz(aRaw(:,8));
+            dExact    = dQ/sqrt(iCount/dRAWFrac);
+            dRelError = abs(dQ/(dRAWFrac*sqrt(iSelCount))-dExact);
+            
+            stReturn.QTotal         = dQ;
+            stReturn.RAWFraction    = dRAWFrac;
+            stReturn.RAWCount       = iCount;
+            stReturn.SelectionCount = iSelCount;
+            stReturn.FractionError  = dRelError;
             
         end % function
 
@@ -192,7 +325,12 @@ classdef Charge
             
             stReturn = {};
             
-            h5Data = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Beam);
+            if ~isBeam(obj.Species)
+                fprintf(2, 'Error: Species %s is not a beam.\n', obj.Species);
+                return;
+            end % if
+
+            h5Data = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
             
             aData = abs(sum(h5Data,2));
             aThreshold = aData/max(aData);
@@ -253,7 +391,7 @@ classdef Charge
         
         function aReturn = fGetTimeAxis(obj)
             
-            iDumps  = obj.Data.Elements.DENSITY.(obj.Beam).charge.Info.Files-1;
+            iDumps  = obj.Data.Elements.DENSITY.(obj.Species).charge.Info.Files-1;
             
             dPStart = obj.Data.Config.Variables.Plasma.PlasmaStart;
             dTFac   = obj.Data.Config.Variables.Convert.SI.TimeFac;
@@ -270,22 +408,24 @@ classdef Charge
                     dXMin = obj.Data.Config.Variables.Simulation.BoxX1Min;
                     dXMax = obj.Data.Config.Variables.Simulation.BoxX1Max;
                     iNX   = obj.Data.Config.Variables.Simulation.BoxNX1;
+                    dLFac = obj.ZFac;
                 case 'x2'
                     dXMin = obj.Data.Config.Variables.Simulation.BoxX2Min;
                     dXMax = obj.Data.Config.Variables.Simulation.BoxX2Max;
                     iNX   = obj.Data.Config.Variables.Simulation.BoxNX2;
+                    dLFac = obj.RFac;
                 case 'x3'
                     dXMin = obj.Data.Config.Variables.Simulation.BoxX3Min;
                     dXMax = obj.Data.Config.Variables.Simulation.BoxX3Max;
                     iNX   = obj.Data.Config.Variables.Simulation.BoxNX3;
+                    dLFac = 1.0;
             end % switch
 
-            dLFac   = obj.Data.Config.Variables.Convert.SI.LengthFac;
             aReturn = linspace(dXMin, dXMax, iNX)*dLFac;
             
         end % function
         
-        function dReturn = fGetZeta(obj)
+        function dReturn = fGetZPos(obj)
             
             dLFactor = obj.Data.Config.Variables.Convert.SI.LengthFac;
             dTFactor = obj.Data.Config.Variables.Convert.SI.TimeFac;

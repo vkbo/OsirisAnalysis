@@ -1,3 +1,9 @@
+%
+%  Function :: fStringToDump
+% ***************************
+%  Converts string to Osiris dump number based on simulation configuration
+%
+
 function iDump = fStringToDump(oData, sString)
 
     iDump = 0;
@@ -12,7 +18,7 @@ function iDump = fStringToDump(oData, sString)
         return;
     end % if
 
-    if fIsInteger(sString)
+    if isInteger(sString)
         iDump = str2num(sString);
         return;
     end % if
