@@ -11,10 +11,6 @@
 %  sSpecies1 :: Which species
 %  sSpecies2 :: Which species (optional)
 %
-%  Outputs:
-% ==========
-%  None
-%
 
 function fPlotBeamDensityLineout(oData, iTime, iR, sSpecies1, sSpecies2)
 

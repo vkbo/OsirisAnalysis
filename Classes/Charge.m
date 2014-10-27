@@ -80,8 +80,7 @@ classdef Charge
         function obj = set.Time(obj, sTime)
             
             sTime = num2str(sTime);
-            
-            iEnd = fStringToDump(obj.Data, 'end');
+            iEnd  = fStringToDump(obj.Data, 'end');
             
             if strcmpi(sTime, 'next') || strcmpi(sTime, 'n')
 
@@ -163,7 +162,7 @@ classdef Charge
                     dScale = dScale * dLFactor;
             end % switch
             
-            obj.ZFac = dScale * fLengthScale(sUnit);
+            obj.ZFac = dScale*fLengthScale(sUnit);
             obj.ZLim = obj.ZLim*obj.ZFac;
             
         end % function
@@ -180,7 +179,7 @@ classdef Charge
                     dScale = dScale * dLFactor;
             end % switch
             
-            obj.RFac = dScale * fLengthScale(sUnit);
+            obj.RFac = dScale*fLengthScale(sUnit);
             obj.RLim = obj.RLim*obj.RFac;
             
         end % function
@@ -229,7 +228,7 @@ classdef Charge
             
         end % function
         
-        function stReturn = BeamCharge(obj, sTrack, aLimits)
+        function stReturn = BeamCharge(obj, sShape, aLimits)
             
             stReturn = {};
             
@@ -238,7 +237,7 @@ classdef Charge
             end % if
             
             if nargin < 2
-                sTrack = '';
+                sShape = '';
             end % if
             
             if ~isBeam(obj.Species)
@@ -262,25 +261,7 @@ classdef Charge
             aRaw(:,8) = aRaw(:,8).*(aRaw(:,1) >= obj.ZLim(1)/obj.ZFac & aRaw(:,1) <= obj.ZLim(2)/obj.ZFac);
             aRaw(:,8) = aRaw(:,8).*(aRaw(:,2) >= obj.RLim(1)/obj.RFac & aRaw(:,2) <= obj.RLim(2)/obj.RFac);
             
-            if strcmpi(sTrack, 'peak') && length(aLimits) == 2
-
-                [~, iPeak] = max(abs(aRaw(:,8)));
-                
-                dZPos = aRaw(iPeak,1);
-                dRPos = aRaw(iPeak,2);
-                dZRad = aLimits(1)/obj.ZFac;
-                dRRad = aLimits(2)/obj.RFac;
-                
-                % Applying condition:
-                % (X1 - ZPeak)^2 / ZRadius^2 + (X2 - Rpeak)^2 / RRadius^2 <= 1
-                aRaw(:,8) = aRaw(:,8).*(((aRaw(:,1)-dZPos).^2/dZRad^2 + (aRaw(:,2)-dRPos).^2/dRRad^2) <= 1);
-                
-                stReturn.Box    = 'Peak Ellipse';
-                stReturn.Coords = [dZPos, dRPos, dZRad, dRRad];
-
-            end % if
-
-            if strcmpi(sTrack, 'ellipse') && length(aLimits) == 4
+            if strcmpi(sShape, 'ellipse') && length(aLimits) == 4
 
                 dZPos = aLimits(1)/obj.ZFac;
                 dRPos = aLimits(2)/obj.RFac;
@@ -288,7 +269,6 @@ classdef Charge
                 dRRad = aLimits(4)/obj.RFac;
 
                 % Applying condition:
-                % (X1 - ZPeak)^2 / ZRadius^2 + (X2 - Rpeak)^2 / RRadius^2 <= 1
                 aRaw(:,8) = aRaw(:,8).*(((aRaw(:,1)-dZPos).^2/dZRad^2 + (aRaw(:,2)-dRPos).^2/dRRad^2) <= 1);
 
                 stReturn.Box    = 'Ellipse';

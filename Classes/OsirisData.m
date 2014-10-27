@@ -103,7 +103,9 @@ classdef OsirisData
         end % function
 
         function obj = set.Elements(obj, stElements)
+
             obj.Elements = stElements;
+
         end % function
         
     end % methods
@@ -116,12 +118,22 @@ classdef OsirisData
         
         function Info(obj)
             
+            %
+            %  Prints basic simulation info extracted from Config object
+            % ***********************************************************
+            %
+
+            dTMax     = obj.Config.Variables.Simulation.TMax;
+            dTimeStep = obj.Config.Variables.Simulation.TimeStep;
+            dNDump    = obj.Config.Variables.Simulation.NDump;
+
             fprintf('\n');
             fprintf(' Dataset Info\n');
             fprintf('**************\n');
             fprintf('\n');
-            fprintf('Name: %s\n', obj.Config.Name);
-            fprintf('Path: %s\n', obj.Config.Path);
+            fprintf('Name:      %s\n', obj.Config.Name);
+            fprintf('Path:      %s\n', obj.Config.Path);
+            fprintf('Last Dump: %d\n', floor(dTMax/dTimeStep/dNDump));
             fprintf('\n');
 
         end % function
@@ -155,12 +167,12 @@ classdef OsirisData
             fprintf(' Plasma Info\n');
             fprintf('*************\n');
             fprintf('\n');
-            fprintf(' Plasma Start:  %8.2f between dump %03d and %03d\n', dPStart, floor(dPStart/dTFac), ceil(dPStart/dTFac));
-            fprintf(' Plasma End:    %8.2f between dump %03d and %03d\n', dPEnd,   floor(dPEnd/dTFac),   ceil(dPEnd/dTFac));
+            fprintf(' Plasma Start:     %8.2f between dump %03d and %03d\n', dPStart, floor(dPStart/dTFac), ceil(dPStart/dTFac));
+            fprintf(' Plasma End:       %8.2f between dump %03d and %03d\n', dPEnd,   floor(dPEnd/dTFac),   ceil(dPEnd/dTFac));
             fprintf('\n');
-            fprintf(' Plasma Start:  %8.2f m\n', dPStart*dLFac);
-            fprintf(' Plasma End:    %8.2f m\n', dPEnd*dLFac);
-            fprintf(' Plasma Length: %8.2f m\n', (dPEnd-dPStart)*dLFac);
+            fprintf(' Plasma Start:     %8.2f m\n', dPStart*dLFac);
+            fprintf(' Plasma End:       %8.2f m\n', dPEnd*dLFac);
+            fprintf(' Plasma Length:    %8.2f m\n', (dPEnd-dPStart)*dLFac);
             fprintf('\n');
             fprintf(' Nomralised Plasma Density:    %8.2e m^-3\n', dN0);
             fprintf(' Normalised Plasma Frequency:  %8.2e s^-1\n', dNOmegaP);
@@ -249,6 +261,18 @@ classdef OsirisData
             %
             %  Data-extraction function
             % **************************
+            %
+            %  Input Option 1:
+            % =================
+            %  iTime    :: Time dump to extract
+            %  sType    :: Data type [DENSITY, FLD, PHA, RAW]
+            %  sSet     :: Data set i.e. charge, x1p1, etc
+            %  sSpecies :: Particle species
+            %
+            %  Input Option 2:
+            % =================
+            %  iTime    :: Time dump to extract
+            %  oEPath   :: object.Elements path
             %  
             
             if nargin == 1
@@ -281,7 +305,7 @@ classdef OsirisData
 
                 sType     = upper(sVal1); % Type is always upper case
                 sSet      = lower(sVal2); % Set is always lower case
-                sSpecies  = sVal3;
+                sSpecies  = fTranslateSpecies(sVal3);
 
                 sTimeNExt = strcat(sprintf('%06d', iTime), '.h5');
                 sDataRoot = strcat(obj.Path, '/MS/', sType, '/');

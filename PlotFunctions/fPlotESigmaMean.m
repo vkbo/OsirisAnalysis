@@ -11,11 +11,8 @@
 
 function stReturn = fPlotESigmaMean(oData, sSpecies)
 
-    % Defaults
-    stReturn = {};
+    % Input/Output
 
-    
-    % Handle inputs
     if nargin == 0
        fprintf('\n');
        fprintf('  Function: fPlotESigmaMean\n');
@@ -30,8 +27,16 @@ function stReturn = fPlotESigmaMean(oData, sSpecies)
        return;
     end % if
 
+    stReturn = {};
     sSpecies = fTranslateSpecies(sSpecies); 
 
+    oOpt = inputParser;
+    addParameter(oOpt, 'FigureSize', [900 500]);
+    addParameter(oOpt, 'IsSubPlot',  'No');
+    addParameter(oOpt, 'Limits',     []);
+    addParameter(oOpt, 'Charge',     []);
+    parse(oOpt, varargin{:});
+    stOpt = oOpt.Results;
 
     % Data
     oMom   = Momentum(oData, sSpecies);
@@ -39,7 +44,11 @@ function stReturn = fPlotESigmaMean(oData, sSpecies)
     
 
     % Plot
-    cla
+
+    if strcmpi(stOpt.IsSubPlot, 'No')
+        clf;
+        fFigureSize(gcf, stOpt.FigureSize);
+    end % if
     
     hold on;
     

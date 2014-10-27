@@ -9,19 +9,19 @@
 %  sTime   :: Time dump
 %  sBeam   :: Which beam to look at
 %
-%  Optional Inputs:
-% ==================
-%  aLimits :: Axis limits [ZMin, ZMax, RMin, RMax]
-%  aCharge :: Charge area [ZRadius, RRadius]
-%
-%  Outputs:
+%  Options:
 % ==========
-%  None
+%  Limits      :: Axis limits
+%  Charge      :: Calculate charge in ellipse two inputs for peak
+%  FigureSize  :: Default [900 500]
+%  IsSubplot   :: Default No
+%  CAxis       :: Color axis limits
+%  ShowOverlay :: Default Yes
 %
 
-function fPlotBeamDensity(oData, sTime, sBeam, aLimits, aCharge)
+function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
 
-    % Check Arguments
+    % Input/Output
 
     if nargin == 0
        fprintf('\n');
@@ -35,26 +35,41 @@ function fPlotBeamDensity(oData, sTime, sBeam, aLimits, aCharge)
        fprintf('  sTime :: Time dump\n');
        fprintf('  sBeam :: Which beam to look at\n');
        fprintf('\n');
-       fprintf('  Optional Inputs:\n');
-       fprintf(' ==================\n');
-       fprintf('  aLimits :: Axis limits [ZMin, ZMax, RMin, RMax]\n');
-       fprintf('  aCharge :: Charge area [ZRadius, RRadius]\n');
+       fprintf('  Options:\n');
+       fprintf(' ==========\n');
+       fprintf('  Limits      :: Axis limits\n');
+       fprintf('  Charge      :: Calculate charge in ellipse two inputs for peak\n');
+       fprintf('  FigureSize  :: Default [900 500]\n');
+       fprintf('  IsSubplot   :: Default No\n');
+       fprintf('  CAxis       :: Color axis limits\n');
+       fprintf('  ShowOverlay :: Default Yes\n');
        fprintf('\n');
        return;
     end % if
     
-    if nargin < 4
-        aLimits = [];
+    stReturn = {};
+    sBeam    = fTranslateSpecies(sBeam);
+    iTime    = fStringToDump(oData, num2str(sTime));
+
+    oOpt = inputParser;
+    addParameter(oOpt, 'Limits',      []);
+    addParameter(oOpt, 'Charge',      []);
+    addParameter(oOpt, 'FigureSize',  [900 500]);
+    addParameter(oOpt, 'IsSubPlot',   'No');
+    addParameter(oOpt, 'CAxis',       []);
+    addParameter(oOpt, 'ShowOverlay', 'Yes');
+    parse(oOpt, varargin{:});
+    stOpt = oOpt.Results;
+
+    if ~isempty(stOpt.Limits) && length(stOpt.Limits) ~= 4
+        fprintf(2, 'Error: Limits specified, but must be of dimension 4.\n');
+        return;
     end % if
 
-    if nargin < 5
-        aCharge = [];
+    if ~isempty(stOpt.Charge) && (length(stOpt.Charge) ~= 2 || length(stOpt.Charge) ~= 4)
+        fprintf(2, 'Error: Charge specified, but must be of dimension 2 (follow peak) or 4.\n');
+        return;
     end % if
-
-    % Check Input
-
-    sBeam = fTranslateSpecies(sBeam);
-    iTime = fStringToDump(oData, num2str(sTime));
 
     
     % Prepare Data
@@ -65,11 +80,9 @@ function fPlotBeamDensity(oData, sTime, sBeam, aLimits, aCharge)
     CH.ZScale = 'mm';
     CH.RScale = 'mm';
 
-    if length(aLimits) == 4
-        CH.ZLim = aLimits(1:2);
-        CH.RLim = aLimits(3:4);
-    else
-        fprintf(2, 'Warning: Limits specified, but must be of dimension 4.\n');
+    if length(stOpt.Limits) == 4
+        CH.ZLim = stOpt.Limits(1:2);
+        CH.RLim = stOpt.Limits(3:4);
     end % if
 
     stData    = CH.Density;
@@ -82,12 +95,12 @@ function fPlotBeamDensity(oData, sTime, sBeam, aLimits, aCharge)
     aProjZ  = -abs(sum(aData));
     aProjZ  = 0.15*(aRAxis(end)-aRAxis(1))*aProjZ/max(abs(aProjZ))+aRAxis(end);
 
-    if length(aCharge) == 2
+    if length(stOpt.Charge) == 2
         [~,iZPeak] = max(sum(abs(aData),1));
         [~,iRPeak] = max(sum(abs(aData),2));
-        stQTot = CH.BeamCharge('Ellipse', [aZAxis(iZPeak), 0, aCharge(1), aCharge(2)]);
-    elseif length(aCharge) == 4
-        stQTot = CH.BeamCharge('Ellipse', [aCharge(1), aCharge(2), aCharge(3), aCharge(4)]);
+        stQTot = CH.BeamCharge('Ellipse', [aZAxis(iZPeak), 0, stOpt.Charge(1), stOpt.Charge(2)]);
+    elseif length(stOpt.Charge) == 4
+        stQTot = CH.BeamCharge('Ellipse', [stOpt.Charge(1), stOpt.Charge(2), stOpt.Charge(3), stOpt.Charge(4)]);
     else
         stQTot = CH.BeamCharge;
     end % if
@@ -101,35 +114,55 @@ function fPlotBeamDensity(oData, sTime, sBeam, aLimits, aCharge)
     
 
     % Plot
-
-    imagesc(aZAxis, aRAxis, aData);
-    colormap(jet);
-    colorbar();
-
-    hold on;
-    plot(aZAxis, aProjZ, 'White');
     
-    h = legend(sBeamCharge, 'Location', 'NE');
-    legend(h, 'boxoff');
-    set(h,'TextColor', [1 1 1]);
-    set(findobj(h, 'type', 'line'), 'visible', 'off')
-
-    if length(aCharge) == 2
-        dRX = aZAxis(iZPeak)-aCharge(1);
-        dRY = aRAxis(iRPeak)-aCharge(2);
-        rectangle('Position',[dRX,dRY,2*aCharge(1),2*aCharge(2)],'Curvature',[1,1],'EdgeColor','White','LineStyle','--');
-    elseif length(aCharge) == 4
-        dRX = aCharge(1)-aCharge(3);
-        dRY = aCharge(2)-aCharge(4);
-        rectangle('Position',[dRX,dRY,2*aCharge(3),2*aCharge(4)],'Curvature',[1,1],'EdgeColor','White','LineStyle','--');
+    if strcmpi(stOpt.IsSubPlot, 'No')
+        clf;
+        fFigureSize(gcf, stOpt.FigureSize);
+    else
+        cla;
     end % if
 
-    sTitle = sprintf('%s Density after %0.2f m of Plasma (Dump %d)', sBeam, dZPos, iTime);
+    imagesc(aZAxis, aRAxis, aData);
+    colormap('hot');
+    colorbar();
+    if ~isempty(stOpt.CAxis)
+        caxis(stOpt.CAxis);
+    end % if
+
+    hold on;
+
+    if strcmpi(stOpt.ShowOverlay, 'Yes')
+        plot(aZAxis, aProjZ, 'White');
+        h = legend(sBeamCharge, 'Location', 'NE');
+        legend(h, 'boxoff');
+        set(h,'TextColor', [1 1 1]);
+        set(findobj(h, 'type', 'line'), 'visible', 'off')
+    end % if
+
+    if length(stOpt.Charge) == 2
+        dRX = aZAxis(iZPeak)-stOpt.Charge(1);
+        dRY = aRAxis(iRPeak)-stOpt.Charge(2);
+        rectangle('Position',[dRX,dRY,2*stOpt.Charge(1),2*stOpt.Charge(2)],'Curvature',[1,1],'EdgeColor','White','LineStyle','--');
+    elseif length(stOpt.Charge) == 4
+        dRX = aCharge(1)-stOpt.Charge(3);
+        dRY = aCharge(2)-stOpt.Charge(4);
+        rectangle('Position',[dRX,dRY,2*stOpt.Charge(3),2*stOpt.Charge(4)],'Curvature',[1,1],'EdgeColor','White','LineStyle','--');
+    end % if
+
+    sTitle = sprintf('%s Density after %0.2f m of Plasma (Dump %d)', fTranslateSpeciesReadable(sBeam), dZPos, iTime);
 
     title(sTitle,'FontSize',14);
-    xlabel('$$\xi \;\mbox{[mm]}$$','interpreter','LaTex','FontSize',12);
-    ylabel('$$r \;\mbox{[mm]}$$','interpreter','LaTex','FontSize',12);
+    xlabel('\xi [mm]', 'FontSize',12);
+    ylabel('r [mm]', 'FontSize',12);
     
     hold off;
+    
+    
+    % Return
+
+    stReturn.Beam1 = sBeam;
+    stReturn.XLim  = xlim;
+    stReturn.YLim  = ylim;
+    stReturn.CLim  = caxis;
     
 end
