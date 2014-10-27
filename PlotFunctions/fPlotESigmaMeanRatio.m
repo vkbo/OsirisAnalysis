@@ -8,14 +8,16 @@
 %  oData    :: OsirisData object
 %  sSpecies :: Which species
 %
+%  Options:
+% ==========
+%  FigureSize  :: Default [900 500]
+%  IsSubplot   :: Default No
+%
 
-function stReturn = fPlotESigmaMeanRatio(oData, sSpecies)
+function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
 
-    % Defaults
-    stReturn = {};
+    % Input/Output
 
-    
-    % Handle inputs
     if nargin == 0
        fprintf('\n');
        fprintf('  Function: fPlotESigmaMeanRatio\n');
@@ -27,10 +29,22 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies)
        fprintf('  oData    :: OsirisData object\n');
        fprintf('  sSpecies :: Which species\n');
        fprintf('\n');
+       fprintf('  Options:\n');
+       fprintf(' ==========\n');
+       fprintf('  FigureSize  :: Default [900 500]\n');
+       fprintf('  IsSubplot   :: Default No\n');
+       fprintf('\n');
        return;
     end % if
 
-    sSpecies = fTranslateSpecies(sSpecies); 
+    stReturn = {};
+    sSpecies = fTranslateSpecies(sSpecies);
+
+    oOpt = inputParser;
+    addParameter(oOpt, 'FigureSize', [900 500]);
+    addParameter(oOpt, 'IsSubPlot',  'No');
+    parse(oOpt, varargin{:});
+    stOpt = oOpt.Results;
 
 
     % Data
@@ -39,29 +53,33 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies)
     
 
     % Plot
-    cla
+
+    if strcmpi(stOpt.IsSubPlot, 'No')
+        clf;
+        fFigureSize(gcf, stOpt.FigureSize);
+    else
+        cla;
+    end % if
     
     hold on;
     
     H(1) = plot(stData.TimeAxis, stData.Data, '-b', 'LineWidth', 2);
     
     %legend(H(1), '<E>/\sigma_E', 'Location', 'SouthEast');
-    aXLim = [stData.TimeAxis(1),stData.TimeAxis(end)];
-    xlim(aXLim);
-    aYLim = get(gca,'YLim');
+    xlim([stData.TimeAxis(1),stData.TimeAxis(end)]);
 
     sTitle = sprintf('%s Energy Mean to Sigma Ratio', sSpecies);
     title(sTitle, 'FontSize', 16);
-    xlabel('$$\zeta [\mbox{m}]$$', 'Interpreter', 'LaTex', 'FontSize', 14);
-    ylabel('$$\langle E \rangle / \sigma_E$$', 'Interpreter', 'LaTex', 'FontSize', 14);
+    xlabel('$$z [\mbox{m}]$$', 'Interpreter', 'LaTex', 'FontSize', 12);
+    ylabel('$$\langle E \rangle / \sigma_E$$', 'Interpreter', 'LaTex', 'FontSize', 12);
     
     hold off;
 
 
     % Returns
     stReturn.Beam1 = sSpecies;
-    stReturn.XLim  = aXLim;
-    stReturn.YLim  = aYLim;
+    stReturn.XLim  = get(gca, 'XLim');
+    stReturn.YLim  = get(gca, 'YLim');
     
 end
 

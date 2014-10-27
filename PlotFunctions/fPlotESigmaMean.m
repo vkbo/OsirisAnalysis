@@ -8,8 +8,13 @@
 %  oData    :: OsirisData object
 %  sSpecies :: Which species
 %
+%  Options:
+% ==========
+%  FigureSize  :: Default [900 500]
+%  IsSubplot   :: Default No
+%
 
-function stReturn = fPlotESigmaMean(oData, sSpecies)
+function stReturn = fPlotESigmaMean(oData, sSpecies, varargin)
 
     % Input/Output
 
@@ -24,6 +29,11 @@ function stReturn = fPlotESigmaMean(oData, sSpecies)
        fprintf('  oData    :: OsirisData object\n');
        fprintf('  sSpecies :: Which species\n');
        fprintf('\n');
+       fprintf('  Options:\n');
+       fprintf(' ==========\n');
+       fprintf('  FigureSize  :: Default [900 500]\n');
+       fprintf('  IsSubplot   :: Default No\n');
+       fprintf('\n');
        return;
     end % if
 
@@ -33,10 +43,9 @@ function stReturn = fPlotESigmaMean(oData, sSpecies)
     oOpt = inputParser;
     addParameter(oOpt, 'FigureSize', [900 500]);
     addParameter(oOpt, 'IsSubPlot',  'No');
-    addParameter(oOpt, 'Limits',     []);
-    addParameter(oOpt, 'Charge',     []);
     parse(oOpt, varargin{:});
     stOpt = oOpt.Results;
+
 
     % Data
     oMom   = Momentum(oData, sSpecies);
@@ -57,22 +66,20 @@ function stReturn = fPlotESigmaMean(oData, sSpecies)
     %plot(stData.TimeAxis, stData.Mean-stData.Sigma, 'red--');
     
     legend([H(1).mainLine, H.patch], '<E>', '\sigma_E', 'Location', 'SouthEast');
-    aXLim = [stData.TimeAxis(1),stData.TimeAxis(end)];
-    xlim(aXLim);
-    aYLim = get(gca,'YLim');
+    xlim([stData.TimeAxis(1), stData.TimeAxis(end)]);
 
     sTitle = sprintf('%s Mean Energy', sSpecies);
     title(sTitle, 'FontSize', 16);
-    xlabel('$$\zeta [\mbox{m}]$$', 'Interpreter', 'LaTex', 'FontSize', 14);
-    ylabel('$$P_{z} [\mbox{MeV/c}]$$', 'Interpreter', 'LaTex', 'FontSize', 14);
+    xlabel('s [m]', 'FontSize', 12);
+    ylabel('P_z [MeV/c]', 'FontSize', 12);
     
     hold off;
 
 
     % Returns
     stReturn.Beam1 = sSpecies;
-    stReturn.XLim  = aXLim;
-    stReturn.YLim  = aYLim;
+    stReturn.XLim  = get(gca, 'XLim');
+    stReturn.YLim  = get(gca, 'YLim');
     
 end
 

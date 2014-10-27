@@ -74,18 +74,18 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     
     % Prepare Data
 
-    CH        = Charge(oData, sBeam);
-    CH.Time   = iTime;
-    CH.Units  = 'SI';
-    CH.ZScale = 'mm';
-    CH.RScale = 'mm';
+    oCH        = Charge(oData, sBeam);
+    oCH.Time   = iTime;
+    oCH.Units  = 'SI';
+    oCH.ZScale = 'mm';
+    oCH.RScale = 'mm';
 
     if length(stOpt.Limits) == 4
-        CH.ZLim = stOpt.Limits(1:2);
-        CH.RLim = stOpt.Limits(3:4);
+        oCH.ZLim = stOpt.Limits(1:2);
+        oCH.RLim = stOpt.Limits(3:4);
     end % if
 
-    stData    = CH.Density;
+    stData    = oCH.Density;
 
     aData   = stData.Data;
     aZAxis  = stData.ZAxis;
@@ -98,11 +98,11 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     if length(stOpt.Charge) == 2
         [~,iZPeak] = max(sum(abs(aData),1));
         [~,iRPeak] = max(sum(abs(aData),2));
-        stQTot = CH.BeamCharge('Ellipse', [aZAxis(iZPeak), 0, stOpt.Charge(1), stOpt.Charge(2)]);
+        stQTot = oCH.BeamCharge('Ellipse', [aZAxis(iZPeak), 0, stOpt.Charge(1), stOpt.Charge(2)]);
     elseif length(stOpt.Charge) == 4
-        stQTot = CH.BeamCharge('Ellipse', [stOpt.Charge(1), stOpt.Charge(2), stOpt.Charge(3), stOpt.Charge(4)]);
+        stQTot = oCH.BeamCharge('Ellipse', [stOpt.Charge(1), stOpt.Charge(2), stOpt.Charge(3), stOpt.Charge(4)]);
     else
-        stQTot = CH.BeamCharge;
+        stQTot = oCH.BeamCharge;
     end % if
     dQ = stQTot.QTotal;
     
