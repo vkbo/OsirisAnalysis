@@ -1,6 +1,6 @@
 %
-%  Class Object :: Analyse Beam Charge
-% *************************************
+%  Class Object :: Analyse Species Charge
+% ****************************************
 %
 
 classdef Charge

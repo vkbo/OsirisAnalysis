@@ -9,14 +9,6 @@
 %  iTime    :: Which dump to look at
 %  sAxis    :: Which axis to plot
 %
-%  Optional Inputs:
-% ==================
-%  sSave    :: 'save' will save plot to file
-%
-%  Outputs:
-% ==========
-%  None
-%
 
 function fPlotField(oData, iTime, sAxis)
 
@@ -36,10 +28,6 @@ function fPlotField(oData, iTime, sAxis)
        fprintf('  oData    :: OsirisData object\n');
        fprintf('  iTime    :: Which dump to look at\n');
        fprintf('  sAxis    :: Which axis to plot\n');
-       fprintf('\n');
-       fprintf('  Optional Inputs:\n');
-       fprintf(' ==================\n');
-       fprintf('  sSave    :: ''save'' will save plot to file\n');
        fprintf('\n');
        return;
     end % if

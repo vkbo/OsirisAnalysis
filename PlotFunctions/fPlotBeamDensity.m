@@ -17,6 +17,7 @@
 %  IsSubplot   :: Default No
 %  CAxis       :: Color axis limits
 %  ShowOverlay :: Default Yes
+%  Absolute    :: Absolute value, default No
 %
 
 function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
@@ -58,6 +59,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     addParameter(oOpt, 'IsSubPlot',   'No');
     addParameter(oOpt, 'CAxis',       []);
     addParameter(oOpt, 'ShowOverlay', 'Yes');
+    addParameter(oOpt, 'Absolute',    'No');
     parse(oOpt, varargin{:});
     stOpt = oOpt.Results;
 
@@ -85,12 +87,16 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
         oCH.RLim = stOpt.Limits(3:4);
     end % if
 
-    stData    = oCH.Density;
+    stData  = oCH.Density;
 
     aData   = stData.Data;
     aZAxis  = stData.ZAxis;
     aRAxis  = stData.RAxis;
     dZPos   = stData.ZPos;
+    
+    if strcmpi(stOpt.Absolute, 'Yes')
+        aData = abs(aData);
+    end % if
     
     aProjZ  = -abs(sum(aData));
     aProjZ  = 0.15*(aRAxis(end)-aRAxis(1))*aProjZ/max(abs(aProjZ))+aRAxis(end);
