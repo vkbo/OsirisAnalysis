@@ -115,6 +115,12 @@ classdef OsirisData
     %
     
     methods (Access = 'public')
+
+        function Reload(obj)
+            
+            obj.PathID = obj.PathID;
+            
+        end % function
         
         function Info(obj)
             
@@ -136,12 +142,6 @@ classdef OsirisData
             fprintf('Last Dump: %d\n', floor(dTMax/dTimeStep/dNDump));
             fprintf('\n');
 
-        end % function
-        
-        function Reload(obj)
-            
-            obj.PathID = obj.PathID;
-            
         end % function
         
         function PlasmaInfo(obj)
@@ -222,16 +222,14 @@ classdef OsirisData
             if strcmpi(sCoords, 'cylindrical')
 
                 %sFunction = sprintf('%s.*%s.*x2', stInt.Equations{1}, stInt.Equations{2});
-                sFunction = sprintf('%s.*x2', stInt.Equations{4});
-                %sFunction = strrep(sFunction, 'sin', 'fPosSin');
-                %sFunction = strrep(sFunction, 'cos', 'fPosCos');
+                sFunction = sprintf('%s.*x2', stInt.Equation);
                 fprintf(' EQ: %s\n', sFunction);
-                fprintf(' X1: %d–%d\n', stInt.Lims{1}, stInt.Lims{2});
-                fprintf(' X2: %d–%d\n', stInt.Lims{3}, stInt.Lims{4});
+                fprintf(' X1: %d–%d\n', stInt.Lims(1), stInt.Lims(2));
+                fprintf(' X2: %d–%d\n', stInt.Lims(3), stInt.Lims(4));
                 fprintf('\n');
                 
                 fInt = @(x1,x2) eval(sFunction);
-                dBeamInt = 2*pi*integral2(fInt,stInt.Lims{1},stInt.Lims{2},0,stInt.Lims{4});
+                dBeamInt = 2*pi*integral2(fInt,stInt.Lims(1),stInt.Lims(2),0,stInt.Lims(4));
                 
                 dBeamVol     = dBeamInt * dC^3/dNOmegaP^3;
                 dBeamNum     = dBeamVol * dDensity * dN0;

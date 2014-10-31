@@ -3,18 +3,18 @@
 % Script to generate an animation of the evolution of the ElectronBeam
 %
 
-figMain = figure;
-set(figMain, 'Position', [200 200 1200 700]);
-
-clear M;
-
-iStart = 80;
-iEnd   = 95;
-
+iStart = 0;
+iEnd   = fStringToDump(od, 'End');
+aDim   = [1200, 700];
 xMin   = 213;
 xMax   = 221;
-%xMin   = 185;
-%xMax   = 189;
+
+% Animation Loop
+
+figMain = figure;
+set(figMain, 'Position', [1800-aDim(1), 1000-aDim(2), aDim(1), aDim(2)]);
+
+sMovieFile = 'AnimBeam';
 
 clear M;
 
@@ -57,16 +57,16 @@ for k=iStart:iEnd
     
     drawnow;
     
-    set(figMain, 'PaperPosition', [1 1 1200/96 700/96]);
+    set(figMain, 'PaperPosition', [1 1 aDim(1)/96 aDim(2)/96]);
     set(figMain, 'InvertHardCopy', 'Off');
-    print(figMain, '-dtiffnocompression', '-r96', 'Temp/print.tif');
-    M(i).cdata    = imread('Temp/print.tif');
+    print(figMain, '-dtiffnocompression', '-r96', '/tmp/osiris-print.tif');
+    M(i).cdata    = imread('/tmp/osiris-print.tif');
     M(i).colormap = [];
 
 end % for
 
-movie2avi(M, 'Movies/Temp.avi', 'fps', 2);
-[~,~] = system(sprintf('avconv -i Movies/Temp.avi -s 1200x700 -b:v 5000k Movies/AnimElectronBeam-%s.mp4', fTimeStamp));
+movie2avi(M, '/tmp/osiris-temp.avi', 'fps', 6, 'Compression', 'None');
+[~,~] = system(sprintf('avconv -i /tmp/osiris-temp.avi -c:v libx264 -crf 1 -s %dx%d -b:v 50000k Movies/%s-%s.mp4', aDim(1), aDim(2), sMovieFile, fTimeStamp));
 [~,~] = system('rm Movies/Temp.avi');
 
 clear i;
@@ -75,3 +75,4 @@ clear iEnd;
 clear iStart;
 clear xMin;
 clear xMax;
+clear aDim;

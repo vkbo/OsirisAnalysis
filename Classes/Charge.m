@@ -16,6 +16,7 @@ classdef Charge
         Time    = 0;   % Current time (dumb number)
         ZLim    = [];  % Z axis limits
         RLim    = [];  % R axis limits
+        ZZero   = '';  % Zero point on Z axis
         Units   = 'N'; % Unit of axes
         ZScale  = 1.0; % Scale of Z axis
         RScale  = 1.0; % Scale of R axis
@@ -224,6 +225,41 @@ classdef Charge
             stReturn.Data  = aData;
             stReturn.ZAxis = aZAxis;
             stReturn.RAxis = aRAxis;
+            stReturn.ZPos  = obj.fGetZPos();
+            
+        end % function
+
+        function stReturn = Fourier(obj, aRange)
+            
+            stReturn = {};
+            
+            if nargin < 2
+                aRange = [];
+            end % if
+            
+            dXMin    = obj.Data.Config.Variables.Simulation.BoxX1Min;
+            dXMax    = obj.Data.Config.Variables.Simulation.BoxX1Max;
+            dBoxSize = dXMax-dXMin;
+            
+            h5Data = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
+            if isempty(aRange)
+                aProj = abs(sum(transpose(h5Data),1));
+            else
+                if length(aRange) == 1
+                    aProj = abs(sum(transpose(h5Data(:,aRange(1))),1));
+                else
+                    aProj = abs(sum(transpose(h5Data(:,aRange(1):aRange(1))),1));
+                end % if
+            end % if
+
+            iLen   = length(aProj);
+            iN     = 2^nextpow2(iLen);
+            aFFT   = fft(aProj,iN)/iLen;
+            aXAxis = 2*pi*iLen/dBoxSize/2*linspace(0,1,iN/2+1);
+            
+            stReturn.Proj  = aProj;
+            stReturn.Data  = 2*abs(aFFT(1:iN/2+1));
+            stReturn.XAxis = aXAxis;
             stReturn.ZPos  = obj.fGetZPos();
             
         end % function

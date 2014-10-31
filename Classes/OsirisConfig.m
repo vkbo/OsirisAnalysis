@@ -408,26 +408,44 @@ classdef OsirisConfig
         
         function obj = fGetSpecies(obj)
             
-            aSpecies.Beam   = {};
-            aSpecies.Plasma = {};
+            stSpecies.Beam   = {};
+            stSpecies.Plasma = {};
+
             [iRows,~] = size(obj.Raw);
+            sPrev     = '';
             
-            sPrev = '';
-            
+            % Look for species in raw data
             for i=1:iRows
                 sBeam = obj.Raw{i,7};
                 if ~strcmp(sBeam,sPrev)
                     if strcmpi(sBeam(1:6), 'Plasma')
-                        aSpecies.Plasma{end+1,1} = sBeam;
+                        stSpecies.Plasma{end+1,1} = sBeam;
                     else
-                        aSpecies.Beam{end+1,1} = sBeam;
+                        stSpecies.Beam{end+1,1} = sBeam;
                     end % if
                     sPrev = obj.Raw{i,7};
                 end % if
             end % for
+
+            iBeams = length(stSpecies.Beam);
             
-            obj.Variables.Species = aSpecies;
+            % Assume first beam in input deck is the drive beam
+            if iBeams > 0
+                stSpecies.DriveBeam = stSpecies.Beam(1);
+            end % if
+
+            % Assume the rest of the beams are witness beams
+            if iBeams > 1
+                stSpecies.WitnessBeam = stSpecies.Beam(2:end);
+            end % if
             
+            stSpecies.BeamCount        = iBeams;
+            stSpecies.PlasmaCount      = length(stSpecies.Plasma);
+            stSpecies.DriveBeamCount   = length(stSpecies.DriveBeam);
+            stSpecies.WitnessBeamCount = length(stSpecies.WitnessBeam);
+            
+            obj.Variables.Species = stSpecies;
+
         end % function
 
         function obj = fGetPlasmaVariables(obj)
@@ -535,6 +553,16 @@ classdef OsirisConfig
         
         function obj = fGetBeamVariables(obj)
             
+            % Extract variables
+            iDim   = obj.Variables.Simulation.Dimensions;
+            dX1Min = obj.Variables.Simulation.BoxX1Min;
+            dX1Max = obj.Variables.Simulation.BoxX1Max;
+            dX2Min = obj.Variables.Simulation.BoxX2Min;
+            dX2Max = obj.Variables.Simulation.BoxX2Max;
+            dX3Min = obj.Variables.Simulation.BoxX3Min;
+            dX3Max = obj.Variables.Simulation.BoxX3Max;
+
+            % Loop through beam species
             [iRows,~] = size(obj.Variables.Species.Beam);
             
             for i=1:iRows
@@ -597,16 +625,35 @@ classdef OsirisConfig
                 aValue = obj.fExtractFixedNum(sBeam,'diag_species','raw_fraction',[0]);
                 obj.Variables.Beam.(sBeam).RAWFraction = double(aValue(1));
 
-                % Beam Profile
+                % Beam profile
                 
                 sValue = obj.fExtractRaw(sBeam, 'profile', 'profile_type');
                 obj.Variables.Beam.(sBeam).ProfileType     = strrep(sValue, '"', '');
                 
                 sValue = obj.fExtractRaw(sBeam, 'profile', 'math_func_expr');
                 obj.Variables.Beam.(sBeam).ProfileFunction = strrep(sValue, '"', '');
+                sMathFunc = strrep(sValue, '"', '');
                 
                 aValue = obj.fExtractFixedNum(sBeam,'profile','density',[0]);
                 obj.Variables.Beam.(sBeam).Density         = double(aValue(1));
+                
+                % Analyse beam profile
+                
+                stFunc    = fExtractEq(sMathFunc, iDim, [dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max]);
+                sFunction = stFunc.Equation;
+                fProfile  = @(x1,x2) eval(sFunction);
+                
+                %aSpan = linspace(stFunc.Lims(1), stFunc.Lims(2), 200);
+                %aReturn = fProfile(aSpan,0);
+                %figure();
+                %plot(aReturn);
+                %dSigma = std(aReturn)
+
+                %aSpan = linspace(stFunc.Lims(3), stFunc.Lims(4), 200);
+                %aReturn = fProfile(0,aSpan);
+                %figure();
+                %plot(aReturn);
+                %dSigma = std(aReturn)
 
             end % for
             

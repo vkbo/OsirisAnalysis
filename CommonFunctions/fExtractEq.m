@@ -16,8 +16,7 @@
 
 function stReturn = fExtractEq(sEquation, iDim, aLims)
 
-    stReturn.Equations = {};
-    stReturn.Lims      = {};
+    stReturn = {};
 
     if strcmp(sEquation, '')
         return;
@@ -36,10 +35,10 @@ function stReturn = fExtractEq(sEquation, iDim, aLims)
     if strcmpi(sEquation(1:3), 'if(')
 
         aSplit = strsplit(sEquation(4:end-1),',');
-        
+
         % If so, it should have 3 parts
         if length(aSplit) == 3
-                        
+
             % First part dictates limits
             aLim = strsplit(aSplit{1},'&&');
             for i=1:length(aLim)
@@ -54,22 +53,22 @@ function stReturn = fExtractEq(sEquation, iDim, aLims)
                         dX2Max = str2num(aLim{i}(4:end));
                 end % switch
             end % for
-            
+
             if iDim == 2
                 dX3Min = dX2Min;
                 dX3Max = dX2Max;
             end % if
-            
+
             % Second part is the actual equation
             sEquation = aSplit{2};
-            
+
         end % if
-        
+
     end % if
 
     % Interpret equation
     %fprintf('%s\n', sEquation);
-    
+
     sX1Eq = '';
     sX2Eq = '';
     sX3Eq = '';
@@ -86,50 +85,14 @@ function stReturn = fExtractEq(sEquation, iDim, aLims)
 
     end % if
 
-    if isempty(sX1Eq)
-        sX1Eq = '1';
-    end % if
-
-    if isempty(sX2Eq)
-        sX2Eq = '1';
-    end % if
-    
-    if isempty(sX3Eq)
-        sX3Eq = '1';
-    end % if
-
     % Make vector compatible
-    sX1Eq = strrep(sX1Eq,'*','.*');
-    sX1Eq = strrep(sX1Eq,'/','./');
-    sX1Eq = strrep(sX1Eq,'^','.^');
-    %sX1Eq = strrep(sX1Eq,'x1','x');
-
-    sX2Eq = strrep(sX2Eq,'*','.*');
-    sX2Eq = strrep(sX2Eq,'/','./');
-    sX2Eq = strrep(sX2Eq,'^','.^');
-    %sX2Eq = strrep(sX2Eq,'x2','y');
-
-    sX3Eq = strrep(sX3Eq,'*','.*');
-    sX3Eq = strrep(sX3Eq,'/','./');
-    sX3Eq = strrep(sX3Eq,'^','.^');
-    %sX3Eq = strrep(sX3Eq,'x3','z');
-    
     sEquation = strrep(sEquation,'*','.*');
     sEquation = strrep(sEquation,'/','./');
     sEquation = strrep(sEquation,'^','.^');
 
-    stReturn.Equations = {sX1Eq, sX2Eq, sX3Eq, sEquation};
-    stReturn.Lims      = {dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max};
-
-    %fprintf('%s\n', sX1Eq);
-    %fprintf('%s\n', sX2Eq);
-    %fprintf('%s\n', sX3Eq);
-    %fprintf('%d\n', dX1Min);
-    %fprintf('%d\n', dX1Max);
-    %fprintf('%d\n', dX2Min);
-    %fprintf('%d\n', dX2Max);
-    %fprintf('%d\n', dX3Min);
-    %fprintf('%d\n', dX3Max);
+    stReturn.Equation = sEquation;
+    stReturn.Lims     = [dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max];
+    stReturn.Box      = aLims;
 
 end
 

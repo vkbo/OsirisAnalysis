@@ -60,6 +60,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     addParameter(oOpt, 'CAxis',       []);
     addParameter(oOpt, 'ShowOverlay', 'Yes');
     addParameter(oOpt, 'Absolute',    'No');
+    addParameter(oOpt, 'TrackPeak',   'No');
     parse(oOpt, varargin{:});
     stOpt = oOpt.Results;
 
@@ -112,7 +113,9 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     end % if
     dQ = stQTot.QTotal;
     
-    if abs(dQ) < 1.0
+    if abs(dQ) < 1.0e-3
+        sBeamCharge = sprintf('Q_{tot} = %.2f fC', dQ*1e6);
+    elseif abs(dQ) < 1.0
         sBeamCharge = sprintf('Q_{tot} = %.2f pC', dQ*1e3);
     else
         sBeamCharge = sprintf('Q_{tot} = %.2f nC', dQ);
