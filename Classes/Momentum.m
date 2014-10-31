@@ -215,6 +215,115 @@ classdef Momentum
             aReturn = sqrt(abs(aMomentum).^2 + 1)*dPFac;
             
         end % function
+        
+        function stReturn = Evolution(obj, sAxis, sStart, sStop)
+
+            stReturn = {};
+            
+            if nargin < 3
+                sStart = 'Start';
+            end % if
+
+            if nargin < 4
+                sStop = 'End';
+            end % if
+            
+            iStart = fStringToDump(obj.Data, sStart);
+            iStop  = fStringToDump(obj.Data, sStop);
+
+            switch(fMomentumAxis(sAxis))
+                case 'p1'
+                    iAxis = 4;
+                case 'p2'
+                    iAxis = 5;
+                case 'p3'
+                    iAxis = 6;
+            end % switch
+            
+            for i=iStart:iStop
+                
+                k = i-iStart+1;
+
+                aRAW = obj.Data.Data(i, 'RAW', '', obj.Beam);
+
+                stReturn.Average(k)       = fWeightedMean(aRAW(:,iAxis),aRAW(:,8));
+                stReturn.Median(k)        = wprctile(aRAW(:,iAxis),50,abs(aRAW(:,8)));
+                stReturn.Percentile10(k)  = wprctile(aRAW(:,iAxis),10,abs(aRAW(:,8)));
+                stReturn.Percentile90(k)  = wprctile(aRAW(:,iAxis),90,abs(aRAW(:,8)));
+                stReturn.FirstQuartile(k) = wprctile(aRAW(:,iAxis),25,abs(aRAW(:,8)));
+                stReturn.ThirdQuartile(k) = wprctile(aRAW(:,iAxis),75,abs(aRAW(:,8)));
+
+            end % for
+            
+    
+        end % function
+
+        function stReturn = BeamSlip(obj, sStart, sStop)
+
+            stReturn = {};
+
+            if nargin < 2
+                sStart = 'Start';
+            end % if
+
+            if nargin < 3
+                sStop = 'End';
+            end % if
+            
+            iStart = fStringToDump(obj.Data, sStart);
+            iStop  = fStringToDump(obj.Data, sStop);
+            
+            % Variables
+            dLFac     = obj.Data.Config.Variables.Convert.SI.LengthFac;
+            dTimeStep = obj.Data.Config.Variables.Simulation.TimeStep;
+            iNDump    = obj.Data.Config.Variables.Simulation.NDump;
+            dDeltaZ   = dTimeStep*iNDump;
+            dLFac     = dLFac*1e3;
+            
+            for i=iStart:iStop
+                
+                k = i-iStart+1;
+
+                aRAW = obj.Data.Data(i, 'RAW', '', obj.Beam);
+
+                stReturn.Slip.Average(k)           = (dDeltaZ - dDeltaZ*sqrt(1-1/fWeightedMean(aRAW(:,4),aRAW(:,8))^2))*dLFac;
+                stReturn.Slip.Median(k)            = (dDeltaZ - dDeltaZ*sqrt(1-1/wprctile(aRAW(:,4),50,abs(aRAW(:,8)))^2))*dLFac;
+                stReturn.Slip.Percentile10(k)      = (dDeltaZ - dDeltaZ*sqrt(1-1/wprctile(aRAW(:,4),10,abs(aRAW(:,8)))^2))*dLFac;
+                stReturn.Slip.Percentile90(k)      = (dDeltaZ - dDeltaZ*sqrt(1-1/wprctile(aRAW(:,4),90,abs(aRAW(:,8)))^2))*dLFac;
+                stReturn.Slip.FirstQuartile(k)     = (dDeltaZ - dDeltaZ*sqrt(1-1/wprctile(aRAW(:,4),25,abs(aRAW(:,8)))^2))*dLFac;
+                stReturn.Slip.ThirdQuartile(k)     = (dDeltaZ - dDeltaZ*sqrt(1-1/wprctile(aRAW(:,4),75,abs(aRAW(:,8)))^2))*dLFac;
+
+                stReturn.Position.Average(k)       = (fWeightedMean(aRAW(:,1),aRAW(:,8))-(i*dDeltaZ))*dLFac;
+                stReturn.Position.Median(k)        = (wprctile(aRAW(:,1),50,abs(aRAW(:,8)))-(i*dDeltaZ))*dLFac;
+                stReturn.Position.Percentile10(k)  = (wprctile(aRAW(:,1),10,abs(aRAW(:,8)))-(i*dDeltaZ))*dLFac;
+                stReturn.Position.Percentile90(k)  = (wprctile(aRAW(:,1),90,abs(aRAW(:,8)))-(i*dDeltaZ))*dLFac;
+                stReturn.Position.FirstQuartile(k) = (wprctile(aRAW(:,1),25,abs(aRAW(:,8)))-(i*dDeltaZ))*dLFac;
+                stReturn.Position.ThirdQuartile(k) = (wprctile(aRAW(:,1),75,abs(aRAW(:,8)))-(i*dDeltaZ))*dLFac;
+                
+                if k > 1
+                    stReturn.ExpectedPos.Average(k)       = stReturn.Position.Average(1)       - sum(stReturn.Slip.Average(1:k-1));
+                    stReturn.ExpectedPos.Median(k)        = stReturn.Position.Median(1)        - sum(stReturn.Slip.Median(1:k-1));
+                    stReturn.ExpectedPos.Percentile10(k)  = stReturn.Position.Percentile10(1)  - sum(stReturn.Slip.Percentile10(1:k-1));
+                    stReturn.ExpectedPos.Percentile90(k)  = stReturn.Position.Percentile90(1)  - sum(stReturn.Slip.Percentile90(1:k-1));
+                    stReturn.ExpectedPos.FirstQuartile(k) = stReturn.Position.FirstQuartile(1) - sum(stReturn.Slip.FirstQuartile(1:k-1));
+                    stReturn.ExpectedPos.ThirdQuartile(k) = stReturn.Position.ThirdQuartile(1) - sum(stReturn.Slip.ThirdQuartile(1:k-1));
+                else
+                    stReturn.ExpectedPos.Average(1)       = stReturn.Position.Average(1);
+                    stReturn.ExpectedPos.Median(1)        = stReturn.Position.Median(1);
+                    stReturn.ExpectedPos.Percentile10(1)  = stReturn.Position.Percentile10(1);
+                    stReturn.ExpectedPos.Percentile90(1)  = stReturn.Position.Percentile90(1);
+                    stReturn.ExpectedPos.FirstQuartile(1) = stReturn.Position.FirstQuartile(1);
+                    stReturn.ExpectedPos.ThirdQuartile(1) = stReturn.Position.ThirdQuartile(1);
+                end % if
+                
+            end % for
+            
+            aTAxis = obj.fGetTimeAxis;
+            
+            stReturn.DeltaZ = dDeltaZ;
+            stReturn.TAxis  = aTAxis(iStart+1:iStop+1);
+    
+        end % function
     
     end % methods
     

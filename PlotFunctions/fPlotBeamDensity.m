@@ -15,6 +15,7 @@
 %  Charge      :: Calculate charge in ellipse two inputs for peak
 %  FigureSize  :: Default [900 500]
 %  IsSubplot   :: Default No
+%  HideDump    :: Default No
 %  CAxis       :: Color axis limits
 %  ShowOverlay :: Default Yes
 %  Absolute    :: Absolute value, default No
@@ -23,6 +24,8 @@
 function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
 
     % Input/Output
+
+    stReturn = {};
 
     if nargin == 0
        fprintf('\n');
@@ -42,13 +45,13 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
        fprintf('  Charge      :: Calculate charge in ellipse two inputs for peak\n');
        fprintf('  FigureSize  :: Default [900 500]\n');
        fprintf('  IsSubplot   :: Default No\n');
+       fprintf('  HideDump    :: Default No\n');
        fprintf('  CAxis       :: Color axis limits\n');
        fprintf('  ShowOverlay :: Default Yes\n');
        fprintf('\n');
        return;
     end % if
     
-    stReturn = {};
     sBeam    = fTranslateSpecies(sBeam);
     iTime    = fStringToDump(oData, num2str(sTime));
 
@@ -56,6 +59,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     addParameter(oOpt, 'Limits',      []);
     addParameter(oOpt, 'Charge',      []);
     addParameter(oOpt, 'FigureSize',  [900 500]);
+    addParameter(oOpt, 'HideDump',    'No');
     addParameter(oOpt, 'IsSubPlot',   'No');
     addParameter(oOpt, 'CAxis',       []);
     addParameter(oOpt, 'ShowOverlay', 'Yes');
@@ -127,6 +131,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     if strcmpi(stOpt.IsSubPlot, 'No')
         clf;
         fFigureSize(gcf, stOpt.FigureSize);
+        set(gcf,'Name',sprintf('Beam Fourier (Dump %d)',iTime),'NumberTitle','off')
     else
         cla;
     end % if
@@ -158,7 +163,11 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
         rectangle('Position',[dRX,dRY,2*stOpt.Charge(3),2*stOpt.Charge(4)],'Curvature',[1,1],'EdgeColor','White','LineStyle','--');
     end % if
 
-    sTitle = sprintf('%s Density after %0.2f m of Plasma (Dump %d)', fTranslateSpeciesReadable(sBeam), dZPos, iTime);
+    if strcmpi(stOpt.HideDump, 'No')
+        sTitle = sprintf('%s Density %s (Dump %d)', fTranslateSpeciesReadable(sBeam), fPlasmaPosition(oData, iTime), iTime);
+    else
+        sTitle = sprintf('%s Density %s', fTranslateSpeciesReadable(sBeam), fPlasmaPosition(oData, iTime));
+    end % if
 
     title(sTitle,'FontSize',14);
     xlabel('\xi [mm]', 'FontSize',12);

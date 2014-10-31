@@ -237,9 +237,10 @@ classdef Charge
                 aRange = [];
             end % if
             
-            dXMin    = obj.Data.Config.Variables.Simulation.BoxX1Min;
-            dXMax    = obj.Data.Config.Variables.Simulation.BoxX1Max;
-            dBoxSize = dXMax-dXMin;
+            dPlasmaFac = obj.Data.Config.Variables.Plasma.MaxPlasmaFac;
+            dXMin      = obj.Data.Config.Variables.Simulation.BoxX1Min;
+            dXMax      = obj.Data.Config.Variables.Simulation.BoxX1Max;
+            dBoxSize   = dXMax-dXMin;
             
             h5Data = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
             if isempty(aRange)
@@ -255,7 +256,7 @@ classdef Charge
             iLen   = length(aProj);
             iN     = 2^nextpow2(iLen);
             aFFT   = fft(aProj,iN)/iLen;
-            aXAxis = 2*pi*iLen/dBoxSize/2*linspace(0,1,iN/2+1);
+            aXAxis = 2*pi*iLen/dBoxSize/2*linspace(0,1,iN/2+1)/sqrt(dPlasmaFac);
             
             stReturn.Proj  = aProj;
             stReturn.Data  = 2*abs(aFFT(1:iN/2+1));
@@ -317,7 +318,7 @@ classdef Charge
             dQ = dQ*dN0;           % Plasma density
             dQ = dQ*dLFactor^4;    % Convert from normalised units to unitless
             dQ = dQ*2*pi;          % Cylindrical factor
-            dQ = dQ*1.337952;      % Unknown correction factor, tuned to initial electron beam
+            dQ = dQ*1.361175;      % Unknown correction factor, tuned to initial electron beam
             dQ = dQ*dECharge;      % Convert to coulomb
             dQ = dQ*1e9;           % Convert to nC
             

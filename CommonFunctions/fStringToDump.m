@@ -6,7 +6,8 @@
 
 function iDump = fStringToDump(oData, sString)
 
-    iDump = 0;
+    iDump   = 0;
+    sString = num2str(sString);
 
     if strcmp(sString, '')
         iDump = 0;
