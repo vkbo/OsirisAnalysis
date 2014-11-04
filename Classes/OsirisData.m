@@ -383,53 +383,57 @@ classdef OsirisData
 
             end % if
             
-            if iTime >= iFiles
+            if iTime >= iFiles && ~strcmpi(sType, 'TRACKS')
                 fprintf(2, 'Error: Dump %d does not exist. Last dump is %d.\n', iTime, iFiles-1);
                 return;
             end % if
             
-            sLoad = char(strcat(sDataRoot, sFolder, sFile));
-            %fprintf('File: %s\n', sLoad);
+            sLoad = strcat(sDataRoot, sFolder, sFile);
             
-            switch(sType)
+            if strcmpi(sType, 'RAW') || strcmpi(sType, 'TRACKS')
 
-                case 'RAW'
+                if strcmpi(sType, 'RAW')
+                    sGroup = '/';
+                else
+                    sGroup = strcat('/', sSet, '/');
+                end % if
+                
+                h5Info = h5info(sLoad, sGroup);
 
-                    h5Info = h5info(sLoad);
-
-                    % Check if 3rd dimension exists
-                    bX3 = false;
-                    for i=1:length(h5Info.Datasets)
-                        if strcmp(h5Info.Datasets(i).Name, '/x3')
-                            bX3 = true;
-                        end % if
-                    end % for
-
-                    aX1     = h5read(sLoad, '/x1');
-                    aX2     = h5read(sLoad, '/x2');
-                    if bX3
-                        aX3 = h5read(sLoad, '/x3');
-                    else
-                        aX3 = zeros(length(aX1),1);
+                % Check if 3rd dimension exists
+                bX3 = false;
+                for i=1:length(h5Info.Datasets)
+                    if strcmp(h5Info.Datasets(i).Name, [sGroup, 'x3'])
+                        bX3 = true;
                     end % if
-                    aP1     = h5read(sLoad, '/p1');
-                    aP2     = h5read(sLoad, '/p2');
-                    aP3     = h5read(sLoad, '/p3');
-                    aE      = h5read(sLoad, '/ene');
-                    aQ      = h5read(sLoad, '/q');
-                    aTag    = h5read(sLoad, '/tag');
-                    aReturn = ([aX1, aX2, aX3, aP1, aP2, aP3, aE, aQ, double(transpose(aTag))]);
+                end % for
 
-                case 'TRACKS'
+                aCol1 = h5read(sLoad, [sGroup, 'x1']);
+                aCol2 = h5read(sLoad, [sGroup, 'x2']);
+                if bX3
+                    aCol3 = h5read(sLoad, [sGroup, 'x3']);
+                else
+                    aCol3 = zeros(length(aCol1),1);
+                end % if
+                aCol4 = h5read(sLoad, [sGroup, 'p1']);
+                aCol5 = h5read(sLoad, [sGroup, 'p2']);
+                aCol6 = h5read(sLoad, [sGroup, 'p3']);
+                aCol7 = h5read(sLoad, [sGroup, 'ene']);
+                aCol8 = h5read(sLoad, [sGroup, 'q']);
+                if strcmpi(sType, 'RAW')
+                    aCol9 = h5read(sLoad, [sGroup, 'tag']);
+                    aCol9 = double(transpose(aCol9));
+                else
+                    aCol9 = h5read(sLoad, [sGroup, 'n']);
+                    aCol9 = double(aCol9);
+                end % if
+                aReturn = [aCol1 aCol2 aCol3 aCol4 aCol5 aCol6 aCol7 aCol8 aCol9];
 
-                    h5Info = h5info(sLoad);
-                    aReturn = h5read(sLoad, strcat('/', sSet, '/ene'));
-                    
-                otherwise
+            else
 
-                    aReturn = h5read(sLoad, strcat('/', sSet));
+                aReturn = h5read(sLoad, strcat('/', sSet));
             
-            end % switch
+            end % if
             
         end % function
         
@@ -493,11 +497,11 @@ classdef OsirisData
             oFile = fopen(sFile, 'w');
             
             fprintf(oFile, '! Number of tags\n');
-            fprintf(oFile, '%010.d\n', iCount);
+            fprintf(oFile, '%010d\n', iCount);
 
             fprintf(oFile, '! Tag list\n');
             for i=1:iCount
-                fprintf(oFile, '%010.d %010.d\n', aRaw(i,9), aRaw(i,10));
+                fprintf(oFile, '%010d %010d\n', aRaw(i,9), aRaw(i,10));
             end % for
             
             fclose(oFile);
