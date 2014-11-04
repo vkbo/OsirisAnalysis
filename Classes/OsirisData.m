@@ -53,7 +53,7 @@ classdef OsirisData
                     for i = 1:length(stDir)
                         if stDir(i).isdir && ~strcmp(stDir(i).name, '.') && ~strcmp(stDir(i).name, '..')
                             obj.DefaultData{end+1} = sprintf('%s/%s', obj.DefaultPath{f}, stDir(i).name);
-                            fprintf('(%d) %s\n', length(obj.DefaultData), stDir(i).name);
+                            fprintf('%02.d => %s\n', length(obj.DefaultData), stDir(i).name);
                         end % if
                     end % for
                 end % if
@@ -68,7 +68,7 @@ classdef OsirisData
     %
 
     methods
-    
+        
         function obj = set.Path(obj, sPath)
             
             %
@@ -116,6 +116,26 @@ classdef OsirisData
     
     methods (Access = 'public')
 
+        function List(obj)
+
+            sPrev  = '';
+
+            for d = 1:length(obj.DefaultData)
+
+                aPath = strsplit(obj.DefaultData{d}, '/');
+                sPath = strjoin(aPath(1:end-1), '/');
+                
+                if ~strcmp(sPrev, sPath)
+                    fprintf('Listing %s\n',sPath);
+                    sPrev = sPath;
+                end % if
+                
+                fprintf('%02.d => %s\n', d, aPath{end});
+
+            end % for
+
+        end % function
+        
         function Reload(obj)
             
             obj.PathID = obj.PathID;
@@ -254,7 +274,7 @@ classdef OsirisData
             
         end % function
 
-        function h5Data = Data(obj, iTime, sVal1, sVal2, sVal3)
+        function aReturn = Data(obj, iTime, sVal1, sVal2, sVal3)
             
             %
             %  Data-extraction function
@@ -273,8 +293,9 @@ classdef OsirisData
             %  oEPath   :: object.Elements path
             %  
             
+            aReturn = [];
+
             if nargin == 1
-                
                 fprintf('\n');
                 fprintf(' object.Data(iTime, *)\n');
                 fprintf('***********************\n');
@@ -290,12 +311,10 @@ classdef OsirisData
                 fprintf(' oEPath   :: object.Elements path\n');
                 fprintf('\n');
                 return;
-
             end % if
             
             if strcmp(obj.Path, '')
                 fprintf(2, 'Error: No dataset has been loaded.\n');
-                h5Data = 0;
                 return;
             end % if
             
@@ -325,6 +344,10 @@ classdef OsirisData
                         sFolder = strcat(sSpecies, '/');
                         sFile   = strcat(sType, '-', sSpecies, '-', sTimeNExt);
                         iFiles  = obj.Elements.(sType).(sSpecies).Info.Files;
+                    case 'TRACKS'
+                        sFolder = '';
+                        sFile   = strcat(sSpecies, '-', lower(sType), '.h5');
+                        iFiles  = obj.Elements.(sType).Info.Files;
                 end % switch
 
             else
@@ -353,54 +376,135 @@ classdef OsirisData
                     case 'RAW'
                         sFolder = strcat(aPath(3), '/');
                         sFile   = strcat(aPath(2), '-', aPath(3), '-', sTimeNExt);
+                    case 'TRACKS'
+                        sFolder = '';
+                        sFile   = strcat(aPath(3), '-', lower(aPath(2)), '.h5');
                 end % switch
 
             end % if
             
-            h5Data = [];
-            
             if iTime >= iFiles
                 fprintf(2, 'Error: Dump %d does not exist. Last dump is %d.\n', iTime, iFiles-1);
-                h5Data = 0;
                 return;
             end % if
             
-            sLoad  = char(strcat(sDataRoot, sFolder, sFile));
+            sLoad = char(strcat(sDataRoot, sFolder, sFile));
             %fprintf('File: %s\n', sLoad);
             
-            if strcmp(sType, 'RAW')
-        
-                h5Info = h5info(sLoad);
+            switch(sType)
 
-                % Check if 3rd dimension exists
-                bX3 = false;
-                for i=1:length(h5Info.Datasets)
-                    if strcmp(h5Info.Datasets(i).Name, '/x3')
-                        bX3 = true;
+                case 'RAW'
+
+                    h5Info = h5info(sLoad);
+
+                    % Check if 3rd dimension exists
+                    bX3 = false;
+                    for i=1:length(h5Info.Datasets)
+                        if strcmp(h5Info.Datasets(i).Name, '/x3')
+                            bX3 = true;
+                        end % if
+                    end % for
+
+                    aX1     = h5read(sLoad, '/x1');
+                    aX2     = h5read(sLoad, '/x2');
+                    if bX3
+                        aX3 = h5read(sLoad, '/x3');
+                    else
+                        aX3 = zeros(length(aX1),1);
                     end % if
-                end % for
-                
-                aX1    = h5read(sLoad, '/x1');
-                aX2    = h5read(sLoad, '/x2');
-                if bX3
-                    aX3 = h5read(sLoad, '/x3');
-                else
-                    aX3 = zeros(length(aX1),1);
-                end % if
-                aP1    = h5read(sLoad, '/p1');
-                aP2    = h5read(sLoad, '/p2');
-                aP3    = h5read(sLoad, '/p3');
-                aE     = h5read(sLoad, '/ene');
-                aQ     = h5read(sLoad, '/q');
-                aTag   = h5read(sLoad, '/tag');
-                h5Data = ([aX1, aX2, aX3, aP1, aP2, aP3, aE, aQ, double(transpose(aTag))]);
+                    aP1     = h5read(sLoad, '/p1');
+                    aP2     = h5read(sLoad, '/p2');
+                    aP3     = h5read(sLoad, '/p3');
+                    aE      = h5read(sLoad, '/ene');
+                    aQ      = h5read(sLoad, '/q');
+                    aTag    = h5read(sLoad, '/tag');
+                    aReturn = ([aX1, aX2, aX3, aP1, aP2, aP3, aE, aQ, double(transpose(aTag))]);
 
-            else
-                
-                h5Data = h5read(sLoad, strcat('/', sSet));
+                case 'TRACKS'
+
+                    h5Info = h5info(sLoad);
+                    aReturn = h5read(sLoad, strcat('/', sSet, '/ene'));
+                    
+                otherwise
+
+                    aReturn = h5read(sLoad, strcat('/', sSet));
             
+            end % switch
+            
+        end % function
+        
+        function stReturn = ExportTags(obj, sTime, sSpecies, varargin)
+            
+            stReturn = {};
+
+            sSpecies = fTranslateSpecies(sSpecies);
+            iTime    = fStringToDump(obj, num2str(sTime));
+
+            dBoxX1Min = obj.Config.Variables.Simulation.BoxX1Min;
+            dBoxX1Max = obj.Config.Variables.Simulation.BoxX1Max;
+            dBoxX2Min = obj.Config.Variables.Simulation.BoxX2Min;
+            dBoxX2Max = obj.Config.Variables.Simulation.BoxX2Max;
+            
+            dTimeStep = obj.Config.Variables.Simulation.TimeStep;
+            iNDump    = obj.Config.Variables.Simulation.NDump;
+            dBoxStart = iTime*iNDump*dTimeStep;
+            
+            dLenFac   = obj.Config.Variables.Convert.SI.LengthFac;
+
+            oOpt = inputParser;
+            addParameter(oOpt, 'FileName', sprintf('%s.tags', sSpecies));
+            addParameter(oOpt, 'Units',    'Norm');
+            addParameter(oOpt, 'ZLim',     [dBoxX1Min dBoxX1Max]);
+            addParameter(oOpt, 'RLim',     [dBoxX2Min dBoxX2Max]);
+            addParameter(oOpt, 'MaxCount', 200);
+            addParameter(oOpt, 'OrderBy',  'Random');
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
+            
+            aRaw      = obj.Data(iTime, 'RAW', '', sSpecies);
+            aRaw(:,1) = aRaw(:,1)-dBoxStart;
+            
+            switch(lower(stOpt.Units));
+                case 'm'
+                    aRaw(:,1:3) = aRaw(:,1:3)*dLenFac;
+                case 'cm'
+                    aRaw(:,1:3) = aRaw(:,1:3)*dLenFac*1e2;
+                case 'mm'
+                    aRaw(:,1:3) = aRaw(:,1:3)*dLenFac*1e3;
+            end % switch
+            
+            aRaw = aRaw(aRaw(:,1) >= stOpt.ZLim(1), :);
+            aRaw = aRaw(aRaw(:,1) <= stOpt.ZLim(2), :);
+            aRaw = aRaw(aRaw(:,2) >= stOpt.RLim(1), :);
+            aRaw = aRaw(aRaw(:,2) <= stOpt.RLim(2), :);
+        
+            iCount = stOpt.MaxCount;
+            if iCount > length(aRaw(:,1))
+                iCount = length(aRaw(:,1));
             end % if
             
+            switch(lower(stOpt.OrderBy))
+                case 'random'
+                    aRand = randperm(length(aRaw(:,1)));
+                    aRaw  = aRaw(aRand(1:iCount),:);
+            end % switch
+
+            sFile = [obj.Path, '/', stOpt.FileName];
+            oFile = fopen(sFile, 'w');
+            
+            fprintf(oFile, '! Number of tags\n');
+            fprintf(oFile, '%010.d\n', iCount);
+
+            fprintf(oFile, '! Tag list\n');
+            for i=1:iCount
+                fprintf(oFile, '%010.d %010.d\n', aRaw(i,9), aRaw(i,10));
+            end % for
+            
+            fclose(oFile);
+            
+            stReturn.Selection = aRaw;
+            stReturn.File      = sFile;
+
         end % function
         
     end % methods

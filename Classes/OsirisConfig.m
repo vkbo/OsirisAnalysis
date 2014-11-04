@@ -92,8 +92,8 @@ classdef OsirisConfig
  
                     [~, ~, sFileExt] = fileparts(aDir(i).name);
                     
-                    aExclude = {'.out','.sh','.e'};       % Files to exclude as definitely not the config file
-                    aSizes   = [1024, 10240];             % Minimum, maximum size in bytes
+                    aExclude = {'.out','.sh','.e', '.tags'}; % Files to exclude as definitely not the config file
+                    aSizes   = [1024, 10240];                % Minimum, maximum size in bytes
                     
                     if sum(ismember(sFileExt, aExclude)) == 0 ...
                             && sFileExt(end) ~= '~'           ...
