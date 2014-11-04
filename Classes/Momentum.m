@@ -98,10 +98,12 @@ classdef Momentum
             
             for i=iStart:iStop
                 
-                h5Data             = obj.Data.Data(i, 'RAW', '', obj.Beam);
-                aMean(i-iStart+1)  = obj.MomentumToEnergy(mean(h5Data(:,4)));
-                aSigma(i-iStart+1) = obj.MomentumToEnergy(std(h5Data(:,4)));
-                aData(i-iStart+1)  = aSigma(i-iStart+1)/aMean(i-iStart+1);
+                k = i-iStart+1;
+                
+                h5Data    = obj.Data.Data(i, 'RAW', '', obj.Beam);
+                aMean(k)  = obj.MomentumToEnergy(fWeightedMean(h5Data(:,4), abs(h5Data(:,8))));
+                aSigma(k) = obj.MomentumToEnergy(fWeightedStd(h5Data(:,4), abs(h5Data(:,8))));
+                aData(k)  = aSigma(k)/aMean(k);
                 
             end % for
             
@@ -133,7 +135,7 @@ classdef Momentum
             
             for i=iStart:iStop
                 
-                
+                % Code
                 
             end % for
         

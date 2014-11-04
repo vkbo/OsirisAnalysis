@@ -98,7 +98,7 @@ function stReturn = fAnimBeamDensity(oData, sDrive, sWitness, varargin)
 
         drawnow;
 
-        set(figMain, 'PaperPosition', [1 1 aDim(1)/96 aDim(2)/96]);
+        set(figMain, 'PaperUnits', 'Inches', 'PaperPosition', [1 1 aDim(1)/96 aDim(2)/96]);
         set(figMain, 'InvertHardCopy', 'Off');
         print(figMain, '-dtiffnocompression', '-r96', '/tmp/osiris-print.tif');
         M(i).cdata    = imread('/tmp/osiris-print.tif');

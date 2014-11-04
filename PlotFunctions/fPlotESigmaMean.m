@@ -62,15 +62,13 @@ function stReturn = fPlotESigmaMean(oData, sSpecies, varargin)
     hold on;
     
     H(1) = shadedErrorBar(stData.TimeAxis, stData.Mean, stData.Sigma, {'-b', 'LineWidth', 2});
-    %plot(stData.TimeAxis, stData.Mean+stData.Sigma, 'red--');
-    %plot(stData.TimeAxis, stData.Mean-stData.Sigma, 'red--');
     
     legend([H(1).mainLine, H.patch], '<E>', '\sigma_E', 'Location', 'SouthEast');
     xlim([stData.TimeAxis(1), stData.TimeAxis(end)]);
 
-    sTitle = sprintf('%s Mean Energy', sSpecies);
+    sTitle = sprintf('%s Mean Energy', fTranslateSpeciesReadable(sSpecies));
     title(sTitle, 'FontSize', 16);
-    xlabel('s [m]', 'FontSize', 12);
+    xlabel('z [m]', 'FontSize', 12);
     ylabel('P_z [MeV/c]', 'FontSize', 12);
     
     hold off;

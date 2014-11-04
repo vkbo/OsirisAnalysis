@@ -65,13 +65,12 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
     
     H(1) = plot(stData.TimeAxis, stData.Data, '-b', 'LineWidth', 2);
     
-    %legend(H(1), '<E>/\sigma_E', 'Location', 'SouthEast');
     xlim([stData.TimeAxis(1),stData.TimeAxis(end)]);
 
-    sTitle = sprintf('%s Energy Mean to Sigma Ratio', sSpecies);
+    sTitle = sprintf('%s Energy Mean to Sigma Ratio', fTranslateSpeciesReadable(sSpecies));
     title(sTitle, 'FontSize', 16);
-    xlabel('$$z [\mbox{m}]$$', 'Interpreter', 'LaTex', 'FontSize', 12);
-    ylabel('$$\langle E \rangle / \sigma_E$$', 'Interpreter', 'LaTex', 'FontSize', 12);
+    xlabel('z [m]', 'FontSize', 12);
+    ylabel('<E> / \sigma_E', 'FontSize', 12);
     
     hold off;
 

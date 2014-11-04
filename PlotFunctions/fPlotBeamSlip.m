@@ -1,6 +1,6 @@
 %
-%  Function: fBeamSlip
-% ****************************
+%  Function: fPlotBeamSlip
+% *************************
 %  Plots the slippage of a beam through the simulation
 %
 %  Inputs:
@@ -15,7 +15,7 @@
 %  IsSubplot   :: Default No
 %
 
-function stReturn = fBeamSlip(oData, sBeam, varargin)
+function stReturn = fPlotBeamSlip(oData, sBeam, varargin)
 
     % Input/Output
 
@@ -23,8 +23,8 @@ function stReturn = fBeamSlip(oData, sBeam, varargin)
 
     if nargin == 0
        fprintf('\n');
-       fprintf('  Function: fBeamSlip\n');
-       fprintf(' ****************************\n');
+       fprintf('  Function: fPlotBeamSlip\n');
+       fprintf(' *************************\n');
        fprintf('  Plots the slippage of a beam through the simulation\n');
        fprintf('\n');
        fprintf('  Inputs:\n');
