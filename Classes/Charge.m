@@ -282,6 +282,18 @@ classdef Charge
                 return;
             end % if
             
+            dBoxX1Min = obj.Data.Config.Variables.Simulation.BoxX1Min;
+            dBoxX1Max = obj.Data.Config.Variables.Simulation.BoxX1Max;
+            dBoxX2Min = obj.Data.Config.Variables.Simulation.BoxX2Min;
+            dBoxX2Max = obj.Data.Config.Variables.Simulation.BoxX2Max;
+            iBoxNZ    = obj.Data.Config.Variables.Simulation.BoxNX1;
+            iBoxNR    = obj.Data.Config.Variables.Simulation.BoxNX2;
+            
+            dBoxZSize = dBoxX1Max - dBoxX1Min;
+            dBoxRSize = dBoxX2Max - dBoxX2Min;
+            dBoxNZ    = double(iBoxNZ);
+            dBoxNR    = double(iBoxNR);
+            
             dRAWFrac  = obj.Data.Config.Variables.Beam.(obj.Species).RAWFraction;
             dLFactor  = obj.Data.Config.Variables.Convert.SI.LengthFac;
             dECharge  = obj.Data.Config.Variables.Constants.ElementaryCharge;
@@ -313,14 +325,15 @@ classdef Charge
 
             end % if
             
-            dQ = sum(aRaw(:,8));   % Sum of RAW field q
-            dQ = dQ/dRAWFrac;      % Correct for fraction of particles dumped
-            dQ = dQ*dN0;           % Plasma density
-            dQ = dQ*dLFactor^4;    % Convert from normalised units to unitless
-            dQ = dQ*2*pi;          % Cylindrical factor
-            dQ = dQ*1.361175;      % Unknown correction factor, tuned to initial electron beam
-            dQ = dQ*dECharge;      % Convert to coulomb
-            dQ = dQ*1e9;           % Convert to nC
+            dQ = sum(aRaw(:,8));      % Sum of RAW field q
+            dQ = dQ/dRAWFrac;         % Correct for fraction of particles dumped
+            dQ = dQ*dN0;              % Plasma density
+            dQ = dQ*dLFactor^3;       % Convert from normalised units to unitless
+            dQ = dQ*2*pi;             % Cylindrical factor
+            dQ = dQ*dBoxRSize/dBoxNR; % Radial cell size
+            dQ = dQ*dBoxZSize/dBoxNZ; % Longitudinal cell size
+            dQ = dQ*dECharge;         % Convert to coulomb
+            dQ = dQ*1e9;              % Convert to nC
             
             iSelCount = nnz(aRaw(:,8));
             dExact    = dQ/sqrt(iCount/dRAWFrac);
