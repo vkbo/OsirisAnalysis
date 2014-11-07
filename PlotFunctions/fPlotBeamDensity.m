@@ -103,8 +103,8 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
         aData = abs(aData);
     end % if
     
-    aProjZ  = -abs(sum(aData));
-    aProjZ  = 0.15*(aRAxis(end)-aRAxis(1))*aProjZ/max(abs(aProjZ))+aRAxis(end);
+    aProjZ  = abs(sum(aData));
+    aProjZ  = 0.15*(aRAxis(end)-aRAxis(1))*aProjZ/max(abs(aProjZ))+aRAxis(1);
 
     if length(stOpt.Charge) == 2
         [~,iZPeak] = max(sum(abs(aData),1));
@@ -137,6 +137,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     end % if
 
     imagesc(aZAxis, aRAxis, aData);
+    set(gca,'YDir','Normal');
     colormap('hot');
     colorbar();
     if ~isempty(stOpt.CAxis)
