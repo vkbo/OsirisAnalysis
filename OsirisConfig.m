@@ -54,15 +54,15 @@ classdef OsirisConfig
             
             % Setting constants
             
-            sConstants;
+            Constants;
 
-            obj.Variables.Constants.SpeedOfLight       = Constants.Nature.SpeedOfLight;
-            obj.Variables.Constants.ElectronMass       = Constants.Particles.Electron.Mass;
-            obj.Variables.Constants.ElectronMassMeV    = Constants.Particles.Electron.MassMeV;
-            obj.Variables.Constants.ElectronVolt       = Constants.Units.ElectronVolt.Mass;
-            obj.Variables.Constants.ElementaryCharge   = Constants.Nature.ElementaryCharge;
-            obj.Variables.Constants.VacuumPermitivity  = Constants.Nature.VacuumPermitivity;
-            obj.Variables.Constants.VacuumPermeability = Constants.Nature.VacuumPermeability;
+            obj.Variables.Constants.SpeedOfLight       = stConstants.Nature.SpeedOfLight;
+            obj.Variables.Constants.ElectronMass       = stConstants.Particles.Electron.Mass;
+            obj.Variables.Constants.ElectronMassMeV    = stConstants.Particles.Electron.MassMeV;
+            obj.Variables.Constants.ElectronVolt       = stConstants.Units.ElectronVolt.Mass;
+            obj.Variables.Constants.ElementaryCharge   = stConstants.Nature.ElementaryCharge;
+            obj.Variables.Constants.VacuumPermitivity  = stConstants.Nature.VacuumPermitivity;
+            obj.Variables.Constants.VacuumPermeability = stConstants.Nature.VacuumPermeability;
 
         end % function
         

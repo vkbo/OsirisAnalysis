@@ -101,8 +101,8 @@ classdef Momentum
                 k = i-iStart+1;
                 
                 h5Data    = obj.Data.Data(i, 'RAW', '', obj.Beam);
-                aMean(k)  = obj.MomentumToEnergy(fWeightedMean(h5Data(:,4), abs(h5Data(:,8))));
-                aSigma(k) = obj.MomentumToEnergy(fWeightedStd(h5Data(:,4), abs(h5Data(:,8))));
+                aMean(k)  = obj.MomentumToEnergy(wmean(h5Data(:,4), abs(h5Data(:,8))));
+                aSigma(k) = obj.MomentumToEnergy(wstd(h5Data(:,4), abs(h5Data(:,8))));
                 aData(k)  = aSigma(k)/aMean(k);
                 
             end % for
@@ -248,7 +248,7 @@ classdef Momentum
 
                 aRAW = obj.Data.Data(i, 'RAW', '', obj.Beam);
 
-                stReturn.Average(k)       = fWeightedMean(aRAW(:,iAxis),aRAW(:,8));
+                stReturn.Average(k)       = wmean(aRAW(:,iAxis),aRAW(:,8));
                 stReturn.Median(k)        = wprctile(aRAW(:,iAxis),50,abs(aRAW(:,8)));
                 stReturn.Percentile10(k)  = wprctile(aRAW(:,iAxis),10,abs(aRAW(:,8)));
                 stReturn.Percentile90(k)  = wprctile(aRAW(:,iAxis),90,abs(aRAW(:,8)));
@@ -288,14 +288,14 @@ classdef Momentum
 
                 aRAW = obj.Data.Data(i, 'RAW', '', obj.Beam);
 
-                stReturn.Slip.Average(k)           = (dDeltaZ - dDeltaZ*sqrt(1-1/fWeightedMean(aRAW(:,4),aRAW(:,8))^2))*dLFac;
+                stReturn.Slip.Average(k)           = (dDeltaZ - dDeltaZ*sqrt(1-1/wmean(aRAW(:,4),aRAW(:,8))^2))*dLFac;
                 stReturn.Slip.Median(k)            = (dDeltaZ - dDeltaZ*sqrt(1-1/wprctile(aRAW(:,4),50,abs(aRAW(:,8)))^2))*dLFac;
                 stReturn.Slip.Percentile10(k)      = (dDeltaZ - dDeltaZ*sqrt(1-1/wprctile(aRAW(:,4),10,abs(aRAW(:,8)))^2))*dLFac;
                 stReturn.Slip.Percentile90(k)      = (dDeltaZ - dDeltaZ*sqrt(1-1/wprctile(aRAW(:,4),90,abs(aRAW(:,8)))^2))*dLFac;
                 stReturn.Slip.FirstQuartile(k)     = (dDeltaZ - dDeltaZ*sqrt(1-1/wprctile(aRAW(:,4),25,abs(aRAW(:,8)))^2))*dLFac;
                 stReturn.Slip.ThirdQuartile(k)     = (dDeltaZ - dDeltaZ*sqrt(1-1/wprctile(aRAW(:,4),75,abs(aRAW(:,8)))^2))*dLFac;
 
-                stReturn.Position.Average(k)       = (fWeightedMean(aRAW(:,1),aRAW(:,8))-(i*dDeltaZ))*dLFac;
+                stReturn.Position.Average(k)       = (wmean(aRAW(:,1),aRAW(:,8))-(i*dDeltaZ))*dLFac;
                 stReturn.Position.Median(k)        = (wprctile(aRAW(:,1),50,abs(aRAW(:,8)))-(i*dDeltaZ))*dLFac;
                 stReturn.Position.Percentile10(k)  = (wprctile(aRAW(:,1),10,abs(aRAW(:,8)))-(i*dDeltaZ))*dLFac;
                 stReturn.Position.Percentile90(k)  = (wprctile(aRAW(:,1),90,abs(aRAW(:,8)))-(i*dDeltaZ))*dLFac;
