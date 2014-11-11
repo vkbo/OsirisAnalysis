@@ -1,0 +1,62 @@
+
+  Osiris Ananlysis ToolBox for MATLAB
+ *************************************
+  By Veronica Berglyd Olsen
+  
+  Depratment of Physics
+  University of Oslo, Norway
+  
+  
+  Basic Usage
+ =============
+ 
+ 1. Configuration:
+ 
+ The LocalConfig.m file contains paths to folders used to store Osiris analysis files. Ass paths to scan here, or use
+ full path when accessing files from the main class object. See below.
+ 
+ 
+ 2. Initialising:
+ 
+ The main class of the toolbox is the OsirisData class. To get started, create an OsirisData object.
+ 
+    od = OsirisData;
+    
+ Initiating the object will generate a list of subfolders in the data folders listed in LocalConfig.m. To select one of
+ these folders, set the PathID value.
+ 
+    od.PathID = 5;
+    
+ Alternatively, the path can be set directly
+ 
+    od.Path = '/foo/bar';
+    
+ After a valid path is set, the class will search the root of the folder looking for the input deck. It will look for
+ any suitable file within size and file name parameters, and will ask if there are more than one possible candidate. It
+ will ignore files with .out, .e, and .tags extensions.
+ 
+ When the input deck has been found or selected, it will be scanned and an OsirisConfig object will be created
+ containing the variables in the input deck. The struct of config variables are available as od.Config.Variables, and
+ the raw scanned data is accessible through od.Config.Raw.
+ 
+ 
+ 3. Plotting:
+ 
+ Most plot functions take the OsirisData object as first input, and the timestep as second if applicable.
+ 
+ 
+ 4. Key assumptions made by the tool about data structure:
+ 
+ The tool assumes all species are denoted with [Particle]Beam or Plasma[Particle] in the input deck and therefore also
+ as files. Examples: PlasmaElectrons, PlasmaIons, ProtonBeam, ElectronBeam, etc.
+
+ 
+ 5. Shorthand variable inputs
+ 
+ Functions accept a set of shorthand codes for the different beams. For instance EB = ElectronBeam, PB = ProtonBeam.
+ These are not case sensitive.
+ 
+ Functions also accept text representations of time dumps like Start, End, PStart, PEnd. The former two representing the
+ start and the end of the simulation, and the latter two representing the start and end of the plasma.
+ 
+ 
