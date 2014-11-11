@@ -1,6 +1,7 @@
 %
 %  Class Object to hold Osiris data
 % **********************************
+%  Version 0.6
 %
 
 classdef OsirisData
