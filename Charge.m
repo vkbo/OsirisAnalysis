@@ -146,6 +146,8 @@ classdef Charge
                     
                 case 'si'
                     obj.Units = 'SI';
+                    obj.ZScale = 'm';
+                    obj.RScale = 'm';
                     
             end % switch
             
@@ -262,6 +264,81 @@ classdef Charge
             stReturn.Data  = 2*abs(aFFT(1:iN/2+1));
             stReturn.XAxis = aXAxis;
             stReturn.ZPos  = obj.fGetZPos();
+            
+        end % function
+
+        function stReturn = Wavelet(obj, aRange, varargin)
+            
+            % Input/Output
+            
+            stReturn = {};
+            
+            if nargin < 2
+                aRange = [];
+            end % if
+
+            oOpt = inputParser;
+            addParameter(oOpt, 'Octaves', 7);
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
+            
+
+            % Simulation parameters
+
+            dPlasmaFac = obj.Data.Config.Variables.Plasma.MaxPlasmaFac;
+            dLFac      = obj.Data.Config.Variables.Convert.SI.LengthFac;
+            iBoxNX     = obj.Data.Config.Variables.Simulation.BoxNX1;
+            dXMin      = obj.Data.Config.Variables.Simulation.BoxX1Min;
+            dXMax      = obj.Data.Config.Variables.Simulation.BoxX1Max;
+            dBoxSize   = dXMax-dXMin;
+
+            
+            % Get dataset
+            
+            aData = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
+            
+            if isempty(aRange)
+                aProj = abs(sum(transpose(aData),1));
+            else
+                if length(aRange) == 1
+                    aProj = abs(sum(transpose(aData(:,aRange(1))),1));
+                else
+                    aProj = abs(sum(transpose(aData(:,aRange(1):aRange(1))),1));
+                end % if
+            end % if
+            
+            aProj = aProj/max(aProj);
+            
+
+            % Wavelet parameters
+            
+            iN    = length(aProj);
+            dZ    = dBoxSize/double(iBoxNX)/sqrt(dPlasmaFac);
+            iPad  = 1;
+            dDJ   = 0.02;
+            dS0   = 2*dZ;
+            dJ1   = stOpt.Octaves/dDJ;
+
+            
+            % Wavelet
+            
+            [aWave, aPeriod, aScale, aCOI] = wavelet(aProj, dZ, iPad, dDJ, dS0, dJ1, 'MORLET', 6);
+            
+            
+            % Return
+            
+            stReturn.Input     = aProj;
+            stReturn.Data      = aWave;
+            stReturn.Real      = real(aWave);
+            stReturn.Imaginary = imag(aWave);
+            stReturn.Amplitude = abs(aWave);
+            stReturn.Phase     = atan(imag(aWave)/real(aWave));
+            stReturn.Power     = abs(aWave).^2;
+            stReturn.Period    = aPeriod;
+            stReturn.Scale     = aScale;
+            stReturn.COI       = aCOI;
+            stReturn.XAxis     = obj.fGetBoxAxis('x1');
+            stReturn.ZPos      = obj.fGetZPos();
             
         end % function
         

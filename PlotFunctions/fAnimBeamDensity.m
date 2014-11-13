@@ -5,17 +5,17 @@
 %
 %  Inputs:
 % =========
-%  oData  :: OsirisData object
-%  sBeam1 :: Drive beam
-%  sBeam2 :: Witness beam (optional)
-%  iStart :: First dump (default = 0)
-%  iEnd   :: Last dump (default = end)
+%  oData    :: OsirisData object
+%  sDrive   :: Drive beam
+%  sWitness :: Witness beam (optional)
 %
 %  Options:
 % ==========
 %  FigureSize  :: Default [900 500]
 %  DriveCut    :: Drive beam limits
 %  WitnessCut  :: Witness beam limits
+%  Start       :: First dump (default = 0)
+%  End         :: Last dump (default = end)
 %
 
 function stReturn = fAnimBeamDensity(oData, sDrive, sWitness, varargin)
@@ -30,9 +30,9 @@ function stReturn = fAnimBeamDensity(oData, sDrive, sWitness, varargin)
        fprintf('\n');
        fprintf('  Inputs:\n');
        fprintf(' =========\n');
-       fprintf('  oData  :: OsirisData object\n');
-       fprintf('  sBeam1 :: Drive beam\n');
-       fprintf('  sBeam2 :: Witness beam (optional)\n');
+       fprintf('  oData    :: OsirisData object\n');
+       fprintf('  sDrive   :: Drive beam\n');
+       fprintf('  sWitness :: Witness beam (optional)\n');
        fprintf('\n');
        fprintf('  Options:\n');
        fprintf(' ==========\n');
