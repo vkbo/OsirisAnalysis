@@ -642,19 +642,22 @@ classdef OsirisConfig
                 stFunc    = fExtractEq(sMathFunc, iDim, [dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max]);
                 sFunction = stFunc.Equation;
                 fProfile  = @(x1,x2) eval(sFunction);
+
+                aSpan    = linspace(stFunc.Lims(1), stFunc.Lims(2), 20000);
+                aReturn  = fProfile(aSpan,0);
+                dMeanX1  = dround(wmean(aSpan, aReturn),3);
+                dSigmaX1 = dround(sqrt(var(aSpan,aReturn)),5);
+
+                aSpan    = linspace(-stFunc.Lims(4), stFunc.Lims(4), 10000); % Assumes cylindrical
+                aReturn  = fProfile(dMeanX1,aSpan);
+                dMeanX2  = dround(wmean(aSpan, aReturn),3);
+                dSigmaX2 = dround(sqrt(var(aSpan,aReturn)),5);
+
+                obj.Variables.Beam.(sBeam).MeanX1  = dMeanX1;
+                obj.Variables.Beam.(sBeam).MeanX2  = dMeanX2;
+                obj.Variables.Beam.(sBeam).SigmaX1 = dSigmaX1;
+                obj.Variables.Beam.(sBeam).SigmaX2 = dSigmaX2;
                 
-                %aSpan = linspace(stFunc.Lims(1), stFunc.Lims(2), 200);
-                %aReturn = fProfile(aSpan,0);
-                %figure();
-                %plot(aReturn);
-                %dSigma = std(aReturn)
-
-                %aSpan = linspace(stFunc.Lims(3), stFunc.Lims(4), 200);
-                %aReturn = fProfile(0,aSpan);
-                %figure();
-                %plot(aReturn);
-                %dSigma = std(aReturn)
-
             end % for
             
         end % function
