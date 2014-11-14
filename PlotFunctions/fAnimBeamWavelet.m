@@ -47,6 +47,8 @@ function stReturn = fAnimBeamWavelet(oData, sBeam, varargin)
     addParameter(oOpt, 'FigureSize',  [1400 900]);
     addParameter(oOpt, 'Start',       'Start');
     addParameter(oOpt, 'End',         'End');
+    addParameter(oOpt, 'RRange',      []);
+    addParameter(oOpt, 'Limits',      []);
     parse(oOpt, varargin{:});
     stOpt = oOpt.Results;
 
@@ -64,7 +66,7 @@ function stReturn = fAnimBeamWavelet(oData, sBeam, varargin)
 
         clf;
         i = k-iStart+1;
-
+        
         stBeamInfo = fPlotBeamWavelet(oData, k, sBeam, 'IsSubPlot', 'Yes', 'RRange', [3 425]);
 
         drawnow;

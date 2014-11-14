@@ -286,7 +286,6 @@ classdef Charge
             % Simulation parameters
 
             dPlasmaFac = obj.Data.Config.Variables.Plasma.MaxPlasmaFac;
-            dLFac      = obj.Data.Config.Variables.Convert.SI.LengthFac;
             iBoxNX     = obj.Data.Config.Variables.Simulation.BoxNX1;
             dXMin      = obj.Data.Config.Variables.Simulation.BoxX1Min;
             dXMax      = obj.Data.Config.Variables.Simulation.BoxX1Max;
@@ -312,7 +311,6 @@ classdef Charge
 
             % Wavelet parameters
             
-            iN    = length(aProj);
             dZ    = dBoxSize/double(iBoxNX)/sqrt(dPlasmaFac);
             iPad  = 1;
             dDJ   = 0.02;
