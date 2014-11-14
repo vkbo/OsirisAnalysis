@@ -636,24 +636,6 @@ classdef OsirisConfig
                 
                 aValue = obj.fExtractFixedNum(sBeam,'profile','density',[0]);
                 obj.Variables.Beam.(sBeam).Density         = double(aValue(1));
-                
-                % Analyse beam profile
-                
-                stFunc    = fExtractEq(sMathFunc, iDim, [dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max]);
-                sFunction = stFunc.Equation;
-                fProfile  = @(x1,x2) eval(sFunction);
-                
-                %aSpan = linspace(stFunc.Lims(1), stFunc.Lims(2), 200);
-                %aReturn = fProfile(aSpan,0);
-                %figure();
-                %plot(aReturn);
-                %dSigma = std(aReturn)
-
-                %aSpan = linspace(stFunc.Lims(3), stFunc.Lims(4), 200);
-                %aReturn = fProfile(0,aSpan);
-                %figure();
-                %plot(aReturn);
-                %dSigma = std(aReturn)
 
             end % for
             
