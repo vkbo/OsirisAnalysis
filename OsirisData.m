@@ -233,24 +233,30 @@ classdef OsirisData
             dX2Max    = obj.Config.Variables.Simulation.BoxX2Max;
             dX3Min    = obj.Config.Variables.Simulation.BoxX3Min;
             dX3Max    = obj.Config.Variables.Simulation.BoxX3Max;
+
+            dMeanX1   = obj.Config.Variables.Beam.(sSpecies).MeanX1;
+            dMeanX2   = obj.Config.Variables.Beam.(sSpecies).MeanX2;
+            dSigmaX1  = obj.Config.Variables.Beam.(sSpecies).SigmaX1;
+            dSigmaX2  = obj.Config.Variables.Beam.(sSpecies).SigmaX2;
             
             fprintf('\n');
             fprintf(' Beam Info for %s\n',sSpecies);
             fprintf('************************************\n');
+            fprintf('\n');
 
             stInt = fExtractEq(sMathFunc, iDim, [dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max]);
             
             if strcmpi(sCoords, 'cylindrical')
 
                 %sFunction = sprintf('%s.*%s.*x2', stInt.Equations{1}, stInt.Equations{2});
-                sFunction = sprintf('%s.*x2', stInt.Equation);
-                fprintf(' EQ: %s\n', sFunction);
-                fprintf(' X1: %d–%d\n', stInt.Lims(1), stInt.Lims(2));
-                fprintf(' X2: %d–%d\n', stInt.Lims(3), stInt.Lims(4));
+                sFunction = sprintf('%s.*x2', stInt.ForEval);
+                fprintf(' Density Function:       %s\n',           stInt.Equation);
+                fprintf(' X1 Mean, Sigma:         %7.2f, %9.4f\n', dMeanX1, dSigmaX1);
+                fprintf(' X2 Mean, Sigma:         %7.2f, %9.4f\n', dMeanX2, dSigmaX2);
                 fprintf('\n');
                 
-                fInt = @(x1,x2) eval(sFunction);
-                dBeamInt = 2*pi*integral2(fInt,stInt.Lims(1),stInt.Lims(2),0,stInt.Lims(4));
+                fInt         = @(x1,x2) eval(sFunction);
+                dBeamInt     = 2*pi*quad2d(fInt,stInt.Lims(1),stInt.Lims(2),0,stInt.Lims(4),'MaxFunEvals',15000,'Abstol',1e-3);
                 
                 dBeamVol     = dBeamInt * dC^3/dNOmegaP^3;
                 dBeamNum     = dBeamVol * dDensity * dN0;
