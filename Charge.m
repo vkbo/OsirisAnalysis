@@ -49,6 +49,12 @@ classdef Charge
             obj.Data    = oData;
             obj.Species = fTranslateSpecies(sSpecies);
             
+            dBoxX1Min = obj.Data.Config.Variables.Simulation.BoxX1Min;
+            dBoxX1Max = obj.Data.Config.Variables.Simulation.BoxX1Max;
+            dBoxX2Max = obj.Data.Config.Variables.Simulation.BoxX2Max;
+            
+            obj.ZLim = [ dBoxX1Min, dBoxX1Max];
+            obj.RLim = [-dBoxX2Max, dBoxX2Max];
             
         end % function
         
@@ -378,9 +384,6 @@ classdef Charge
             iCount    = length(aRaw(:,1));
             aRaw(:,1) = aRaw(:,1) - dTFactor*obj.Time;
             
-            obj.ZLim/obj.ZFac;
-            obj.RLim/obj.RFac;
-            
             aRaw(:,8) = aRaw(:,8).*(aRaw(:,1) >= obj.ZLim(1)/obj.ZFac & aRaw(:,1) <= obj.ZLim(2)/obj.ZFac);
             aRaw(:,8) = aRaw(:,8).*(aRaw(:,2) >= obj.RLim(1)/obj.RFac & aRaw(:,2) <= obj.RLim(2)/obj.RFac);
             
@@ -399,30 +402,36 @@ classdef Charge
 
             end % if
             
-            dQ = sum(aRaw(:,8));          % Sum of RAW field q
-            dQ = dQ/dRAWFrac;             % Correct for fraction of particles dumped
-            dQ = dQ*dN0;                  % Plasma density
+            % Total charge
+            
+            dQ = sum(aRaw(:,8));      % Sum of RAW field q
+            dQ = dQ/dRAWFrac;         % Correct for fraction of particles dumped
             
             if iDim == 2 && strcmpi(sCoords, 'cylindrical')
-                dQ = dQ*2*pi;             % Cylindrical factor
+                dQ = dQ*2*pi;         % Cylindrical factor
             end % if
             
             % Particle count
             
-            dP = dQ*dLFactor^3;       % Convert from normalised units to unitless
+            dP = dQ*dN0;              % Plasma density
+            dP = dP*dLFactor^3;       % Convert from normalised units to unitless
             dP = dP*dBoxRSize/dBoxNR; % Radial cell size
             dP = dP*dBoxZSize/dBoxNZ; % Longitudinal cell size
 
-            switch lower(obj.Units)
-                case 'si'
-                    dQ = dP*dECharge; % CInvert to Coulomb
-                case 'n'
-                    dQ = dP;
+            % Unit conversion
+            
+            switch obj.Units
+                case 'SI'
+                    dQ = dP*dECharge; % Convert to Coulomb
             end % switch
+            
+            % Meta data
             
             iSCount = nnz(aRaw(:,8));
             dExact  = dQ/sqrt(iCount/dRAWFrac);
             dSError = abs(dQ/(dRAWFrac*sqrt(iSCount))-dExact);
+            
+            % Return data
             
             stReturn.QTotal      = dQ;
             stReturn.Particles   = round(dP*dSign);
