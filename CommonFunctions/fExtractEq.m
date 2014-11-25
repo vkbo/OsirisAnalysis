@@ -86,13 +86,15 @@ function stReturn = fExtractEq(sEquation, iDim, aLims)
     end % if
 
     % Make vector compatible
+    stReturn.Equation = sEquation;
+    stReturn.Lims     = [dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max];
+    stReturn.Box      = aLims;
+
     sEquation = strrep(sEquation,'*','.*');
     sEquation = strrep(sEquation,'/','./');
     sEquation = strrep(sEquation,'^','.^');
 
-    stReturn.Equation = sEquation;
-    stReturn.Lims     = [dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max];
-    stReturn.Box      = aLims;
+    stReturn.ForEval  = sEquation;
 
 end
 

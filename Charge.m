@@ -49,12 +49,6 @@ classdef Charge
             obj.Data    = oData;
             obj.Species = fTranslateSpecies(sSpecies);
             
-            dBoxX1Min = obj.Data.Config.Variables.Simulation.BoxX1Min;
-            dBoxX1Max = obj.Data.Config.Variables.Simulation.BoxX1Max;
-            dBoxX2Max = obj.Data.Config.Variables.Simulation.BoxX2Max;
-            
-            obj.ZLim = [ dBoxX1Min, dBoxX1Max];
-            obj.RLim = [-dBoxX2Max, dBoxX2Max];
             
         end % function
         
@@ -145,7 +139,7 @@ classdef Charge
                     obj.Units = 'N';
                     
                 case 'si'
-                    obj.Units = 'SI';
+                    obj.Units  = 'SI';
                     obj.ZScale = 'm';
                     obj.RScale = 'm';
                     
@@ -375,6 +369,11 @@ classdef Charge
             dN0       = obj.Data.Config.Variables.Plasma.N0;
             dTFactor  = obj.Data.Config.Variables.Convert.SI.TimeFac;
 
+            iDim      = obj.Data.Config.Variables.Simulation.Dimensions;
+            sCoords   = obj.Data.Config.Variables.Simulation.Coordinates;
+            dRQM      = obj.Data.Config.Variables.Beam.(obj.Species).RQM;
+            dSign     = dRQM/abs(dRQM);
+            
             aRaw      = obj.Data.Data(obj.Time, 'RAW', '', obj.Species);
             iCount    = length(aRaw(:,1));
             aRaw(:,1) = aRaw(:,1) - dTFactor*obj.Time;
@@ -400,25 +399,37 @@ classdef Charge
 
             end % if
             
-            dQ = sum(aRaw(:,8));      % Sum of RAW field q
-            dQ = dQ/dRAWFrac;         % Correct for fraction of particles dumped
-            dQ = dQ*dN0;              % Plasma density
-            dQ = dQ*dLFactor^3;       % Convert from normalised units to unitless
-            dQ = dQ*2*pi;             % Cylindrical factor
-            dQ = dQ*dBoxRSize/dBoxNR; % Radial cell size
-            dQ = dQ*dBoxZSize/dBoxNZ; % Longitudinal cell size
-            dQ = dQ*dECharge;         % Convert to coulomb
-            dQ = dQ*1e9;              % Convert to nC
+            dQ = sum(aRaw(:,8));          % Sum of RAW field q
+            dQ = dQ/dRAWFrac;             % Correct for fraction of particles dumped
+            dQ = dQ*dN0;                  % Plasma density
             
-            iSelCount = nnz(aRaw(:,8));
-            dExact    = dQ/sqrt(iCount/dRAWFrac);
-            dRelError = abs(dQ/(dRAWFrac*sqrt(iSelCount))-dExact);
+            if iDim == 2 && strcmpi(sCoords, 'cylindrical')
+                dQ = dQ*2*pi;             % Cylindrical factor
+            end % if
             
-            stReturn.QTotal         = dQ;
-            stReturn.RAWFraction    = dRAWFrac;
-            stReturn.RAWCount       = iCount;
-            stReturn.SelectionCount = iSelCount;
-            stReturn.FractionError  = dRelError;
+            % Particle count
+            
+            dP = dQ*dLFactor^3;       % Convert from normalised units to unitless
+            dP = dP*dBoxRSize/dBoxNR; % Radial cell size
+            dP = dP*dBoxZSize/dBoxNZ; % Longitudinal cell size
+
+            switch lower(obj.Units)
+                case 'si'
+                    dQ = dP*dECharge; % CInvert to Coulomb
+                case 'n'
+                    dQ = dP;
+            end % switch
+            
+            iSCount = nnz(aRaw(:,8));
+            dExact  = dQ/sqrt(iCount/dRAWFrac);
+            dSError = abs(dQ/(dRAWFrac*sqrt(iSCount))-dExact);
+            
+            stReturn.QTotal      = dQ;
+            stReturn.Particles   = round(dP*dSign);
+            stReturn.RAWFraction = dRAWFrac;
+            stReturn.RAWCount    = iCount;
+            stReturn.SampleCount = iSCount;
+            stReturn.SampleError = dSError;
             
         end % function
 

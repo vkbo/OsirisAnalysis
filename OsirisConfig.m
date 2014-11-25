@@ -474,12 +474,38 @@ classdef OsirisConfig
             
             % Calculating conversion variables
             
-            dSIE0 = 1e-7 * dEMass * dC^3 * dOmegaP * 4*pi*dEpsilon0 / dECharge;
+            dSIE0    = 1e-7 * dEMass * dC^3 * dOmegaP * 4*pi*dEpsilon0 / dECharge;
+            dLFactor = dC / dOmegaP;
 
             % Setting conversion variables
             
             obj.Variables.Convert.SI.E0        = dSIE0;
-            obj.Variables.Convert.SI.LengthFac = dC / dOmegaP;
+            obj.Variables.Convert.SI.LengthFac = dLFactor;
+
+
+            % Charge conversion factor
+            
+            sCoords    = obj.Variables.Simulation.Coordinates;
+            iDim       = obj.Variables.Simulation.Dimensions;
+            
+            dBoxNX1    = double(obj.Variables.Simulation.BoxNX1);
+            dBoxNX2    = double(obj.Variables.Simulation.BoxNX2);
+            dBoxNX3    = double(obj.Variables.Simulation.BoxNX3);
+            
+            dBoxX1Size = obj.Variables.Simulation.BoxX1Max - obj.Variables.Simulation.BoxX1Min;
+            dBoxX2Size = obj.Variables.Simulation.BoxX2Max - obj.Variables.Simulation.BoxX2Min;
+            dBoxX3Size = obj.Variables.Simulation.BoxX3Max - obj.Variables.Simulation.BoxX3Min;
+
+            dQFac = obj.N0;           % Plasma density
+            dQFac = dQFac*dLFactor^3; % Convert from normalised units to unitless
+            
+            if iDim == 2 && strcmpi(sCoords, 'cylindrical')
+                dQFac = dQFac*2*pi;               % Cylindrical factor
+                dQFac = dQFac*dBoxX1Size/dBoxNX1; % Longitudinal cell size
+                dQFac = dQFac*dBoxX2Size/dBoxNX2; % Radial cell size
+            end % if
+            
+            obj.Variables.Convert.SI.ChargeFac = dQFac;
             
             
             % Setting plasma profile
@@ -548,7 +574,7 @@ classdef OsirisConfig
             obj.Variables.Plasma.MaxPlasmaFac = dPlasmaMax;
             obj.Variables.Plasma.MaxOmegaP    = dOmegaP  * sqrt(dPlasmaMax);
             obj.Variables.Plasma.MaxLambdaP   = dLambdaP / sqrt(dPlasmaMax);
-
+            
         end % function
         
         function obj = fGetBeamVariables(obj)
@@ -636,7 +662,28 @@ classdef OsirisConfig
                 
                 aValue = obj.fExtractFixedNum(sBeam,'profile','density',[0]);
                 obj.Variables.Beam.(sBeam).Density         = double(aValue(1));
+                
+                % Analyse beam profile
+                
+                stFunc    = fExtractEq(sMathFunc, iDim, [dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max]);
+                sFunction = stFunc.ForEval;
+                fProfile  = @(x1,x2) eval(sFunction);
 
+                aSpan    = linspace(stFunc.Lims(1), stFunc.Lims(2), 20000);
+                aReturn  = fProfile(aSpan,0);
+                dMeanX1  = dround(wmean(aSpan, aReturn),3);
+                dSigmaX1 = dround(wstd(aSpan,aReturn),5);
+
+                aSpan    = linspace(-stFunc.Lims(4), stFunc.Lims(4), 10000); % Assumes cylindrical
+                aReturn  = fProfile(dMeanX1,aSpan);
+                dMeanX2  = dround(wmean(aSpan, aReturn),3);
+                dSigmaX2 = dround(wstd(aSpan,aReturn),5);
+
+                obj.Variables.Beam.(sBeam).MeanX1  = dMeanX1;
+                obj.Variables.Beam.(sBeam).MeanX2  = dMeanX2;
+                obj.Variables.Beam.(sBeam).SigmaX1 = dSigmaX1;
+                obj.Variables.Beam.(sBeam).SigmaX2 = dSigmaX2;
+                
             end % for
             
         end % function
