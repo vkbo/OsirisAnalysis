@@ -357,26 +357,9 @@ classdef Charge
                 return;
             end % if
             
-            dBoxX1Min = obj.Data.Config.Variables.Simulation.BoxX1Min;
-            dBoxX1Max = obj.Data.Config.Variables.Simulation.BoxX1Max;
-            dBoxX2Min = obj.Data.Config.Variables.Simulation.BoxX2Min;
-            dBoxX2Max = obj.Data.Config.Variables.Simulation.BoxX2Max;
-            iBoxNZ    = obj.Data.Config.Variables.Simulation.BoxNX1;
-            iBoxNR    = obj.Data.Config.Variables.Simulation.BoxNX2;
-            
-            dBoxZSize = dBoxX1Max - dBoxX1Min;
-            dBoxRSize = dBoxX2Max - dBoxX2Min;
-            dBoxNZ    = double(iBoxNZ);
-            dBoxNR    = double(iBoxNR);
             
             dRAWFrac  = obj.Data.Config.Variables.Beam.(obj.Species).RAWFraction;
-            dLFactor  = obj.Data.Config.Variables.Convert.SI.LengthFac;
-            dECharge  = obj.Data.Config.Variables.Constants.ElementaryCharge;
-            dN0       = obj.Data.Config.Variables.Plasma.N0;
             dTFactor  = obj.Data.Config.Variables.Convert.SI.TimeFac;
-
-            iDim      = obj.Data.Config.Variables.Simulation.Dimensions;
-            sCoords   = obj.Data.Config.Variables.Simulation.Coordinates;
             dRQM      = obj.Data.Config.Variables.Beam.(obj.Species).RQM;
             dSign     = dRQM/abs(dRQM);
             
@@ -406,23 +389,16 @@ classdef Charge
             
             dQ = sum(aRaw(:,8));      % Sum of RAW field q
             dQ = dQ/dRAWFrac;         % Correct for fraction of particles dumped
-            
-            if iDim == 2 && strcmpi(sCoords, 'cylindrical')
-                dQ = dQ*2*pi;         % Cylindrical factor
-            end % if
-            
-            % Particle count
-            
-            dP = dQ*dN0;              % Plasma density
-            dP = dP*dLFactor^3;       % Convert from normalised units to unitless
-            dP = dP*dBoxRSize/dBoxNR; % Radial cell size
-            dP = dP*dBoxZSize/dBoxNZ; % Longitudinal cell size
 
             % Unit conversion
             
             switch obj.Units
                 case 'SI'
-                    dQ = dP*dECharge; % Convert to Coulomb
+                    dP = dQ*obj.Data.Config.Variables.Convert.SI.ParticleFac;
+                    dQ = dQ*obj.Data.Config.Variables.Convert.SI.ChargeFac;
+                case 'N'
+                    dP = dQ*obj.Data.Config.Variables.Convert.Norm.ParticleFac;
+                    dQ = dQ*obj.Data.Config.Variables.Convert.Norm.ChargeFac;
             end % switch
             
             % Meta data
