@@ -405,16 +405,18 @@ classdef Charge
             
             iSCount = nnz(aRaw(:,8));
             dExact  = dQ/sqrt(iCount/dRAWFrac);
-            dSError = abs(dQ/(dRAWFrac*sqrt(iSCount))-dExact);
+            dSErrorQ = abs(dQ/(dRAWFrac*sqrt(iSCount))-dExact);
+            dSErrorP = abs(dP/(dRAWFrac*sqrt(iSCount))-dExact);
             
             % Return data
             
-            stReturn.QTotal      = dQ;
-            stReturn.Particles   = round(dP*dSign);
-            stReturn.RAWFraction = dRAWFrac;
-            stReturn.RAWCount    = iCount;
-            stReturn.SampleCount = iSCount;
-            stReturn.SampleError = dSError;
+            stReturn.QTotal              = dQ;
+            stReturn.Particles           = dP*dSign;
+            stReturn.RAWFraction         = dRAWFrac;
+            stReturn.RAWCount            = iCount;
+            stReturn.SampleCount         = iSCount;
+            stReturn.ChargeSampleError   = dSErrorQ;
+            stReturn.ParticleSampleError = dSErrorP;
             
         end % function
 
