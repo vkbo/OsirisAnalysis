@@ -55,15 +55,19 @@ classdef OsirisConfig
             % Setting constants
             
             Constants;
+            
+            % SI
+            obj.Variables.Constants.SpeedOfLight        = stConstants.Nature.SpeedOfLight;
+            obj.Variables.Constants.ElectronMass        = stConstants.Particles.Electron.Mass;
+            obj.Variables.Constants.ElectronMassMeV     = stConstants.Particles.Electron.MassMeV;
+            obj.Variables.Constants.ElectronVolt        = stConstants.Units.ElectronVolt.Mass;
+            obj.Variables.Constants.ElementaryCharge    = stConstants.Nature.ElementaryCharge;
+            obj.Variables.Constants.VacuumPermitivity   = stConstants.Nature.VacuumPermitivity;
+            obj.Variables.Constants.VacuumPermeability  = stConstants.Nature.VacuumPermeability;
 
-            obj.Variables.Constants.SpeedOfLight       = stConstants.Nature.SpeedOfLight;
-            obj.Variables.Constants.ElectronMass       = stConstants.Particles.Electron.Mass;
-            obj.Variables.Constants.ElectronMassMeV    = stConstants.Particles.Electron.MassMeV;
-            obj.Variables.Constants.ElectronVolt       = stConstants.Units.ElectronVolt.Mass;
-            obj.Variables.Constants.ElementaryCharge   = stConstants.Nature.ElementaryCharge;
-            obj.Variables.Constants.VacuumPermitivity  = stConstants.Nature.VacuumPermitivity;
-            obj.Variables.Constants.VacuumPermeability = stConstants.Nature.VacuumPermeability;
-
+            % CGS
+            obj.Variables.Constants.ElementaryChargeCGS = stConstants.Nature.ElementaryChargeCGS;
+            
         end % function
         
     end % methods
@@ -452,11 +456,12 @@ classdef OsirisConfig
             
             % Retrieving constants
 
-            dC        = obj.Variables.Constants.SpeedOfLight;
-            dECharge  = obj.Variables.Constants.ElementaryCharge;
-            dEMass    = obj.Variables.Constants.ElectronMass;
-            dEpsilon0 = obj.Variables.Constants.VacuumPermitivity;
-            dMu0      = obj.Variables.Constants.VacuumPermeability;
+            dC          = obj.Variables.Constants.SpeedOfLight;
+            dECharge    = obj.Variables.Constants.ElementaryCharge;
+            dEChargeCGS = obj.Variables.Constants.ElementaryChargeCGS;
+            dEMass      = obj.Variables.Constants.ElectronMass;
+            dEpsilon0   = obj.Variables.Constants.VacuumPermitivity;
+            dMu0        = obj.Variables.Constants.VacuumPermeability;
             
 
             % Calculating plasma variables
@@ -496,16 +501,25 @@ classdef OsirisConfig
             dBoxX2Size = obj.Variables.Simulation.BoxX2Max - obj.Variables.Simulation.BoxX2Min;
             dBoxX3Size = obj.Variables.Simulation.BoxX3Max - obj.Variables.Simulation.BoxX3Min;
 
-            dQFac = obj.N0;           % Plasma density
-            dQFac = dQFac*dLFactor^3; % Convert from normalised units to unitless
+            dQFac = 1.0;    % Factor for charge in normalised units
+            dPFac = obj.N0; % Density is relative to N0
             
+            % 2D cylindrical
             if iDim == 2 && strcmpi(sCoords, 'cylindrical')
                 dQFac = dQFac*2*pi;               % Cylindrical factor
-                dQFac = dQFac*dBoxX1Size/dBoxNX1; % Longitudinal cell size
-                dQFac = dQFac*dBoxX2Size/dBoxNX2; % Radial cell size
+                dPFac = dPFac*dBoxX1Size/dBoxNX1; % Longitudinal cell size
+                dPFac = dPFac*dBoxX2Size/dBoxNX2; % Radial cell size
             end % if
+
+            dPFac = dPFac*dLFactor^3; % Convert from normalised units to unitless
+            dPFac = dPFac*dQFac;      % Combine particle factor and charge factor
             
-            obj.Variables.Convert.SI.ChargeFac = dQFac;
+            obj.Variables.Convert.Norm.ChargeFac   = dQFac;
+            obj.Variables.Convert.Norm.ParticleFac = dPFac;
+            obj.Variables.Convert.SI.ChargeFac     = dPFac*dECharge;
+            obj.Variables.Convert.SI.ParticleFac   = dPFac;
+            obj.Variables.Convert.CGS.ChargeFac    = dPFac*dEChargeCGS;
+            obj.Variables.Convert.CGS.ParticleFac  = dPFac;
             
             
             % Setting plasma profile
