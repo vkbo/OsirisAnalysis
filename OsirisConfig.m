@@ -360,84 +360,49 @@ classdef OsirisConfig
 
         function obj = fGetSimulationVariables(obj)
             
-            % Simulation grid size
+            % Store variables
             
-            aValue  = obj.fExtractFixedNum('','grid','nx_p',[0,0,0]);
-            dBoxNX1 = double(aValue(1));
-            dBoxNX2 = double(aValue(2));
-            dBoxNX3 = double(aValue(3));
-            obj.Variables.Simulation.BoxNX1 = int64(dBoxNX1);
-            obj.Variables.Simulation.BoxNX2 = int64(dBoxNX2);
-            obj.Variables.Simulation.BoxNX3 = int64(dBoxNX3);
-            
+            aValue = obj.fExtractFixedNum('','grid','nx_p',[0,0,0]);
+            obj.Variables.Simulation.BoxNX1      = int64(aValue(1));
+            obj.Variables.Simulation.BoxNX2      = int64(aValue(2));
+            obj.Variables.Simulation.BoxNX3      = int64(aValue(3));
 
-            % Simulation box size in normalised units
+            aValue = obj.fExtractFixedNum('','space','xmin',[0.0,0.0,0.0]);
+            obj.Variables.Simulation.BoxX1Min    = double(aValue(1));
+            obj.Variables.Simulation.BoxX2Min    = double(aValue(2));
+            obj.Variables.Simulation.BoxX3Min    = double(aValue(3));
 
-            aValue    = obj.fExtractFixedNum('','space','xmin',[0.0,0.0,0.0]);
-            dBoxX1Min = double(aValue(1));
-            dBoxX2Min = double(aValue(2));
-            dBoxX3Min = double(aValue(3));
-            obj.Variables.Simulation.BoxX1Min = dBoxX1Min;
-            obj.Variables.Simulation.BoxX2Min = dBoxX2Min;
-            obj.Variables.Simulation.BoxX3Min = dBoxX3Min;
-
-            aValue    = obj.fExtractFixedNum('','space','xmax',[0.0,0.0,0.0]);
-            dBoxX1Max = double(aValue(1));
-            dBoxX2Max = double(aValue(2));
-            dBoxX3Max = double(aValue(3));
-            obj.Variables.Simulation.BoxX1Max = dBoxX1Max;
-            obj.Variables.Simulation.BoxX2Max = dBoxX2Max;
-            obj.Variables.Simulation.BoxX3Max = dBoxX3Max;
-            
-            dBoxX1Size = dBoxX1Max - dBoxX1Min;
-            dBoxX2Size = dBoxX2Max - dBoxX2Min;
-            dBoxX3Size = dBoxX3Max - dBoX3xMin;
-            obj.Variables.Simulation.BoxX1Size = dBoxX1Size;
-            obj.Variables.Simulation.BoxX2Size = dBoxX2Size;
-            obj.Variables.Simulation.BoxX3Size = dBoxX3Size;
-            
-
-            % Time variables
+            aValue = obj.fExtractFixedNum('','space','xmax',[0.0,0.0,0.0]);
+            obj.Variables.Simulation.BoxX1Max    = double(aValue(1));
+            obj.Variables.Simulation.BoxX2Max    = double(aValue(2));
+            obj.Variables.Simulation.BoxX3Max    = double(aValue(3));
 
             aValue = obj.fExtractFixedNum('','time','tmin',[0.0]);
-            obj.Variables.Simulation.TMin = double(aValue(1));
+            obj.Variables.Simulation.TMin        = double(aValue(1));
 
             aValue = obj.fExtractFixedNum('','time','tmax',[0.0]);
-            obj.Variables.Simulation.TMax = double(aValue(1));
+            obj.Variables.Simulation.TMax        = double(aValue(1));
 
-            aValue    = obj.fExtractFixedNum('','time_step','dt',[0.0]);
-            dTimeStep = double(aValue(1));
-            obj.Variables.Simulation.TimeStep = dTimeStep;
+            aValue = obj.fExtractFixedNum('','time_step','dt',[0.0]);
+            obj.Variables.Simulation.TimeStep    = double(aValue(1));
 
             aValue = obj.fExtractFixedNum('','time_step','ndump',[0]);
-            iNDump = double(aValue(1));
-            obj.Variables.Simulation.NDump = double(iNDump);
+            obj.Variables.Simulation.NDump       = double(aValue(1));
 
-            
-            % Grid
-            
             aValue = obj.fExtractFixedNum('','grid','nx_p',[0]);
             obj.Variables.Simulation.Dimensions  = length(aValue);
 
-            sValue  = obj.fExtractRaw('','grid','coordinates');
-            sCoords = strrep(sValue,'"','');
-            obj.Variables.Simulation.Coordinates = sCoord;
+            sValue = obj.fExtractRaw('','grid','coordinates');
+            obj.Variables.Simulation.Coordinates = strrep(sValue,'"','');
 
+            % Extract variables
 
+            dTimeStep = obj.Variables.Simulation.TimeStep;
+            iNDump    = obj.Variables.Simulation.NDump;
+            
             % Calculate scaling variables
             
             obj.Variables.Convert.SI.TimeFac = dTimeStep*iNDump;
-            
-            dQFac = obj.Data.Config.Variables.Plasma.N0; % Plasma density
-            dQFac = dQFac*dLFactor^3;                    % Convert from normalised units to unitless
-            
-            if strcmpi(sCoords, 'cylindrical')
-                dQFac = dQFac*2*pi;               % Cylindrical factor
-                dQFac = dQFac*dBoxX1Size/dBoxNX1; % Longitudinal cell size
-                dQFac = dQFac*dBoxX2Size/dBoxNX2; % Radial cell size
-            end % if
-            
-            obj.Variables.Convert.SI.ChargeFac = dQFac;
             
         end % function
         
@@ -509,12 +474,38 @@ classdef OsirisConfig
             
             % Calculating conversion variables
             
-            dSIE0 = 1e-7 * dEMass * dC^3 * dOmegaP * 4*pi*dEpsilon0 / dECharge;
+            dSIE0    = 1e-7 * dEMass * dC^3 * dOmegaP * 4*pi*dEpsilon0 / dECharge;
+            dLFactor = dC / dOmegaP;
 
             % Setting conversion variables
             
             obj.Variables.Convert.SI.E0        = dSIE0;
-            obj.Variables.Convert.SI.LengthFac = dC / dOmegaP;
+            obj.Variables.Convert.SI.LengthFac = dLFactor;
+
+
+            % Charge conversion factor
+            
+            sCoords    = obj.Variables.Simulation.Coordinates;
+            iDim       = obj.Variables.Simulation.Dimensions;
+            
+            dBoxNX1    = double(obj.Variables.Simulation.BoxNX1);
+            dBoxNX2    = double(obj.Variables.Simulation.BoxNX2);
+            dBoxNX3    = double(obj.Variables.Simulation.BoxNX3);
+            
+            dBoxX1Size = obj.Variables.Simulation.BoxX1Max - obj.Variables.Simulation.BoxX1Min;
+            dBoxX2Size = obj.Variables.Simulation.BoxX2Max - obj.Variables.Simulation.BoxX2Min;
+            dBoxX3Size = obj.Variables.Simulation.BoxX3Max - obj.Variables.Simulation.BoxX3Min;
+
+            dQFac = obj.N0;           % Plasma density
+            dQFac = dQFac*dLFactor^3; % Convert from normalised units to unitless
+            
+            if iDim == 2 && strcmpi(sCoords, 'cylindrical')
+                dQFac = dQFac*2*pi;               % Cylindrical factor
+                dQFac = dQFac*dBoxX1Size/dBoxNX1; % Longitudinal cell size
+                dQFac = dQFac*dBoxX2Size/dBoxNX2; % Radial cell size
+            end % if
+            
+            obj.Variables.Convert.SI.ChargeFac = dQFac;
             
             
             % Setting plasma profile
@@ -583,7 +574,7 @@ classdef OsirisConfig
             obj.Variables.Plasma.MaxPlasmaFac = dPlasmaMax;
             obj.Variables.Plasma.MaxOmegaP    = dOmegaP  * sqrt(dPlasmaMax);
             obj.Variables.Plasma.MaxLambdaP   = dLambdaP / sqrt(dPlasmaMax);
-
+            
         end % function
         
         function obj = fGetBeamVariables(obj)
