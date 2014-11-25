@@ -474,12 +474,38 @@ classdef OsirisConfig
             
             % Calculating conversion variables
             
-            dSIE0 = 1e-7 * dEMass * dC^3 * dOmegaP * 4*pi*dEpsilon0 / dECharge;
+            dSIE0    = 1e-7 * dEMass * dC^3 * dOmegaP * 4*pi*dEpsilon0 / dECharge;
+            dLFactor = dC / dOmegaP;
 
             % Setting conversion variables
             
             obj.Variables.Convert.SI.E0        = dSIE0;
-            obj.Variables.Convert.SI.LengthFac = dC / dOmegaP;
+            obj.Variables.Convert.SI.LengthFac = dLFactor;
+
+
+            % Charge conversion factor
+            
+            sCoords    = obj.Variables.Simulation.Coordinates;
+            iDim       = obj.Variables.Simulation.Dimensions;
+            
+            dBoxNX1    = double(obj.Variables.Simulation.BoxNX1);
+            dBoxNX2    = double(obj.Variables.Simulation.BoxNX2);
+            dBoxNX3    = double(obj.Variables.Simulation.BoxNX3);
+            
+            dBoxX1Size = obj.Variables.Simulation.BoxX1Max - obj.Variables.Simulation.BoxX1Min;
+            dBoxX2Size = obj.Variables.Simulation.BoxX2Max - obj.Variables.Simulation.BoxX2Min;
+            dBoxX3Size = obj.Variables.Simulation.BoxX3Max - obj.Variables.Simulation.BoxX3Min;
+
+            dQFac = obj.N0;           % Plasma density
+            dQFac = dQFac*dLFactor^3; % Convert from normalised units to unitless
+            
+            if iDim == 2 && strcmpi(sCoords, 'cylindrical')
+                dQFac = dQFac*2*pi;               % Cylindrical factor
+                dQFac = dQFac*dBoxX1Size/dBoxNX1; % Longitudinal cell size
+                dQFac = dQFac*dBoxX2Size/dBoxNX2; % Radial cell size
+            end % if
+            
+            obj.Variables.Convert.SI.ChargeFac = dQFac;
             
             
             % Setting plasma profile
@@ -548,7 +574,7 @@ classdef OsirisConfig
             obj.Variables.Plasma.MaxPlasmaFac = dPlasmaMax;
             obj.Variables.Plasma.MaxOmegaP    = dOmegaP  * sqrt(dPlasmaMax);
             obj.Variables.Plasma.MaxLambdaP   = dLambdaP / sqrt(dPlasmaMax);
-
+            
         end % function
         
         function obj = fGetBeamVariables(obj)
