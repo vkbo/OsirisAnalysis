@@ -25,12 +25,16 @@ stConstants.Nature.Gravity                 =  6.67384e-11;       % N·m^2 / kg^2
 stConstants.Nature.Boltzmann               =  1.3806488e-23;     % J/K
 stConstants.Nature.BoltzmannEV             =  8.6173324e-5;      % eV/K
 
-% Other
+% Other (SI)
 stConstants.Nature.ElementaryCharge        =  1.602176565e-19;   % C
+stConstants.Nature.ElementaryChargeCGS     =  4.80320425e-10;    % statC
 stConstants.Nature.VacuumPermitivity       =  8.854187817e-12;   % F/m 
 stConstants.Nature.VacuumPermeability      =  1.2566370614e-6;   % N/A^2
 stConstants.Nature.HBar                    =  1.054571726e-34;   % J·s
 stConstants.Nature.HBarEV                  =  6.58211928e-16;    % eV·s
+
+% Other (CGS)
+stConstants.Nature.ElementaryChargeCGS     =  4.80320425e-10;    % statC
 
 %
 % Particles

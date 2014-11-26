@@ -49,6 +49,12 @@ classdef Charge
             obj.Data    = oData;
             obj.Species = fTranslateSpecies(sSpecies);
             
+            dBoxX1Min = obj.Data.Config.Variables.Simulation.BoxX1Min;
+            dBoxX1Max = obj.Data.Config.Variables.Simulation.BoxX1Max;
+            dBoxX2Max = obj.Data.Config.Variables.Simulation.BoxX2Max;
+            
+            obj.ZLim = [ dBoxX1Min, dBoxX1Max];
+            obj.RLim = [-dBoxX2Max, dBoxX2Max];
             
         end % function
         
@@ -351,35 +357,15 @@ classdef Charge
                 return;
             end % if
             
-            dBoxX1Min = obj.Data.Config.Variables.Simulation.BoxX1Min;
-            dBoxX1Max = obj.Data.Config.Variables.Simulation.BoxX1Max;
-            dBoxX2Min = obj.Data.Config.Variables.Simulation.BoxX2Min;
-            dBoxX2Max = obj.Data.Config.Variables.Simulation.BoxX2Max;
-            iBoxNZ    = obj.Data.Config.Variables.Simulation.BoxNX1;
-            iBoxNR    = obj.Data.Config.Variables.Simulation.BoxNX2;
-            
-            dBoxZSize = dBoxX1Max - dBoxX1Min;
-            dBoxRSize = dBoxX2Max - dBoxX2Min;
-            dBoxNZ    = double(iBoxNZ);
-            dBoxNR    = double(iBoxNR);
             
             dRAWFrac  = obj.Data.Config.Variables.Beam.(obj.Species).RAWFraction;
-            dLFactor  = obj.Data.Config.Variables.Convert.SI.LengthFac;
-            dECharge  = obj.Data.Config.Variables.Constants.ElementaryCharge;
-            dN0       = obj.Data.Config.Variables.Plasma.N0;
             dTFactor  = obj.Data.Config.Variables.Convert.SI.TimeFac;
-
-            iDim      = obj.Data.Config.Variables.Simulation.Dimensions;
-            sCoords   = obj.Data.Config.Variables.Simulation.Coordinates;
             dRQM      = obj.Data.Config.Variables.Beam.(obj.Species).RQM;
             dSign     = dRQM/abs(dRQM);
             
             aRaw      = obj.Data.Data(obj.Time, 'RAW', '', obj.Species);
             iCount    = length(aRaw(:,1));
             aRaw(:,1) = aRaw(:,1) - dTFactor*obj.Time;
-            
-            obj.ZLim/obj.ZFac;
-            obj.RLim/obj.RFac;
             
             aRaw(:,8) = aRaw(:,8).*(aRaw(:,1) >= obj.ZLim(1)/obj.ZFac & aRaw(:,1) <= obj.ZLim(2)/obj.ZFac);
             aRaw(:,8) = aRaw(:,8).*(aRaw(:,2) >= obj.RLim(1)/obj.RFac & aRaw(:,2) <= obj.RLim(2)/obj.RFac);
@@ -399,37 +385,38 @@ classdef Charge
 
             end % if
             
-            dQ = sum(aRaw(:,8));          % Sum of RAW field q
-            dQ = dQ/dRAWFrac;             % Correct for fraction of particles dumped
-            dQ = dQ*dN0;                  % Plasma density
+            % Total charge
             
-            if iDim == 2 && strcmpi(sCoords, 'cylindrical')
-                dQ = dQ*2*pi;             % Cylindrical factor
-            end % if
-            
-            % Particle count
-            
-            dP = dQ*dLFactor^3;       % Convert from normalised units to unitless
-            dP = dP*dBoxRSize/dBoxNR; % Radial cell size
-            dP = dP*dBoxZSize/dBoxNZ; % Longitudinal cell size
+            dQ = sum(aRaw(:,8));      % Sum of RAW field q
+            dQ = dQ/dRAWFrac;         % Correct for fraction of particles dumped
 
-            switch lower(obj.Units)
-                case 'si'
-                    dQ = dP*dECharge; % CInvert to Coulomb
-                case 'n'
-                    dQ = dP;
+            % Unit conversion
+            
+            switch obj.Units
+                case 'SI'
+                    dP = dQ*obj.Data.Config.Variables.Convert.SI.ParticleFac;
+                    dQ = dQ*obj.Data.Config.Variables.Convert.SI.ChargeFac;
+                case 'N'
+                    dP = dQ*obj.Data.Config.Variables.Convert.Norm.ParticleFac;
+                    dQ = dQ*obj.Data.Config.Variables.Convert.Norm.ChargeFac;
             end % switch
+            
+            % Meta data
             
             iSCount = nnz(aRaw(:,8));
             dExact  = dQ/sqrt(iCount/dRAWFrac);
-            dSError = abs(dQ/(dRAWFrac*sqrt(iSCount))-dExact);
+            dSErrorQ = abs(dQ/(dRAWFrac*sqrt(iSCount))-dExact);
+            dSErrorP = abs(dP/(dRAWFrac*sqrt(iSCount))-dExact);
             
-            stReturn.QTotal      = dQ;
-            stReturn.Particles   = round(dP*dSign);
-            stReturn.RAWFraction = dRAWFrac;
-            stReturn.RAWCount    = iCount;
-            stReturn.SampleCount = iSCount;
-            stReturn.SampleError = dSError;
+            % Return data
+            
+            stReturn.QTotal              = dQ;
+            stReturn.Particles           = dP*dSign;
+            stReturn.RAWFraction         = dRAWFrac;
+            stReturn.RAWCount            = iCount;
+            stReturn.SampleCount         = iSCount;
+            stReturn.ChargeSampleError   = dSErrorQ;
+            stReturn.ParticleSampleError = dSErrorP;
             
         end % function
 
