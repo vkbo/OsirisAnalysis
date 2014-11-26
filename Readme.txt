@@ -16,7 +16,8 @@
  =====================
 
   Version 0.7
-  - Nothing yet
+  - Added charge conversion calculations to OsirisConfig
+  - Bug fixes
 
   Version 0.6
   - Added wavelet functionality
