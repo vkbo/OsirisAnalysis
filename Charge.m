@@ -17,7 +17,6 @@ classdef Charge
         X1Lim     = [];                       % Axes limits x1
         X2Lim     = [];                       % Axes limits x2
         X3Lim     = [];                       % Axes limits x3
-        ZZero     = '';                       % Zero point on Z axis
         Units     = 'N';                      % Units of axes
         AxisUnits = {'N', 'N', 'N'};          % Units of axes
         AxisScale = {'Auto', 'Auto', 'Auto'}; % Scale of axes
@@ -53,10 +52,6 @@ classdef Charge
             addParameter(oOpt, 'X1Scale', 'Auto');
             addParameter(oOpt, 'X2Scale', 'Auto');
             addParameter(oOpt, 'X3Scale', 'Auto');
-            addParameter(oOpt, 'RScale',  '');
-            addParameter(oOpt, 'XScale',  '');
-            addParameter(oOpt, 'YScale',  '');
-            addParameter(oOpt, 'ZScale',  '');
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
 
@@ -74,26 +69,11 @@ classdef Charge
 
             % Set Scale and Units
             obj.AxisScale = {stOpt.X1Scale, stOpt.X2Scale, stOpt.X3Scale};
-            
-            if ~isempty(stOpt.RScale)
-                obj.AxisScale{2} = stOpt.RScale;
-            end % if
-            
-            if ~isempty(stOpt.XScale)
-                obj.AxisScale{3} = stOpt.XScale;
-            end % if
-            
-            if ~isempty(stOpt.YScale)
-                obj.AxisScale{2} = stOpt.YScale;
-            end % if
 
-            if ~isempty(stOpt.ZScale)
-                obj.AxisScale{1} = stOpt.ZScale;
-            end % if
 
             % Evaluate units
             switch(lower(stOpt.Units))
-                
+
                 case 'si'
                     obj.Units         = 'SI';
                     [dX1Fac, sX1Unit] = fLengthScale(obj.AxisScale{1}, 'm');
@@ -101,7 +81,7 @@ classdef Charge
                     [dX3Fac, sX3Unit] = fLengthScale(obj.AxisScale{3}, 'm');
                     obj.AxisFac       = [dLFactor*dX1Fac, dLFactor*dX2Fac, dLFactor*dX3Fac];
                     obj.AxisUnits     = {sX1Unit, sX2Unit, sX3Unit};
-                    
+
                 otherwise
                     obj.Units   = 'N';
                     obj.AxisFac = [1.0, 1.0, 1.0];
@@ -110,10 +90,10 @@ classdef Charge
                     else
                         obj.AxisUnits = {'c/\omega_p', 'c_/\omega_p', 'c/\omega_p'};
                     end % if
-                    
+
             end % switch
 
-            
+
             % Set defult axis limits
             obj.X1Lim = [dBoxX1Min, dBoxX1Max]*obj.AxisFac(1);
             if strcmpi(sCoords, 'cylindrical')
@@ -122,9 +102,9 @@ classdef Charge
                 obj.X2Lim = [ dBoxX2Min, dBoxX2Max]*obj.AxisFac(2);
             end % if
             obj.X3Lim = [dBoxX3Min, dBoxX3Max]*obj.AxisFac(3);
-            
+
         end % function
-        
+
     end % methods
 
     %
@@ -178,10 +158,6 @@ classdef Charge
                 return;
             end % if
              
-            if aX2Lim(1) < 0
-                aX2Lim(1) = 0;
-            end % if
-             
             obj.X2Lim = aX2Lim/obj.AxisFac(2);
              
         end % function
@@ -208,36 +184,38 @@ classdef Charge
         function stReturn = Density(obj)
             
             stReturn = {};
-            
-            h5Data = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
-            if obj.X2Lim(1) == 0
-                aData  = transpose([fliplr(h5Data),h5Data]);
+
+            % Get settings
+            sCoords = obj.Data.Config.Variables.Simulation.Coordinates;
+
+            % Get data and axes
+            aData   = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
+            aX1Axis = obj.fGetBoxAxis('x1');
+            aX2Axis = obj.fGetBoxAxis('x2');
+
+            % Check if cylindrical
+            if strcmpi(sCoords, 'cylindrical')
+                aData   = transpose([fliplr(aData),aData]);
+                aX2Axis = [-fliplr(aX2Axis), aX2Axis];
             else
-                aData  = transpose(h5Data);
-            end % if
-            aZAxis = obj.fGetBoxAxis('x1');
-            aRAxis = obj.fGetBoxAxis('x2');
-            if obj.X2Lim(1) == 0
-                aRAxis = [-fliplr(aRAxis),aRAxis];
+                aData   = transpose(aData);
             end % if
 
-            iZMin  = fGetIndex(aZAxis, obj.X1Lim(1));
-            iZMax  = fGetIndex(aZAxis, obj.X1Lim(2));
-            if obj.X2Lim(1) == 0
-                iRMin  = fGetIndex(aRAxis, -obj.X2Lim(2));
-            else
-                iRMin  = fGetIndex(aRAxis, obj.X2Lim(1));
-            end % if
-            iRMax  = fGetIndex(aRAxis, obj.X2Lim(2));
+            iZMin   = fGetIndex(aX1Axis, obj.X1Lim(1)*obj.AxisFac(1));
+            iZMax   = fGetIndex(aX1Axis, obj.X1Lim(2)*obj.AxisFac(1));
+            iRMin   = fGetIndex(aX2Axis, obj.X2Lim(1)*obj.AxisFac(2));
+            iRMax   = fGetIndex(aX2Axis, obj.X2Lim(2)*obj.AxisFac(2));
 
-            aData  = aData(iRMin:iRMax,iZMin:iZMax);
-            aZAxis = aZAxis(iZMin:iZMax);
-            aRAxis = aRAxis(iRMin:iRMax);
+            % Crop dataset
+            aData   = aData(iRMin:iRMax,iZMin:iZMax);
+            aX1Axis = aX1Axis(iZMin:iZMax);
+            aX2Axis = aX2Axis(iRMin:iRMax);
             
-            stReturn.Data  = aData;
-            stReturn.ZAxis = aZAxis;
-            stReturn.RAxis = aRAxis;
-            stReturn.ZPos  = obj.fGetZPos();
+            % Return data
+            stReturn.Data   = aData;
+            stReturn.X1Axis = aX1Axis;
+            stReturn.X2Axis = aX2Axis;
+            stReturn.ZPos   = obj.fGetZPos();
             
         end % function
 
@@ -350,17 +328,16 @@ classdef Charge
             
         end % function
         
-        function stReturn = BeamCharge(obj, sShape, aLimits)
+        function stReturn = BeamCharge(obj, varargin)
             
+            % Input/Output
             stReturn = {};
-            
-            if nargin < 3
-                aLimits = [];
-            end % if
-            
-            if nargin < 2
-                sShape = '';
-            end % if
+
+            % Read input parameters
+            oOpt = inputParser;
+            addParameter(oOpt, 'Ellipse', []);
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
             
             if ~isBeam(obj.Species)
                 fprintf(2, 'Error: Species %s is not a beam.\n', obj.Species);
@@ -377,15 +354,16 @@ classdef Charge
             iCount    = length(aRaw(:,1));
             aRaw(:,1) = aRaw(:,1) - dTFactor*obj.Time;
             
-            aRaw(:,8) = aRaw(:,8).*(aRaw(:,1) >= obj.X1Lim(1)/obj.AxisFac(1) & aRaw(:,1) <= obj.X1Lim(2)/obj.AxisFac(1));
-            aRaw(:,8) = aRaw(:,8).*(aRaw(:,2) >= obj.X2Lim(1)/obj.AxisFac(2) & aRaw(:,2) <= obj.X2Lim(2)/obj.AxisFac(2));
+            % Eliminate charge outside box. In cylindrical X2Lim(1) < 0 is 0
+            aRaw(:,8) = aRaw(:,8).*(aRaw(:,1) >= obj.X1Lim(1) & aRaw(:,1) <= obj.X1Lim(2));
+            aRaw(:,8) = aRaw(:,8).*(aRaw(:,2) >= obj.X2Lim(1) & aRaw(:,2) <= obj.X2Lim(2));
             
-            if strcmpi(sShape, 'ellipse') && length(aLimits) == 4
+            if length(stOpt.Ellipse) == 4
 
-                dZPos = aLimits(1)/obj.AxisFac(1);
-                dRPos = aLimits(2)/obj.AxisFac(2);
-                dZRad = aLimits(3)/obj.AxisFac(1);
-                dRRad = aLimits(4)/obj.AxisFac(2);
+                dXPos = stOpt.Ellipse(1)/obj.AxisFac(1);
+                dRPos = stOpt.Ellipse(2)/obj.AxisFac(2);
+                dZRad = stOpt.Ellipse(3)/obj.AxisFac(1);
+                dRRad = stOpt.Ellipse(4)/obj.AxisFac(2);
 
                 % Applying condition:
                 aRaw(:,8) = aRaw(:,8).*(((aRaw(:,1)-dZPos).^2/dZRad^2 + (aRaw(:,2)-dRPos).^2/dRRad^2) <= 1);
@@ -397,8 +375,7 @@ classdef Charge
             
             % Total charge
             
-            dQ = sum(aRaw(:,8));      % Sum of RAW field q
-            dQ = dQ/dRAWFrac;         % Correct for fraction of particles dumped
+            dQ = sum(aRaw(:,8))/dRAWFrac; % Sum of RAW field q
 
             % Unit conversion
             
@@ -413,8 +390,8 @@ classdef Charge
             
             % Meta data
             
-            iSCount = nnz(aRaw(:,8));
-            dExact  = dQ/sqrt(iCount/dRAWFrac);
+            iSCount  = nnz(aRaw(:,8));
+            dExact   = dQ/sqrt(iCount/dRAWFrac);
             dSErrorQ = abs(dQ/(dRAWFrac*sqrt(iSCount))-dExact);
             dSErrorP = abs(dP/(dRAWFrac*sqrt(iSCount))-dExact);
             
@@ -521,17 +498,17 @@ classdef Charge
                     dXMin = obj.Data.Config.Variables.Simulation.BoxX1Min;
                     dXMax = obj.Data.Config.Variables.Simulation.BoxX1Max;
                     iNX   = obj.Data.Config.Variables.Simulation.BoxNX1;
-                    dLFac = obj.ZFac;
+                    dLFac = obj.AxisFac(1);
                 case 'x2'
                     dXMin = obj.Data.Config.Variables.Simulation.BoxX2Min;
                     dXMax = obj.Data.Config.Variables.Simulation.BoxX2Max;
                     iNX   = obj.Data.Config.Variables.Simulation.BoxNX2;
-                    dLFac = obj.RFac;
+                    dLFac = obj.AxisFac(2);
                 case 'x3'
                     dXMin = obj.Data.Config.Variables.Simulation.BoxX3Min;
                     dXMax = obj.Data.Config.Variables.Simulation.BoxX3Max;
                     iNX   = obj.Data.Config.Variables.Simulation.BoxNX3;
-                    dLFac = 1.0;
+                    dLFac = obj.AxisFac(3);
             end % switch
 
             aReturn = linspace(dXMin, dXMax, iNX)*dLFac;
