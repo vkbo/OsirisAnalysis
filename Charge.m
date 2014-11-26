@@ -160,42 +160,42 @@ classdef Charge
             
         end % function
         
-         function obj = set.X1Lim(obj, aX1Lim)
+        function obj = set.X1Lim(obj, aX1Lim)
              
-             if length(aX1Lim) ~= 2
-                 fprintf(2, 'Error: x1 limit needs to be a vector of dimension 2.\n');
-                 return;
-             end % if
+            if length(aX1Lim) ~= 2
+                fprintf(2, 'Error: x1 limit needs to be a vector of dimension 2.\n');
+                return;
+            end % if
              
-             obj.X1Lim = aX1Lim/obj.AxisFac(1);
+            obj.X1Lim = aX1Lim/obj.AxisFac(1);
              
-         end % function
+        end % function
          
-         function obj = set.X2Lim(obj, aX2Lim)
+        function obj = set.X2Lim(obj, aX2Lim)
  
-             if length(aX2Lim) ~= 2
-                 fprintf(2, 'Error: x2 limit needs to be a vector of dimension 2.\n');
-                 return;
-             end % if
+            if length(aX2Lim) ~= 2
+                fprintf(2, 'Error: x2 limit needs to be a vector of dimension 2.\n');
+                return;
+            end % if
              
-             if aX2Lim(1) < 0
-                 aX2Lim(1) = 0;
-             end % if
+            if aX2Lim(1) < 0
+                aX2Lim(1) = 0;
+            end % if
              
-             obj.X2Lim = aX2Lim/obj.AxisFac(2);
+            obj.X2Lim = aX2Lim/obj.AxisFac(2);
              
-         end % function
+        end % function
  
-         function obj = set.X3Lim(obj, aX3Lim)
+        function obj = set.X3Lim(obj, aX3Lim)
  
-             if length(aX3Lim) ~= 2
-                 fprintf(2, 'Error: x3 limit needs to be a vector of dimension 2.\n');
-                 return;
-             end % if
+            if length(aX3Lim) ~= 2
+                fprintf(2, 'Error: x3 limit needs to be a vector of dimension 2.\n');
+                return;
+            end % if
              
-             obj.X3Lim = aX3Lim/obj.AxisFac(3);
+            obj.X3Lim = aX3Lim/obj.AxisFac(3);
              
-         end % function
+        end % function
 
     end % methods
     
@@ -210,25 +210,25 @@ classdef Charge
             stReturn = {};
             
             h5Data = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
-            if obj.RLim(1) == 0
+            if obj.X2Lim(1) == 0
                 aData  = transpose([fliplr(h5Data),h5Data]);
             else
                 aData  = transpose(h5Data);
             end % if
             aZAxis = obj.fGetBoxAxis('x1');
             aRAxis = obj.fGetBoxAxis('x2');
-            if obj.RLim(1) == 0
+            if obj.X2Lim(1) == 0
                 aRAxis = [-fliplr(aRAxis),aRAxis];
             end % if
 
-            iZMin  = fGetIndex(aZAxis, obj.ZLim(1));
-            iZMax  = fGetIndex(aZAxis, obj.ZLim(2));
-            if obj.RLim(1) == 0
-                iRMin  = fGetIndex(aRAxis, -obj.RLim(2));
+            iZMin  = fGetIndex(aZAxis, obj.X1Lim(1));
+            iZMax  = fGetIndex(aZAxis, obj.X1Lim(2));
+            if obj.X2Lim(1) == 0
+                iRMin  = fGetIndex(aRAxis, -obj.X2Lim(2));
             else
-                iRMin  = fGetIndex(aRAxis, obj.RLim(1));
+                iRMin  = fGetIndex(aRAxis, obj.X2Lim(1));
             end % if
-            iRMax  = fGetIndex(aRAxis, obj.RLim(2));
+            iRMax  = fGetIndex(aRAxis, obj.X2Lim(2));
 
             aData  = aData(iRMin:iRMax,iZMin:iZMax);
             aZAxis = aZAxis(iZMin:iZMax);
@@ -377,15 +377,15 @@ classdef Charge
             iCount    = length(aRaw(:,1));
             aRaw(:,1) = aRaw(:,1) - dTFactor*obj.Time;
             
-            aRaw(:,8) = aRaw(:,8).*(aRaw(:,1) >= obj.ZLim(1)/obj.ZFac & aRaw(:,1) <= obj.ZLim(2)/obj.ZFac);
-            aRaw(:,8) = aRaw(:,8).*(aRaw(:,2) >= obj.RLim(1)/obj.RFac & aRaw(:,2) <= obj.RLim(2)/obj.RFac);
+            aRaw(:,8) = aRaw(:,8).*(aRaw(:,1) >= obj.X1Lim(1)/obj.AxisFac(1) & aRaw(:,1) <= obj.X1Lim(2)/obj.AxisFac(1));
+            aRaw(:,8) = aRaw(:,8).*(aRaw(:,2) >= obj.X2Lim(1)/obj.AxisFac(2) & aRaw(:,2) <= obj.X2Lim(2)/obj.AxisFac(2));
             
             if strcmpi(sShape, 'ellipse') && length(aLimits) == 4
 
-                dZPos = aLimits(1)/obj.ZFac;
-                dRPos = aLimits(2)/obj.RFac;
-                dZRad = aLimits(3)/obj.ZFac;
-                dRRad = aLimits(4)/obj.RFac;
+                dZPos = aLimits(1)/obj.AxisFac(1);
+                dRPos = aLimits(2)/obj.AxisFac(2);
+                dZRad = aLimits(3)/obj.AxisFac(1);
+                dRRad = aLimits(4)/obj.AxisFac(2);
 
                 % Applying condition:
                 aRaw(:,8) = aRaw(:,8).*(((aRaw(:,1)-dZPos).^2/dZRad^2 + (aRaw(:,2)-dRPos).^2/dRRad^2) <= 1);
