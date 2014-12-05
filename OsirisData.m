@@ -102,39 +102,58 @@ classdef OsirisData
 
     methods
         
-        function obj = set.Path(obj, sPath)
+        function obj = set.Path(obj, vInput)
             
             %
             %  Sets obj.Path and scan data tree
             % **********************************
             %
-
-            if ~isdir(sPath)
-                return;
+            
+            iHasData   = 0;
+            iHasTracks = 0;
+            iCompleted = 0;
+            
+            if isstruct(vInput)
+                if isfield(vInput, 'Path')
+                    obj.Path   = vInput.Path;
+                    iHasData   = vInput.HasData;
+                    iHasTracks = vInput.HasTracks;
+                    iCompleted = vInput.Completed;
+                else
+                    fprintf(2, 'Error: Path not recognised or found.\n');
+                    return;
+                end % if
+            elseif isdir(vInput)
+                obj.Path   = vInput;
+                iHasData   = isdir([vInput, '/MS']);
+                iHasTracks = isdir([vInput, '/MS/TRACKS']);
+                iCompleted = isdir([vInput, '/TIMINGS']);
+            else
+                sField = structname(vInput);
+                if isfield(obj.DataSets.ByName, sField)
+                    obj.Path   = obj.DataSets.ByName.(sField).Path;
+                    iHasData   = obj.DataSets.ByName.(sField).HasData;
+                    iHasTracks = obj.DataSets.ByName.(sField).HasTracks;
+                    iCompleted = obj.DataSets.ByName.(sField).Completed;
+                else
+                    fprintf(2, 'Error: Path not recognised or found.\n');
+                    return;
+                end % if
             end % if
 
-            obj.Path = sPath;
             fprintf('Path is %s\n', obj.Path);
             
             % Scanning MS folder
             obj.Elements = obj.fScanFolder([obj.Path,'/MS'],'');
 
             % Set path in OsirisConfig object
-            obj.Config.Path = obj.Path;
+            obj.Config.Path      = obj.Path;
+            obj.Config.HasData   = iHasData;
+            obj.Config.HasTracks = iHasTracks;
+            obj.Config.Completed = iCompleted;
 
         end % function
         
-        function obj = set.PathID(obj, iID)
-            
-            if iID > 0 && iID <= length(obj.DefaultData)
-                obj.PathID = iID;
-                obj.Path   = obj.DefaultData{iID};
-            else
-                fprintf(2, 'Error: Folder with ID %d is not in the list.\n', iID);
-            end % if
-            
-        end % function
-
         function obj = set.Elements(obj, stElements)
 
             obj.Elements = stElements;

@@ -17,6 +17,9 @@ classdef OsirisConfig
         Raw       = {};  % Matrix of config file data
         Variables = {};  % Struct for all variables
         N0        = 0.0; % N0
+        HasData   = 0;   % 1 if folder 'MS' exists, otherwise 0
+        HasTracks = 0;   % 1 if folder 'MS/TRACKS' exists, otherwise 0
+        Completed = 0;   % 1 if folder 'TIMINGS' exists, otherwise 0
 
     end % properties
 
