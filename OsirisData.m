@@ -105,8 +105,8 @@ classdef OsirisData
         function obj = set.Path(obj, vInput)
             
             %
-            %  Sets obj.Path and scan data tree
-            % **********************************
+            %  Sets obj.Path and scans data tree
+            % ***********************************
             %
             
             iHasData   = 0;
@@ -144,7 +144,7 @@ classdef OsirisData
             fprintf('Path is %s\n', obj.Path);
             
             % Scanning MS folder
-            obj.Elements = obj.fScanFolder([obj.Path,'/MS'],'');
+            obj.Elements = obj.fScanFolder([obj.Path, '/MS'], '');
 
             % Set path in OsirisConfig object
             obj.Config.Path      = obj.Path;

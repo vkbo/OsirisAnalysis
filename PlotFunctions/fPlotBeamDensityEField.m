@@ -36,7 +36,6 @@ function fPlotBeamDensityEField(oData, iTime, vR, sSpecies1, sSpecies2, sEField)
        fprintf('  oData     :: OsirisData object\n');
        fprintf('  iTime     :: Dump number\n');
        fprintf('  vR        :: R-value as integer or 2-vector\n');
-       fprintf('  iAverage  :: Number of cells to average\n');
        fprintf('  sSpecies1 :: Beam 1\n');
        fprintf('  sSpecies2 :: Beam 2\n');
        fprintf('  sEField   :: E-field (default e1)\n');

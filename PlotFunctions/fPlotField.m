@@ -53,7 +53,7 @@ function fPlotField(oData, iTime, sAxis)
     aCMap = [transpose([aCInc;aCInc;aCMid]);transpose([aCMid;aCDec;aCDec])];
 
     % Data
-    aData = oData.Data(iTime, oData.Elements.FLD.(sAxis));
+    aData = oData.Data(iTime, 'FLD', sAxis, '');
     aData = aData.*dE0*1e-9;
     aPlot = transpose([fliplr(aData), aData]);
     

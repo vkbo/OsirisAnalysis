@@ -84,8 +84,8 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     oCH        = Charge(oData, sBeam);
     oCH.Time   = iTime;
     oCH.Units  = 'SI';
-    oCH.ZScale = 'mm';
-    oCH.RScale = 'mm';
+    %oCH.ZScale = 'mm';
+    %oCH.RScale = 'mm';
 
     if length(stOpt.Limits) == 4
         oCH.ZLim = stOpt.Limits(1:2);
