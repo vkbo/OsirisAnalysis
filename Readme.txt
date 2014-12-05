@@ -2,7 +2,7 @@
   Osiris Analysis Toolbox
  ******************************************
   MATLAB package for analysing Osiris data
-  Current version: 0.7
+  Current version: 1.0
  
 
   Developed by:
@@ -14,6 +14,9 @@
 
   Development History
  =====================
+ 
+  Version 1.0
+  - 
 
   Version 0.7
   - Added charge conversion calculations to OsirisConfig
