@@ -17,6 +17,7 @@
 
   Version 0.7
   - Added charge conversion calculations to OsirisConfig
+  - Changed how Osiris datasets are opened
   - Bug fixes
 
   Version 0.6
