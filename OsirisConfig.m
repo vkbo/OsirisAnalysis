@@ -17,6 +17,9 @@ classdef OsirisConfig
         Raw       = {};  % Matrix of config file data
         Variables = {};  % Struct for all variables
         N0        = 0.0; % N0
+        HasData   = 0;   % 1 if folder 'MS' exists, otherwise 0
+        HasTracks = 0;   % 1 if folder 'MS/TRACKS' exists, otherwise 0
+        Completed = 0;   % 1 if folder 'TIMINGS' exists, otherwise 0
 
     end % properties
 
@@ -685,13 +688,23 @@ classdef OsirisConfig
 
                 aSpan    = linspace(stFunc.Lims(1), stFunc.Lims(2), 20000);
                 aReturn  = fProfile(aSpan,0);
-                dMeanX1  = dround(wmean(aSpan, aReturn),3);
-                dSigmaX1 = dround(wstd(aSpan,aReturn),5);
+                if sum(aReturn) > 0 && max(aReturn) >= 0
+                    dMeanX1  = dround(wmean(aSpan, aReturn),3);
+                    dSigmaX1 = dround(sqrt(var(aSpan,aReturn)),5);
+                else
+                    dMeanX1  = 0.0;
+                    dSigmaX1 = 0.0;
+                end % if
 
                 aSpan    = linspace(-stFunc.Lims(4), stFunc.Lims(4), 10000); % Assumes cylindrical
                 aReturn  = fProfile(dMeanX1,aSpan);
-                dMeanX2  = dround(wmean(aSpan, aReturn),3);
-                dSigmaX2 = dround(wstd(aSpan,aReturn),5);
+                if sum(aReturn) > 0 && max(aReturn) >= 0
+                    dMeanX2  = dround(wmean(aSpan, aReturn),3);
+                    dSigmaX2 = dround(sqrt(var(aSpan,aReturn)),5);
+                else
+                    dMeanX2  = 0.0;
+                    dSigmaX2 = 0.0;
+                end % if
 
                 obj.Variables.Beam.(sBeam).MeanX1  = dMeanX1;
                 obj.Variables.Beam.(sBeam).MeanX2  = dMeanX2;

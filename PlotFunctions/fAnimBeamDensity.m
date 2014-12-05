@@ -108,7 +108,7 @@ function stReturn = fAnimBeamDensity(oData, sDrive, sWitness, varargin)
 
     movie2avi(M, '/tmp/osiris-temp.avi', 'fps', 6, 'Compression', 'None');
     [~,~] = system(sprintf('avconv -i /tmp/osiris-temp.avi -c:v libx264 -crf 1 -s %dx%d -b:v 50000k Movies/%s-%s.mp4', aDim(1), aDim(2), sMovieFile, fTimeStamp));
-    [~,~] = system('rm Movies/Temp.avi');
+    [~,~] = system('rm /tmp/osiris-temp.avi');
     
     
     % Return values
