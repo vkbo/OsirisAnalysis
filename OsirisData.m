@@ -15,8 +15,8 @@ classdef OsirisData
         Path      = ''; % Path to dataset
         PathID    = ''; % Path as ID instead of free text input
         Elements  = {}; % Struct of all datafiles in dataset ('MS/' subfolder)
-        RawFields = {}; % Column labels for RAW data matrix
         Config    = []; % Content of the config files and extraction of all runtime variables
+        DataSets  = {}; % Available datasets in folders indicated by LocalConfig.m
 
     end % properties
 
@@ -41,20 +41,52 @@ classdef OsirisData
             
             LocalConfig;
     
-            obj.RawFields = {'x1','x2','x3','p1','p2','p3','ene','q','tag1','tag2'};
-            obj.Config    = OsirisConfig();
+            obj.Config = OsirisConfig;
             
             obj.DefaultPath = stFolders;
             fprintf('Scanning default data folder(s)\n');
+            
+            stFields = fieldnames(obj.DefaultPath);
 
-            for f=1:length(obj.DefaultPath)
-                if isdir(obj.DefaultPath{f})
-                    fprintf('Scanning %s\n',obj.DefaultPath{f});
-                    stDir = dir(obj.DefaultPath{f});
-                    for i = 1:length(stDir)
-                        if stDir(i).isdir && ~strcmp(stDir(i).name, '.') && ~strcmp(stDir(i).name, '..')
-                            obj.DefaultData{end+1} = sprintf('%s/%s', obj.DefaultPath{f}, stDir(i).name);
-                            fprintf('%02.d => %s\n', length(obj.DefaultData), stDir(i).name);
+            for f=1:length(stFields)
+
+                sName  = stFields{f};
+                sPath  = obj.DefaultPath.(stFields{f}).Path;
+                iDepth = obj.DefaultPath.(stFields{f}).Depth;
+
+                if isdir(sPath)
+
+                    fprintf('Scanning %s\n', sPath);
+                    
+                    stScan.(sName)(1) = struct('Path', sPath, 'Name', sName, 'Level', 0);
+                    for r=0:iDepth-1
+                        for p=1:length(stScan.(sName))
+                            if stScan.(sName)(p).Level == r
+                                stDir = dir(stScan.(sName)(p).Path);
+                                for d=1:length(stDir)
+                                    if stDir(d).isdir == 1 && ~strcmp(stDir(d).name, '.') && ~strcmp(stDir(d).name, '..')
+                                        stScan.(sName)(end+1) = struct('Path',  [stScan.(sName)(p).Path, '/', stDir(d).name], ...
+                                                                       'Name',  stDir(d).name, ...
+                                                                       'Level', r+1);
+                                    end % if
+                                end % for
+                            end % if
+                        end % for
+                    end % for
+                    
+                    for s=1:length(stScan.(sName))
+                        if stScan.(sName)(s).Level == iDepth
+                            sSet = structname(stScan.(sName)(s).Name);
+
+                            obj.DataSets.ByName.(sSet).Path      = stScan.(sName)(s).Path;
+                            obj.DataSets.ByName.(sSet).HasData   = isdir([stScan.(sName)(s).Path, '/MS']);
+                            obj.DataSets.ByName.(sSet).HasTracks = isdir([stScan.(sName)(s).Path, '/MS/TRACKS']);
+                            obj.DataSets.ByName.(sSet).Completed = isdir([stScan.(sName)(s).Path, '/TIMINGS']);
+
+                            obj.DataSets.ByPath.(sName).(sSet).Path      = stScan.(sName)(s).Path;
+                            obj.DataSets.ByPath.(sName).(sSet).HasData   = isdir([stScan.(sName)(s).Path, '/MS']);
+                            obj.DataSets.ByPath.(sName).(sSet).HasTracks = isdir([stScan.(sName)(s).Path, '/MS/TRACKS']);
+                            obj.DataSets.ByPath.(sName).(sSet).Completed = isdir([stScan.(sName)(s).Path, '/TIMINGS']);
                         end % if
                     end % for
                 end % if
@@ -117,26 +149,6 @@ classdef OsirisData
     
     methods (Access = 'public')
 
-        function List(obj)
-
-            sPrev  = '';
-
-            for d = 1:length(obj.DefaultData)
-
-                aPath = strsplit(obj.DefaultData{d}, '/');
-                sPath = strjoin(aPath(1:end-1), '/');
-                
-                if ~strcmp(sPrev, sPath)
-                    fprintf('Listing %s\n',sPath);
-                    sPrev = sPath;
-                end % if
-                
-                fprintf('%02.d => %s\n', d, aPath{end});
-
-            end % for
-
-        end % function
-        
         function Reload(obj)
             
             obj.PathID = obj.PathID;
@@ -580,7 +592,7 @@ classdef OsirisData
             stReturn.Info.Files = iFiles;
         
         end % function
-        
+
     end % methods
     
 end % classdef
