@@ -183,31 +183,40 @@ classdef Charge
         
         function stReturn = Density(obj)
             
+            % Input/Output
             stReturn = {};
 
-            % Get settings
-            sCoords = obj.Data.Config.Variables.Simulation.Coordinates;
 
+            % Get simulation variables
+            sCoords = obj.Data.Config.Variables.Simulation.Coordinates;
+            dNMax   = obj.Data.Config.Variables.Plasma.MaxPlasmaFac;
+           %dN0     = obj.Data.Config.N0;
+
+            
             % Get data and axes
             aData   = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
             aX1Axis = obj.fGetBoxAxis('x1');
             aX2Axis = obj.fGetBoxAxis('x2');
 
+
             % Check if cylindrical
             if strcmpi(sCoords, 'cylindrical')
+                %aData(:,2) = mean(aData(:,3:6),2);
+                %aData(:,1) = mean(aData(:,2:5),2);
                 aData   = transpose([fliplr(aData),aData]);
                 aX2Axis = [-fliplr(aX2Axis), aX2Axis];
             else
                 aData   = transpose(aData);
             end % if
-
+            
             iZMin   = fGetIndex(aX1Axis, obj.X1Lim(1)*obj.AxisFac(1));
             iZMax   = fGetIndex(aX1Axis, obj.X1Lim(2)*obj.AxisFac(1));
             iRMin   = fGetIndex(aX2Axis, obj.X2Lim(1)*obj.AxisFac(2));
             iRMax   = fGetIndex(aX2Axis, obj.X2Lim(2)*obj.AxisFac(2));
 
-            % Crop dataset
-            aData   = aData(iRMin:iRMax,iZMin:iZMax);
+            
+            % Crop and scale dataset
+            aData   = aData(iRMin:iRMax,iZMin:iZMax)/dNMax;
             aX1Axis = aX1Axis(iZMin:iZMax);
             aX2Axis = aX2Axis(iRMin:iRMax);
             

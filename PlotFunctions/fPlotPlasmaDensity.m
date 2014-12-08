@@ -62,7 +62,8 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     addParameter(oOpt, 'IsSubPlot',   'No');
     addParameter(oOpt, 'CAxis',       []);
     addParameter(oOpt, 'OverlayBeam', '');
-    addParameter(oOpt, 'Absolute',    'No');
+    addParameter(oOpt, 'ScatterBeam', '');
+    addParameter(oOpt, 'Absolute',    'Yes');
     parse(oOpt, varargin{:});
     stOpt = oOpt.Results;
 
@@ -93,12 +94,12 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         aData = abs(aData);
     end % if
 
-    
+
     % Get beam overlay data if a beam is selected
     
     if ~isempty(stOpt.OverlayBeam)
     
-        oBeam      = Charge(oData, stOpt.OverlayBeam, 'Units', 'SI');
+        oBeam      = Charge(oData, stOpt.OverlayBeam, 'Units', 'SI', 'X1Scale', oCH.AxisScale{1}, 'X2Scale', oCH.AxisScale{1});
         oBeam.Time = iTime;
 
         if length(stOpt.Limits) == 4
@@ -111,7 +112,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         aProjZ     = 0.15*(aRAxis(end)-aRAxis(1))*aProjZ/max(abs(aProjZ))+aRAxis(1);
 
         stQTot     = oBeam.BeamCharge;
-        dQ         = stQTot.QTotal;
+        dQ         = stQTot.QTotal*1e9;
 
         if abs(dQ) < 1.0e-3
             sBeamCharge = sprintf('Q_{tot} = %.2f fC', dQ*1e6);
@@ -141,7 +142,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     imagesc(aZAxis, aRAxis, aData);
     set(gca,'YDir','Normal');
     colormap('gray');
-    colorbar();
+    hCol = colorbar();
     if ~isempty(stOpt.CAxis)
         caxis(stOpt.CAxis);
     end % if
@@ -165,6 +166,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     title(sTitle,'FontSize',14);
     xlabel('\xi [mm]', 'FontSize',12);
     ylabel('r [mm]', 'FontSize',12);
+    title(hCol, 'n_{pe}/n_0');
     
     hold off;
     
