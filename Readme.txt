@@ -16,7 +16,9 @@
  =====================
  
   Version 1.0
-  - 
+  - Classes now handle units as normalised by default. Changing units is done when the object is created by using
+    standard matlab input pairs. For instance: CH = Charge(<Data object>, 'EB', 'Units', 'SI', 'X1Scale', 'mm');
+    This sets class units to SI and the x1-axis (xi-axis) to millimetres.
 
   Version 0.7
   - Added charge conversion calculations to OsirisConfig
