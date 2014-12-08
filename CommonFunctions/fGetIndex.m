@@ -1,3 +1,8 @@
+%
+%  Function: fGetIndex
+% *********************
+%  Returns the index on an axis vector corresponding to a value
+%
 
 function iIndex = fGetIndex(aVector, dValue)
 
@@ -16,6 +21,11 @@ function iIndex = fGetIndex(aVector, dValue)
     
     if dValue >= aVector(end-1)-(aVector(end)-aVector(end-1))/2
         iIndex = length(aVector);
+    end % if
+    
+    % Matlab matrix index cannot be less than 1
+    if iIndex < 1
+        iIndex = 1;
     end % if
 
 end
