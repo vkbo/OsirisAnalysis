@@ -72,7 +72,7 @@ function stReturn = fAnimPlasmaDensity(oData, sDrive, sWitness, varargin)
         i = k-iStart+1;
 
         % Call plot
-        stB1Info = fPlotPlasmaDensity(oData, k, 'PE', 'Absolute', 'Yes', 'Limits', aLimits, 'CAxis', [0 5], ...
+        stInfo = fPlotPlasmaDensity(oData, k, 'PE', 'Absolute', 'Yes', 'Limits', aLimits, 'CAxis', [0 5], ...
                                       'Overlay1', sWitness, 'Overlay2', sDrive, ...
                                       'Scatter1', sWitness, 'Sample1', 1000, ...
                                       'Scatter2', sDrive,   'Sample2', 2000);
@@ -93,8 +93,7 @@ function stReturn = fAnimPlasmaDensity(oData, sDrive, sWitness, varargin)
     
     
     % Return values
-    stReturn.Movie           = M;
-    stReturn.DriveBeamInfo   = stB1Info;
-    stReturn.WitnessBeamInfo = stB2Info;
+    stReturn.Movie      = M;
+    stReturn.PlotInfo   = stInfo;
 
 end % function
