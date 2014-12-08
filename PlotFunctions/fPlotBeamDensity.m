@@ -5,9 +5,9 @@
 %
 %  Inputs:
 % =========
-%  oData   :: OsirisData object
-%  sTime   :: Time dump
-%  sBeam   :: Which beam to look at
+%  oData :: OsirisData object
+%  sTime :: Time dump
+%  sBeam :: Which beam to look at
 %
 %  Options:
 % ==========
@@ -81,22 +81,19 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     
     % Prepare Data
 
-    oCH        = Charge(oData, sBeam);
-    oCH.Time   = iTime;
-    oCH.Units  = 'SI';
-    %oCH.ZScale = 'mm';
-    %oCH.RScale = 'mm';
+    oCH      = Charge(oData, sBeam, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
+    oCH.Time = iTime;
 
     if length(stOpt.Limits) == 4
-        oCH.ZLim = stOpt.Limits(1:2);
-        oCH.RLim = stOpt.Limits(3:4);
+        oCH.X1Lim = stOpt.Limits(1:2);
+        oCH.X2Lim = stOpt.Limits(3:4);
     end % if
-
+    
     stData  = oCH.Density;
 
     aData   = stData.Data;
-    aZAxis  = stData.ZAxis;
-    aRAxis  = stData.RAxis;
+    aZAxis  = stData.X1Axis;
+    aRAxis  = stData.X2Axis;
     dZPos   = stData.ZPos;
     
     if strcmpi(stOpt.Absolute, 'Yes')
@@ -115,7 +112,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     else
         stQTot = oCH.BeamCharge;
     end % if
-    dQ = stQTot.QTotal;
+    dQ = stQTot.QTotal*1e9;
     
     if abs(dQ) < 1.0e-3
         sBeamCharge = sprintf('Q_{tot} = %.2f fC', dQ*1e6);
