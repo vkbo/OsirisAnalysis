@@ -11,16 +11,18 @@ classdef Charge
 
     properties (GetAccess = 'public', SetAccess = 'public')
         
-        Data      = [];                       % OsirisData dataset
-        Species   = '';                       % Species to ananlyse
-        Time      = 0;                        % Current time (dumb number)
-        X1Lim     = [];                       % Axes limits x1
-        X2Lim     = [];                       % Axes limits x2
-        X3Lim     = [];                       % Axes limits x3
-        Units     = 'N';                      % Units of axes
-        AxisUnits = {'N', 'N', 'N'};          % Units of axes
-        AxisScale = {'Auto', 'Auto', 'Auto'}; % Scale of axes
-        AxisFac   = [1.0, 1.0, 1.0];          % Axes scale factors
+        Data        = [];                       % OsirisData dataset
+        Species     = '';                       % Species to ananlyse
+        Time        = 0;                        % Current time (dumb number)
+        X1Lim       = [];                       % Axes limits x1
+        X2Lim       = [];                       % Axes limits x2
+        X3Lim       = [];                       % Axes limits x3
+        Units       = 'N';                      % Units of axes
+        AxisUnits   = {'N', 'N', 'N'};          % Units of axes
+        AxisScale   = {'Auto', 'Auto', 'Auto'}; % Scale of axes
+        AxisFac     = [1.0, 1.0, 1.0];          % Axes scale factors
+        ParticleFac = 1.0;                      % Q-to-particles factor
+        ChargeFac   = 1.0;                      % Q-to-charge factor
 
     end % properties
 
@@ -76,20 +78,28 @@ classdef Charge
 
                 case 'si'
                     obj.Units         = 'SI';
+                    
                     [dX1Fac, sX1Unit] = fLengthScale(obj.AxisScale{1}, 'm');
                     [dX2Fac, sX2Unit] = fLengthScale(obj.AxisScale{2}, 'm');
                     [dX3Fac, sX3Unit] = fLengthScale(obj.AxisScale{3}, 'm');
                     obj.AxisFac       = [dLFactor*dX1Fac, dLFactor*dX2Fac, dLFactor*dX3Fac];
                     obj.AxisUnits     = {sX1Unit, sX2Unit, sX3Unit};
+                    
+                    obj.ParticleFac = obj.Data.Config.Variables.Convert.SI.ParticleFac;
+                    obj.ChargeFac   = obj.Data.Config.Variables.Convert.SI.ChargeFac;
 
                 otherwise
                     obj.Units   = 'N';
+
                     obj.AxisFac = [1.0, 1.0, 1.0];
                     if strcmpi(sCoords, 'cylindrical')
                         obj.AxisUnits = {'c/\omega_p', 'c_/\omega_p', 'rad'};
                     else
                         obj.AxisUnits = {'c/\omega_p', 'c_/\omega_p', 'c/\omega_p'};
                     end % if
+
+                    obj.ParticleFac = obj.Data.Config.Variables.Convert.Norm.ParticleFac;
+                    obj.ChargeFac   = obj.Data.Config.Variables.Convert.Norm.ChargeFac;
 
             end % switch
 
@@ -385,17 +395,8 @@ classdef Charge
             % Total charge
             
             dQ = sum(aRaw(:,8))/dRAWFrac; % Sum of RAW field q
-
-            % Unit conversion
-            
-            switch obj.Units
-                case 'SI'
-                    dP = dQ*obj.Data.Config.Variables.Convert.SI.ParticleFac;
-                    dQ = dQ*obj.Data.Config.Variables.Convert.SI.ChargeFac;
-                case 'N'
-                    dP = dQ*obj.Data.Config.Variables.Convert.Norm.ParticleFac;
-                    dQ = dQ*obj.Data.Config.Variables.Convert.Norm.ChargeFac;
-            end % switch
+            dP = dQ*obj.ParticleFac;
+            dQ = dQ*obj.ChargeFac;
             
             % Meta data
             
@@ -478,6 +479,68 @@ classdef Charge
             stReturn.Total     = dTotal;
             stReturn.Missing   = dMissing;
             
+        end % function
+        
+        function stReturn = ParticleSample(obj, varargin)
+        
+            % Input/Output
+            stReturn = {};
+
+            % Read input parameters
+            oOpt = inputParser;
+            addParameter(oOpt, 'Sample', 200);
+            addParameter(oOpt, 'Filter', 'Random');
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
+
+            % Read variables
+            sCoords   = obj.Data.Config.Variables.Simulation.Coordinates;
+            dTFactor  = obj.Data.Config.Variables.Convert.SI.TimeFac;
+            dRQM      = obj.Data.Config.Variables.Beam.(obj.Species).RQM;
+            dSign     = dRQM/abs(dRQM);
+            
+            aRaw      = obj.Data.Data(obj.Time, 'RAW', '', obj.Species);
+            iCount    = length(aRaw(:,1));
+            aRaw(:,1) = aRaw(:,1) - dTFactor*obj.Time;
+
+            iCount = stOpt.Sample;
+            if iCount > length(aRaw(:,1))
+                iCount = length(aRaw(:,1));
+            end % if
+
+            % Removing elements outside box
+            aRaw(:,8) = aRaw(:,8).*(aRaw(:,1) >= obj.X1Lim(1) & aRaw(:,1) <= obj.X1Lim(2));
+            aRaw(:,8) = aRaw(:,8).*(aRaw(:,2) >= obj.X2Lim(1) & aRaw(:,2) <= obj.X2Lim(2));
+            aRaw      = aRaw(find(aRaw(:,8)),:);
+
+            aRaw(:,9) = aRaw(:,8)*dSign;
+
+            if strcmpi(sCoords, 'cylindrical')
+                aRaw = [aRaw; aRaw(:,1) -aRaw(:,2) aRaw(:,3:end)]; 
+            end % if
+
+            switch(lower(stOpt.Filter))
+                case 'random'
+                    aRand = randperm(length(aRaw(:,1)));
+                    aRaw  = aRaw(aRand(1:iCount),:);
+                case 'charge'
+                    aRaw  = sortrows(aRaw,9);
+                    aRaw  = aRaw(end-iCount+1:end,:);
+            end % switch
+            
+            % Return data
+            stReturn.X1     = aRaw(:,1)*obj.AxisFac(1);
+            stReturn.X2     = aRaw(:,2)*obj.AxisFac(2);
+            stReturn.X3     = aRaw(:,3)*obj.AxisFac(3);
+            stReturn.P1     = aRaw(:,4);
+            stReturn.P2     = aRaw(:,5);
+            stReturn.P3     = aRaw(:,6);
+            stReturn.Energy = aRaw(:,7);
+            stReturn.Charge = aRaw(:,8)*obj.ChargeFac;
+            stReturn.Count  = aRaw(:,9)*obj.ParticleFac;
+            stReturn.Norm   = aRaw(:,9)./max(aRaw(:,9));
+            stReturn.Area   = 7*(0.4 + stReturn.Norm);
+
         end % function
         
     end % methods
