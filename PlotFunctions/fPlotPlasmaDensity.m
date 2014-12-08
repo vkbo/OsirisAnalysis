@@ -57,14 +57,12 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
 
     oOpt = inputParser;
     addParameter(oOpt, 'Limits',      []);
-    addParameter(oOpt, 'Charge',      []);
     addParameter(oOpt, 'FigureSize',  [900 500]);
     addParameter(oOpt, 'HideDump',    'No');
     addParameter(oOpt, 'IsSubPlot',   'No');
     addParameter(oOpt, 'CAxis',       []);
-    addParameter(oOpt, 'ShowOverlay', 'Yes');
+    addParameter(oOpt, 'OverlayBeam', '');
     addParameter(oOpt, 'Absolute',    'No');
-    addParameter(oOpt, 'TrackPeak',   'No');
     parse(oOpt, varargin{:});
     stOpt = oOpt.Results;
 
@@ -73,56 +71,60 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         return;
     end % if
 
-    if ~isempty(stOpt.Charge) && (length(stOpt.Charge) ~= 2 || length(stOpt.Charge) ~= 4)
-        fprintf(2, 'Error: Charge specified, but must be of dimension 2 (follow peak) or 4.\n');
-        return;
-    end % if
-
     
     % Prepare Data
 
-    oCH        = Charge(oData, sPlasma);
-    oCH.Time   = iTime;
-    oCH.Units  = 'SI';
-    %oCH.ZScale = 'mm';
-    %oCH.RScale = 'mm';
+    oCH      = Charge(oData, sPlasma, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
+    oCH.Time = iTime;
 
     if length(stOpt.Limits) == 4
-        oCH.ZLim = stOpt.Limits(1:2);
-        oCH.RLim = stOpt.Limits(3:4);
+        oCH.X1Lim = stOpt.Limits(1:2);
+        oCH.X2Lim = stOpt.Limits(3:4);
     end % if
 
     stData  = oCH.Density;
 
     aData   = stData.Data;
-    aZAxis  = stData.ZAxis;
-    aRAxis  = stData.RAxis;
+    aZAxis  = stData.X1Axis;
+    aRAxis  = stData.X2Axis;
     dZPos   = stData.ZPos;
-    
+
     if strcmpi(stOpt.Absolute, 'Yes')
         aData = abs(aData);
     end % if
-    
-    aProjZ  = abs(sum(aData));
-    aProjZ  = 0.15*(aRAxis(end)-aRAxis(1))*aProjZ/max(abs(aProjZ))+aRAxis(1);
 
-    if length(stOpt.Charge) == 2
-        [~,iZPeak] = max(sum(abs(aData),1));
-        [~,iRPeak] = max(sum(abs(aData),2));
-        stQTot = oCH.BeamCharge('Ellipse', [aZAxis(iZPeak), 0, stOpt.Charge(1), stOpt.Charge(2)]);
-    elseif length(stOpt.Charge) == 4
-        stQTot = oCH.BeamCharge('Ellipse', [stOpt.Charge(1), stOpt.Charge(2), stOpt.Charge(3), stOpt.Charge(4)]);
-    else
-        stQTot = oCH.BeamCharge;
-    end % if
-    dQ = stQTot.QTotal;
     
-    if abs(dQ) < 1.0e-3
-        sBeamCharge = sprintf('Q_{tot} = %.2f fC', dQ*1e6);
-    elseif abs(dQ) < 1.0
-        sBeamCharge = sprintf('Q_{tot} = %.2f pC', dQ*1e3);
+    % Get beam overlay data if a beam is selected
+    
+    if ~isempty(stOpt.OverlayBeam)
+    
+        oBeam      = Charge(oData, stOpt.OverlayBeam, 'Units', 'SI');
+        oBeam.Time = iTime;
+
+        if length(stOpt.Limits) == 4
+            oBeam.X1Lim = stOpt.Limits(1:2);
+            oBeam.X2Lim = stOpt.Limits(3:4);
+        end % if
+        
+        stBeam     = oBeam.Density;
+        aProjZ     = abs(sum(stBeam.Data));
+        aProjZ     = 0.15*(aRAxis(end)-aRAxis(1))*aProjZ/max(abs(aProjZ))+aRAxis(1);
+
+        stQTot     = oBeam.BeamCharge;
+        dQ         = stQTot.QTotal;
+
+        if abs(dQ) < 1.0e-3
+            sBeamCharge = sprintf('Q_{tot} = %.2f fC', dQ*1e6);
+        elseif abs(dQ) < 1.0
+            sBeamCharge = sprintf('Q_{tot} = %.2f pC', dQ*1e3);
+        else
+            sBeamCharge = sprintf('Q_{tot} = %.2f nC', dQ);
+        end % if
+    
     else
-        sBeamCharge = sprintf('Q_{tot} = %.2f nC', dQ);
+        
+        dQ = 0.0;
+        
     end % if
     
 
@@ -138,7 +140,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
 
     imagesc(aZAxis, aRAxis, aData);
     set(gca,'YDir','Normal');
-    colormap('hot');
+    colormap('gray');
     colorbar();
     if ~isempty(stOpt.CAxis)
         caxis(stOpt.CAxis);
@@ -146,22 +148,12 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
 
     hold on;
 
-    if strcmpi(stOpt.ShowOverlay, 'Yes')
+    if ~isempty(stOpt.OverlayBeam)
         plot(aZAxis, aProjZ, 'White');
         h = legend(sBeamCharge, 'Location', 'NE');
         legend(h, 'boxoff');
         set(h,'TextColor', [1 1 1]);
         set(findobj(h, 'type', 'line'), 'visible', 'off')
-    end % if
-
-    if length(stOpt.Charge) == 2
-        dRX = aZAxis(iZPeak)-stOpt.Charge(1);
-        dRY = aRAxis(iRPeak)-stOpt.Charge(2);
-        rectangle('Position',[dRX,dRY,2*stOpt.Charge(1),2*stOpt.Charge(2)],'Curvature',[1,1],'EdgeColor','White','LineStyle','--');
-    elseif length(stOpt.Charge) == 4
-        dRX = aCharge(1)-stOpt.Charge(3);
-        dRY = aCharge(2)-stOpt.Charge(4);
-        rectangle('Position',[dRX,dRY,2*stOpt.Charge(3),2*stOpt.Charge(4)],'Curvature',[1,1],'EdgeColor','White','LineStyle','--');
     end % if
 
     if strcmpi(stOpt.HideDump, 'No')
@@ -179,9 +171,9 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     
     % Return
 
-    stReturn.Beam1 = sPlasma;
-    stReturn.XLim  = xlim;
-    stReturn.YLim  = ylim;
-    stReturn.CLim  = caxis;
+    stReturn.Plasma = sPlasma;
+    stReturn.XLim   = xlim;
+    stReturn.YLim   = ylim;
+    stReturn.CLim   = caxis;
     
 end
