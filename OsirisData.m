@@ -174,12 +174,6 @@ classdef OsirisData
             
         end % function
 
-        function Reload(obj)
-            
-            obj.PathID = obj.PathID;
-            
-        end % function
-        
         function Info(obj)
             
             %
