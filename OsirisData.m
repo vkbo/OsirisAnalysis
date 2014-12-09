@@ -1,7 +1,7 @@
 %
 %  Class Object to hold Osiris data
 % **********************************
-%  Version 0.6
+%  Version 0.7
 %
 
 classdef OsirisData
@@ -167,6 +167,12 @@ classdef OsirisData
     %
     
     methods (Access = 'public')
+        
+        function Version(obj)
+            
+            fprintf('OsirisAnalysis Version 0.7\n');
+            
+        end % function
 
         function Reload(obj)
             
