@@ -116,7 +116,7 @@ classdef Momentum
     %
 
     methods
-        
+
         function obj = set.Time(obj, sTime)
             
             sTime = num2str(sTime);
@@ -143,38 +143,96 @@ classdef Momentum
             end % if
             
         end % function
-        
+
         function obj = set.X1Lim(obj, aX1Lim)
-             
+
+            dBoxX1Min = obj.Data.Config.Variables.Simulation.BoxX1Min;
+            dBoxX1Max = obj.Data.Config.Variables.Simulation.BoxX1Max;
+
             if length(aX1Lim) ~= 2
                 fprintf(2, 'Error: x1 limit needs to be a vector of dimension 2.\n');
                 return;
             end % if
-             
+
+            if aX1Lim(2) < aX1Lim(1)
+                fprintf(2, 'Error: second value must be larger than first value.\n');
+                return;
+            end % if
+
+            if aX1Lim(1)/obj.AxisFac(1) < dBoxX1Min || aX1Lim(1)/obj.AxisFac(1) > dBoxX1Max ...
+            || aX1Lim(2)/obj.AxisFac(1) < dBoxX1Min || aX1Lim(2)/obj.AxisFac(1) > dBoxX1Max
+                fprintf('Warning: X1Lim input is out of range. Range is %.2f–%.2f %s.\n', dBoxX1Min*obj.AxisFac(1), dBoxX1Max*obj.AxisFac(1), obj.AxisUnits{1});
+                aX1Lim(1) = dBoxX1Min*obj.AxisFac(1);
+            end % if
+
             obj.X1Lim = aX1Lim/obj.AxisFac(1);
-             
+
         end % function
-         
+
         function obj = set.X2Lim(obj, aX2Lim)
  
+            dBoxX2Min = obj.Data.Config.Variables.Simulation.BoxX2Min;
+            dBoxX2Max = obj.Data.Config.Variables.Simulation.BoxX2Max;
+            sCoords   = obj.Data.Config.Variables.Simulation.Coordinates;
+
             if length(aX2Lim) ~= 2
                 fprintf(2, 'Error: x2 limit needs to be a vector of dimension 2.\n');
                 return;
             end % if
-             
+
+            if aX2Lim(2) < aX2Lim(1)
+                fprintf(2, 'Error: second value must be larger than first value.\n');
+                return;
+            end % if
+            
+            if strcmpi(sCoords, 'cylindrical')
+
+                if aX2Lim(1)/obj.AxisFac(2) < -dBoxX2Max || aX2Lim(1)/obj.AxisFac(2) > dBoxX2Max ...
+                || aX2Lim(2)/obj.AxisFac(2) < -dBoxX2Max || aX2Lim(2)/obj.AxisFac(2) > dBoxX2Max
+                    fprintf('Warning: X2Lim input is out of range. Range is %.2f–%.2f %s.\n', ...
+                            -dBoxX2Max*obj.AxisFac(2), dBoxX2Max*obj.AxisFac(2), obj.AxisUnits{2});
+                    aX2Lim = [-dBoxX2Max*obj.AxisFac(2) dBoxX2Max*obj.AxisFac(2)];
+                end % if
+
+            else
+                
+                if aX2Lim(1)/obj.AxisFac(2) < dBoxX2Min || aX2Lim(1)/obj.AxisFac(2) > dBoxX2Max ...
+                || aX2Lim(2)/obj.AxisFac(2) < dBoxX2Min || aX2Lim(2)/obj.AxisFac(2) > dBoxX2Max
+                    fprintf('Warning: X2Lim input is out of range. Range is %.2f–%.2f %s.\n', ...
+                            dBoxX2Min*obj.AxisFac(2), dBoxX2Max*obj.AxisFac(2), obj.AxisUnits{2});
+                    aX2Lim = [dBoxX2Min*obj.AxisFac(2) dBoxX2Max*obj.AxisFac(2)];
+                end % if
+
+            end % if
+
             obj.X2Lim = aX2Lim/obj.AxisFac(2);
              
         end % function
- 
+
         function obj = set.X3Lim(obj, aX3Lim)
- 
+
+            dBoxX3Min = obj.Data.Config.Variables.Simulation.BoxX3Min;
+            dBoxX3Max = obj.Data.Config.Variables.Simulation.BoxX3Max;
+
             if length(aX3Lim) ~= 2
                 fprintf(2, 'Error: x3 limit needs to be a vector of dimension 2.\n');
                 return;
             end % if
-             
+
+            if aX3Lim(2) < aX3Lim(1)
+                fprintf(2, 'Error: second value must be larger than first value.\n');
+                return;
+            end % if
+
+            if aX3Lim(1)/obj.AxisFac(3) < dBoxX3Min || aX3Lim(1)/obj.AxisFac(3) > dBoxX3Max ...
+            || aX3Lim(2)/obj.AxisFac(3) < dBoxX3Min || aX3Lim(2)/obj.AxisFac(3) > dBoxX3Max
+                fprintf('Warning: X3Lim input is out of range. Range is %.2f–%.2f %s.\n', ...
+                        dBoxX3Min*obj.AxisFac(3), dBoxX3Max*obj.AxisFac(3), obj.AxisUnits{3});
+                aX3Lim = [dBoxX3Min*obj.AxisFac(3) dBoxX3Max*obj.AxisFac(3)];
+            end % if
+
             obj.X3Lim = aX3Lim/obj.AxisFac(3);
-             
+
         end % function
 
     end % methods

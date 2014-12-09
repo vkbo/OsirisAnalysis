@@ -136,7 +136,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     imagesc(aZAxis, aRAxis, aData);
     set(gca,'YDir','Normal');
     colormap('hot');
-    colorbar();
+    hCol = colorbar();
     if ~isempty(stOpt.CAxis)
         caxis(stOpt.CAxis);
     end % if
@@ -170,6 +170,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     title(sTitle,'FontSize',14);
     xlabel('\xi [mm]', 'FontSize',12);
     ylabel('r [mm]', 'FontSize',12);
+    title(hCol, 'n_{pe}/n_0');
     
     hold off;
     

@@ -11,16 +11,18 @@ classdef Charge
 
     properties (GetAccess = 'public', SetAccess = 'public')
         
-        Data      = [];                       % OsirisData dataset
-        Species   = '';                       % Species to ananlyse
-        Time      = 0;                        % Current time (dumb number)
-        X1Lim     = [];                       % Axes limits x1
-        X2Lim     = [];                       % Axes limits x2
-        X3Lim     = [];                       % Axes limits x3
-        Units     = 'N';                      % Units of axes
-        AxisUnits = {'N', 'N', 'N'};          % Units of axes
-        AxisScale = {'Auto', 'Auto', 'Auto'}; % Scale of axes
-        AxisFac   = [1.0, 1.0, 1.0];          % Axes scale factors
+        Data        = [];                       % OsirisData dataset
+        Species     = '';                       % Species to ananlyse
+        Time        = 0;                        % Current time (dumb number)
+        X1Lim       = [];                       % Axes limits x1
+        X2Lim       = [];                       % Axes limits x2
+        X3Lim       = [];                       % Axes limits x3
+        Units       = 'N';                      % Units of axes
+        AxisUnits   = {'N', 'N', 'N'};          % Units of axes
+        AxisScale   = {'Auto', 'Auto', 'Auto'}; % Scale of axes
+        AxisFac     = [1.0, 1.0, 1.0];          % Axes scale factors
+        ParticleFac = 1.0;                      % Q-to-particles factor
+        ChargeFac   = 1.0;                      % Q-to-charge factor
 
     end % properties
 
@@ -76,20 +78,28 @@ classdef Charge
 
                 case 'si'
                     obj.Units         = 'SI';
+                    
                     [dX1Fac, sX1Unit] = fLengthScale(obj.AxisScale{1}, 'm');
                     [dX2Fac, sX2Unit] = fLengthScale(obj.AxisScale{2}, 'm');
                     [dX3Fac, sX3Unit] = fLengthScale(obj.AxisScale{3}, 'm');
                     obj.AxisFac       = [dLFactor*dX1Fac, dLFactor*dX2Fac, dLFactor*dX3Fac];
                     obj.AxisUnits     = {sX1Unit, sX2Unit, sX3Unit};
+                    
+                    obj.ParticleFac = obj.Data.Config.Variables.Convert.SI.ParticleFac;
+                    obj.ChargeFac   = obj.Data.Config.Variables.Convert.SI.ChargeFac;
 
                 otherwise
                     obj.Units   = 'N';
+
                     obj.AxisFac = [1.0, 1.0, 1.0];
                     if strcmpi(sCoords, 'cylindrical')
                         obj.AxisUnits = {'c/\omega_p', 'c_/\omega_p', 'rad'};
                     else
                         obj.AxisUnits = {'c/\omega_p', 'c_/\omega_p', 'c/\omega_p'};
                     end % if
+
+                    obj.ParticleFac = obj.Data.Config.Variables.Convert.Norm.ParticleFac;
+                    obj.ChargeFac   = obj.Data.Config.Variables.Convert.Norm.ChargeFac;
 
             end % switch
 
@@ -141,36 +151,94 @@ classdef Charge
         end % function
         
         function obj = set.X1Lim(obj, aX1Lim)
-             
+
+            dBoxX1Min = obj.Data.Config.Variables.Simulation.BoxX1Min;
+            dBoxX1Max = obj.Data.Config.Variables.Simulation.BoxX1Max;
+
             if length(aX1Lim) ~= 2
                 fprintf(2, 'Error: x1 limit needs to be a vector of dimension 2.\n');
                 return;
             end % if
-             
+
+            if aX1Lim(2) < aX1Lim(1)
+                fprintf(2, 'Error: second value must be larger than first value.\n');
+                return;
+            end % if
+
+            if aX1Lim(1)/obj.AxisFac(1) < dBoxX1Min || aX1Lim(1)/obj.AxisFac(1) > dBoxX1Max ...
+            || aX1Lim(2)/obj.AxisFac(1) < dBoxX1Min || aX1Lim(2)/obj.AxisFac(1) > dBoxX1Max
+                fprintf('Warning: X1Lim input is out of range. Range is %.2f–%.2f %s.\n', dBoxX1Min*obj.AxisFac(1), dBoxX1Max*obj.AxisFac(1), obj.AxisUnits{1});
+                aX1Lim(1) = dBoxX1Min*obj.AxisFac(1);
+            end % if
+
             obj.X1Lim = aX1Lim/obj.AxisFac(1);
-             
+
         end % function
          
         function obj = set.X2Lim(obj, aX2Lim)
  
+            dBoxX2Min = obj.Data.Config.Variables.Simulation.BoxX2Min;
+            dBoxX2Max = obj.Data.Config.Variables.Simulation.BoxX2Max;
+            sCoords   = obj.Data.Config.Variables.Simulation.Coordinates;
+
             if length(aX2Lim) ~= 2
                 fprintf(2, 'Error: x2 limit needs to be a vector of dimension 2.\n');
                 return;
             end % if
-             
+
+            if aX2Lim(2) < aX2Lim(1)
+                fprintf(2, 'Error: second value must be larger than first value.\n');
+                return;
+            end % if
+            
+            if strcmpi(sCoords, 'cylindrical')
+
+                if aX2Lim(1)/obj.AxisFac(2) < -dBoxX2Max || aX2Lim(1)/obj.AxisFac(2) > dBoxX2Max ...
+                || aX2Lim(2)/obj.AxisFac(2) < -dBoxX2Max || aX2Lim(2)/obj.AxisFac(2) > dBoxX2Max
+                    fprintf('Warning: X2Lim input is out of range. Range is %.2f–%.2f %s.\n', ...
+                            -dBoxX2Max*obj.AxisFac(2), dBoxX2Max*obj.AxisFac(2), obj.AxisUnits{2});
+                    aX2Lim = [-dBoxX2Max*obj.AxisFac(2) dBoxX2Max*obj.AxisFac(2)];
+                end % if
+
+            else
+                
+                if aX2Lim(1)/obj.AxisFac(2) < dBoxX2Min || aX2Lim(1)/obj.AxisFac(2) > dBoxX2Max ...
+                || aX2Lim(2)/obj.AxisFac(2) < dBoxX2Min || aX2Lim(2)/obj.AxisFac(2) > dBoxX2Max
+                    fprintf('Warning: X2Lim input is out of range. Range is %.2f–%.2f %s.\n', ...
+                            dBoxX2Min*obj.AxisFac(2), dBoxX2Max*obj.AxisFac(2), obj.AxisUnits{2});
+                    aX2Lim = [dBoxX2Min*obj.AxisFac(2) dBoxX2Max*obj.AxisFac(2)];
+                end % if
+
+            end % if
+
             obj.X2Lim = aX2Lim/obj.AxisFac(2);
              
         end % function
  
         function obj = set.X3Lim(obj, aX3Lim)
- 
+
+            dBoxX3Min = obj.Data.Config.Variables.Simulation.BoxX3Min;
+            dBoxX3Max = obj.Data.Config.Variables.Simulation.BoxX3Max;
+
             if length(aX3Lim) ~= 2
                 fprintf(2, 'Error: x3 limit needs to be a vector of dimension 2.\n');
                 return;
             end % if
-             
+
+            if aX3Lim(2) < aX3Lim(1)
+                fprintf(2, 'Error: second value must be larger than first value.\n');
+                return;
+            end % if
+
+            if aX3Lim(1)/obj.AxisFac(3) < dBoxX3Min || aX3Lim(1)/obj.AxisFac(3) > dBoxX3Max ...
+            || aX3Lim(2)/obj.AxisFac(3) < dBoxX3Min || aX3Lim(2)/obj.AxisFac(3) > dBoxX3Max
+                fprintf('Warning: X3Lim input is out of range. Range is %.2f–%.2f %s.\n', ...
+                        dBoxX3Min*obj.AxisFac(3), dBoxX3Max*obj.AxisFac(3), obj.AxisUnits{3});
+                aX3Lim = [dBoxX3Min*obj.AxisFac(3) dBoxX3Max*obj.AxisFac(3)];
+            end % if
+
             obj.X3Lim = aX3Lim/obj.AxisFac(3);
-             
+
         end % function
 
     end % methods
@@ -183,31 +251,40 @@ classdef Charge
         
         function stReturn = Density(obj)
             
+            % Input/Output
             stReturn = {};
 
-            % Get settings
-            sCoords = obj.Data.Config.Variables.Simulation.Coordinates;
 
+            % Get simulation variables
+            sCoords = obj.Data.Config.Variables.Simulation.Coordinates;
+            dNMax   = obj.Data.Config.Variables.Plasma.MaxPlasmaFac;
+           %dN0     = obj.Data.Config.N0;
+
+            
             % Get data and axes
             aData   = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
             aX1Axis = obj.fGetBoxAxis('x1');
             aX2Axis = obj.fGetBoxAxis('x2');
 
+
             % Check if cylindrical
             if strcmpi(sCoords, 'cylindrical')
+                %aData(:,2) = mean(aData(:,3:6),2);
+                %aData(:,1) = mean(aData(:,2:5),2);
                 aData   = transpose([fliplr(aData),aData]);
                 aX2Axis = [-fliplr(aX2Axis), aX2Axis];
             else
                 aData   = transpose(aData);
             end % if
-
+            
             iZMin   = fGetIndex(aX1Axis, obj.X1Lim(1)*obj.AxisFac(1));
             iZMax   = fGetIndex(aX1Axis, obj.X1Lim(2)*obj.AxisFac(1));
             iRMin   = fGetIndex(aX2Axis, obj.X2Lim(1)*obj.AxisFac(2));
             iRMax   = fGetIndex(aX2Axis, obj.X2Lim(2)*obj.AxisFac(2));
 
-            % Crop dataset
-            aData   = aData(iRMin:iRMax,iZMin:iZMax);
+            
+            % Crop and scale dataset
+            aData   = aData(iRMin:iRMax,iZMin:iZMax)/dNMax;
             aX1Axis = aX1Axis(iZMin:iZMax);
             aX2Axis = aX2Axis(iRMin:iRMax);
             
@@ -376,17 +453,8 @@ classdef Charge
             % Total charge
             
             dQ = sum(aRaw(:,8))/dRAWFrac; % Sum of RAW field q
-
-            % Unit conversion
-            
-            switch obj.Units
-                case 'SI'
-                    dP = dQ*obj.Data.Config.Variables.Convert.SI.ParticleFac;
-                    dQ = dQ*obj.Data.Config.Variables.Convert.SI.ChargeFac;
-                case 'N'
-                    dP = dQ*obj.Data.Config.Variables.Convert.Norm.ParticleFac;
-                    dQ = dQ*obj.Data.Config.Variables.Convert.Norm.ChargeFac;
-            end % switch
+            dP = dQ*obj.ParticleFac;
+            dQ = dQ*obj.ChargeFac;
             
             % Meta data
             
@@ -469,6 +537,69 @@ classdef Charge
             stReturn.Total     = dTotal;
             stReturn.Missing   = dMissing;
             
+        end % function
+        
+        function stReturn = ParticleSample(obj, varargin)
+        
+            % Input/Output
+            stReturn = {};
+
+            % Read input parameters
+            oOpt = inputParser;
+            addParameter(oOpt, 'Sample', 200);
+            addParameter(oOpt, 'Filter', 'Random');
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
+
+            % Read variables
+            sCoords   = obj.Data.Config.Variables.Simulation.Coordinates;
+            dTFactor  = obj.Data.Config.Variables.Convert.SI.TimeFac;
+            dRQM      = obj.Data.Config.Variables.Beam.(obj.Species).RQM;
+            dSign     = dRQM/abs(dRQM);
+            
+            aRaw      = obj.Data.Data(obj.Time, 'RAW', '', obj.Species);
+            iCount    = length(aRaw(:,1));
+            aRaw(:,1) = aRaw(:,1) - dTFactor*obj.Time;
+
+            iCount = stOpt.Sample;
+            if iCount > length(aRaw(:,1))
+                iCount = length(aRaw(:,1));
+            end % if
+
+            % Removing elements outside box
+            aRaw(:,8) = aRaw(:,8).*(aRaw(:,1) >= obj.X1Lim(1) & aRaw(:,1) <= obj.X1Lim(2));
+            aRaw(:,8) = aRaw(:,8).*(aRaw(:,2) >= obj.X2Lim(1) & aRaw(:,2) <= obj.X2Lim(2));
+            aRaw      = aRaw(find(aRaw(:,8)),:);
+            
+            if strcmpi(sCoords, 'cylindrical')
+                aRaw(:,8) = aRaw(:,8)./aRaw(:,2);
+                aRaw      = [aRaw; aRaw(:,1) -aRaw(:,2) aRaw(:,3:end)]; 
+            end % if
+
+            aRaw(:,9) = aRaw(:,8)*dSign;
+
+            switch(lower(stOpt.Filter))
+                case 'random'
+                    aRand = randperm(length(aRaw(:,1)));
+                    aRaw  = aRaw(aRand(1:iCount),:);
+                case 'charge'
+                    aRaw  = sortrows(aRaw,9);
+                    aRaw  = aRaw(end-iCount+1:end,:);
+            end % switch
+            
+            % Return data
+            stReturn.X1     = aRaw(:,1)*obj.AxisFac(1);
+            stReturn.X2     = aRaw(:,2)*obj.AxisFac(2);
+            stReturn.X3     = aRaw(:,3)*obj.AxisFac(3);
+            stReturn.P1     = aRaw(:,4);
+            stReturn.P2     = aRaw(:,5);
+            stReturn.P3     = aRaw(:,6);
+            stReturn.Energy = aRaw(:,7);
+            stReturn.Charge = aRaw(:,8)*obj.ChargeFac;
+            stReturn.Count  = aRaw(:,9)*obj.ParticleFac;
+            stReturn.Norm   = aRaw(:,9)./max(aRaw(:,9));
+            stReturn.Area   = 7*(0.4 + stReturn.Norm);
+
         end % function
         
     end % methods

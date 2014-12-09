@@ -9,9 +9,9 @@ function sReturn = fTranslateSpecies(sInput)
     switch(sInput)
         
         case 'PlasmaElectrons'
-            sReturn = 'Plasma Electrons';
+            sReturn = 'Plasma Electron';
         case 'PlasmaProtons'
-            sReturn = 'Plasma Protons';
+            sReturn = 'Plasma Proton';
         case 'PlasmaIons'
             sReturn = 'Plasma Ions';
         case 'ElectronBeam'
