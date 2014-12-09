@@ -512,12 +512,13 @@ classdef Charge
             aRaw(:,8) = aRaw(:,8).*(aRaw(:,1) >= obj.X1Lim(1) & aRaw(:,1) <= obj.X1Lim(2));
             aRaw(:,8) = aRaw(:,8).*(aRaw(:,2) >= obj.X2Lim(1) & aRaw(:,2) <= obj.X2Lim(2));
             aRaw      = aRaw(find(aRaw(:,8)),:);
+            
+            if strcmpi(sCoords, 'cylindrical')
+                aRaw(:,8) = aRaw(:,8)./aRaw(:,2);
+                aRaw      = [aRaw; aRaw(:,1) -aRaw(:,2) aRaw(:,3:end)]; 
+            end % if
 
             aRaw(:,9) = aRaw(:,8)*dSign;
-
-            if strcmpi(sCoords, 'cylindrical')
-                aRaw = [aRaw; aRaw(:,1) -aRaw(:,2) aRaw(:,3:end)]; 
-            end % if
 
             switch(lower(stOpt.Filter))
                 case 'random'
