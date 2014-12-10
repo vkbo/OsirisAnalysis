@@ -128,7 +128,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     if strcmpi(stOpt.IsSubPlot, 'No')
         clf;
         fFigureSize(gcf, stOpt.FigureSize);
-        set(gcf,'Name',sprintf('Beam Density (Dump %d)',iTime),'NumberTitle','off')
+        set(gcf,'Name',sprintf('Beam Density (%s #%d)',oData.Config.Name,iTime),'NumberTitle','off')
     else
         cla;
     end % if
@@ -162,7 +162,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     end % if
 
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s Density %s (Dump %d)', fTranslateSpeciesReadable(sBeam), fPlasmaPosition(oData, iTime), iTime);
+        sTitle = sprintf('%s Density %s (%s #%d)', fTranslateSpeciesReadable(sBeam), fPlasmaPosition(oData, iTime), oData.Config.Name, iTime);
     else
         sTitle = sprintf('%s Density %s', fTranslateSpeciesReadable(sBeam), fPlasmaPosition(oData, iTime));
     end % if

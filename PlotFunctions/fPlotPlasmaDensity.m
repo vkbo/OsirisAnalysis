@@ -162,7 +162,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     if strcmpi(stOpt.IsSubPlot, 'No')
         clf;
         fFigureSize(gcf, stOpt.FigureSize);
-        set(gcf,'Name',sprintf('Beam Fourier (Dump %d)',iTime),'NumberTitle','off')
+        set(gcf,'Name',sprintf('Plasma Density (%s Dump %d)',oData.Config.Name,iTime),'NumberTitle','off')
     else
         cla;
     end % if
@@ -202,7 +202,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
                 oBeam.X2Lim = stOpt.Limits(3:4);
             end % if
 
-            stScatter  = oBeam.ParticleSample('Sample', aSample(i), 'Filter', stFilter{i});
+            stScatter = oBeam.ParticleSample('Sample', aSample(i), 'Filter', stFilter{i});
 
             scatter(stScatter.X1, stScatter.X2, stScatter.Area, aCol(i,:), 'Filled');
             stReturn.Scatter = stScatter;
@@ -273,7 +273,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     %
     
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s Density %s (Dump %d)', fTranslateSpeciesReadable(sPlasma), fPlasmaPosition(oData, iTime), iTime);
+        sTitle = sprintf('%s Density %s (%s #%d)', fTranslateSpeciesReadable(sPlasma), fPlasmaPosition(oData, iTime), oData.Config.Name, iTime);
     else
         sTitle = sprintf('%s Density %s', fTranslateSpeciesReadable(sPlasma), fPlasmaPosition(oData, iTime));
     end % if
