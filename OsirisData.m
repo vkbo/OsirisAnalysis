@@ -249,6 +249,7 @@ classdef OsirisData
             dC        = obj.Config.Variables.Constants.SpeedOfLight;
             dE        = obj.Config.Variables.Constants.ElementaryCharge;
             dLFac     = obj.Config.Variables.Convert.SI.LengthFac;
+            dT        = obj.Config.Variables.Simulation.TimeStep;
             
             dN0       = obj.Config.Variables.Plasma.N0;
             dNOmegaP  = obj.Config.Variables.Plasma.NormOmegaP;
@@ -276,7 +277,8 @@ classdef OsirisData
             fprintf('************************************\n');
             fprintf('\n');
 
-            stInt = fExtractEq(sMathFunc, iDim, [dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max]);
+            stFunc    = fExtractEq(sMathFunc, iDim, [dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max]);
+            fProfile  = @(x1,x2) eval(stFunc.ForEval);
             
             if strcmpi(sCoords, 'cylindrical')
 
@@ -297,14 +299,20 @@ classdef OsirisData
                     sUnitS2    = 'µm';
                 end % if
 
-                sFunction = sprintf('%s.*x2', stInt.ForEval);
-                fprintf(' Density Function:       %s\n',           stInt.Equation);
+                sFunction = sprintf('%s.*x2', stFunc.ForEval);
+                fprintf(' Density Function:       %s\n', stFunc.Equation);
                 fprintf(' X1 Mean, Sigma:         %7.2f, %9.4f [%7.2f mm, %7.2f %s]\n', dMeanX1, dSigmaX1, dSIMeanX1, dSISigmaX1, sUnitS1);
                 fprintf(' X2 Mean, Sigma:         %7.2f, %9.4f [%7.2f mm, %7.2f %s]\n', dMeanX2, dSigmaX2, dSIMeanX2, dSISigmaX2, sUnitS2);
                 fprintf('\n');
                 
-                fInt         = @(x1,x2) eval(sFunction);
-                dBeamInt     = 2*pi*quad2d(fInt,stInt.Lims(1),stInt.Lims(2),0,stInt.Lims(4),'MaxFunEvals',15000,'Abstol',1e-3);
+                % Beam integral
+                aSpanX1 = stFunc.Lims(1):dT:stFunc.Lims(2);
+                aSpanX2 = stFunc.Lims(3):dT:stFunc.Lims(4);
+                for i=1:length(aSpanX2)
+                    aReturn(:,i) = fProfile(aSpanX1,aSpanX2(i))*aSpanX2(i);
+                end % for
+                aReturn  = aReturn.*(aReturn > 0);
+                dBeamInt = 2*pi*sum(aReturn(:))*dT^2;
                 
                 dBeamVol     = dBeamInt * dC^3/dNOmegaP^3;
                 dBeamNum     = dBeamVol * dDensity * dN0;
@@ -315,7 +323,7 @@ classdef OsirisData
                 fprintf(' Max Plasma Density:     %0.3e m^-3\n', dN0*dPMax);
                 fprintf(' Max Plasma Frequency:   %0.3e s^-1\n', dMOmegaP);
                 fprintf('\n');
-                fprintf(' Beam Integral:          %0.3e \n',     dBeamInt);
+                fprintf(' Beam Integral:          %0.3f \n',     dBeamInt);
                 fprintf(' Beam Volume:            %0.3e m^3\n',  dBeamVol);
                 fprintf(' Beam Charge:            %0.3e nC\n',   dBeamCharge);
                 fprintf(' Beam Particle Count:    %0.3e \n',     dBeamNum);
