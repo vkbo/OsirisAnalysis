@@ -686,8 +686,9 @@ classdef OsirisConfig
                 sFunction = stFunc.ForEval;
                 fProfile  = @(x1,x2) eval(sFunction);
 
-                aSpan    = linspace(stFunc.Lims(1), stFunc.Lims(2), 20000);
-                aReturn  = fProfile(aSpan,0);
+                aSpan   = linspace(stFunc.Lims(1), stFunc.Lims(2), 20000);
+                aReturn = fProfile(aSpan,0);
+                aReturn = aReturn.*(aReturn > 0);
                 if sum(aReturn) > 0 && max(aReturn) >= 0
                     dMeanX1  = dround(wmean(aSpan, aReturn),3);
                     dSigmaX1 = dround(sqrt(var(aSpan,aReturn)),5);
@@ -696,8 +697,9 @@ classdef OsirisConfig
                     dSigmaX1 = 0.0;
                 end % if
 
-                aSpan    = linspace(-stFunc.Lims(4), stFunc.Lims(4), 10000); % Assumes cylindrical
-                aReturn  = fProfile(dMeanX1,aSpan);
+                aSpan   = linspace(-stFunc.Lims(4), stFunc.Lims(4), 10000); % Assumes cylindrical
+                aReturn = fProfile(dMeanX1,aSpan);
+                aReturn = aReturn.*(aReturn > 0);
                 if sum(aReturn) > 0 && max(aReturn) >= 0
                     dMeanX2  = dround(wmean(aSpan, aReturn),3);
                     dSigmaX2 = dround(sqrt(var(aSpan,aReturn)),5);
