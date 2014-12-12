@@ -52,8 +52,8 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
        return;
     end % if
     
-    sBeam    = fTranslateSpecies(sBeam);
-    iTime    = fStringToDump(oData, num2str(sTime));
+    sBeam = fTranslateSpecies(sBeam);
+    iTime = fStringToDump(oData, num2str(sTime));
 
     oOpt = inputParser;
     addParameter(oOpt, 'Limits',      []);

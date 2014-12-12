@@ -49,7 +49,7 @@ function stReturn = fAnimPlasmaDensity(oData, sDrive, sWitness, varargin)
 
     oOpt = inputParser;
     addParameter(oOpt, 'FigureSize',  [1100 600]);
-    addParameter(oOpt, 'Limits',      [216.0, 220.0, -0.5, 0.5]);
+    addParameter(oOpt, 'Limits',      []);
     addParameter(oOpt, 'Start',       'Start');
     addParameter(oOpt, 'End',         'End');
     parse(oOpt, varargin{:});

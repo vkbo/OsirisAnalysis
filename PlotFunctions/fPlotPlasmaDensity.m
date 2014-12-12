@@ -57,8 +57,8 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
        return;
     end % if
     
-    sPlasma  = fTranslateSpecies(sPlasma);
-    iTime    = fStringToDump(oData, num2str(sTime));
+    sPlasma = fTranslateSpecies(sPlasma);
+    iTime   = fStringToDump(oData, num2str(sTime));
 
     oOpt = inputParser;
     addParameter(oOpt, 'Limits',      []);
