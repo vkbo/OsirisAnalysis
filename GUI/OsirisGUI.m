@@ -22,7 +22,7 @@ function varargout = OsirisGUI(varargin)
 
 % Edit the above text to modify the response to help OsirisGUI
 
-% Last Modified by GUIDE v2.5 12-Dec-2014 18:22:31
+% Last Modified by GUIDE v2.5 08-Jan-2015 17:37:01
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -126,6 +126,10 @@ function btnLoadData_Callback(hObject, eventdata, handles)
     sGeometry = sprintf('%s%s %dD', upper(sCoords(1)), lower(sCoords(2:end)), iDim);
 
     set(handles.infGeometry, 'String', sGeometry);
+    
+    set(handles.mPlasma, 'String', handles.Data.Config.Variables.Species.Plasma);
+    set(handles.mBeam1,  'String', handles.Data.Config.Variables.Species.Beam);
+    set(handles.mBeam2,  'String', handles.Data.Config.Variables.Species.Beam);
 
     guidata(hObject, handles);
 
@@ -139,8 +143,79 @@ function btnDensity_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of btnDensity
     iVal = get(hObject, 'Value');
     
+    fprintf('Button value is %d\n', iVal);
     
     
     
     
-    
+
+
+
+
+% --- Executes on selection change in mBeam1.
+function mBeam1_Callback(hObject, eventdata, handles)
+% hObject    handle to mBeam1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns mBeam1 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from mBeam1
+
+
+% --- Executes during object creation, after setting all properties.
+function mBeam1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to mBeam1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in mBeam2.
+function mBeam2_Callback(hObject, eventdata, handles)
+% hObject    handle to mBeam2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns mBeam2 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from mBeam2
+
+
+% --- Executes during object creation, after setting all properties.
+function mBeam2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to mBeam2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in mPlasma.
+function mPlasma_Callback(hObject, eventdata, handles)
+% hObject    handle to mPlasma (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns mPlasma contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from mPlasma
+
+
+% --- Executes during object creation, after setting all properties.
+function mPlasma_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to mPlasma (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
