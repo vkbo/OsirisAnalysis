@@ -149,6 +149,10 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     aRAxis  = stData.X2Axis;
     dZPos   = stData.ZPos;
 
+    stReturn.X1Axis = stData.X1Axis;
+    stReturn.X2Axis = stData.X2Axis;
+    stReturn.ZPos   = stData.ZPos;
+
     if strcmpi(stOpt.Absolute, 'Yes')
         aData = abs(aData);
     end % if
@@ -241,13 +245,14 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
             aProjZ = 0.15*(aRAxis(end)-aRAxis(1))*aProjZ/max(abs(aProjZ))+aRAxis(1);
             stQTot = oBeam.BeamCharge;
             dQ     = stQTot.QTotal*1e9;
+            
 
             if abs(dQ) < 1.0e-3
-                sBeamCharge = sprintf('Q_{tot}^{%s} = %.2f fC', lower(stOLBeam{i}), dQ*1e6);
+                sBeamCharge = sprintf('Q_{tot}^{%s} = %.2f fC', fTranslateSpeciesShort(stOLBeam{i}), dQ*1e6);
             elseif abs(dQ) < 1.0
-                sBeamCharge = sprintf('Q_{tot}^{%s} = %.2f pC', lower(stOLBeam{i}), dQ*1e3);
+                sBeamCharge = sprintf('Q_{tot}^{%s} = %.2f pC', fTranslateSpeciesShort(stOLBeam{i}), dQ*1e3);
             else
-                sBeamCharge = sprintf('Q_{tot}^{%s} = %.2f nC', lower(stOLBeam{i}), dQ);
+                sBeamCharge = sprintf('Q_{tot}^{%s} = %.2f nC', fTranslateSpeciesShort(stOLBeam{i}), dQ);
             end % if
 
             plot(aZAxis, aProjZ, 'Color', aCol(i,:));
