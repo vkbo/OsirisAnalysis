@@ -12,6 +12,8 @@
 % ==========
 %  FigureSize  :: Default [900 500]
 %  IsSubplot   :: Default No
+%  Start       :: Default Plasma Start
+%  End         :: Default Plasma End
 %
 
 function stReturn = fPlotESigmaMean(oData, sSpecies, varargin)
@@ -33,6 +35,8 @@ function stReturn = fPlotESigmaMean(oData, sSpecies, varargin)
        fprintf(' ==========\n');
        fprintf('  FigureSize  :: Default [900 500]\n');
        fprintf('  IsSubplot   :: Default No\n');
+       fprintf('  Start       :: Default Plasma Start\n');
+       fprintf('  End         :: Default Plasma End\n');
        fprintf('\n');
        return;
     end % if
@@ -43,13 +47,15 @@ function stReturn = fPlotESigmaMean(oData, sSpecies, varargin)
     oOpt = inputParser;
     addParameter(oOpt, 'FigureSize', [900 500]);
     addParameter(oOpt, 'IsSubPlot',  'No');
+    addParameter(oOpt, 'Start',      'PStart');
+    addParameter(oOpt, 'End',        'PEnd');
     parse(oOpt, varargin{:});
     stOpt = oOpt.Results;
 
 
     % Data
     oMom   = Momentum(oData, sSpecies);
-    stData = oMom.SigmaEToEMean('PStart','PEnd');
+    stData = oMom.SigmaEToEMean(stOpt.Start, stOpt.End);
     
 
     % Plot

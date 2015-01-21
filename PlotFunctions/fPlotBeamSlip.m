@@ -93,7 +93,7 @@ function stReturn = fPlotBeamSlip(oData, sBeam, varargin)
 
     hA(1) = shadedErrorBar(aTAxis, aActual,   aASpread, {'-b', 'LineWidth', 2});
     hE    = plot(aTAxis, aExpected, 'Red', 'LineWidth', 1, 'LineStyle', '--');
-    hL    = line([0 0], get(gca, 'YLim'), 'Color', [1.0 0.5 0.0], 'LineStyle', '--');
+    hL    = line([0 0], get(gca, 'YLim'), 'Color', [0.5 0.8 0.0], 'LineStyle', '--');
     
     legend([hA(1).mainLine, hA.patch, hE, hL], 'Median Position', 'Quartiles', 'Expected Slip', 'Plasma Start', 'Location', 'NorthEast');
     
