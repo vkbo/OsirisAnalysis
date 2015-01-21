@@ -1,5 +1,6 @@
 %
-%
+%  GUI :: Analyse Density
+% ************************
 %
 
 function AnaDensity(oData)
@@ -119,8 +120,8 @@ function AnaDensity(oData)
     pumScatt1 = uicontrol(bgScatter,'Style','PopupMenu','String',aScatt1,'Position',[10 35 110 22],'Callback',@pumScatt1_Callback);
     pumScatt2 = uicontrol(bgScatter,'Style','PopupMenu','String',aScatt2,'Position',[10 10 110 22],'Callback',@pumScatt2_Callback);
 
-    edtScatt1 = uicontrol(bgScatter,'Style','Edit','String',sprintf('%d',iScatt1),'Position',[135 35 60 20],'Callback',@edtScatt1_Callback);
-    edtScatt2 = uicontrol(bgScatter,'Style','Edit','String',sprintf('%d',iScatt2),'Position',[135 10 60 20],'Callback',@edtScatt2_Callback);
+    edtScatt1 = uicontrol(bgScatter,'Style','Edit','String',sprintf('%d',iScatt1),'Position',[135 35 55 20],'Callback',@edtScatt1_Callback);
+    edtScatt2 = uicontrol(bgScatter,'Style','Edit','String',sprintf('%d',iScatt2),'Position',[135 10 55 20],'Callback',@edtScatt2_Callback);
     
     % Zoom Controls
 
