@@ -434,7 +434,7 @@ classdef Momentum
     
         end % function
 
-        function stReturn = BeamSlip(obj, sStart, sStop)
+        function stReturn = BeamSlip(obj, sStart, sStop, dAdd)
 
             stReturn = {};
 
@@ -444,6 +444,10 @@ classdef Momentum
 
             if nargin < 3
                 sStop = 'End';
+            end % if
+
+            if nargin < 4
+                dAdd = 0.0;
             end % if
             
             iStart = fStringToDump(obj.Data, sStart);
@@ -490,6 +494,17 @@ classdef Momentum
                     stReturn.ExpectedPos.Percentile90(1)  = stReturn.Position.Percentile90(1);
                     stReturn.ExpectedPos.FirstQuartile(1) = stReturn.Position.FirstQuartile(1);
                     stReturn.ExpectedPos.ThirdQuartile(1) = stReturn.Position.ThirdQuartile(1);
+                end % if
+                
+                % Slip if added energy
+                stReturn.Slip.AverageAdd(k) = (dDeltaZ - dDeltaZ*sqrt(1-1/(dAdd + wmean(aRAW(:,4),aRAW(:,8)))^2))*dLFac;
+                stReturn.Slip.MedianAdd(k)  = (dDeltaZ - dDeltaZ*sqrt(1-1/(dAdd + wprctile(aRAW(:,4),50,abs(aRAW(:,8))))^2))*dLFac;
+                if k > 1
+                    stReturn.ExpectedAdd.Average(k) = stReturn.Position.Average(1) - sum(stReturn.Slip.AverageAdd(1:k-1));
+                    stReturn.ExpectedAdd.Median(k)  = stReturn.Position.Median(1)  - sum(stReturn.Slip.MedianAdd(1:k-1));
+                else
+                    stReturn.ExpectedAdd.Average(1) = stReturn.Position.Average(1);
+                    stReturn.ExpectedAdd.Median(1)  = stReturn.Position.Median(1);
                 end % if
                 
             end % for

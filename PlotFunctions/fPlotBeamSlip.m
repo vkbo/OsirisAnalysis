@@ -50,6 +50,7 @@ function stReturn = fPlotBeamSlip(oData, sBeam, varargin)
     addParameter(oOpt, 'FigureSize', [900 500]);
     addParameter(oOpt, 'IsSubPlot',  'No');
     addParameter(oOpt, 'LambdaRel',  'No');
+    addParameter(oOpt, 'AddEnergy',  0);
     parse(oOpt, varargin{:});
     stOpt = oOpt.Results;
 
@@ -57,7 +58,7 @@ function stReturn = fPlotBeamSlip(oData, sBeam, varargin)
     % Data
 
     oM        = Momentum(oData, sBeam);
-    stData    = oM.BeamSlip();
+    stData    = oM.BeamSlip('Start', 'End', stOpt.AddEnergy);
     
     aTAxis    = stData.TAxis;
     aActual   = stData.Position.Median;
@@ -67,17 +68,26 @@ function stReturn = fPlotBeamSlip(oData, sBeam, varargin)
     sXLabel   = 'z [m]';
     sYLabel   = '\xi [mm]';
     
+    if stOpt.AddEnergy > 0
+        aExpectedAdd = stData.ExpectedAdd.Average;
+    end % if
+
     if strcmpi(stOpt.LambdaRel, 'Yes')
         
         dLambdaP  = oData.Config.Variables.Plasma.MaxLambdaP*1e3;
         
-        aExpected = 100*(aExpected - aActual(1))*dLambdaP;
         aActual   = 100*(aActual   - aActual(1))*dLambdaP;
         aASpread  = 100*aASpread*dLambdaP;
+        aExpected = 100*(aExpected - aExpected(1))*dLambdaP;
+
+        if stOpt.AddEnergy > 0
+            aExpectedAdd = 100*(aExpectedAdd - aExpectedAdd(1))*dLambdaP;
+        end % if
         
         sYLabel   = '\xi_0\lambda_P [%]';
 
     end % if
+    
     
     
     % Plot
@@ -94,6 +104,10 @@ function stReturn = fPlotBeamSlip(oData, sBeam, varargin)
     hA(1) = shadedErrorBar(aTAxis, aActual,   aASpread, {'-b', 'LineWidth', 2});
     hE    = plot(aTAxis, aExpected, 'Red', 'LineWidth', 1, 'LineStyle', '--');
     hL    = line([0 0], get(gca, 'YLim'), 'Color', [0.5 0.8 0.0], 'LineStyle', '--');
+
+    if stOpt.AddEnergy > 0
+        hB = plot(aTAxis, aExpectedAdd, 'Color', [0.5 0.5 0.5], 'LineWidth', 1, 'LineStyle', '--');
+    end % if
     
     legend([hA(1).mainLine, hA.patch, hE, hL], 'Median Position', 'Quartiles', 'Expected Slip', 'Plasma Start', 'Location', 'NorthEast');
     
