@@ -1,31 +1,51 @@
+
 %
-%  GUI :: Analyse Density
+%  GUI :: Analyse 2D Data
 % ************************
 %
 
-function AnaDensity(oData)
+function Analyse2D(oData)
 
-    cBackGround = [0.8 0.8 0.8];
-    cWhite      = [1.0 1.0 1.0];
+    %
+    %  Variable Presets
+    % ******************
+    %
+
+    % Colours
     
-    iTime   = 0;
-    iStart  = fStringToDump(oData, 'Start');
-    iEnd    = fStringToDump(oData, 'End');
-    iPStart = fStringToDump(oData, 'PStart');
-    iPEnd   = fStringToDump(oData, 'PEnd');
+    cBackGround  = [0.8 0.8 0.8];
+    cWhite       = [1.0 1.0 1.0];
     
-    dZPos   = 0.0;
+    % Default Settings
     
-    sName   = oData.Config.Name;
-    aBeam   = oData.Config.Variables.Species.Beam;
-    aPlasma = oData.Config.Variables.Species.Plasma;
+    X.Time.Dump    = 0;
+    X.Time.ZPos    = 0.0;
+
+    X.Time.Start   = fStringToDump(oData, 'Start');
+    X.Time.End     = fStringToDump(oData, 'End');
+    X.Time.PStart  = fStringToDump(oData, 'PStart');
+    X.Time.PEnd    = fStringToDump(oData, 'PEnd');
     
-    sData   = 'ProtonBeam';
+    X.Data.Name    = oData.Config.Name;
+    X.Data.Beam    = oData.Config.Variables.Species.Beam;
+    X.Data.Plasma  = oData.Config.Variables.Species.Plasma;
     
-    aScatt1 = ['Off'; aBeam];
-    aScatt2 = ['Off'; aBeam];
+    X.Data.X1Min   = oData.Config.Variables.Simulation.BoxX1Min;
+    X.Data.X1Max   = oData.Config.Variables.Simulation.BoxX1Max;
+    X.Data.X2Min   = oData.Config.Variables.Simulation.BoxX2Min;
+    X.Data.X2Max   = oData.Config.Variables.Simulation.BoxX2Max;
     
-    aProj   = {'Off','Density'};
+    X.Main.Plots   = {'Beam Density','Plasma Density'};
+    X.Main.Type    = 1;
+    X.Main.Data    = 'ProtonBeam';
+    X.Main.Scatter = ['Off'; X.Data.Beam];
+    X.Main.ShowS1  = '';
+    X.Main.ShowS2  = '';
+    X.Main.NumS1   = 2000;
+    X.Main.NumS2   = 2000;
+    X.Main.Proj    = {'Off','Density','E-Field'};
+    X.Main.ToProj  = 2;
+    X.Main.SymX2   = 1;
     
     dX1Min  = 0.0;
     dX1Max  = 0.0;
@@ -37,113 +57,147 @@ function AnaDensity(oData)
     dP2Min  = 0.0;
     dP2Max  = 0.0;
     
-    iX2Sym  = 1;
-    iCharge = 1;
-    iProj   = 2;
-    
-    sScatt1 = '';
-    sScatt2 = '';
-    iScatt1 = 2000;
-    iScatt2 = 2000;
-    
-    iType   = 1;
 
-    % Create figure
     
-    f = figure(1);
-    clf;
-    aFigPos = get(f, 'Position');
+    %
+    %  Main Figure
+    % *************
+    %
+    
+    % Figure Controls
+    iFigF = 0;
+    iFigR = 0;
+    
+    fMain = figure(1); clf;
+    aMPos = get(fMain, 'Position');
     
     % Set figure properties
+    
+    set(fMain, 'Units', 'Pixels');
+    set(fMain, 'Position', [aMPos(1:2) 1000 610]);
+    set(fMain, 'Color', cBackGround);
+    set(fMain, 'Name', sprintf('Beam Density (%s #%d)', X.Data.Name, X.Time.Dump));
 
-    set(f, 'Units', 'Pixels');
-    set(f, 'Position', [aFigPos(1:2) 1200 600]);
-    set(f, 'Color', cBackGround);
-    set(f, 'Name', sprintf('Beam Density (%s #%d)', sName, iTime));
+    aMPos = get(fMain, 'Position');
+
+    % Plot Axes
+    axMain = axes('Units','Pixels');
+    axFoot = axes('Units','Pixels','Visible','Off');
+    axROne = axes('Units','Pixels','Visible','Off');
+    axRTwo = axes('Units','Pixels','Visible','Off');
+    axFTwo = axes('Units','Pixels','Visible','Off');
+
     
-    h = axes('Units','Pixels','Position',[50,50,900,500]); 
+    %
+    %  Control Figure
+    % ****************
+    %
+
+    fCtrl = figure(2); clf;
+
+    set(fCtrl, 'Units', 'Pixels');
+    set(fCtrl, 'Position', [aMPos(1) aMPos(2) 250 700]);
+    set(fCtrl, 'Color', cBackGround);
+    set(fCtrl, 'NumberTitle', 'Off');
+    set(fCtrl, 'MenuBar', 'None');
+    set(fCtrl, 'ToolBar', 'None');
+    set(fCtrl, 'Name', 'Controls');
+    
+    fUpdateFigures;
     fPlot;
-    
+
     dP1Min = dX1Min;
     dP1Max = dX1Max;
     dP2Min = dX2Min;
     dP2Max = dX2Max;
 
-    % Plot Types
     
-    bgType    = uibuttongroup('Title','Plot Type','Units','Pixels','Position',[975 490 200 65],'BackgroundColor',cBackGround);
+    %
+    %  Create Controls
+    % *****************
+    %
     
-    optBeam   = uicontrol(bgType,'Style','RadioButton','String','Plot beam density','Value',1,'Position',[ 10 30 180 15],'BackgroundColor',cBackGround,'HandleVisibility','Off');
-    optPlasma = uicontrol(bgType,'Style','RadioButton','String','Plot plasma density','Value',0,'Position',[ 10 10 180 15],'BackgroundColor',cBackGround,'HandleVisibility','Off');
+    iX = 20; iY = 660;
+    set(0, 'CurrentFigure', fCtrl);
+    uicontrol('Style','Text','String','Controls','FontSize',20,'Position',[iX iY 140 25],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    iY = iY-15;
+
     
-    set(bgType,'SelectionChangeFcn',@optType_Callback);
+    %  Time Dump Controls
+    % ====================
 
-    % Time Dump Controls
+    iY = iY-85;
     
-    bgTime    = uibuttongroup('Title','Time Dump','Units','Pixels','Position',[975 405 200 80],'BackgroundColor',cBackGround);
+    bgTime = uibuttongroup('Title','Time Dump','Units','Pixels','Position',[iX iY 200 80],'BackgroundColor',cBackGround);
 
-    lblDumpN  = uicontrol(bgTime,'Style','Text','String','#','Position',[132 37 10 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-    lblDumpL  = uicontrol(bgTime,'Style','Text','String','L','Position',[133 12 10 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    uicontrol(bgTime,'Style','Text','String','#','Position',[132 37 10 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    uicontrol(bgTime,'Style','Text','String','L','Position',[133 12 10 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
 
-    edtDumpN  = uicontrol(bgTime,'Style','Edit','String',sprintf('%d',iTime),'Position',[ 145 35 45 20],'Callback',@edtDumpN_Callback);
-    edtDumpL  = uicontrol(bgTime,'Style','Edit','String',sprintf('%.2f',dZPos),'Position',[ 145 10 45 20]);
+    uicontrol(bgTime,'Style','PushButton','String','<<','Position',[ 10 35 30 22],'Callback',@fJumpPrev);
+    uicontrol(bgTime,'Style','PushButton','String','<', 'Position',[ 40 35 30 22],'Callback',@fSkipPrev);
+    uicontrol(bgTime,'Style','PushButton','String','>', 'Position',[ 70 35 30 22],'Callback',@fSkipNext);
+    uicontrol(bgTime,'Style','PushButton','String','>>','Position',[100 35 30 22],'Callback',@fJumpNext);
 
-    btnTPrev2 = uicontrol(bgTime,'Style','PushButton','String','<<','Position',[ 10 35 30 22],'Callback',@btnTPrev2_Callback);
-    btnTPrev1 = uicontrol(bgTime,'Style','PushButton','String','<', 'Position',[ 40 35 30 22],'Callback',@btnTPrev1_Callback);
-    btnTNext1 = uicontrol(bgTime,'Style','PushButton','String','>', 'Position',[ 70 35 30 22],'Callback',@btnTNext1_Callback);
-    btnTNext2 = uicontrol(bgTime,'Style','PushButton','String','>>','Position',[100 35 30 22],'Callback',@btnTNext2_Callback);
+    uicontrol(bgTime,'Style','PushButton','String','<S','Position',[ 10 10 30 22],'Callback',@fGoStart);
+    uicontrol(bgTime,'Style','PushButton','String','<P','Position',[ 40 10 30 22],'Callback',@fGoPStart);
+    uicontrol(bgTime,'Style','PushButton','String','P>','Position',[ 70 10 30 22],'Callback',@fGoPEnd);
+    uicontrol(bgTime,'Style','PushButton','String','S>','Position',[100 10 30 22],'Callback',@fGoEnd);
 
-    btnSStart = uicontrol(bgTime,'Style','PushButton','String','<S','Position',[ 10 10 30 22],'Callback',@btnSStart_Callback);
-    btnPStart = uicontrol(bgTime,'Style','PushButton','String','<P','Position',[ 40 10 30 22],'Callback',@btnPStart_Callback);
-    btnPEnd   = uicontrol(bgTime,'Style','PushButton','String','P>','Position',[ 70 10 30 22],'Callback',@btnPEnd_Callback);
-    btnSEnd   = uicontrol(bgTime,'Style','PushButton','String','S>','Position',[100 10 30 22],'Callback',@btnSEnd_Callback);
+    edtDumpN = uicontrol(bgTime,'Style','Edit','String',sprintf('%d',X.Time.Dump),'Position',[ 145 35 45 20],'Callback',@fEditDump);
+    edtDumpL = uicontrol(bgTime,'Style','Edit','String',sprintf('%.2f',X.Time.ZPos),'Position',[ 145 10 45 20]);
+
     
-    % Data Controls
-
-    bgData    = uibuttongroup('Title','Data Selection','Units','Pixels','Position',[975 305 200 95],'BackgroundColor',cBackGround);
-
-    lblData   = uicontrol(bgData,'Style','Text','String','Data','Position',[10 57 55 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-    lblProj   = uicontrol(bgData,'Style','Text','String','Overlay','Position',[10 32 55 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-
-    pumData   = uicontrol(bgData,'Style','PopupMenu','String',aBeam,'Value',1,'Position',[65 55 125 22],'Callback',@pumData_Callback);
-    pumProj   = uicontrol(bgData,'Style','PopupMenu','String',aProj,'Value',iProj,'Position',[65 30 125 22],'Callback',@pumProj_Callback);
+    %  Main Figure Controls
+    % ======================
     
-    chkCharge = uicontrol(bgData,'Style','Checkbox','String','Show total charge','Value',iCharge,'Position',[55 10 135 15],'BackgroundColor',cBackGround);
+    iTop = 80;
+    iY   = iY-iTop-25;
 
-    % Scatter Controls
+    bgMain = uibuttongroup('Title','Main Figure','Units','Pixels','Position',[iX iY 200 iTop+20],'BackgroundColor',cBackGround);
 
-    bgScatter = uibuttongroup('Title','Scatter Selection','Units','Pixels','Position',[975 225 200 75],'BackgroundColor',cBackGround);
+    uicontrol(bgMain,'Style','Text','String','Plot',   'Position',[10 iTop-18 55 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    uicontrol(bgMain,'Style','Text','String','Data',   'Position',[10 iTop-43 55 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    uicontrol(bgMain,'Style','Text','String','Overlay','Position',[10 iTop-68 55 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    
+    pumFMain = uicontrol(bgMain,'Style','PopupMenu','String',X.Main.Plots,'Value',1,'Position',[65 iTop-20 125 22],'Callback',@fSelMainType);
+    pumData  = uicontrol(bgMain,'Style','PopupMenu','String',X.Data.Beam, 'Value',1,'Position',[65 iTop-45 125 22],'Callback',@fSelMainData);
+    pumProj  = uicontrol(bgMain,'Style','PopupMenu','String',X.Main.Proj, 'Value',2,'Position',[65 iTop-70 125 22],'Callback',@fSelMainProj);
 
-    lblScatt1 = uicontrol(bgScatter,'Style','Text','String','#','Position',[122 37 10 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-    lblScatt2 = uicontrol(bgScatter,'Style','Text','String','#','Position',[122 12 10 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    % Main Figure Scatter Controls
 
-    pumScatt1 = uicontrol(bgScatter,'Style','PopupMenu','String',aScatt1,'Position',[10 35 110 22],'Callback',@pumScatt1_Callback);
-    pumScatt2 = uicontrol(bgScatter,'Style','PopupMenu','String',aScatt2,'Position',[10 10 110 22],'Callback',@pumScatt2_Callback);
+    iTop = 55;
+    iY   = iY-iTop-25;
 
-    edtScatt1 = uicontrol(bgScatter,'Style','Edit','String',sprintf('%d',iScatt1),'Position',[135 35 55 20],'Callback',@edtScatt1_Callback);
-    edtScatt2 = uicontrol(bgScatter,'Style','Edit','String',sprintf('%d',iScatt2),'Position',[135 10 55 20],'Callback',@edtScatt2_Callback);
+    bgScatter = uibuttongroup('Title','Main: Scatter Beam','Units','Pixels','Position',[iX iY 200 iTop+20],'BackgroundColor',cBackGround);
+
+    uicontrol(bgScatter,'Style','PopupMenu','String',X.Main.Scatter,'Position',[10 iTop-20 110 22],'Callback',@fSelScatter1);
+    uicontrol(bgScatter,'Style','PopupMenu','String',X.Main.Scatter,'Position',[10 iTop-45 110 22],'Callback',@fSelScatter2);
+
+    uicontrol(bgScatter,'Style','Text','String','#','Position',[122 iTop-18 10 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    uicontrol(bgScatter,'Style','Text','String','#','Position',[122 iTop-43 10 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+
+    uicontrol(bgScatter,'Style','Edit','String',sprintf('%d',X.Main.NumS1),'Position',[135 iTop-20 55 20],'Callback',@fNumScatter1);
+    uicontrol(bgScatter,'Style','Edit','String',sprintf('%d',X.Main.NumS2),'Position',[135 iTop-45 55 20],'Callback',@fNumScatter2);
     
     % Zoom Controls
 
-    bgZoom    = uibuttongroup('Title','Zoom','Units','Pixels','Position',[975 45 200 175],'BackgroundColor',cBackGround);
+    iTop = 70;
+    iY   = iY-iTop-25;
 
-    lblX1Zoom = uicontrol(bgZoom,'Style','Text','String','X1 Lim','Position',[10 137 45 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-    lblX2Zoom = uicontrol(bgZoom,'Style','Text','String','X2 Lim','Position',[10 112 45 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-    
-    lblX1Dash = uicontrol(bgZoom,'Style','Text','String','–','Position',[120 137 10 15],'BackgroundColor',cBackGround);
-    lblX2Dash = uicontrol(bgZoom,'Style','Text','String','–','Position',[120 112 10 15],'BackgroundColor',cBackGround);
-    
-    edtX1Min  = uicontrol(bgZoom,'Style','Edit','String',sprintf('%.2f',dP1Min),'Position',[ 60 135 60 20],'Callback',@edtX1Min_Callback);
-    edtX1Max  = uicontrol(bgZoom,'Style','Edit','String',sprintf('%.2f',dP1Max),'Position',[130 135 60 20],'Callback',@edtX1Max_Callback);
-    edtX2Min  = uicontrol(bgZoom,'Style','Edit','String',sprintf('%.2f',dP2Min),'Position',[ 60 110 60 20],'Callback',@edtX2Min_Callback);
-    edtX2Max  = uicontrol(bgZoom,'Style','Edit','String',sprintf('%.2f',dP2Max),'Position',[130 110 60 20],'Callback',@edtX2Max_Callback);
-    
-    sldX1Min  = uicontrol(bgZoom,'Style','Slider','Min',dX1Min,'Max',dX1Max,'Value',dP1Min,'Position',[ 10 90 180 15],'Callback',@sldX1Min_Callback);
-    sldX1Max  = uicontrol(bgZoom,'Style','Slider','Min',dX1Min,'Max',dX1Max,'Value',dP1Max,'Position',[ 10 70 180 15],'Callback',@sldX1Max_Callback);
-    sldX2Min  = uicontrol(bgZoom,'Style','Slider','Min',dX2Min,'Max',dX2Max,'Value',dP2Min,'Position',[ 10 50 180 15],'Callback',@sldX2Min_Callback);
-    sldX2Max  = uicontrol(bgZoom,'Style','Slider','Min',dX2Min,'Max',dX2Max,'Value',dP2Max,'Position',[ 10 30 180 15],'Callback',@sldX2Max_Callback);
+    bgZoom = uibuttongroup('Title','Main: Zoom','Units','Pixels','Position',[iX iY 200 iTop+20],'BackgroundColor',cBackGround);
 
-    chkX2Sym  = uicontrol(bgZoom,'Style','Checkbox','String','Symmetric X2 axis','Value',iX2Sym,'Position',[ 50 10 140 15],'BackgroundColor',cBackGround,'Callback',@chkX2Sym_Callback);
+    uicontrol(bgZoom,'Style','Text','String','X Lim','Position',[10 iTop-18 45 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    uicontrol(bgZoom,'Style','Text','String','Y Lim','Position',[10 iTop-43 45 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    
+    uicontrol(bgZoom,'Style','Text','String','–','Position',[120 iTop-18 10 15],'BackgroundColor',cBackGround);
+    uicontrol(bgZoom,'Style','Text','String','–','Position',[120 iTop-43 10 15],'BackgroundColor',cBackGround);
+    
+    edtXMin = uicontrol(bgZoom,'Style','Edit','String',sprintf('%.2f',dP1Min),'Position',[ 60 iTop-20 60 20],'Callback',@fMainXMin);
+    edtXMax = uicontrol(bgZoom,'Style','Edit','String',sprintf('%.2f',dP1Max),'Position',[130 iTop-20 60 20],'Callback',@fMainXMax);
+    edtYMin = uicontrol(bgZoom,'Style','Edit','String',sprintf('%.2f',dP2Min),'Position',[ 60 iTop-45 60 20],'Callback',@fMainYMin);
+    edtYMax = uicontrol(bgZoom,'Style','Edit','String',sprintf('%.2f',dP2Max),'Position',[130 iTop-45 60 20],'Callback',@fMainYMax);
+
+    chkX2Sym = uicontrol(bgZoom,'Style','Checkbox','String','Symmetric X2 axis','Value',1,'Position',[50 iTop-65 140 15],'BackgroundColor',cBackGround,'Callback',@fMainSymX2);
                       
     
     %
@@ -153,18 +207,19 @@ function AnaDensity(oData)
     
     % Type Callback
     
-    function optType_Callback(source, eventdata)
+    function fSelMainType(uiSrc, ~)
         
-        sValue = get(eventdata.NewValue, 'String');
-        switch(sValue)
-            case 'Plot beam density'
-                iType = 1;
-                set(pumData, 'String', aBeam, 'Value', 1);
-                sData = aBeam{1};
-            case 'Plot plasma density'
-                iType = 2;
-                set(pumData, 'String', aPlasma, 'Value', 1);
-                sData = aPlasma{1};
+        iValue = get(uiSrc, 'Value');
+
+        switch(iValue)
+            case 1
+                X.Main.Type = 1;
+                set(pumData, 'String', X.Data.Beam, 'Value', 1);
+                X.Main.Data = X.Data.Beam{1};
+            case 2
+                X.Main.Type = 2;
+                set(pumData, 'String', X.Data.Plasma, 'Value', 1);
+                X.Main.Data = X.Data.Plasma{1};
         end % switch
         
         fPlot;
@@ -173,11 +228,11 @@ function AnaDensity(oData)
     
     % Time Callback
     
-    function btnTNext1_Callback(source, eventdata) 
+    function fSkipNext(~, ~)
 
-        iTime = iTime + 1;
-        if iTime > iEnd
-            iTime = iEnd;
+        X.Time.Dump = X.Time.Dump + 1;
+        if X.Time.Dump > X.Time.End
+            X.Time.Dump = X.Time.End;
         end % if
 
         fPlot;
@@ -185,11 +240,11 @@ function AnaDensity(oData)
 
     end % function
 
-    function btnTNext2_Callback(source, eventdata) 
+    function fJumpNext(~, ~)
     
-        iTime = iTime + 10;
-        if iTime > iEnd
-            iTime = iEnd;
+        X.Time.Dump = X.Time.Dump + 10;
+        if X.Time.Dump > X.Time.End
+            X.Time.Dump = X.Time.End;
         end % if
 
         fPlot;
@@ -197,11 +252,11 @@ function AnaDensity(oData)
 
     end % function
 
-    function btnTPrev1_Callback(source, eventdata)
+    function fSkipPrev(~, ~)
 
-        iTime = iTime - 1;
-        if iTime < 0
-            iTime = 0;
+        X.Time.Dump = X.Time.Dump - 1;
+        if X.Time.Dump < 0
+            X.Time.Dump = 0;
         end % if
         
         fPlot;
@@ -209,11 +264,11 @@ function AnaDensity(oData)
 
     end % function
 
-    function btnTPrev2_Callback(source, eventdata)
+    function fJumpPrev(~, ~)
 
-        iTime = iTime - 10;
-        if iTime < 0
-            iTime = 0;
+        X.Time.Dump = X.Time.Dump - 10;
+        if X.Time.Dump < 0
+            X.Time.Dump = 0;
         end % if
         
         fPlot;
@@ -221,42 +276,42 @@ function AnaDensity(oData)
 
     end % function
 
-    function btnSStart_Callback(source, eventdata)
+    function fGoStart(~, ~)
         
-        iTime = iStart;
+        X.Time.Dump = X.Time.Start;
         fPlot;
         fUpdateTime;
         
     end % function
 
-    function btnSEnd_Callback(source, eventdata)
+    function fGoEnd(~, ~)
         
-        iTime = iEnd;
+        X.Time.Dump = X.Time.End;
         fPlot;
         fUpdateTime;
         
     end % function
 
-    function btnPStart_Callback(source, eventdata)
+    function fGoPStart(~, ~)
         
-        iTime = iPStart;
+        X.Time.Dump = X.Time.PStart;
         fPlot;
         fUpdateTime;
         
     end % function
 
-    function btnPEnd_Callback(source, eventdata)
+    function fGoPEnd(~, ~)
         
-        iTime = iPEnd;
+        X.Time.Dump = X.Time.PEnd;
         fPlot;
         fUpdateTime;
         
     end % function
 
-    function edtDumpN_Callback(source, eventdata)
+    function fEditDump(uiSrc)
         
-        sValue = num2str(get(source, 'Value'));
-        iTime  = fStringToDump(oData, sValue);
+        sValue      = num2str(get(uiSrc, 'Value'));
+        X.Time.Dump = fStringToDump(oData, sValue);
         fPlot;
         fUpdateTime;
         
@@ -264,141 +319,104 @@ function AnaDensity(oData)
 
     % Data Callback
     
-    function pumData_Callback(source, eventdata)
+    function fSelMainData(uiSrc, ~)
         
-        iValue = get(source, 'Value');
+        iValue = get(uiSrc, 'Value');
 
-        switch(iType)
+        switch(X.Main.Type)
             case 1
-                sData = aBeam{iValue};
+                X.Main.Data = X.Data.Beam{iValue};
             case 2
-                sData = sPlasma{iValue};
+                X.Main.Data = X.Data.Plasma{iValue};
         end % switch
         
         fPlot;
         
     end % function
 
-    function pumProj_Callback(source, eventdata)
+    function fSelMainProj(uiSrc, ~)
         
-        iProj = get(source, 'Value');
+        X.Main.ToProj = get(uiSrc, 'Value');
         fPlot;
         
     end % function
     
     % Scatter Callpack
     
-    function pumScatt1_Callback(source, eventdata)
+    function fSelScatter1(uiSrc, ~)
         
-        iValue = get(source, 'Value');
+        iValue = get(uiSrc, 'Value');
 
-        sScatt1 = aScatt1{iValue};
-        if strcmp(sScatt1, 'Off')
-            sScatt1 = '';
+        X.Main.ShowS1 = X.Main.Scatter{iValue};
+        if strcmp(X.Main.ShowS1, 'Off')
+            X.Main.ShowS1 = '';
         end % if
         
         fPlot;
         
     end % function
 
-    function pumScatt2_Callback(source, eventdata)
+    function fSelScatter2(uiSrc, ~)
         
-        iValue = get(source, 'Value');
+        iValue = get(uiSrc, 'Value');
 
-        sScatt2 = aScatt2{iValue};
-        if strcmp(sScatt2, 'Off')
-            sScatt2 = '';
+        X.Main.ShowS2 = X.Main.Scatter{iValue};
+        if strcmp(X.Main.ShowS2, 'Off')
+            X.Main.ShowS2 = '';
         end % if
         
         fPlot;
         
     end % function
 
-    function edtScatt1_Callback(source, eventdata)
+    function fNumScatter1(uiSrc, ~)
         
-        iValue = str2num(get(source, 'String'));
+        iValue = str2num(get(uiSrc, 'String'));
         iValue = floor(iValue);
         
         if isempty(iValue)
             iValue = 2000;
         end % if
         
-        set(source, 'String', num2str(iValue));
+        set(uiSrc, 'String', num2str(iValue));
         
-        iScatt1 = iValue;
+        X.Main.NumS1 = iValue;
         fPlot;
         
     end % function
 
-    function edtScatt2_Callback(source, eventdata)
+    function fNumScatter2(uiSrc, ~)
         
-        iValue = str2num(get(source, 'String'));
+        iValue = str2num(get(uiSrc, 'String'));
         iValue = floor(iValue);
         
         if isempty(iValue)
             iValue = 2000;
         end % if
         
-        set(source, 'String', num2str(iValue));
+        set(uiSrc, 'String', num2str(iValue));
         
-        iScatt2 = iValue;
+        X.Main.NumS2 = iValue;
         fPlot;
         
     end % function
 
     % Zoom Callback
 
-    function sldX1Min_Callback(source, eventdata) 
-
-        dP1Min = get(source, 'Value');
-        fUpdateZoom;
-
-    end % function
-
-    function sldX1Max_Callback(source, eventdata) 
-
-        dP1Max = get(source, 'Value');
-        fUpdateZoom;
-
-    end % function
-
-    function sldX2Min_Callback(source, eventdata) 
-
-        dP2Min = get(source, 'Value');
-        if iX2Sym == 1
-            dP2Max = -dP2Min;
-        end % if
-        fUpdateZoom;
-
-    end % function
-
-    function sldX2Max_Callback(source, eventdata) 
-
-        dP2Max = get(source, 'Value');
-        if iX2Sym == 1
-            dP2Min = -dP2Max;
-        end % if
-        fUpdateZoom;
-
-    end % function
-
-    function edtX1Min_Callback(source, eventdata)
+    function fMainXMin(uiSrc, ~)
         
-        iValue = str2num(get(source, 'String'));
+        iValue = str2num(get(uiSrc, 'String'));
         
         if isempty(iValue)
             iValue = dP1Min;
         end % if
         
-        dMin = get(sldX1Min, 'Min');
-        dMax = get(sldX1Min, 'Max');
-        
-        if iValue < dMin
-            iValue = dMin;
+        if iValue < X.Data.X1Min
+            iValue = X.Data.X1Min;
         end % if
         
-        if iValue > dMax
-            iValue = dMax;
+        if iValue > X.Data.X1Max
+            iValue = X.Data.X1Max;
         end % if
         
         dP1Min = iValue;
@@ -406,23 +424,20 @@ function AnaDensity(oData)
         
     end % function
 
-    function edtX1Max_Callback(source, eventdata)
+    function fMainXMax(uiSrc, ~)
         
-        iValue = str2num(get(source, 'String'));
+        iValue = str2num(get(uiSrc, 'String'));
         
         if isempty(iValue)
             iValue = dP1Max;
         end % if
         
-        dMin = get(sldX1Max, 'Min');
-        dMax = get(sldX1Max, 'Max');
-        
-        if iValue < dMin
-            iValue = dMin;
+        if iValue < X.Data.X1Min
+            iValue = X.Data.X1Min;
         end % if
         
-        if iValue > dMax
-            iValue = dMax;
+        if iValue > X.Data.X1Max
+            iValue = X.Data.X1Max;
         end % if
         
         dP1Max = iValue;
@@ -430,27 +445,24 @@ function AnaDensity(oData)
         
     end % function
 
-    function edtX2Min_Callback(source, eventdata)
+    function fMainYMin(uiSrc, ~)
         
-        iValue = str2num(get(source, 'String'));
+        iValue = str2num(get(uiSrc, 'String'));
         
         if isempty(iValue)
             iValue = dP2Min;
         end % if
         
-        dMin = get(sldX2Min, 'Min');
-        dMax = get(sldX2Min, 'Max');
-        
-        if iValue < dMin
-            iValue = dMin;
+        if iValue < X.Data.X2Min
+            iValue = X.Data.X2Min;
         end % if
         
-        if iValue > dMax
-            iValue = dMax;
+        if iValue > X.Data.X2Max
+            iValue = X.Data.X2Max;
         end % if
 
         dP2Min = iValue;
-        if iX2Sym == 1
+        if X.Main.SymX2 == 1
             dP2Max = -dP2Min;
         end % if
         
@@ -458,27 +470,24 @@ function AnaDensity(oData)
         
     end % function
 
-    function edtX2Max_Callback(source, eventdata)
+    function fMainYMax(uiSrc, ~)
         
-        iValue = str2num(get(source, 'String'));
+        iValue = str2num(get(uiSrc, 'String'));
         
         if isempty(iValue)
             iValue = dP2Max;
         end % if
         
-        dMin = get(sldX2Max, 'Min');
-        dMax = get(sldX2Max, 'Max');
-        
-        if iValue < dMin
-            iValue = dMin;
+        if iValue < X.Data.X2Min
+            iValue = X.Data.X2Min;
         end % if
         
-        if iValue > dMax
-            iValue = dMax;
+        if iValue > X.Data.X2Max
+            iValue = X.Data.X2Max;
         end % if
         
         dP2Max = iValue;
-        if iX2Sym == 1
+        if X.Main.SymX2 == 1
             dP2Min = -dP2Max;
         end % if
 
@@ -486,12 +495,9 @@ function AnaDensity(oData)
         
     end % function
 
-    function chkX2Sym_Callback(source, eventdata) 
+    function fMainSymX2(uiSrc, ~) 
 
-        iX2Sym = get(source, 'Value');
-        if iX2Sym == 1
-            set(sldX2Max, 'Value', -get(sldX2Min, 'Value'));
-        end % if
+        X.Main.SymX2 = get(uiSrc, 'Value');
         fUpdateZoom;
 
     end % function
@@ -500,22 +506,17 @@ function AnaDensity(oData)
 
     function fUpdateTime
         
-        set(edtDumpN, 'String', sprintf('%d', iTime));
-        set(edtDumpL, 'String', sprintf('%.2f', dZPos));
+        set(edtDumpN, 'String', sprintf('%d', X.Time.Dump));
+        set(edtDumpL, 'String', sprintf('%.2f', X.Time.ZPos));
         
     end % function
 
     function fUpdateZoom
 
-        set(edtX1Min,'String',sprintf('%.2f',dP1Min));
-        set(edtX1Max,'String',sprintf('%.2f',dP1Max));
-        set(edtX2Min,'String',sprintf('%.2f',dP2Min));
-        set(edtX2Max,'String',sprintf('%.2f',dP2Max));
-
-        set(sldX1Min,'Value',dP1Min);
-        set(sldX1Max,'Value',dP1Max);
-        set(sldX2Min,'Value',dP2Min);
-        set(sldX2Max,'Value',dP2Max);
+        set(edtXMin,'String',sprintf('%.2f',dP1Min));
+        set(edtXMax,'String',sprintf('%.2f',dP1Max));
+        set(edtYMin,'String',sprintf('%.2f',dP2Min));
+        set(edtYMax,'String',sprintf('%.2f',dP2Max));
         
         fPlot;
 
@@ -524,6 +525,9 @@ function AnaDensity(oData)
     % Plot Function
 
     function fPlot
+        
+        set(0,     'CurrentFigure', fMain);
+        set(fMain, 'CurrentAxes',   axMain);
 
         if dP1Max > 0 && dP2Max > 0
             aLimits = [dP1Min dP1Max dP2Min dP2Max];
@@ -534,19 +538,19 @@ function AnaDensity(oData)
         sOverlay1 = '';
         sOverlay2 = '';
         
-        switch(iProj)
+        switch(X.Main.ToProj)
             case 1
                 sOverlay  = 'No';
             case 2
                 sOverlay  = 'Yes';
-                sOverlay1 = sScatt1;
-                sOverlay2 = sScatt2;
+                sOverlay1 = X.Main.ShowS1;
+                sOverlay2 = X.Main.ShowS2;
         end % if
         
-        switch(iType)
+        switch(X.Main.Type)
             
             case 1
-                stPlot = fPlotBeamDensity(oData, iTime, sData, ...
+                stPlot = fPlotBeamDensity(oData, X.Time.Dump, X.Main.Data, ...
                                           'IsSubPlot', 'Yes', ...
                                           'HideDump', 'Yes', ...
                                           'Absolute', 'Yes', ...
@@ -554,30 +558,97 @@ function AnaDensity(oData)
                                           'Limits', aLimits);
                                       
             case 2
-                stPlot = fPlotPlasmaDensity(oData, iTime, sData, ...
+                stPlot = fPlotPlasmaDensity(oData, X.Time.Dump, X.Main.Data, ...
                                             'IsSubPlot', 'Yes', ...
                                             'HideDump', 'Yes', ...
                                             'Absolute', 'Yes', ...
                                             'Overlay1', sOverlay1, ...
                                             'Overlay2', sOverlay2, ...
-                                            'Scatter1', sScatt1, ...
-                                            'Scatter2', sScatt2, ...
-                                            'Sample1', iScatt1, ...
-                                            'Sample2', iScatt2, ...
+                                            'Scatter1', X.Main.ShowS1, ...
+                                            'Scatter2', X.Main.ShowS2, ...
+                                            'Sample1', X.Main.NumS1, ...
+                                            'Sample2', X.Main.NumS2, ...
                                             'Limits', aLimits, ...
                                             'CAxis', [0 5]);
 
         end % switch
 
-        set(f, 'Name', sprintf('Analyse Density (%s #%d)', sName, iTime));
+        set(fMain, 'Name', sprintf('Analyse Density (%s #%d)', X.Data.Name, X.Time.Dump));
         
         dX1Min = stPlot.X1Axis(1);
         dX1Max = stPlot.X1Axis(end);
         dX2Min = stPlot.X2Axis(1);
         dX2Max = stPlot.X2Axis(end);
         
-        dZPos  = stPlot.ZPos;
+        X.Time.ZPos  = stPlot.ZPos;
         
     end % function 
+
+    % Figures
+    
+    function fUpdateFigures
+
+        set(0, 'CurrentFigure', fMain);
+        aMainO = get(fMain, 'OuterPosition');
+        aMainI = get(fMain, 'Position');
+        
+        stFig = struct();
+        stFig.FPos = [aMainO(1) aMainO(2)+aMainO(4)];
+        stFig.Size = [1020 610];
+        stFig.Main = [  70  60];
+        stFig.Foot = [  70  60];
+        stFig.ROne = [1070 360];
+        stFig.RTwo = [1070  60];
+        stFig.FTwo = [1070  60];
+       
+        if iFigF == 1
+            set(axFoot, 'Position', [stFig.Foot 900 250]);
+            set(axFoot, 'Visible',  'On');
+            stFig.Size = [1020 950];
+            stFig.Main = [  70 400];
+            stFig.ROne = [1070 700];
+            stFig.RTwo = [1070 400];
+        else
+            cla(axFoot);
+            cla(axFTwo);
+            set(axFoot, 'Visible',  'Off');
+            set(axFTwo, 'Visible',  'Off');
+        end % if
+        
+        if iFigR == 1
+            set(axROne, 'Position', [stFig.ROne 300 200]);
+            set(axRTwo, 'Position', [stFig.RTwo 300 200]);
+            set(axROne, 'Visible',  'On');
+            set(axRTwo, 'Visible',  'On');
+            stFig.Size = [1400 610];
+        else
+            cla(axROne);
+            cla(axRTwo);
+            set(axROne, 'Visible',  'Off');
+            set(axRTwo, 'Visible',  'Off');
+        end % if
+
+        if iFigF == 1 && iFigR == 1
+            set(axFTwo, 'Position', [stFig.FTwo 300 250]);
+            set(axFTwo, 'Visible',  'On');
+            stFig.Size = [1400 950];
+        else
+            cla(axFTwo);
+            set(axFTwo, 'Visible',  'Off');
+        end % if
+
+        set(axMain, 'Position', [stFig.Main 900 500]);
+        
+        set(fMain, 'Position', [aMainI(1:2) stFig.Size]);
+        aMainO = get(fMain, 'OuterPosition');
+        aMainI = get(fMain, 'Position');
+        
+        set(fMain, 'OuterPosition', [stFig.FPos(1) stFig.FPos(2)-aMainO(4) aMainO(3:4)]);
+        aMainO = get(fMain, 'OuterPosition');
+
+        aCtrl = get(fCtrl, 'OuterPosition');
+        set(fCtrl, 'OuterPosition', [aMainO(1)+aMainO(3)+8 aMainO(2)+aMainO(4)-aCtrl(4) aCtrl(3:4)]);
+        
+    end % function
    
 end % function
