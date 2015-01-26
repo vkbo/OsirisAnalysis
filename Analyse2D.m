@@ -35,6 +35,12 @@ function Analyse2D(oData)
     X.Data.X2Min   = oData.Config.Variables.Simulation.BoxX2Min;
     X.Data.X2Max   = oData.Config.Variables.Simulation.BoxX2Max;
     
+    X.Data.Coords  = oData.Config.Variables.Simulation.Coordinates;
+    X.Data.X1Range = [0.0 0.0];
+    X.Data.X2Range = [0.0 0.0];
+    X.Data.X1Limit = [0.0 0.0];
+    X.Data.X2Limit = [0.0 0.0];
+    
     X.Main.Plots   = {'Beam Density','Plasma Density'};
     X.Main.Type    = 1;
     X.Main.Data    = 'ProtonBeam';
@@ -46,17 +52,6 @@ function Analyse2D(oData)
     X.Main.Proj    = {'Off','Density','E-Field'};
     X.Main.ToProj  = 2;
     X.Main.SymX2   = 1;
-    
-    dX1Min  = 0.0;
-    dX1Max  = 0.0;
-    dX2Min  = 0.0;
-    dX2Max  = 0.0;
-
-    dP1Min  = 0.0;
-    dP1Max  = 0.0;
-    dP2Min  = 0.0;
-    dP2Max  = 0.0;
-    
 
     
     %
@@ -106,10 +101,8 @@ function Analyse2D(oData)
     fUpdateFigures;
     fPlot;
 
-    dP1Min = dX1Min;
-    dP1Max = dX1Max;
-    dP2Min = dX2Min;
-    dP2Max = dX2Max;
+    X.Data.X1Limit = X.Data.X1Range;
+    X.Data.X2Limit = X.Data.X2Range;
 
     
     %
@@ -143,7 +136,7 @@ function Analyse2D(oData)
     uicontrol(bgTime,'Style','PushButton','String','P>','Position',[ 70 10 30 22],'Callback',@fGoPEnd);
     uicontrol(bgTime,'Style','PushButton','String','S>','Position',[100 10 30 22],'Callback',@fGoEnd);
 
-    edtDumpN = uicontrol(bgTime,'Style','Edit','String',sprintf('%d',X.Time.Dump),'Position',[ 145 35 45 20],'Callback',@fEditDump);
+    edtDumpN = uicontrol(bgTime,'Style','Edit','String',sprintf('%d',  X.Time.Dump),'Position',[ 145 35 45 20],'Callback',@fEditDump);
     edtDumpL = uicontrol(bgTime,'Style','Edit','String',sprintf('%.2f',X.Time.ZPos),'Position',[ 145 10 45 20]);
 
     
@@ -192,12 +185,12 @@ function Analyse2D(oData)
     uicontrol(bgZoom,'Style','Text','String','–','Position',[120 iTop-18 10 15],'BackgroundColor',cBackGround);
     uicontrol(bgZoom,'Style','Text','String','–','Position',[120 iTop-43 10 15],'BackgroundColor',cBackGround);
     
-    edtXMin = uicontrol(bgZoom,'Style','Edit','String',sprintf('%.2f',dP1Min),'Position',[ 60 iTop-20 60 20],'Callback',@fMainXMin);
-    edtXMax = uicontrol(bgZoom,'Style','Edit','String',sprintf('%.2f',dP1Max),'Position',[130 iTop-20 60 20],'Callback',@fMainXMax);
-    edtYMin = uicontrol(bgZoom,'Style','Edit','String',sprintf('%.2f',dP2Min),'Position',[ 60 iTop-45 60 20],'Callback',@fMainYMin);
-    edtYMax = uicontrol(bgZoom,'Style','Edit','String',sprintf('%.2f',dP2Max),'Position',[130 iTop-45 60 20],'Callback',@fMainYMax);
+    edtXMin = uicontrol(bgZoom,'Style','Edit','String',sprintf('%.2f',X.Data.X1Limit(1)),'Position',[ 60 iTop-20 60 20],'Callback',@fMainXMin);
+    edtXMax = uicontrol(bgZoom,'Style','Edit','String',sprintf('%.2f',X.Data.X1Limit(2)),'Position',[130 iTop-20 60 20],'Callback',@fMainXMax);
+    edtYMin = uicontrol(bgZoom,'Style','Edit','String',sprintf('%.2f',X.Data.X2Limit(1)),'Position',[ 60 iTop-45 60 20],'Callback',@fMainYMin);
+    edtYMax = uicontrol(bgZoom,'Style','Edit','String',sprintf('%.2f',X.Data.X2Limit(2)),'Position',[130 iTop-45 60 20],'Callback',@fMainYMax);
 
-    chkX2Sym = uicontrol(bgZoom,'Style','Checkbox','String','Symmetric X2 axis','Value',1,'Position',[50 iTop-65 140 15],'BackgroundColor',cBackGround,'Callback',@fMainSymX2);
+    chkX2Sym = uicontrol(bgZoom,'Style','Checkbox','String','Symmetric X2 axis','Value',X.Main.SymX2,'Position',[50 iTop-65 140 15],'BackgroundColor',cBackGround,'Callback',@fMainSymX2);
                       
     
     %
@@ -408,18 +401,18 @@ function Analyse2D(oData)
         iValue = str2num(get(uiSrc, 'String'));
         
         if isempty(iValue)
-            iValue = dP1Min;
+            iValue = X.Data.X1Limit(1);
         end % if
         
-        if iValue < X.Data.X1Min
-            iValue = X.Data.X1Min;
+        if iValue < X.Data.X1Range(1)
+            iValue = X.Data.X1Range(1);
         end % if
         
-        if iValue > X.Data.X1Max
-            iValue = X.Data.X1Max;
+        if iValue > X.Data.X1Range(2)
+            iValue = X.Data.X1Range(2);
         end % if
         
-        dP1Min = iValue;
+        X.Data.X1Limit(1) = iValue;
         fUpdateZoom;
         
     end % function
@@ -429,18 +422,18 @@ function Analyse2D(oData)
         iValue = str2num(get(uiSrc, 'String'));
         
         if isempty(iValue)
-            iValue = dP1Max;
+            iValue = X.Data.X1Limit(2);
         end % if
         
-        if iValue < X.Data.X1Min
-            iValue = X.Data.X1Min;
+        if iValue < X.Data.X1Range(1)
+            iValue = X.Data.X1Range(1);
         end % if
         
-        if iValue > X.Data.X1Max
-            iValue = X.Data.X1Max;
+        if iValue > X.Data.X1Range(2)
+            iValue = X.Data.X1Range(2);
         end % if
         
-        dP1Max = iValue;
+        X.Data.X1Limit(2) = iValue;
         fUpdateZoom;
         
     end % function
@@ -450,20 +443,20 @@ function Analyse2D(oData)
         iValue = str2num(get(uiSrc, 'String'));
         
         if isempty(iValue)
-            iValue = dP2Min;
+            iValue = X.Data.X2Limit(1);
         end % if
         
-        if iValue < X.Data.X2Min
-            iValue = X.Data.X2Min;
+        if iValue < X.Data.X2Range(1)
+            iValue = X.Data.X2Range(1);
         end % if
         
-        if iValue > X.Data.X2Max
-            iValue = X.Data.X2Max;
+        if iValue > X.Data.X2Range(2)
+            iValue = X.Data.X2Range(2);
         end % if
 
-        dP2Min = iValue;
+        X.Data.X2Limit(1) = iValue;
         if X.Main.SymX2 == 1
-            dP2Max = -dP2Min;
+            X.Data.X2Limit(2) = -X.Data.X2Limit(1);
         end % if
         
         fUpdateZoom;
@@ -475,20 +468,20 @@ function Analyse2D(oData)
         iValue = str2num(get(uiSrc, 'String'));
         
         if isempty(iValue)
-            iValue = dP2Max;
+            iValue = X.Data.X2Limit(2);
         end % if
         
-        if iValue < X.Data.X2Min
-            iValue = X.Data.X2Min;
+        if iValue < X.Data.X2Range(1)
+            iValue = X.Data.X2Range(1);
         end % if
         
-        if iValue > X.Data.X2Max
-            iValue = X.Data.X2Max;
+        if iValue > X.Data.X2Range(2)
+            iValue = X.Data.X2Range(2);
         end % if
         
-        dP2Max = iValue;
+        X.Data.X2Limit(2) = iValue;
         if X.Main.SymX2 == 1
-            dP2Min = -dP2Max;
+            X.Data.X2Limit(1) = -X.Data.X2Limit(2);
         end % if
 
         fUpdateZoom;
@@ -513,10 +506,10 @@ function Analyse2D(oData)
 
     function fUpdateZoom
 
-        set(edtXMin,'String',sprintf('%.2f',dP1Min));
-        set(edtXMax,'String',sprintf('%.2f',dP1Max));
-        set(edtYMin,'String',sprintf('%.2f',dP2Min));
-        set(edtYMax,'String',sprintf('%.2f',dP2Max));
+        set(edtXMin,'String',sprintf('%.2f',X.Data.X1Limit(1)));
+        set(edtXMax,'String',sprintf('%.2f',X.Data.X1Limit(2)));
+        set(edtYMin,'String',sprintf('%.2f',X.Data.X2Limit(1)));
+        set(edtYMax,'String',sprintf('%.2f',X.Data.X2Limit(2)));
         
         fPlot;
 
@@ -529,8 +522,8 @@ function Analyse2D(oData)
         set(0,     'CurrentFigure', fMain);
         set(fMain, 'CurrentAxes',   axMain);
 
-        if dP1Max > 0 && dP2Max > 0
-            aLimits = [dP1Min dP1Max dP2Min dP2Max];
+        if X.Data.X1Limit(2) > 0 && X.Data.X2Limit(2) > 0
+            aLimits = [X.Data.X1Limit X.Data.X2Limit];
         else
             aLimits = [];
         end % if
@@ -574,12 +567,18 @@ function Analyse2D(oData)
         end % switch
 
         set(fMain, 'Name', sprintf('Analyse Density (%s #%d)', X.Data.Name, X.Time.Dump));
-        
-        dX1Min = stPlot.X1Axis(1);
-        dX1Max = stPlot.X1Axis(end);
-        dX2Min = stPlot.X2Axis(1);
-        dX2Max = stPlot.X2Axis(end);
-        
+
+        if sum(X.Data.X1Range) == 0.0 && sum(X.Data.X2Range) == 0
+
+            X.Data.X1Range = [stPlot.X1Axis(1) stPlot.X1Axis(end)];
+            X.Data.X2Range = [stPlot.X2Axis(1) stPlot.X2Axis(end)];
+
+            if strcmpi(X.Data.Coords, 'Cylindrical')
+                X.Data.X2Range(1) = -X.Data.X2Range(2);
+            end % if
+
+        end % if
+
         X.Time.ZPos  = stPlot.ZPos;
         
     end % function 

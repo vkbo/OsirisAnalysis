@@ -96,9 +96,10 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     aRAxis  = stData.X2Axis;
     dZPos   = stData.ZPos;
 
-    stReturn.X1Axis = stData.X1Axis;
-    stReturn.X2Axis = stData.X2Axis;
-    stReturn.ZPos   = stData.ZPos;
+    stReturn.X1Axis  = stData.X1Axis;
+    stReturn.X2Axis  = stData.X2Axis;
+    stReturn.ZPos    = stData.ZPos;
+    stReturn.AxisFac = oCH.AxisFac;
     
     if strcmpi(stOpt.Absolute, 'Yes')
         aData = abs(aData);
