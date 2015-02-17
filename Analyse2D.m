@@ -32,8 +32,12 @@ function Analyse2D
         stSettings.LoadData = {'','',''};
     end % if
 
-    stPlots{1} = 'Beam Density';
-    stPlots{2} = 'Plasma Density';
+    X.Plots{1} = 'Beam Density';
+    X.Plots{2} = 'Plasma Density';
+   
+    X.Figure = [0 0 0 0 0 0 0];
+    X.X1Link = [0 0 0 0 0 0 0];
+    X.X2Sym  = [1 1 1 1 1 1 1];
     
     %
     %  Main Figure
@@ -129,19 +133,19 @@ function Analyse2D
     uicontrol(bgFigs,'Style','Text','String','#3','Position',[10 112 20 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
     uicontrol(bgFigs,'Style','Text','String','#2','Position',[10 137 20 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
 
-    pumFig7 = uicontrol(bgFigs,'Style','PopupMenu','String',stPlots,'Value',1,'Position',[35  10 150 20],'Callback',@fSetFig);
-    pumFig6 = uicontrol(bgFigs,'Style','PopupMenu','String',stPlots,'Value',1,'Position',[35  35 150 20],'Callback',@fSetFig);
-    pumFig5 = uicontrol(bgFigs,'Style','PopupMenu','String',stPlots,'Value',1,'Position',[35  60 150 20],'Callback',@fSetFig);
-    pumFig4 = uicontrol(bgFigs,'Style','PopupMenu','String',stPlots,'Value',1,'Position',[35  85 150 20],'Callback',@fSetFig);
-    pumFig3 = uicontrol(bgFigs,'Style','PopupMenu','String',stPlots,'Value',1,'Position',[35 110 150 20],'Callback',@fSetFig);
-    pumFig2 = uicontrol(bgFigs,'Style','PopupMenu','String',stPlots,'Value',1,'Position',[35 135 150 20],'Callback',@fSetFig);
+    pumFig7 = uicontrol(bgFigs,'Style','PopupMenu','String',X.Plots,'Value',1,'Position',[35  10 150 20],'Callback',@fSetFig);
+    pumFig6 = uicontrol(bgFigs,'Style','PopupMenu','String',X.Plots,'Value',1,'Position',[35  35 150 20],'Callback',@fSetFig);
+    pumFig5 = uicontrol(bgFigs,'Style','PopupMenu','String',X.Plots,'Value',1,'Position',[35  60 150 20],'Callback',@fSetFig);
+    pumFig4 = uicontrol(bgFigs,'Style','PopupMenu','String',X.Plots,'Value',1,'Position',[35  85 150 20],'Callback',@fSetFig);
+    pumFig3 = uicontrol(bgFigs,'Style','PopupMenu','String',X.Plots,'Value',1,'Position',[35 110 150 20],'Callback',@fSetFig);
+    pumFig2 = uicontrol(bgFigs,'Style','PopupMenu','String',X.Plots,'Value',1,'Position',[35 135 150 20],'Callback',@fSetFig);
 
-    btnFig7 = uicontrol(bgFigs,'Style','PushButton','String','   ','Position',[190  10 20 20],'BackgroundColor',cButtonOff,'Callback',@fToggleFig7);
-    btnFig6 = uicontrol(bgFigs,'Style','PushButton','String','   ','Position',[190  35 20 20],'BackgroundColor',cButtonOff,'Callback',@fToggleFig6);
-    btnFig5 = uicontrol(bgFigs,'Style','PushButton','String','   ','Position',[190  60 20 20],'BackgroundColor',cButtonOff,'Callback',@fToggleFig5);
-    btnFig4 = uicontrol(bgFigs,'Style','PushButton','String','   ','Position',[190  85 20 20],'BackgroundColor',cButtonOff,'Callback',@fToggleFig4);
-    btnFig3 = uicontrol(bgFigs,'Style','PushButton','String','   ','Position',[190 110 20 20],'BackgroundColor',cButtonOff,'Callback',@fToggleFig3);
-    btnFig2 = uicontrol(bgFigs,'Style','PushButton','String','   ','Position',[190 135 20 20],'BackgroundColor',cButtonOff,'Callback',@fToggleFig2);
+    btnFig7 = uicontrol(bgFigs,'Style','PushButton','String','','Position',[190  10 20 20],'BackgroundColor',cButtonOff,'Callback',@fToggleFig7);
+    btnFig6 = uicontrol(bgFigs,'Style','PushButton','String','','Position',[190  35 20 20],'BackgroundColor',cButtonOff,'Callback',@fToggleFig6);
+    btnFig5 = uicontrol(bgFigs,'Style','PushButton','String','','Position',[190  60 20 20],'BackgroundColor',cButtonOff,'Callback',@fToggleFig5);
+    btnFig4 = uicontrol(bgFigs,'Style','PushButton','String','','Position',[190  85 20 20],'BackgroundColor',cButtonOff,'Callback',@fToggleFig4);
+    btnFig3 = uicontrol(bgFigs,'Style','PushButton','String','','Position',[190 110 20 20],'BackgroundColor',cButtonOff,'Callback',@fToggleFig3);
+    btnFig2 = uicontrol(bgFigs,'Style','PushButton','String','','Position',[190 135 20 20],'BackgroundColor',cButtonOff,'Callback',@fToggleFig2);
 
     %btnCtrl7 = uicontrol(bgFigs,'Style','PushButton','String','Ctrl','Position',[215  10 30 20],'BackgroundColor',cButtonOff,'Callback',@fToggleCtrl7);
     
@@ -175,19 +179,19 @@ function Analyse2D
     edtYMin2 = uicontrol(bgFigs,'Style','Edit','String',sprintf('%.2f',0),'Position',[355 135 55 20],'Callback',@fZoom2);
     edtYMax2 = uicontrol(bgFigs,'Style','Edit','String',sprintf('%.2f',0),'Position',[435 135 55 20],'Callback',@fZoom2);
 
-    chkX27 = uicontrol(bgFigs,'Style','Checkbox','Value',1,'Position',[415  12 15 15],'BackgroundColor',cBackGround,'Callback',@fSymX2);
-    chkX26 = uicontrol(bgFigs,'Style','Checkbox','Value',1,'Position',[415  37 15 15],'BackgroundColor',cBackGround,'Callback',@fSymX2);
-    chkX25 = uicontrol(bgFigs,'Style','Checkbox','Value',1,'Position',[415  62 15 15],'BackgroundColor',cBackGround,'Callback',@fSymX2);
-    chkX24 = uicontrol(bgFigs,'Style','Checkbox','Value',1,'Position',[415  87 15 15],'BackgroundColor',cBackGround,'Callback',@fSymX2);
-    chkX23 = uicontrol(bgFigs,'Style','Checkbox','Value',1,'Position',[415 112 15 15],'BackgroundColor',cBackGround,'Callback',@fSymX2);
-    chkX22 = uicontrol(bgFigs,'Style','Checkbox','Value',1,'Position',[415 137 15 15],'BackgroundColor',cBackGround,'Callback',@fSymX2);
+    chkX27 = uicontrol(bgFigs,'Style','Checkbox','Value',X.X2Sym(7),'Position',[415  12 15 15],'BackgroundColor',cBackGround,'Callback',@fSymX2);
+    chkX26 = uicontrol(bgFigs,'Style','Checkbox','Value',X.X2Sym(6),'Position',[415  37 15 15],'BackgroundColor',cBackGround,'Callback',@fSymX2);
+    chkX25 = uicontrol(bgFigs,'Style','Checkbox','Value',X.X2Sym(5),'Position',[415  62 15 15],'BackgroundColor',cBackGround,'Callback',@fSymX2);
+    chkX24 = uicontrol(bgFigs,'Style','Checkbox','Value',X.X2Sym(4),'Position',[415  87 15 15],'BackgroundColor',cBackGround,'Callback',@fSymX2);
+    chkX23 = uicontrol(bgFigs,'Style','Checkbox','Value',X.X2Sym(3),'Position',[415 112 15 15],'BackgroundColor',cBackGround,'Callback',@fSymX2);
+    chkX22 = uicontrol(bgFigs,'Style','Checkbox','Value',X.X2Sym(2),'Position',[415 137 15 15],'BackgroundColor',cBackGround,'Callback',@fSymX2);
 
-    chkX17 = uicontrol(bgFigs,'Style','Checkbox','Value',0,'Position',[275  12 15 15],'BackgroundColor',cBackGround,'Callback',@fSymX1);
-    chkX16 = uicontrol(bgFigs,'Style','Checkbox','Value',0,'Position',[275  37 15 15],'BackgroundColor',cBackGround,'Callback',@fSymX1);
-    chkX15 = uicontrol(bgFigs,'Style','Checkbox','Value',0,'Position',[275  62 15 15],'BackgroundColor',cBackGround,'Callback',@fSymX1);
-    chkX14 = uicontrol(bgFigs,'Style','Checkbox','Value',0,'Position',[275  87 15 15],'BackgroundColor',cBackGround,'Callback',@fSymX1);
-    chkX13 = uicontrol(bgFigs,'Style','Checkbox','Value',0,'Position',[275 112 15 15],'BackgroundColor',cBackGround,'Callback',@fSymX1);
-    chkX12 = uicontrol(bgFigs,'Style','Checkbox','Value',0,'Position',[275 137 15 15],'BackgroundColor',cBackGround,'Callback',@fSymX1);
+    chkX17 = uicontrol(bgFigs,'Style','Checkbox','Value',X.X1Link(7),'Position',[275  12 15 15],'BackgroundColor',cBackGround,'Callback',@fLinkX1);
+    chkX16 = uicontrol(bgFigs,'Style','Checkbox','Value',X.X1Link(6),'Position',[275  37 15 15],'BackgroundColor',cBackGround,'Callback',@fLinkX1);
+    chkX15 = uicontrol(bgFigs,'Style','Checkbox','Value',X.X1Link(5),'Position',[275  62 15 15],'BackgroundColor',cBackGround,'Callback',@fLinkX1);
+    chkX14 = uicontrol(bgFigs,'Style','Checkbox','Value',X.X1Link(4),'Position',[275  87 15 15],'BackgroundColor',cBackGround,'Callback',@fLinkX1);
+    chkX13 = uicontrol(bgFigs,'Style','Checkbox','Value',X.X1Link(3),'Position',[275 112 15 15],'BackgroundColor',cBackGround,'Callback',@fLinkX1);
+    chkX12 = uicontrol(bgFigs,'Style','Checkbox','Value',X.X1Link(2),'Position',[275 137 15 15],'BackgroundColor',cBackGround,'Callback',@fLinkX1);
     
     %
     %  Functions
@@ -230,6 +234,116 @@ function Analyse2D
         oData.Path = stSettings.LoadData{3};
         fSaveVariables;
 
+    end % function
+
+    % Toggle Figure
+    
+    function fToggleFig2(~,~)
+        
+        if X.Figure(2) == 0
+            set(btnFig2, 'BackgroundColor', cButtonOn);
+            X.Figure(2) = 1;
+            figure(2); clf;
+        else
+            set(btnFig2, 'BackgroundColor', cButtonOff);
+            X.Figure(2) = 0;
+            close(figure(2));
+        end % if
+        
+    end % function
+
+    function fToggleFig3(~,~)
+        
+        if X.Figure(3) == 0
+            set(btnFig3, 'BackgroundColor', cButtonOn);
+            X.Figure(3) = 1;
+            figure(3); clf;
+        else
+            set(btnFig3, 'BackgroundColor', cButtonOff);
+            X.Figure(3) = 0;
+            close(figure(3));
+        end % if
+        
+    end % function
+
+    function fToggleFig4(~,~)
+        
+        if X.Figure(4) == 0
+            set(btnFig4, 'BackgroundColor', cButtonOn);
+            X.Figure(4) = 1;
+            figure(4); clf;
+        else
+            set(btnFig4, 'BackgroundColor', cButtonOff);
+            X.Figure(4) = 0;
+            close(figure(4));
+        end % if
+        
+    end % function
+
+    function fToggleFig5(~,~)
+        
+        if X.Figure(5) == 0
+            set(btnFig5, 'BackgroundColor', cButtonOn);
+            X.Figure(5) = 1;
+            figure(5); clf;
+        else
+            set(btnFig5, 'BackgroundColor', cButtonOff);
+            X.Figure(5) = 0;
+            close(figure(5));
+        end % if
+        
+    end % function
+
+    function fToggleFig6(~,~)
+        
+        if X.Figure(6) == 0
+            set(btnFig6, 'BackgroundColor', cButtonOn);
+            X.Figure(6) = 1;
+            figure(6); clf;
+        else
+            set(btnFig6, 'BackgroundColor', cButtonOff);
+            X.Figure(6) = 0;
+            close(figure(6));
+        end % if
+        
+    end % function
+
+    function fToggleFig7(~,~)
+        
+        if X.Figure(7) == 0
+            set(btnFig7, 'BackgroundColor', cButtonOn);
+            X.Figure(7) = 1;
+            figure(7); clf;
+        else
+            set(btnFig7, 'BackgroundColor', cButtonOff);
+            X.Figure(7) = 0;
+            close(figure(7));
+        end % if
+        
+    end % function
+
+    % Link and Symmetric Functions
+    
+    function fLinkX1(~,~)
+        
+        X.X1Link(2) = get(chkX12, 'Value');
+        X.X1Link(3) = get(chkX13, 'Value');
+        X.X1Link(4) = get(chkX14, 'Value');
+        X.X1Link(5) = get(chkX15, 'Value');
+        X.X1Link(6) = get(chkX16, 'Value');
+        X.X1Link(7) = get(chkX17, 'Value');
+        
+    end % function
+
+    function fSymX2(~,~)
+        
+        X.X2Sym(2) = get(chkX22, 'Value');
+        X.X2Sym(3) = get(chkX23, 'Value');
+        X.X2Sym(4) = get(chkX24, 'Value');
+        X.X2Sym(5) = get(chkX25, 'Value');
+        X.X2Sym(6) = get(chkX26, 'Value');
+        X.X2Sym(7) = get(chkX27, 'Value');
+        
     end % function
 
     % Common Functions
