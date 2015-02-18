@@ -133,7 +133,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     if strcmpi(stOpt.IsSubPlot, 'No')
         clf;
         fFigureSize(gcf, stOpt.FigureSize);
-        set(gcf,'Name',sprintf('Beam Density (%s #%d)',oData.Config.Name,iTime),'NumberTitle','off')
+        set(gcf,'Name',sprintf('Beam Density (%s #%d)',oData.Config.Name,iTime))
     else
         cla;
     end % if
