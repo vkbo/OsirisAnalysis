@@ -15,6 +15,7 @@
 %  FigureSize   :: Default [1100 600]
 %  HideDump     :: Default No
 %  IsSubplot    :: Default No
+%  AutoResize   :: Default On
 %  CAxis        :: Color axis limits
 %  Absolute     :: Use absolute value of charge
 %  Overlay[1,2] :: Beam projection overlay
@@ -47,6 +48,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
        fprintf('  FigureSize   :: Default [1100 600]\n');
        fprintf('  HideDump     :: Default No\n');
        fprintf('  IsSubplot    :: Default No\n');
+       fprintf('  AutoResize   :: Default On\n');
        fprintf('  CAxis        :: Color axis limits\n');
        fprintf('  Absolute     :: Use absolute value of charge\n');
        fprintf('  Overlay[1,2] :: Beam projection overlay\n');
@@ -65,6 +67,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     addParameter(oOpt, 'FigureSize',  [1100 600]);
     addParameter(oOpt, 'HideDump',    'No');
     addParameter(oOpt, 'IsSubPlot',   'No');
+    addParameter(oOpt, 'AutoResize',  'On');
     addParameter(oOpt, 'CAxis',       []);
     addParameter(oOpt, 'Absolute',    'Yes');
     addParameter(oOpt, 'Overlay',     '');
@@ -149,10 +152,11 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     aRAxis  = stData.X2Axis;
     dZPos   = stData.ZPos;
 
-    stReturn.X1Axis  = stData.X1Axis;
-    stReturn.X2Axis  = stData.X2Axis;
-    stReturn.ZPos    = stData.ZPos;
-    stReturn.AxisFac = oCH.AxisFac;
+    stReturn.X1Axis    = stData.X1Axis;
+    stReturn.X2Axis    = stData.X2Axis;
+    stReturn.ZPos      = stData.ZPos;
+    stReturn.AxisFac   = oCH.AxisFac;
+    stReturn.AxisRange = oCH.AxisRange;
 
     if strcmpi(stOpt.Absolute, 'Yes')
         aData = abs(aData);
@@ -166,8 +170,10 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     
     if strcmpi(stOpt.IsSubPlot, 'No')
         clf;
-        fFigureSize(gcf, stOpt.FigureSize);
-        set(gcf,'Name',sprintf('Plasma Density (%s Dump %d)',oData.Config.Name,iTime),'NumberTitle','off')
+        if strcmpi(stOpt.AutoResize, 'On')
+            fFigureSize(gcf, stOpt.FigureSize);
+        end % if
+        set(gcf,'Name',sprintf('Plasma Density (%s #%d)',oData.Config.Name,iTime))
     else
         cla;
     end % if

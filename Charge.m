@@ -11,18 +11,19 @@ classdef Charge
 
     properties (GetAccess = 'public', SetAccess = 'public')
         
-        Data        = [];                       % OsirisData dataset
-        Species     = '';                       % Species to ananlyse
-        Time        = 0;                        % Current time (dumb number)
-        X1Lim       = [];                       % Axes limits x1
-        X2Lim       = [];                       % Axes limits x2
-        X3Lim       = [];                       % Axes limits x3
-        Units       = 'N';                      % Units of axes
-        AxisUnits   = {'N', 'N', 'N'};          % Units of axes
-        AxisScale   = {'Auto', 'Auto', 'Auto'}; % Scale of axes
-        AxisFac     = [1.0, 1.0, 1.0];          % Axes scale factors
-        ParticleFac = 1.0;                      % Q-to-particles factor
-        ChargeFac   = 1.0;                      % Q-to-charge factor
+        Data        = [];                        % OsirisData dataset
+        Species     = '';                        % Species to ananlyse
+        Time        = 0;                         % Current time (dumb number)
+        X1Lim       = [];                        % Axes limits x1
+        X2Lim       = [];                        % Axes limits x2
+        X3Lim       = [];                        % Axes limits x3
+        Units       = 'N';                       % Units of axes
+        AxisUnits   = {'N' 'N' 'N'};             % Units of axes
+        AxisScale   = {'Auto' 'Auto' 'Auto'};    % Scale of axes
+        AxisRange   = [0.0 0.0 0.0 0.0 0.0 0.0]; % Max and min of axes
+        AxisFac     = [1.0 1.0 1.0];             % Axes scale factors
+        ParticleFac = 1.0;                       % Q-to-particles factor
+        ChargeFac   = 1.0;                       % Q-to-charge factor
 
     end % properties
 
@@ -77,19 +78,22 @@ classdef Charge
             switch(lower(stOpt.Units))
 
                 case 'si'
-                    obj.Units         = 'SI';
+                    obj.Units = 'SI';
                     
-                    [dX1Fac, sX1Unit] = fLengthScale(obj.AxisScale{1}, 'm');
-                    [dX2Fac, sX2Unit] = fLengthScale(obj.AxisScale{2}, 'm');
-                    [dX3Fac, sX3Unit] = fLengthScale(obj.AxisScale{3}, 'm');
-                    obj.AxisFac       = [dLFactor*dX1Fac, dLFactor*dX2Fac, dLFactor*dX3Fac];
-                    obj.AxisUnits     = {sX1Unit, sX2Unit, sX3Unit};
+                    [dX1Fac, sX1Unit]  = fLengthScale(obj.AxisScale{1}, 'm');
+                    [dX2Fac, sX2Unit]  = fLengthScale(obj.AxisScale{2}, 'm');
+                    [dX3Fac, sX3Unit]  = fLengthScale(obj.AxisScale{3}, 'm');
+                    obj.AxisFac        = [dLFactor*dX1Fac, dLFactor*dX2Fac, dLFactor*dX3Fac];
+                    obj.AxisUnits      = {sX1Unit, sX2Unit, sX3Unit};
+                    obj.AxisRange(1:2) = [dBoxX1Min dBoxX1Max]*obj.AxisFac(1);
+                    obj.AxisRange(3:4) = [dBoxX2Min dBoxX2Max]*obj.AxisFac(2);
+                    obj.AxisRange(5:6) = [dBoxX3Min dBoxX3Max]*obj.AxisFac(3);
                     
                     obj.ParticleFac = obj.Data.Config.Variables.Convert.SI.ParticleFac;
                     obj.ChargeFac   = obj.Data.Config.Variables.Convert.SI.ChargeFac;
 
                 otherwise
-                    obj.Units   = 'N';
+                    obj.Units = 'N';
 
                     obj.AxisFac = [1.0, 1.0, 1.0];
                     if strcmpi(sCoords, 'cylindrical')
@@ -97,6 +101,7 @@ classdef Charge
                     else
                         obj.AxisUnits = {'c/\omega_p', 'c_/\omega_p', 'c/\omega_p'};
                     end % if
+                    obj.AxisRange   = [dBoxX1Min dBoxX1Max dBoxX2Min dBoxX2Max dBoxX3Min dBoxX3Max];
 
                     obj.ParticleFac = obj.Data.Config.Variables.Convert.Norm.ParticleFac;
                     obj.ChargeFac   = obj.Data.Config.Variables.Convert.Norm.ChargeFac;

@@ -14,8 +14,9 @@
 %  Limits      :: Axis limits
 %  Charge      :: Calculate charge in ellipse two inputs for peak
 %  FigureSize  :: Default [900 500]
-%  IsSubplot   :: Default No
 %  HideDump    :: Default No
+%  IsSubplot   :: Default No
+%  AutoResize  :: Default On
 %  CAxis       :: Color axis limits
 %  ShowOverlay :: Default Yes
 %  Absolute    :: Absolute value, default No
@@ -44,8 +45,9 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
        fprintf('  Limits      :: Axis limits\n');
        fprintf('  Charge      :: Calculate charge in ellipse two inputs for peak\n');
        fprintf('  FigureSize  :: Default [900 500]\n');
-       fprintf('  IsSubplot   :: Default No\n');
        fprintf('  HideDump    :: Default No\n');
+       fprintf('  IsSubplot   :: Default No\n');
+       fprintf('  AutoResize  :: Default On\n');
        fprintf('  CAxis       :: Color axis limits\n');
        fprintf('  ShowOverlay :: Default Yes\n');
        fprintf('\n');
@@ -61,6 +63,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     addParameter(oOpt, 'FigureSize',  [900 500]);
     addParameter(oOpt, 'HideDump',    'No');
     addParameter(oOpt, 'IsSubPlot',   'No');
+    addParameter(oOpt, 'AutoResize',  'On');
     addParameter(oOpt, 'CAxis',       []);
     addParameter(oOpt, 'ShowOverlay', 'Yes');
     addParameter(oOpt, 'Absolute',    'No');
@@ -96,10 +99,11 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     aRAxis  = stData.X2Axis;
     dZPos   = stData.ZPos;
 
-    stReturn.X1Axis  = stData.X1Axis;
-    stReturn.X2Axis  = stData.X2Axis;
-    stReturn.ZPos    = stData.ZPos;
-    stReturn.AxisFac = oCH.AxisFac;
+    stReturn.X1Axis    = stData.X1Axis;
+    stReturn.X2Axis    = stData.X2Axis;
+    stReturn.ZPos      = stData.ZPos;
+    stReturn.AxisFac   = oCH.AxisFac;
+    stReturn.AxisRange = oCH.AxisRange;
     
     if strcmpi(stOpt.Absolute, 'Yes')
         aData = abs(aData);
@@ -132,7 +136,9 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     
     if strcmpi(stOpt.IsSubPlot, 'No')
         clf;
-        fFigureSize(gcf, stOpt.FigureSize);
+        if strcmpi(stOpt.AutoResize, 'On')
+            fFigureSize(gcf, stOpt.FigureSize);
+        end % if
         set(gcf,'Name',sprintf('Beam Density (%s #%d)',oData.Config.Name,iTime))
     else
         cla;
