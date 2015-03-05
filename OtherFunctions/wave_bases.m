@@ -1,3 +1,8 @@
+%
+%  External Code: wave_bases
+% ***************************
+%
+
 %WAVE_BASES  1D Wavelet functions Morlet, Paul, or DOG
 %
 %  [DAUGHTER,FOURIER_FACTOR,COI,DOFMIN] = ...

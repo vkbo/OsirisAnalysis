@@ -1,3 +1,8 @@
+%
+%  External Code: freezeColors
+% *****************************
+%
+
 function freezeColors(varargin)
 % freezeColors  Lock colors of plot, enabling multiple colormaps per figure. (v2.3)
 %
