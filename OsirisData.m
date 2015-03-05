@@ -17,6 +17,7 @@ classdef OsirisData
         Elements  = {}; % Struct of all datafiles in dataset ('MS/' subfolder)
         Config    = []; % Content of the config files and extraction of all runtime variables
         DataSets  = {}; % Available datasets in folders indicated by LocalConfig.m
+        Silent    = 0;  % Set to 1 to disable command window output
 
     end % properties
 
@@ -37,14 +38,28 @@ classdef OsirisData
     
     methods
         
-        function obj = OsirisData()
+        function obj = OsirisData(varargin)
             
+            % Parse input
+            oOpt = inputParser;
+            addParameter(oOpt, 'Silent', 'No');
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
+            
+            if strcmpi(stOpt.Silent, 'Yes')
+                obj.Silent = 1;
+            end % if
+
+            % Initiate OsirisData
             LocalConfig;
     
             obj.Config = OsirisConfig;
+            obj.Config.Silent = obj.Silent;
             
             obj.DefaultPath = stFolders;
-            fprintf('Scanning default data folder(s)\n');
+            if ~obj.Silent
+                fprintf('Scanning default data folder(s)\n');
+            end % if
             
             stFields = fieldnames(obj.DefaultPath);
 
@@ -56,7 +71,9 @@ classdef OsirisData
 
                 if isdir(sPath)
 
-                    fprintf('Scanning %s\n', sPath);
+                    if ~obj.Silent
+                        fprintf('Scanning %s\n', sPath);
+                    end % if
                     
                     stScan.(sName)(1) = struct('Path', sPath, 'Name', sName, 'Level', 0);
                     for r=0:iDepth-1
@@ -141,7 +158,9 @@ classdef OsirisData
                 end % if
             end % if
 
-            fprintf('Path is %s\n', obj.Path);
+            if ~obj.Silent
+                fprintf('Path is %s\n', obj.Path);
+            end % if
             
             % Scanning MS folder
             obj.Elements = obj.fScanFolder([obj.Path, '/MS'], '');

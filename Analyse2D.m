@@ -13,22 +13,23 @@ function Analyse2D
 
     % Colours
     
-    cBackGround  = [0.8 0.8 0.8];
-    cWhite       = [1.0 1.0 1.0];
-    cInfoText    = [1.0 0.9 0.0];
-    cGreyText    = [0.5 0.5 0.5];
-    cInfoBack    = [0.7 0.7 0.7];
-    cInfoR       = [1.0 0.5 0.5];
-    cInfoY       = [1.0 1.0 0.5];
-    cInfoG       = [0.5 1.0 0.5];
-    cWarningBack = [1.0 0.5 0.5];
-    cButtonOff   = [0.7 0.7 0.7];
-    cButtonOn    = [0.8 0.4 0.8];
+    cBackGround  = [0.94 0.94 0.94];
+    cWhite       = [1.00 1.00 1.00];
+    cInfoText    = [1.00 1.00 0.00];
+    cGreyText    = [0.50 0.50 0.50];
+    cInfoBack    = [0.80 0.80 0.80];
+    cInfoR       = [1.00 0.50 0.50];
+    cInfoY       = [1.00 1.00 0.50];
+    cInfoG       = [0.50 1.00 0.50];
+    cWarningBack = [1.00 0.50 0.50];
+    cButtonOff   = [0.80 0.80 0.80];
+    cButtonOn    = [0.85 0.40 0.85];
     
     % Data
     
-    oData = OsirisData;
+    oData = OsirisData('Silent','Yes');
 
+    X.DataSet     = 0;
     X.Time.Dump   = 0;
     X.Time.Limits = [0 0 0 0];
     
@@ -45,6 +46,7 @@ function Analyse2D
 
     X.Figure = [0 0 0 0 0 0];
     X.X1Link = [0 0 0 0 0 0];
+    X.X2Link = [0 0 0 0 0 0];
     X.X2Sym  = [0 0 0 0 0 0];
     
     for f=1:6
@@ -67,10 +69,11 @@ function Analyse2D
     % Set figure properties
     
     set(fMain, 'Units', 'Pixels');
-    set(fMain, 'Position', [aFPos(1:2) 540 540]);
-    set(fMain, 'Color', cBackGround);
+    set(fMain, 'Position', [aFPos(1:2) 560 540]);
     set(fMain, 'Name', 'Osiris 2D Analysis');
-
+    
+    % Set background color to default
+    cBackGround = get(fMain, 'Color');
 
     %
     %  Create Controls
@@ -80,7 +83,7 @@ function Analyse2D
     set(0, 'CurrentFigure', fMain);
     uicontrol('Style','Text','String','Controls','FontSize',20,'Position',[20 502 140 25],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
     
-    lblData = uicontrol('Style','Text','String','No Data','FontSize',18,'Position',[220 500 300 25],'ForegroundColor',cInfoText,'BackgroundColor',cInfoBack);
+    lblData = uicontrol('Style','Text','String','No Data','FontSize',18,'Position',[240 500 300 25],'ForegroundColor',cInfoText,'BackgroundColor',cInfoBack);
 
 
     %  Data Set Controls
@@ -90,68 +93,76 @@ function Analyse2D
     
     aY = [60 35 10];
     for i=1:3
-        uicontrol(bgData,'Style','Text','String',sprintf('#%d',i),'Position',[10 aY(i)+2 20 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgData,'Style','PushButton','String','...','Position',[160 aY(i) 25 20],'Callback',{@fBrowseSet,i});
+        uicontrol(bgData,'Style','Text','String',sprintf('#%d',i),'Position',[9 aY(i)+2 25 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgData,'Style','PushButton','String','...','Position',[159 aY(i) 25 20],'BackgroundColor',cButtonOff,'Callback',{@fBrowseSet,i});
         
-        edtSet(i) = uicontrol(bgData,'Style','Edit','String',stSettings.LoadData{i},'Position',[35 aY(i) 120 20]);
-        btnSet(i) = uicontrol(bgData,'Style','PushButton','String','Load','Position',[190 aY(i) 50 20],'BackgroundColor',cButtonOff,'Callback',{@fLoadSet,i});
+        edtSet(i) = uicontrol(bgData,'Style','Edit','String',stSettings.LoadData{i},'Position',[34 aY(i) 120 20],'BackgroundColor',cWhite);
+        btnSet(i) = uicontrol(bgData,'Style','PushButton','String','Load','Position',[189 aY(i) 50 20],'BackgroundColor',cButtonOff,'Callback',{@fLoadSet,i});
     end % for
     
 
     %  Time Dump Controls
     % ====================
 
-    bgTime = uibuttongroup('Title','Time Dump','Units','Pixels','Position',[280 390 240 100],'BackgroundColor',cBackGround);
+    bgTime = uibuttongroup('Title','Time Dump','Units','Pixels','Position',[280 390 140 100],'BackgroundColor',cBackGround);
 
-    uicontrol(bgTime,'Style','PushButton','String','<<','Position',[ 10 60 30 20],'Callback',{@fDump, -10});
-    uicontrol(bgTime,'Style','PushButton','String','<', 'Position',[ 40 60 30 20],'Callback',{@fDump,  -1});
-    uicontrol(bgTime,'Style','PushButton','String','>', 'Position',[ 70 60 30 20],'Callback',{@fDump,   1});
-    uicontrol(bgTime,'Style','PushButton','String','>>','Position',[100 60 30 20],'Callback',{@fDump,  10});
+    uicontrol(bgTime,'Style','PushButton','String','<<','Position',[ 9 60 30 20],'BackgroundColor',cButtonOff,'Callback',{@fDump, -10});
+    uicontrol(bgTime,'Style','PushButton','String','<', 'Position',[39 60 30 20],'BackgroundColor',cButtonOff,'Callback',{@fDump,  -1});
+    uicontrol(bgTime,'Style','PushButton','String','>', 'Position',[69 60 30 20],'BackgroundColor',cButtonOff,'Callback',{@fDump,   1});
+    uicontrol(bgTime,'Style','PushButton','String','>>','Position',[99 60 30 20],'BackgroundColor',cButtonOff,'Callback',{@fDump,  10});
 
-    uicontrol(bgTime,'Style','PushButton','String','<S','Position',[ 10 35 30 20],'Callback',{@fJump, 1});
-    uicontrol(bgTime,'Style','PushButton','String','<P','Position',[ 40 35 30 20],'Callback',{@fJump, 2});
-    uicontrol(bgTime,'Style','PushButton','String','P>','Position',[ 70 35 30 20],'Callback',{@fJump, 3});
-    uicontrol(bgTime,'Style','PushButton','String','S>','Position',[100 35 30 20],'Callback',{@fJump, 4});
+    uicontrol(bgTime,'Style','PushButton','String','<S','Position',[ 9 35 30 20],'BackgroundColor',cButtonOff,'Callback',{@fJump, 1});
+    uicontrol(bgTime,'Style','PushButton','String','<P','Position',[39 35 30 20],'BackgroundColor',cButtonOff,'Callback',{@fJump, 2});
+    uicontrol(bgTime,'Style','PushButton','String','P>','Position',[69 35 30 20],'BackgroundColor',cButtonOff,'Callback',{@fJump, 3});
+    uicontrol(bgTime,'Style','PushButton','String','S>','Position',[99 35 30 20],'BackgroundColor',cButtonOff,'Callback',{@fJump, 4});
 
-    lblDump(1) = uicontrol(bgTime,'Style','Text','String','0',  'Position',[ 11 11 28 15]);
-    lblDump(2) = uicontrol(bgTime,'Style','Text','String','10', 'Position',[ 41 11 28 15]);
-    lblDump(3) = uicontrol(bgTime,'Style','Text','String','105','Position',[ 71 11 28 15]);
-    lblDump(4) = uicontrol(bgTime,'Style','Text','String','110','Position',[101 11 28 15]);
+    lblDump(1) = uicontrol(bgTime,'Style','Text','String','0',  'Position',[ 10 11 28 15],'BackgroundColor',cInfoBack);
+    lblDump(2) = uicontrol(bgTime,'Style','Text','String','10', 'Position',[ 40 11 28 15],'BackgroundColor',cInfoBack);
+    lblDump(3) = uicontrol(bgTime,'Style','Text','String','105','Position',[ 70 11 28 15],'BackgroundColor',cInfoBack);
+    lblDump(4) = uicontrol(bgTime,'Style','Text','String','110','Position',[100 11 28 15],'BackgroundColor',cInfoBack);
     
-    lblInfo(1) = uicontrol(bgTime,'Style','Text','String','Geometry','Position',[140 61 90 15]);
-    lblInfo(2) = uicontrol(bgTime,'Style','Text','String','Status','Position',[140 36 90 15]);
-    lblInfo(3) = uicontrol(bgTime,'Style','Text','String','Tracks','Position',[140 11 90 15]);
+
+    %  Simulation Info
+    % =================
+
+    bgInfo = uibuttongroup('Title','Sim. Info','Units','Pixels','Position',[430 390 110 100],'BackgroundColor',cBackGround);
+    
+    lblInfo(1) = uicontrol(bgInfo,'Style','Text','String','Geometry','Position',[9 60 90 17],'BackgroundColor',cInfoBack);
+    lblInfo(2) = uicontrol(bgInfo,'Style','Text','String','Status',  'Position',[9 35 90 17],'BackgroundColor',cInfoBack);
+    lblInfo(3) = uicontrol(bgInfo,'Style','Text','String','Tracks',  'Position',[9 10 90 17],'BackgroundColor',cInfoBack);
 
     
     %  Figure Controls
     % =================
 
-    bgFigs = uibuttongroup('Title','Figures','Units','Pixels','Position',[20 180 500 200],'BackgroundColor',cBackGround);
+    bgFigs = uibuttongroup('Title','Figures','Units','Pixels','Position',[20 180 520 200],'BackgroundColor',cBackGround);
     
-    uicontrol(bgFigs,'Style','Text','String','Fig',      'Position',[ 10 160  20 15],'HorizontalAlignment','Left');
-    uicontrol(bgFigs,'Style','Text','String','Plot Type','Position',[ 35 160 150 15],'HorizontalAlignment','Center');
-    uicontrol(bgFigs,'Style','Text','String','On',       'Position',[190 160  20 15],'HorizontalAlignment','Left');
-    uicontrol(bgFigs,'Style','Text','String','X-Min',    'Position',[215 160  55 15],'HorizontalAlignment','Center');
-    uicontrol(bgFigs,'Style','Text','String','| ',       'Position',[275 160  15 15],'HorizontalAlignment','Center');
-    uicontrol(bgFigs,'Style','Text','String','X-Max',    'Position',[295 160  55 15],'HorizontalAlignment','Center');
-    uicontrol(bgFigs,'Style','Text','String','Y-Min',    'Position',[355 160  55 15],'HorizontalAlignment','Center');
-    uicontrol(bgFigs,'Style','Text','String','—',        'Position',[415 160  15 15],'HorizontalAlignment','Left');
-    uicontrol(bgFigs,'Style','Text','String','Y-Max',    'Position',[435 160  55 15],'HorizontalAlignment','Center');
+    uicontrol(bgFigs,'Style','Text','String','Fig',      'Position',[  9 160  20 15],'HorizontalAlignment','Left');
+    uicontrol(bgFigs,'Style','Text','String','Plot Type','Position',[ 34 160 150 15],'HorizontalAlignment','Center');
+    uicontrol(bgFigs,'Style','Text','String','On',       'Position',[189 160  20 15],'HorizontalAlignment','Left');
+    uicontrol(bgFigs,'Style','Text','String','X-Min',    'Position',[214 160  55 15],'HorizontalAlignment','Center');
+    uicontrol(bgFigs,'Style','Text','String','| ',       'Position',[274 160  15 15],'HorizontalAlignment','Center');
+    uicontrol(bgFigs,'Style','Text','String','X-Max',    'Position',[294 160  55 15],'HorizontalAlignment','Center');
+    uicontrol(bgFigs,'Style','Text','String','Y-Min',    'Position',[354 160  55 15],'HorizontalAlignment','Center');
+    uicontrol(bgFigs,'Style','Text','String','| ',       'Position',[414 160  15 15],'HorizontalAlignment','Center');
+    uicontrol(bgFigs,'Style','Text','String','-=',       'Position',[432 160  19 15],'HorizontalAlignment','Left');
+    uicontrol(bgFigs,'Style','Text','String','Y-Max',    'Position',[454 160  55 15],'HorizontalAlignment','Center');
 
     aY = [135 110 85 60 35 10];
     for f=1:6
-        uicontrol(bgFigs,'Style','Text','String',sprintf('#%d',f+1),'Position',[10 aY(f)+1 20 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgFigs,'Style','Text','String',sprintf('#%d',f+1),'Position',[9 aY(f)+1 25 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         
-        pumFig(f)  = uicontrol(bgFigs,'Style','PopupMenu','String',X.Plots,'Value',1,'Position',[35 aY(f) 150 20]);
-        btnFig(f)  = uicontrol(bgFigs,'Style','PushButton','String','','Position',[190 aY(f) 20 20],'BackgroundColor',cButtonOff,'Callback',{@fToggleFig,f});
+        pumFig(f)  = uicontrol(bgFigs,'Style','PopupMenu','String',X.Plots,'Value',1,'Position',[34 aY(f) 150 20]);
+        btnFig(f)  = uicontrol(bgFigs,'Style','PushButton','String','','Position',[189 aY(f) 20 20],'BackgroundColor',cButtonOff,'Callback',{@fToggleFig,f});
         
-        edtXMin(f) = uicontrol(bgFigs,'Style','Edit','String',sprintf('%.2f',0),'Position',[215 aY(f) 55 20],'Callback',{@fZoom,1,f});
-        edtXMax(f) = uicontrol(bgFigs,'Style','Edit','String',sprintf('%.2f',0),'Position',[295 aY(f) 55 20],'Callback',{@fZoom,2,f});
-        edtYMin(f) = uicontrol(bgFigs,'Style','Edit','String',sprintf('%.2f',0),'Position',[355 aY(f) 55 20],'Callback',{@fZoom,3,f});
-        edtYMax(f) = uicontrol(bgFigs,'Style','Edit','String',sprintf('%.2f',0),'Position',[435 aY(f) 55 20],'Callback',{@fZoom,4,f});
+        edtXMin(f) = uicontrol(bgFigs,'Style','Edit','String',sprintf('%.2f',0),'Position',[214 aY(f) 55 20],'BackgroundColor',cWhite,'Callback',{@fZoom,1,f});
+        edtXMax(f) = uicontrol(bgFigs,'Style','Edit','String',sprintf('%.2f',0),'Position',[294 aY(f) 55 20],'BackgroundColor',cWhite,'Callback',{@fZoom,2,f});
+        edtYMin(f) = uicontrol(bgFigs,'Style','Edit','String',sprintf('%.2f',0),'Position',[354 aY(f) 55 20],'BackgroundColor',cWhite,'Callback',{@fZoom,3,f});
+        edtYMax(f) = uicontrol(bgFigs,'Style','Edit','String',sprintf('%.2f',0),'Position',[454 aY(f) 55 20],'BackgroundColor',cWhite,'Callback',{@fZoom,4,f});
 
-        chkX1(f)   = uicontrol(bgFigs,'Style','Checkbox','Value',X.X1Link(f),'Position',[275 aY(f)+2 15 15],'BackgroundColor',cBackGround,'Callback',@fLinkX1);
-        chkX2(f)   = uicontrol(bgFigs,'Style','Checkbox','Value',X.X2Sym(f), 'Position',[415 aY(f)+2 15 15],'BackgroundColor',cBackGround,'Callback',@fSymX2);
+        chkX1(f)   = uicontrol(bgFigs,'Style','Checkbox','Value',X.X1Link(f),'Position',[274 aY(f)+2 15 15],'BackgroundColor',cBackGround,'Callback',@fLinkX1);
+        chkX2(f)   = uicontrol(bgFigs,'Style','Checkbox','Value',X.X2Link(f),'Position',[414 aY(f)+2 15 15],'BackgroundColor',cBackGround,'Callback',@fLinkX2);
+        chkS2(f)   = uicontrol(bgFigs,'Style','Checkbox','Value',X.X2Sym(f), 'Position',[434 aY(f)+2 15 15],'BackgroundColor',cBackGround,'Callback',@fSymX2);
     end % for
     
 
@@ -159,12 +170,12 @@ function Analyse2D
     % ======
 
     s = warning('off', 'MATLAB:uitabgroup:OldVersion');
-    hTabGroup = uitabgroup('Units','Pixels','Position',[17 20 406 150],'BackgroundColor',cBackGround);
+    hTabGroup = uitabgroup('Units','Pixels','Position',[20 20 520 150]);
     warning(s);
     
     for t=1:6
         hTabs(t) = uitab(hTabGroup,'Title',sprintf('Plot %d', t+1));
-        bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 400 120],'BackgroundColor',cBackGround);
+        bgTab(t) = uibuttongroup(hTabs(t),'Title','','BorderType','None','Units','Pixels','Position',[3 3 514 120],'BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','Text','String','No settings','FontSize',15,'Position',[10 85 140 25],'HorizontalAlignment','Left','BackgroundColor',cBackGround,'ForegroundColor',cGreyText);
     end % for
     
@@ -177,7 +188,7 @@ function Analyse2D
     function fResetTab(t)
 
         delete(bgTab(t));
-        bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 400 120],'BackgroundColor',cBackGround);
+        bgTab(t) = uibuttongroup(hTabs(t),'Title','','BorderType','None','Units','Pixels','Position',[3 3 514 120],'BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','Text','String','No settings','FontSize',15,'Position',[10 85 140 25],'HorizontalAlignment','Left','BackgroundColor',cBackGround,'ForegroundColor',cGreyText);
 
     end % function
@@ -241,6 +252,7 @@ function Analyse2D
         set(btnSet(iSet), 'BackgroundColor', cButtonOn);
 
         oData.Path = stSettings.LoadData{iSet};
+        X.DataSet  = iSet;
         X.Data     = {};
 
         X.Data.Name      = oData.Config.Name;
@@ -394,7 +406,7 @@ function Analyse2D
             end % switch
         end % if
         
-        if X.X1Link(f)
+        if X.X1Link(f) || X.X2Link(f)
             fRefresh;
         else
             fRefresh(f);
@@ -405,6 +417,10 @@ function Analyse2D
     % Toggle Figure
     
     function fToggleFig(~,~,f)
+        
+        if X.DataSet == 0
+            return;
+        end % if
         
         if X.Figure(f) == 0
 
@@ -460,10 +476,18 @@ function Analyse2D
         
     end % function
 
+    function fLinkX2(~,~)
+        
+        for f=1:6
+            X.X2Link(f) = get(chkX2(f), 'Value');
+        end % for
+        
+    end % function
+
     function fSymX2(~,~)
         
         for f=1:6
-            X.X2Sym(f) = get(chkX2(f), 'Value');
+            X.X2Sym(f) = get(chkS2(f), 'Value');
         end % for
         
     end % function
@@ -545,7 +569,8 @@ function Analyse2D
             set(edtYMax(f), 'String', sprintf('%.2f', X.Plot(f).Limits(4)));
 
             set(chkX1(f), 'Value', X.X1Link(f));
-            set(chkX2(f), 'Value', X.X2Sym(f));
+            set(chkX2(f), 'Value', X.X2Link(f));
+            set(chkS2(f), 'Value', X.X2Sym(f));
 
         end % for
         
@@ -615,9 +640,5 @@ function Analyse2D
     end % function
    
 end % function
-
-
-
-
 
 % End

@@ -20,6 +20,7 @@ classdef OsirisConfig
         HasData   = 0;   % 1 if folder 'MS' exists, otherwise 0
         HasTracks = 0;   % 1 if folder 'MS/TRACKS' exists, otherwise 0
         Completed = 0;   % 1 if folder 'TIMINGS' exists, otherwise 0
+        Silent    = 0;   % Set to 1 to disable command window output
 
     end % properties
 
@@ -116,7 +117,7 @@ classdef OsirisConfig
             switch (length(aFiles))
 
                 case 0
-                    fprintf('Config file not found.\n');
+                    fprintf(2, 'Config file not found.\n');
                 
                 case 1
                     obj.File = 1;
@@ -137,7 +138,9 @@ classdef OsirisConfig
             if iFile > 0 && iFile <= length(obj.Files)
 
                 obj.File = obj.Files{iFile};
-                fprintf('Config file set: %s\n', obj.File);
+                if ~obj.Silent
+                    fprintf('Config file set: %s\n', obj.File);
+                end % if
                 
                 obj = obj.fReadFile();
 

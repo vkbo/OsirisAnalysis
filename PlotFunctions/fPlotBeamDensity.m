@@ -157,7 +157,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     if strcmpi(stOpt.ShowOverlay, 'Yes')
         plot(aZAxis, aProjZ, 'White');
         h = legend(sBeamCharge, 'Location', 'NE');
-        legend(h, 'boxoff');
+        set(h,'Box','Off');
         set(h,'TextColor', [1 1 1]);
         set(findobj(h, 'type', 'line'), 'visible', 'off')
     end % if
