@@ -301,27 +301,20 @@ classdef OsirisData
             
             if strcmpi(sCoords, 'cylindrical')
 
-                dSIMeanX1  = dMeanX1*dLFac*1e3;
-                dSIMeanX2  = dMeanX2*dLFac*1e3;
-                dSISigmaX1 = dSigmaX1*dLFac*1e3;
-                dSISigmaX2 = dSigmaX2*dLFac*1e3;
-                sUnitS1    = 'mm';
-                sUnitS2    = 'mm';
+                dSIMeanX1  = dMeanX1*dLFac;
+                dSIMeanX2  = dMeanX2*dLFac;
+                dSISigmaX1 = dSigmaX1*dLFac;
+                dSISigmaX2 = dSigmaX2*dLFac;
                 
-                if dSISigmaX1 < 1.0
-                    dSISigmaX1 = dSISigmaX1*1e3;
-                    sUnitS1    = 'µm';
-                end % if
-
-                if dSISigmaX2 < 1.0
-                    dSISigmaX2 = dSISigmaX2*1e3;
-                    sUnitS2    = 'µm';
-                end % if
+                [dSIMeanX1,  sUnitM1] = fAutoScale(dSIMeanX1, 'm');
+                [dSIMeanX2,  sUnitM2] = fAutoScale(dSIMeanX2, 'm');
+                [dSISigmaX1, sUnitS1] = fAutoScale(dSISigmaX1, 'm');
+                [dSISigmaX2, sUnitS2] = fAutoScale(dSISigmaX2, 'm');
 
                 sFunction = sprintf('%s.*x2', stFunc.ForEval);
                 fprintf(' Density Function:       %s\n', stFunc.Equation);
-                fprintf(' X1 Mean, Sigma:         %7.2f, %9.4f [%7.2f mm, %7.2f %s]\n', dMeanX1, dSigmaX1, dSIMeanX1, dSISigmaX1, sUnitS1);
-                fprintf(' X2 Mean, Sigma:         %7.2f, %9.4f [%7.2f mm, %7.2f %s]\n', dMeanX2, dSigmaX2, dSIMeanX2, dSISigmaX2, sUnitS2);
+                fprintf(' X1 Mean, Sigma:         %7.2f, %9.4f [%7.2f %s, %7.2f %s]\n', dMeanX1, dSigmaX1, dSIMeanX1, sUnitM1, dSISigmaX1, sUnitS1);
+                fprintf(' X2 Mean, Sigma:         %7.2f, %9.4f [%7.2f %s, %7.2f %s]\n', dMeanX2, dSigmaX2, dSIMeanX2, sUnitM2, dSISigmaX2, sUnitS2);
                 fprintf('\n');
                 
                 % Beam integral
@@ -335,29 +328,20 @@ classdef OsirisData
                 
                 dBeamVol     = dBeamInt * dC^3/dNOmegaP^3;
                 dBeamNum     = dBeamVol * dDensity * dN0;
-                dBeamCharge  = dBeamNum * dE*1e9;
+                dBeamCharge  = dBeamNum * dE;
                 dBeamDensity = dBeamNum/dBeamVol;
                 dBeamPlasma  = dBeamDensity/(dN0*dPMax);
                 
-                dPeakCurrent = dBeamCharge*1e-9*dC / sqrt(2*pi*dSigmaX1^2);
-                dCurrentUnit = 'A';
-                
-                if dPeakCurrent < 1.0
-                    dPeakCurrent = dPeakCurrent*1e3;
-                    dCurrentUnit = 'mA';
-                end % if
-
-                if dPeakCurrent < 1.0
-                    dPeakCurrent = dPeakCurrent*1e3;
-                    dCurrentUnit = 'µA';
-                end % if
+                dPeakCurrent = dBeamCharge*dC / sqrt(2*pi*(dSigmaX1*dLFac)^2);
+                [dPeakCurrent, dCurrentUnit] = fAutoScale(dPeakCurrent, 'A');
+                [dBeamCharge,  sChargeUnit]  = fAutoScale(dBeamCharge,  'C');
                 
                 fprintf(' Max Plasma Density:     %0.3e m^-3\n', dN0*dPMax);
                 fprintf(' Max Plasma Frequency:   %0.3e s^-1\n', dMOmegaP);
                 fprintf('\n');
                 fprintf(' Beam Integral:          %0.3f \n',     dBeamInt);
                 fprintf(' Beam Volume:            %0.3e m^3\n',  dBeamVol);
-                fprintf(' Beam Charge:            %0.3e nC\n',   dBeamCharge);
+                fprintf(' Beam Charge:            %0.3f %s\n',   dBeamCharge, sChargeUnit);
                 fprintf(' Beam Particle Count:    %0.3e \n',     dBeamNum);
                 fprintf(' Beam Density:           %0.3e M^-3\n', dBeamDensity);
                 fprintf('\n');
