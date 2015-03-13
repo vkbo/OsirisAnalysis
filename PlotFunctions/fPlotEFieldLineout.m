@@ -188,7 +188,7 @@ function fPlotDensityLineout(oData, iTime, iR, sField, sSpecies1, sSpecies2, iTr
     %dEScale = aBeam1(aB1Peak(1))/aEField(aEPeak(1))
     %aEField = dEScale*aEField/2.0;
 
-    xlim([aXAxis(iXMin), aXAxis(iXMax)]);
+    %xlim([aXAxis(iXMin), aXAxis(iXMax)]);
 
     sTitle = sprintf('Beam Density and Ez at R = %d cells and S = %0.2f m', iR, (iTime*dTFactor - dPStart)*dLFactor);
     title(sTitle, 'FontSize', 16);

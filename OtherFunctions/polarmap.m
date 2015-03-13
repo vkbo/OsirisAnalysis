@@ -1,3 +1,8 @@
+%
+%  External Code: polarmap
+% *************************
+%
+
 function cmap = polarmap(varargin)
 %POLARMAP Polarized color map
 %	POLARMAP applies a "polarized" blue-white-red colormap to current figure,

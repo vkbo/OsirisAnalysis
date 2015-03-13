@@ -1,3 +1,9 @@
+%
+%  Function: fSpaceAxis
+% **********************
+%  Convert axis type to Osiris type
+%
+
 function sReturn = fSpaceAxis(sAxis)
 
     switch(lower(sAxis))

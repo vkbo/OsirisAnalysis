@@ -14,8 +14,9 @@
 %  Limits      :: Axis limits
 %  Charge      :: Calculate charge in ellipse two inputs for peak
 %  FigureSize  :: Default [900 500]
-%  IsSubplot   :: Default No
 %  HideDump    :: Default No
+%  IsSubplot   :: Default No
+%  AutoResize  :: Default On
 %  CAxis       :: Color axis limits
 %  ShowOverlay :: Default Yes
 %  Absolute    :: Absolute value, default No
@@ -44,16 +45,17 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
        fprintf('  Limits      :: Axis limits\n');
        fprintf('  Charge      :: Calculate charge in ellipse two inputs for peak\n');
        fprintf('  FigureSize  :: Default [900 500]\n');
-       fprintf('  IsSubplot   :: Default No\n');
        fprintf('  HideDump    :: Default No\n');
+       fprintf('  IsSubplot   :: Default No\n');
+       fprintf('  AutoResize  :: Default On\n');
        fprintf('  CAxis       :: Color axis limits\n');
        fprintf('  ShowOverlay :: Default Yes\n');
        fprintf('\n');
        return;
     end % if
     
-    sBeam    = fTranslateSpecies(sBeam);
-    iTime    = fStringToDump(oData, num2str(sTime));
+    sBeam = fTranslateSpecies(sBeam);
+    iTime = fStringToDump(oData, num2str(sTime));
 
     oOpt = inputParser;
     addParameter(oOpt, 'Limits',      []);
@@ -61,6 +63,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     addParameter(oOpt, 'FigureSize',  [900 500]);
     addParameter(oOpt, 'HideDump',    'No');
     addParameter(oOpt, 'IsSubPlot',   'No');
+    addParameter(oOpt, 'AutoResize',  'On');
     addParameter(oOpt, 'CAxis',       []);
     addParameter(oOpt, 'ShowOverlay', 'Yes');
     addParameter(oOpt, 'Absolute',    'No');
@@ -95,6 +98,12 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     aZAxis  = stData.X1Axis;
     aRAxis  = stData.X2Axis;
     dZPos   = stData.ZPos;
+
+    stReturn.X1Axis    = stData.X1Axis;
+    stReturn.X2Axis    = stData.X2Axis;
+    stReturn.ZPos      = stData.ZPos;
+    stReturn.AxisFac   = oCH.AxisFac;
+    stReturn.AxisRange = oCH.AxisRange;
     
     if strcmpi(stOpt.Absolute, 'Yes')
         aData = abs(aData);
@@ -127,8 +136,10 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     
     if strcmpi(stOpt.IsSubPlot, 'No')
         clf;
-        fFigureSize(gcf, stOpt.FigureSize);
-        set(gcf,'Name',sprintf('Beam Fourier (Dump %d)',iTime),'NumberTitle','off')
+        if strcmpi(stOpt.AutoResize, 'On')
+            fFigureSize(gcf, stOpt.FigureSize);
+        end % if
+        set(gcf,'Name',sprintf('Beam Density (%s #%d)',oData.Config.Name,iTime))
     else
         cla;
     end % if
@@ -146,7 +157,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     if strcmpi(stOpt.ShowOverlay, 'Yes')
         plot(aZAxis, aProjZ, 'White');
         h = legend(sBeamCharge, 'Location', 'NE');
-        legend(h, 'boxoff');
+        set(h,'Box','Off');
         set(h,'TextColor', [1 1 1]);
         set(findobj(h, 'type', 'line'), 'visible', 'off')
     end % if
@@ -162,7 +173,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     end % if
 
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s Density %s (Dump %d)', fTranslateSpeciesReadable(sBeam), fPlasmaPosition(oData, iTime), iTime);
+        sTitle = sprintf('%s Density %s (%s #%d)', fTranslateSpeciesReadable(sBeam), fPlasmaPosition(oData, iTime), oData.Config.Name, iTime);
     else
         sTitle = sprintf('%s Density %s', fTranslateSpeciesReadable(sBeam), fPlasmaPosition(oData, iTime));
     end % if

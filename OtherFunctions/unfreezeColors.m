@@ -1,3 +1,8 @@
+%
+%  External Code: unfreezeColors
+% *******************************
+%
+
 function unfreezeColors(h)
 % unfreezeColors  Restore colors of a plot to original indexed color. (v2.3)
 %

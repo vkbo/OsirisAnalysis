@@ -1,4 +1,10 @@
-function sReturn = fSpaceAxis(sAxis)
+%
+%  Function: fMomentumAxis
+% *************************
+%  Convert axis type to Osiris type
+%
+
+function sReturn = fMomentumAxis(sAxis)
 
     switch(lower(sAxis))
         

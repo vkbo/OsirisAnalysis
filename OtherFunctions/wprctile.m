@@ -1,3 +1,8 @@
+%
+%  External Code: wprctile
+% *************************
+%
+
 function y = wprctile(X,p,varargin)
 %WPRCTILE  Returns weighted percentiles of a sample with six algorithms.
 % The idea is to give more emphasis in some examples of data as compared to

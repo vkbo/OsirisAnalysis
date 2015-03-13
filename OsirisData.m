@@ -12,11 +12,13 @@ classdef OsirisData
     
     properties (GetAccess = 'public', SetAccess = 'public')
 
-        Path      = ''; % Path to dataset
-        PathID    = ''; % Path as ID instead of free text input
-        Elements  = {}; % Struct of all datafiles in dataset ('MS/' subfolder)
-        Config    = []; % Content of the config files and extraction of all runtime variables
-        DataSets  = {}; % Available datasets in folders indicated by LocalConfig.m
+        Path      = '';     % Path to dataset
+        PathID    = '';     % Path as ID instead of free text input
+        Elements  = {};     % Struct of all datafiles in dataset ('MS/' subfolder)
+        Config    = [];     % Content of the config files and extraction of all runtime variables
+        DataSets  = {};     % Available datasets in folders indicated by LocalConfig.m
+        Silent    = 0;      % Set to 1 to disable command window output
+        Temp      = '/tmp'; % Temp folder (set in LocalConfig.m)
 
     end % properties
 
@@ -37,14 +39,30 @@ classdef OsirisData
     
     methods
         
-        function obj = OsirisData()
+        function obj = OsirisData(varargin)
             
+            % Parse input
+            oOpt = inputParser;
+            addParameter(oOpt, 'Silent', 'No');
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
+            
+            if strcmpi(stOpt.Silent, 'Yes')
+                obj.Silent = 1;
+            end % if
+
+            % Initiate OsirisData
             LocalConfig;
+            
+            obj.Temp   = sLocalTemp;
     
             obj.Config = OsirisConfig;
+            obj.Config.Silent = obj.Silent;
             
             obj.DefaultPath = stFolders;
-            fprintf('Scanning default data folder(s)\n');
+            if ~obj.Silent
+                fprintf('Scanning default data folder(s)\n');
+            end % if
             
             stFields = fieldnames(obj.DefaultPath);
 
@@ -56,7 +74,9 @@ classdef OsirisData
 
                 if isdir(sPath)
 
-                    fprintf('Scanning %s\n', sPath);
+                    if ~obj.Silent
+                        fprintf('Scanning %s\n', sPath);
+                    end % if
                     
                     stScan.(sName)(1) = struct('Path', sPath, 'Name', sName, 'Level', 0);
                     for r=0:iDepth-1
@@ -141,7 +161,9 @@ classdef OsirisData
                 end % if
             end % if
 
-            fprintf('Path is %s\n', obj.Path);
+            if ~obj.Silent
+                fprintf('Path is %s\n', obj.Path);
+            end % if
             
             % Scanning MS folder
             obj.Elements = obj.fScanFolder([obj.Path, '/MS'], '');
@@ -174,12 +196,6 @@ classdef OsirisData
             
         end % function
 
-        function Reload(obj)
-            
-            obj.PathID = obj.PathID;
-            
-        end % function
-        
         function Info(obj)
             
             %
@@ -255,6 +271,7 @@ classdef OsirisData
             dC        = obj.Config.Variables.Constants.SpeedOfLight;
             dE        = obj.Config.Variables.Constants.ElementaryCharge;
             dLFac     = obj.Config.Variables.Convert.SI.LengthFac;
+            dT        = obj.Config.Variables.Simulation.TimeStep;
             
             dN0       = obj.Config.Variables.Plasma.N0;
             dNOmegaP  = obj.Config.Variables.Plasma.NormOmegaP;
@@ -282,52 +299,58 @@ classdef OsirisData
             fprintf('************************************\n');
             fprintf('\n');
 
-            stInt = fExtractEq(sMathFunc, iDim, [dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max]);
+            stFunc    = fExtractEq(sMathFunc, iDim, [dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max]);
+            fProfile  = @(x1,x2) eval(stFunc.ForEval);
             
             if strcmpi(sCoords, 'cylindrical')
 
-                dSIMeanX1  = dMeanX1*dLFac*1e3;
-                dSIMeanX2  = dMeanX2*dLFac*1e3;
-                dSISigmaX1 = dSigmaX1*dLFac*1e3;
-                dSISigmaX2 = dSigmaX2*dLFac*1e3;
-                sUnitS1    = 'mm';
-                sUnitS2    = 'mm';
+                dSIMeanX1  = dMeanX1*dLFac;
+                dSIMeanX2  = dMeanX2*dLFac;
+                dSISigmaX1 = dSigmaX1*dLFac;
+                dSISigmaX2 = dSigmaX2*dLFac;
                 
-                if dSISigmaX1 < 1.0
-                    dSISigmaX1 = dSISigmaX1*1e3;
-                    sUnitS1    = 'µm';
-                end % if
+                [dSIMeanX1,  sUnitM1] = fAutoScale(dSIMeanX1, 'm');
+                [dSIMeanX2,  sUnitM2] = fAutoScale(dSIMeanX2, 'm');
+                [dSISigmaX1, sUnitS1] = fAutoScale(dSISigmaX1, 'm');
+                [dSISigmaX2, sUnitS2] = fAutoScale(dSISigmaX2, 'm');
 
-                if dSISigmaX2 < 1.0
-                    dSISigmaX2 = dSISigmaX2*1e3;
-                    sUnitS2    = 'µm';
-                end % if
-
-                sFunction = sprintf('%s.*x2', stInt.ForEval);
-                fprintf(' Density Function:       %s\n',           stInt.Equation);
-                fprintf(' X1 Mean, Sigma:         %7.2f, %9.4f [%7.2f mm, %7.2f %s]\n', dMeanX1, dSigmaX1, dSIMeanX1, dSISigmaX1, sUnitS1);
-                fprintf(' X2 Mean, Sigma:         %7.2f, %9.4f [%7.2f mm, %7.2f %s]\n', dMeanX2, dSigmaX2, dSIMeanX2, dSISigmaX2, sUnitS2);
+                sFunction = sprintf('%s.*x2', stFunc.ForEval);
+                fprintf(' Density Function:       %s\n', stFunc.Equation);
+                fprintf(' X1 Mean, Sigma:         %7.2f, %9.4f [%7.2f %s, %7.2f %s]\n', dMeanX1, dSigmaX1, dSIMeanX1, sUnitM1, dSISigmaX1, sUnitS1);
+                fprintf(' X2 Mean, Sigma:         %7.2f, %9.4f [%7.2f %s, %7.2f %s]\n', dMeanX2, dSigmaX2, dSIMeanX2, sUnitM2, dSISigmaX2, sUnitS2);
                 fprintf('\n');
                 
-                fInt         = @(x1,x2) eval(sFunction);
-                dBeamInt     = 2*pi*quad2d(fInt,stInt.Lims(1),stInt.Lims(2),0,stInt.Lims(4),'MaxFunEvals',15000,'Abstol',1e-3);
+                % Beam integral
+                aSpanX1 = stFunc.Lims(1):dT:stFunc.Lims(2);
+                aSpanX2 = stFunc.Lims(3):dT:stFunc.Lims(4);
+                for i=1:length(aSpanX2)
+                    aReturn(:,i) = fProfile(aSpanX1,aSpanX2(i))*aSpanX2(i);
+                end % for
+                aReturn  = aReturn.*(aReturn > 0);
+                dBeamInt = 2*pi*sum(aReturn(:))*dT^2;
                 
                 dBeamVol     = dBeamInt * dC^3/dNOmegaP^3;
                 dBeamNum     = dBeamVol * dDensity * dN0;
-                dBeamCharge  = dBeamNum * dE*1e9;
+                dBeamCharge  = dBeamNum * dE;
                 dBeamDensity = dBeamNum/dBeamVol;
                 dBeamPlasma  = dBeamDensity/(dN0*dPMax);
+                
+                dPeakCurrent = dBeamCharge*dC / sqrt(2*pi*(dSigmaX1*dLFac)^2);
+                [dPeakCurrent, dCurrentUnit] = fAutoScale(dPeakCurrent, 'A');
+                [dBeamCharge,  sChargeUnit]  = fAutoScale(dBeamCharge,  'C');
                 
                 fprintf(' Max Plasma Density:     %0.3e m^-3\n', dN0*dPMax);
                 fprintf(' Max Plasma Frequency:   %0.3e s^-1\n', dMOmegaP);
                 fprintf('\n');
-                fprintf(' Beam Integral:          %0.3e \n',     dBeamInt);
+                fprintf(' Beam Integral:          %0.3f \n',     dBeamInt);
                 fprintf(' Beam Volume:            %0.3e m^3\n',  dBeamVol);
-                fprintf(' Beam Charge:            %0.3e nC\n',   dBeamCharge);
+                fprintf(' Beam Charge:            %0.3f %s\n',   dBeamCharge, sChargeUnit);
                 fprintf(' Beam Particle Count:    %0.3e \n',     dBeamNum);
                 fprintf(' Beam Density:           %0.3e M^-3\n', dBeamDensity);
                 fprintf('\n');
                 fprintf(' Beam/Plasma Ratio:      %0.3e \n',     dBeamPlasma);
+                fprintf('\n');
+                fprintf(' Beam Peak Current:      %0.3f %s\n',    dPeakCurrent, dCurrentUnit);
 
             end % if
             

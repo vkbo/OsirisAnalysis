@@ -56,8 +56,8 @@ function stReturn = fAnimBeamDensity(oData, sDrive, sWitness, varargin)
     else
         addParameter(oOpt, 'FigureSize',  [1200 500]);
     end % if
-    addParameter(oOpt, 'DriveCut',    [  0.0, 315.0, -2.0, 2.0]);
-    addParameter(oOpt, 'WitnessCut',  [217.0, 220.0, -0.3, 0.3]);
+    addParameter(oOpt, 'DriveCut',    []);
+    addParameter(oOpt, 'WitnessCut',  []);
     addParameter(oOpt, 'Start',       'Start');
     addParameter(oOpt, 'End',         'End');
     parse(oOpt, varargin{:});
