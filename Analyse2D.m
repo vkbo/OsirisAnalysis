@@ -35,8 +35,8 @@ function Analyse2D
     
     % Settings
     
-    if exist('/tmp/osiris_analyse_settings.mat', 'file')
-        stSettings = load('/tmp/osiris_analyse_settings.mat');
+    if exist(strcat(oData.Temp, '/OsirisAnalyseSettings.mat'), 'file')
+        stSettings = load(strcat(oData.Temp, '/OsirisAnalyseSettings.mat'));
     else
         stSettings.LoadData = {'','',''};
     end % if
@@ -116,10 +116,10 @@ function Analyse2D
     uicontrol(bgTime,'Style','PushButton','String','P>','Position',[69 35 30 20],'BackgroundColor',cButtonOff,'Callback',{@fJump, 3});
     uicontrol(bgTime,'Style','PushButton','String','S>','Position',[99 35 30 20],'BackgroundColor',cButtonOff,'Callback',{@fJump, 4});
 
-    lblDump(1) = uicontrol(bgTime,'Style','Text','String','0',  'Position',[ 10 11 28 15],'BackgroundColor',cInfoBack);
-    lblDump(2) = uicontrol(bgTime,'Style','Text','String','10', 'Position',[ 40 11 28 15],'BackgroundColor',cInfoBack);
-    lblDump(3) = uicontrol(bgTime,'Style','Text','String','105','Position',[ 70 11 28 15],'BackgroundColor',cInfoBack);
-    lblDump(4) = uicontrol(bgTime,'Style','Text','String','110','Position',[100 11 28 15],'BackgroundColor',cInfoBack);
+    lblDump(1) = uicontrol(bgTime,'Style','Text','String','0','Position',[ 10 11 28 15],'BackgroundColor',cInfoBack);
+    lblDump(2) = uicontrol(bgTime,'Style','Text','String','0','Position',[ 40 11 28 15],'BackgroundColor',cInfoBack);
+    lblDump(3) = uicontrol(bgTime,'Style','Text','String','0','Position',[ 70 11 28 15],'BackgroundColor',cInfoBack);
+    lblDump(4) = uicontrol(bgTime,'Style','Text','String','0','Position',[100 11 28 15],'BackgroundColor',cInfoBack);
     
 
     %  Simulation Info
@@ -277,8 +277,14 @@ function Analyse2D
             else
                 set(lblInfo(2),'String','Incomplete','BackgroundColor',cInfoY);
             end % if
+
+            X.Time.Limits(1) = fStringToDump(oData, 'Start');
+            X.Time.Limits(2) = fStringToDump(oData, 'PStart');
+            X.Time.Limits(3) = fStringToDump(oData, 'PEnd');
+            X.Time.Limits(4) = fStringToDump(oData, 'End');
         else
             set(lblInfo(2),'String','No Data','BackgroundColor',cInfoR);
+            X.Time.Limits = [0 0 0 0];
         end % if
         
         % Tracking Data
@@ -287,12 +293,7 @@ function Analyse2D
         else
             set(lblInfo(3),'String','No Tracks','BackgroundColor',cInfoY);
         end % if
-        
-        X.Time.Limits(1) = fStringToDump(oData, 'Start');
-        X.Time.Limits(2) = fStringToDump(oData, 'PStart');
-        X.Time.Limits(3) = fStringToDump(oData, 'PEnd');
-        X.Time.Limits(4) = fStringToDump(oData, 'End');
-        
+                
         % Reset dump boxes
         for i=1:4
             set(lblDump(i), 'BackgroundColor', cInfoBack);
@@ -578,7 +579,7 @@ function Analyse2D
     
     function fSaveVariables
         
-        save('/tmp/osiris_analyse_settings.mat','-struct','stSettings');
+        save(strcat(oData.Temp,'/OsirisAnalyseSettings.mat'),'-struct','stSettings');
         
     end % function
 

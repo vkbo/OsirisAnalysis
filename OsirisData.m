@@ -12,12 +12,13 @@ classdef OsirisData
     
     properties (GetAccess = 'public', SetAccess = 'public')
 
-        Path      = ''; % Path to dataset
-        PathID    = ''; % Path as ID instead of free text input
-        Elements  = {}; % Struct of all datafiles in dataset ('MS/' subfolder)
-        Config    = []; % Content of the config files and extraction of all runtime variables
-        DataSets  = {}; % Available datasets in folders indicated by LocalConfig.m
-        Silent    = 0;  % Set to 1 to disable command window output
+        Path      = '';     % Path to dataset
+        PathID    = '';     % Path as ID instead of free text input
+        Elements  = {};     % Struct of all datafiles in dataset ('MS/' subfolder)
+        Config    = [];     % Content of the config files and extraction of all runtime variables
+        DataSets  = {};     % Available datasets in folders indicated by LocalConfig.m
+        Silent    = 0;      % Set to 1 to disable command window output
+        Temp      = '/tmp'; % Temp folder (set in LocalConfig.m)
 
     end % properties
 
@@ -52,6 +53,8 @@ classdef OsirisData
 
             % Initiate OsirisData
             LocalConfig;
+            
+            obj.Temp   = sLocalTemp;
     
             obj.Config = OsirisConfig;
             obj.Config.Silent = obj.Silent;
