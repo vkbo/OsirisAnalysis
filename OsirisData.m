@@ -339,6 +339,19 @@ classdef OsirisData
                 dBeamDensity = dBeamNum/dBeamVol;
                 dBeamPlasma  = dBeamDensity/(dN0*dPMax);
                 
+                dPeakCurrent = dBeamCharge*1e-9*dC / sqrt(2*pi*dSigmaX1^2);
+                dCurrentUnit = 'A';
+                
+                if dPeakCurrent < 1.0
+                    dPeakCurrent = dPeakCurrent*1e3;
+                    dCurrentUnit = 'mA';
+                end % if
+
+                if dPeakCurrent < 1.0
+                    dPeakCurrent = dPeakCurrent*1e3;
+                    dCurrentUnit = 'µA';
+                end % if
+                
                 fprintf(' Max Plasma Density:     %0.3e m^-3\n', dN0*dPMax);
                 fprintf(' Max Plasma Frequency:   %0.3e s^-1\n', dMOmegaP);
                 fprintf('\n');
@@ -349,6 +362,8 @@ classdef OsirisData
                 fprintf(' Beam Density:           %0.3e M^-3\n', dBeamDensity);
                 fprintf('\n');
                 fprintf(' Beam/Plasma Ratio:      %0.3e \n',     dBeamPlasma);
+                fprintf('\n');
+                fprintf(' Beam Peak Current:      %0.3f %s\n',    dPeakCurrent, dCurrentUnit);
 
             end % if
             
