@@ -421,6 +421,7 @@ classdef Charge
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
             
+            % Species must be a beam
             if ~isBeam(obj.Species)
                 fprintf(2, 'Error: Species %s is not a beam.\n', obj.Species);
                 return;
@@ -480,67 +481,107 @@ classdef Charge
             
         end % function
 
-        function stReturn = Beamlets(obj, dThreshold)
+        function stReturn = Beamlets(obj, varargin)
             
-            if nargin < 2
-                dThreshold = 0.01;
-            end % if
-            
+            % Input/Output
             stReturn = {};
+
+            % Values
+            dMaxPlasma = obj.Data.Config.Variables.Plasma.MaxPlasmaFac;
+            sCoords    = obj.Data.Config.Variables.Simulation.Coordinates;
+
+
+            % Read input parameters
+            oOpt = inputParser;
+            addParameter(oOpt, 'IgnoreLimits', 'No');
+            addParameter(oOpt, 'Threshold',    0.01);
+            addParameter(oOpt, 'MinPeakDistance', 0.5); % In units of max(lambda_p)
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
             
+            
+            % Species must be a beam
             if ~isBeam(obj.Species)
                 fprintf(2, 'Error: Species %s is not a beam.\n', obj.Species);
                 return;
             end % if
 
-            h5Data = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
-            
-            aData = abs(sum(h5Data,2));
-            aThreshold = aData/max(aData);
-            aThreshold = aThreshold > dThreshold;
-            
-            aBeamlets = [];
-            
-            iPrev = 0;
-            
-            for i=1:length(aData)
-                
-                if aThreshold(i) == 1 && iPrev == 0
-                    aBeamlets(1,end+1) = i;
-                end % if
-                
-                if aThreshold(1) == 0 && iPrev == 1
-                    aBeamlets(2,end) = i;
-                end % if
-                
-                iPrev = aThreshold(i);
-                
-            end % for
-            
-            if iPrev == 1
-                aBeamlet(2,end) = length(aData);
+            % Load charge density data
+            h5Data  = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
+            h5Data  = double(h5Data);
+
+            aX1Axis = obj.fGetBoxAxis('x1');
+            aX2Axis = obj.fGetBoxAxis('x2');
+            if strcmpi(sCoords, 'Cylindrical')
+                aX2Axis = [fliplr(aX2Axis) aX2Axis];
             end % if
+
+            dMinPeakD = stOpt.MinPeakDistance * 2*pi/sqrt(dMaxPlasma) * obj.AxisFac(1) / (aX1Axis(2)-aX1Axis(1));
             
-            dTotal = sum(aData);
+            % Limit data selection for beamlet detection
+            % (needs to be converted to use global class settings)
+            %if ~isempty(stOpt.X1Lim)
+            %    aData = aData(stOpt.X1Lim(1):stOpt.X1Lim(2),:);
+            %    aX1Axis = aX1Axis(stOpt.X1Lim(1):stOpt.X1Lim(2));
+            %end % if
+            %if ~isempty(stOpt.X2Lim)
+            %    aData = aData(:,stOpt.X2Lim(1):stOpt.X2Lim(2));
+            %end % if
+
+            % Project data onto x1 axis
+            aData = abs(sum(h5Data,2));
             
-            aFraction = [];
+            [aPeaks,aLocs,aWidths,aProms] = findpeaks(double(aData),'MinPeakDistance',dMinPeakD,'WidthReference','HalfHeight');
             
-            for i=1:length(aBeamlets(1,:))
-                
-                aFraction(i) = sum(aData(aBeamlets(1,i):aBeamlets(2,i)))/dTotal;
-                
+            iPeaks = length(aPeaks);
+            aSpan  = zeros(2,length(aPeaks));
+            
+            if iPeaks > 0
+                [~,iLoc] = min(flipud(aData(1:aLocs(1))));
+                aSpan(1,1) = aLocs(1)-iLoc;
+                for i=2:iPeaks
+                    [~,iLoc] = min(flipud(aData(aLocs(i-1):aLocs(i))));
+                    aSpan(1,i) = aLocs(i)-iLoc;
+                end % for
+                for i=1:iPeaks-1
+                    [~,iLoc] = min(aData(aLocs(i):aLocs(i+1)));
+                    aSpan(2,i) = aLocs(i)+iLoc;
+                end % for
+                [~,iLoc] = min(aData(aLocs(end):length(aData)));
+                aSpan(2,end) = aLocs(end)+iLoc;
+            else
+                aSpan = [1;1];
+            end % if
+
+            stBeamlets = {};
+            for i=1:iPeaks
+                stBeamlets(i).X1Start = aX1Axis(aSpan(1,i));
+                stBeamlets(i).X1Stop  = aX1Axis(aSpan(2,i));
+                stBeamlets(i).X1Proj  = aData(aSpan(1,i):aSpan(2,i)).';
+                stBeamlets(i).X2Proj  = sum(h5Data(aSpan(1,i):aSpan(2,i),:),1);
+                if strcmpi(sCoords, 'Cylindrical')
+                    stBeamlets(i).X2Proj = [fliplr(stBeamlets(i).X2Proj) stBeamlets(i).X2Proj];
+                end % if
+                stBeamlets(i).X1Mean = wmean(aX1Axis(aSpan(1,i):aSpan(2,i)), stBeamlets(i).X1Proj);
+                stBeamlets(i).X1Std  = wstd(aX1Axis(aSpan(1,i):aSpan(2,i)), stBeamlets(i).X1Proj);
+                stBeamlets(i).X2Mean = wmean(aX2Axis, stBeamlets(i).X2Proj);
+                stBeamlets(i).X2Std  = wstd(aX2Axis, stBeamlets(i).X2Proj);
             end % for
             
-            dMissing = 1-sum(aFraction);
-            
-            %stReturn.RAWData   = h5Data;
+            stReturn.RAWData    = aData;
+            stReturn.X1Axis     = aX1Axis;
+            stReturn.Beamlets   = iPeaks;
+            stReturn.Peaks      = aX1Axis(aLocs);
+            %stReturn.FWHM       = aWidths;
+            stReturn.Prominence = transpose(aProms);
+            stReturn.Span       = aSpan;
+            stReturn.Beamlets   = stBeamlets;
             %stReturn.Data      = aData;
             %stReturn.Threshold = aThreshold;
-            stReturn.Beamlets  = aBeamlets;
-            stReturn.Count     = length(aBeamlets(1,:));
-            stReturn.Fraction  = aFraction;
-            stReturn.Total     = dTotal;
-            stReturn.Missing   = dMissing;
+            %stReturn.Count     = length(aBeamlets(1,:));
+            %stReturn.Fraction  = aFraction;
+            %stReturn.Total     = dTotal;
+            %stReturn.Missing   = dMissing;
             
         end % function
         
