@@ -269,7 +269,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         end % if
 
         h = legend(stOLLeg, 'Location', 'NE');
-        legend(h, 'boxoff');
+        set(h,'Box','Off');
         set(h,'TextColor', 'White');
 
         if length(stOLBeam) == 1

@@ -2,6 +2,10 @@
 %  Local Settings
 %
 
+% Local temp directory
+
+sLocalTemp = '/home/vkbo/Temp';
+
 %  List of data folders to scan
 % *******************************
 %  Depth indicates at which sub level the data folders are stored.
