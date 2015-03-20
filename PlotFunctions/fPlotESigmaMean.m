@@ -20,6 +20,8 @@ function stReturn = fPlotESigmaMean(oData, sSpecies, varargin)
 
     % Input/Output
 
+    stReturn = {};
+
     if nargin == 0
        fprintf('\n');
        fprintf('  Function: fPlotESigmaMean\n');
@@ -41,12 +43,13 @@ function stReturn = fPlotESigmaMean(oData, sSpecies, varargin)
        return;
     end % if
 
-    stReturn = {};
     sSpecies = fTranslateSpecies(sSpecies); 
 
     oOpt = inputParser;
-    addParameter(oOpt, 'FigureSize', [900 500]);
-    addParameter(oOpt, 'IsSubPlot',  'No');
+    addParameter(oOpt, 'FigureSize',  [900 500]);
+    addParameter(oOpt, 'HideDump',    'No');
+    addParameter(oOpt, 'IsSubPlot',   'No');
+    addParameter(oOpt, 'AutoResize',  'On');
     addParameter(oOpt, 'Start',      'PStart');
     addParameter(oOpt, 'End',        'PEnd');
     parse(oOpt, varargin{:});
@@ -57,25 +60,39 @@ function stReturn = fPlotESigmaMean(oData, sSpecies, varargin)
     oMom   = Momentum(oData, sSpecies);
     stData = oMom.SigmaEToEMean(stOpt.Start, stOpt.End);
     
+    dPeak  = max(abs(stData.Mean+stData.Sigma));
+    [dTemp, sPUnit] = fAutoScale(dPeak, 'eV');
+    dScale = dTemp/dPeak;
 
     % Plot
 
     if strcmpi(stOpt.IsSubPlot, 'No')
         clf;
-        fFigureSize(gcf, stOpt.FigureSize);
+        if strcmpi(stOpt.AutoResize, 'On')
+            fFigureSize(gcf, stOpt.FigureSize);
+        end % if
+        set(gcf,'Name',sprintf('Sigma E to E Mean (%s)',oData.Config.Name))
+    else
+        cla;
     end % if
     
     hold on;
     
-    H(1) = shadedErrorBar(stData.TimeAxis, stData.Mean, stData.Sigma, {'-b', 'LineWidth', 2});
+    H(1) = shadedErrorBar(stData.TimeAxis, stData.Mean*dScale, stData.Sigma*dScale, {'-b', 'LineWidth', 2});
     
     legend([H(1).mainLine, H.patch], '<E>', '\sigma_E', 'Location', 'SouthEast');
     xlim([stData.TimeAxis(1), stData.TimeAxis(end)]);
 
-    sTitle = sprintf('%s Mean Energy', fTranslateSpeciesReadable(sSpecies));
-    title(sTitle, 'FontSize', 16);
-    xlabel('z [m]', 'FontSize', 12);
-    ylabel('P_z [MeV/c]', 'FontSize', 12);
+    if strcmpi(oMom.Coords, 'cylindrical')
+        sRType = 'ReadableCyl';
+    else
+        sRType = 'Readable';
+    end % of
+
+    sTitle = sprintf('%s Mean Energy', fTranslateSpecies(sSpecies,sRType));
+    title(sTitle);
+    xlabel('z [m]');
+    ylabel(sprintf('P_z [%s/c]', sPUnit));
     
     hold off;
 

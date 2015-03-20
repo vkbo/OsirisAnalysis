@@ -41,8 +41,12 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
     sSpecies = fTranslateSpecies(sSpecies);
 
     oOpt = inputParser;
-    addParameter(oOpt, 'FigureSize', [900 500]);
-    addParameter(oOpt, 'IsSubPlot',  'No');
+    addParameter(oOpt, 'FigureSize',  [900 500]);
+    addParameter(oOpt, 'HideDump',    'No');
+    addParameter(oOpt, 'IsSubPlot',   'No');
+    addParameter(oOpt, 'AutoResize',  'On');
+    addParameter(oOpt, 'Start',      'PStart');
+    addParameter(oOpt, 'End',        'PEnd');
     parse(oOpt, varargin{:});
     stOpt = oOpt.Results;
 

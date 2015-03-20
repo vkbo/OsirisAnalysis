@@ -11,16 +11,18 @@ classdef Momentum
 
     properties (GetAccess = 'public', SetAccess = 'public')
         
-        Data      = [];                       % OsirisData dataset
-        Beam      = '';                       % What beam to ananlyse
-        Time      = 0;                        % Current time (dumb number)
-        X1Lim     = [];                       % Axes limits x1
-        X2Lim     = [];                       % Axes limits x2
-        X3Lim     = [];                       % Axes limits x3
-        Units     = 'N';                      % Units of axes
-        AxisUnits = {'N', 'N', 'N'};          % Units of axes
-        AxisScale = {'Auto', 'Auto', 'Auto'}; % Scale of axes
-        AxisFac   = [1.0, 1.0, 1.0];          % Axes scale factors
+        Data      = [];                        % OsirisData dataset
+        Beam      = '';                        % What beam to ananlyse
+        Time      = 0;                         % Current time (dumb number)
+        X1Lim     = [];                        % Axes limits x1
+        X2Lim     = [];                        % Axes limits x2
+        X3Lim     = [];                        % Axes limits x3
+        Units     = 'N';                       % Units of axes
+        AxisUnits = {'N', 'N', 'N'};           % Units of axes
+        AxisScale = {'Auto', 'Auto', 'Auto'};  % Scale of axes
+        AxisRange = [0.0 0.0 0.0 0.0 0.0 0.0]; % Max and min of axes
+        AxisFac   = [1.0, 1.0, 1.0];           % Axes scale factors
+        Coords    = '';                        % Coordinates
         
     end % properties
 
@@ -49,7 +51,6 @@ classdef Momentum
                 return;
             end % if
 
-            
             % Read input parameters
             oOpt = inputParser;
             addParameter(oOpt, 'Units',   'N');
@@ -58,7 +59,6 @@ classdef Momentum
             addParameter(oOpt, 'X3Scale', 'Auto');
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
-
 
             % Read config
             dBoxX1Min = obj.Data.Config.Variables.Simulation.BoxX1Min;
@@ -70,21 +70,23 @@ classdef Momentum
             sCoords   = obj.Data.Config.Variables.Simulation.Coordinates;
             dLFactor  = obj.Data.Config.Variables.Convert.SI.LengthFac;
 
-
             % Set Scale and Units
             obj.AxisScale = {stOpt.X1Scale, stOpt.X2Scale, stOpt.X3Scale};
-
+            obj.Coords    = sCoords;
 
             % Evaluate units
             switch(lower(stOpt.Units))
 
                 case 'si'
-                    obj.Units         = 'SI';
-                    [dX1Fac, sX1Unit] = fLengthScale(obj.AxisScale{1}, 'm');
-                    [dX2Fac, sX2Unit] = fLengthScale(obj.AxisScale{2}, 'm');
-                    [dX3Fac, sX3Unit] = fLengthScale(obj.AxisScale{3}, 'm');
-                    obj.AxisFac       = [dLFactor*dX1Fac, dLFactor*dX2Fac, dLFactor*dX3Fac];
-                    obj.AxisUnits     = {sX1Unit, sX2Unit, sX3Unit};
+                    obj.Units          = 'SI';
+                    [dX1Fac, sX1Unit]  = fLengthScale(obj.AxisScale{1}, 'm');
+                    [dX2Fac, sX2Unit]  = fLengthScale(obj.AxisScale{2}, 'm');
+                    [dX3Fac, sX3Unit]  = fLengthScale(obj.AxisScale{3}, 'm');
+                    obj.AxisFac        = [dLFactor*dX1Fac, dLFactor*dX2Fac, dLFactor*dX3Fac];
+                    obj.AxisUnits      = {sX1Unit, sX2Unit, sX3Unit};
+                    obj.AxisRange(1:2) = [dBoxX1Min dBoxX1Max]*obj.AxisFac(1);
+                    obj.AxisRange(3:4) = [dBoxX2Min dBoxX2Max]*obj.AxisFac(2);
+                    obj.AxisRange(5:6) = [dBoxX3Min dBoxX3Max]*obj.AxisFac(3);
 
                 otherwise
                     obj.Units   = 'N';
@@ -94,6 +96,7 @@ classdef Momentum
                     else
                         obj.AxisUnits = {'c/\omega_p', 'c_/\omega_p', 'c/\omega_p'};
                     end % if
+                    obj.AxisRange = [dBoxX1Min dBoxX1Max dBoxX2Min dBoxX2Max dBoxX3Min dBoxX3Max];
 
             end % switch
 
@@ -384,7 +387,7 @@ classdef Momentum
         function aReturn = MomentumToEnergy(obj, aMomentum)
             
             dRQM    = obj.Data.Config.Variables.Beam.(obj.Beam).RQM;
-            dEMass  = obj.Data.Config.Variables.Constants.ElectronMassMeV;
+            dEMass  = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
 
             dPFac   = abs(dRQM)*dEMass;
             %dSign   = dRQM/abs(dRQM);
