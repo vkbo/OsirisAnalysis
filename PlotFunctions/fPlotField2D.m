@@ -1,6 +1,6 @@
 %
-%  Function: fPlotField
-% **********************
+%  Function: fPlotField2D
+% ************************
 %  Plots a field from OsirisData
 %
 %  Inputs:
@@ -10,7 +10,7 @@
 %  sAxis    :: Which axis to plot
 %
 
-function fPlotField(oData, iTime, sAxis)
+function fPlotField2D(oData, sTime, sField, varargin)
 
     %
     %  Function Init
@@ -53,7 +53,7 @@ function fPlotField(oData, iTime, sAxis)
     aCMap = [transpose([aCInc;aCInc;aCMid]);transpose([aCMid;aCDec;aCDec])];
 
     % Data
-    aData = oData.Data(iTime, 'FLD', sAxis, '');
+    aData = oData.Data(iTime, 'FLD', sField, '');
     aData = aData.*dE0*1e-9;
     aPlot = transpose([fliplr(aData), aData]);
     
@@ -72,7 +72,7 @@ function fPlotField(oData, iTime, sAxis)
     colorbar;
 
     dPosition = (iTime*dTFac - dPSt)*dLFac;
-    sTitle    = sprintf('Field %s in GeV after %0.2f metres of plasma (Dump %d)',sAxis,dPosition,iTime);
+    sTitle    = sprintf('Field %s in GeV after %0.2f metres of plasma (Dump %d)',sField,dPosition,iTime);
     
     title(sTitle,'FontSize',16);
     xlabel('$z \;\mbox{[mm]}$',   'interpreter','LaTex','FontSize',14);
