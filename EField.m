@@ -22,6 +22,7 @@ classdef EField
         AxisScale = {'Auto', 'Auto', 'Auto'};  % Scale of axes
         AxisRange = [0.0 0.0 0.0 0.0 0.0 0.0]; % Max and min of axes
         AxisFac   = [1.0, 1.0, 1.0];           % Axes scale factors
+        Coords    = '';                        % Coordinates
         
     end % properties
 
@@ -43,7 +44,14 @@ classdef EField
             
             % Set data
             obj.Data  = oData;
-            obj.Field = fTranslateField(sField);
+
+            sField = fTranslateField(sField);
+            if ismember(sField, {'e1','e2','e3'})
+                obj.Field = sField;
+            else
+                obj.Field = 'e1';
+                fprintf('Unknown field %s specified, using e1\n', sField);
+            end % if
 
             % Read input parameters
             oOpt = inputParser;
@@ -54,7 +62,6 @@ classdef EField
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
 
-
             % Read config
             dBoxX1Min = obj.Data.Config.Variables.Simulation.BoxX1Min;
             dBoxX1Max = obj.Data.Config.Variables.Simulation.BoxX1Max;
@@ -64,11 +71,10 @@ classdef EField
             dBoxX3Max = obj.Data.Config.Variables.Simulation.BoxX3Max;
             sCoords   = obj.Data.Config.Variables.Simulation.Coordinates;
             dLFactor  = obj.Data.Config.Variables.Convert.SI.LengthFac;
-
-
+            
             % Set Scale and Units
             obj.AxisScale = {stOpt.X1Scale, stOpt.X2Scale, stOpt.X3Scale};
-
+            obj.Coords    = sCoords;
 
             % Evaluate units
             switch(lower(stOpt.Units))
@@ -95,7 +101,6 @@ classdef EField
                     obj.AxisRange   = [dBoxX1Min dBoxX1Max dBoxX2Min dBoxX2Max dBoxX3Min dBoxX3Max];
 
             end % switch
-
 
             % Set defult axis limits
             obj.X1Lim = [dBoxX1Min, dBoxX1Max]*obj.AxisFac(1);
@@ -249,6 +254,7 @@ classdef EField
 
             % Get simulation variables
             sCoords = obj.Data.Config.Variables.Simulation.Coordinates;
+            dE0     = obj.Data.Config.Variables.Convert.SI.E0;
             
             % Get data and axes
             aData   = obj.Data.Data(obj.Time, 'FLD', obj.Field, '');
@@ -269,7 +275,7 @@ classdef EField
             iX2Max = fGetIndex(aX2Axis, obj.X2Lim(2)*obj.AxisFac(2));
             
             % Crop and scale dataset
-            aData   = aData(iX2Min:iX2Max,iX1Min:iX1Max)/dNMax;
+            aData   = aData(iX2Min:iX2Max,iX1Min:iX1Max)*dE0;
             aX1Axis = aX1Axis(iX1Min:iX1Max);
             aX2Axis = aX2Axis(iX2Min:iX2Max);
             

@@ -50,6 +50,7 @@ classdef OsirisConfig
             
             obj.Variables.Constants   = struct;
             obj.Variables.Simulation  = struct;
+            obj.Variables.Fields      = struct;
             obj.Variables.Species     = struct;
             obj.Variables.Plasma      = struct;
             obj.Variables.Beam        = struct;
@@ -148,6 +149,7 @@ classdef OsirisConfig
                 obj = obj.fGetSpecies();
                 obj = obj.fGetPlasmaVariables();
                 obj = obj.fGetBeamVariables();
+                obj = obj.fGetFields();
                 
             end % if
 
@@ -716,6 +718,31 @@ classdef OsirisConfig
                 obj.Variables.Beam.(sBeam).SigmaX1 = dSigmaX1;
                 obj.Variables.Beam.(sBeam).SigmaX2 = dSigmaX2;
                 
+            end % for
+            
+        end % function
+        
+        function obj = fGetFields(obj)
+            
+            sFields = fExtractRaw(obj, '', 'diag_emf', 'reports', 0);
+            
+            sFields = strrep(sFields, '"', '');
+            aFields = strsplit(sFields, ',');
+            obj.Variables.Fields.Field  = aFields;
+            obj.Variables.Fields.EField = {};
+            obj.Variables.Fields.BField = {};
+            
+            iE = 1;
+            iB = 1;
+            for i=1:length(aFields)
+                if strcmpi(aFields{i}(1), 'e')
+                    obj.Variables.Fields.EField{iE} = aFields{i};
+                    iE = iE + 1;
+                end % if
+                if strcmpi(aFields{i}(1), 'b')
+                    obj.Variables.Fields.BField{iB} = aFields{i};
+                    iB = iB + 1;
+                end % if
             end % for
             
         end % function

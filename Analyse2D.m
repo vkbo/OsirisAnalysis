@@ -43,6 +43,7 @@ function Analyse2D
 
     X.Plots{1} = 'Beam Density';
     X.Plots{2} = 'Plasma Density';
+    X.Plots{3} = 'Field Density';
 
     X.Figure = [0 0 0 0 0 0];
     X.X1Link = [0 0 0 0 0 0];
@@ -197,7 +198,7 @@ function Analyse2D
         
         % Clear panel
         delete(bgTab(t));
-        bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 400 120],'BackgroundColor',cBackGround);
+        bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 514 120],'BackgroundColor',cBackGround);
         
         % Create Controls
         iY = 115;
@@ -212,7 +213,7 @@ function Analyse2D
         
         % Clear panel
         delete(bgTab(t));
-        bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 400 120],'BackgroundColor',cBackGround);
+        bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 514 120],'BackgroundColor',cBackGround);
         
         % Create Controls
         iY = 115;
@@ -235,6 +236,21 @@ function Analyse2D
         
     end % function
     
+    function fCtrlFieldDensity(t)
+        
+        % Clear panel
+        delete(bgTab(t));
+        bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 514 120],'BackgroundColor',cBackGround);
+        
+        % Create Controls
+        iY = 115;
+        
+        iY = iY - 25;
+        uicontrol(bgTab(t),'Style','Text','String','Field','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        pumData(t) = uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Field,'Value',1,'Position',[85 iY 150 20],'Callback',{@fPlotSetField,t});
+        
+    end % function
+
 
     %
     %  Functions
@@ -258,6 +274,7 @@ function Analyse2D
         X.Data.Name      = oData.Config.Name;
         X.Data.Beam      = oData.Config.Variables.Species.Beam;
         X.Data.Plasma    = oData.Config.Variables.Species.Plasma;
+        X.Data.Field     = oData.Config.Variables.Fields.Field;
         X.Data.Completed = oData.Config.Completed;
         X.Data.HasData   = oData.Config.HasData;
         X.Data.HasTracks = oData.Config.HasTracks;
@@ -266,9 +283,16 @@ function Analyse2D
         % Geometry
         if strcmpi(X.Data.Coords, 'cylindrical')
             set(lblInfo(1),'String','Cylindrical','BackgroundColor',cInfoG);
+            X.Data.CoordsPF = 'Cyl';
         else
             set(lblInfo(1),'String','Cartesian','BackgroundColor',cInfoG);
+            X.Data.CoordsPF = '';
         end % if
+        
+        % Translate Fields
+        for i=1:length(X.Data.Field)
+            X.Data.Field{i} = fTranslateField(X.Data.Field{i},['Long',X.Data.CoordsPF]);
+        end % for
         
         % Simulation Status
         if X.Data.HasData
@@ -406,7 +430,16 @@ function Analyse2D
                     X.Plot(f).Limits(4) =  abs(X.Plot(f).Limits(4));
             end % switch
         end % if
+
+        if X.X2Link(f)
+            for i=1:6
+                if X.X2Link(i) && X.Figure(i) > 0
+                    X.Plot(i).Limits(3:4) = X.Plot(f).Limits(3:4);
+                end % if
+            end % for
+        end % if
         
+        % Refresh
         if X.X1Link(f) || X.X2Link(f)
             fRefresh;
         else
@@ -446,6 +479,11 @@ function Analyse2D
                     fCtrlPlasmaDensity(f);
                     fFigureSize(figure(f+1), [900 500]);
                     
+                case 'Field Density'
+                    X.Plot(f).Data = X.Data.Field{1};
+                    fCtrlFieldDensity(f);
+                    fFigureSize(figure(f+1), [900 500]);
+
             end % switch
 
             set(hTabGroup,'SelectedTab',hTabs(f));
@@ -543,6 +581,14 @@ function Analyse2D
                             'Sample1',X.Plot(f).ScatterNum(1),'Sample2',X.Plot(f).ScatterNum(2), ...
                             'Overlay1',X.Plot(f).Scatter{1},'Overlay2',X.Plot(f).Scatter{2}, ...
                             'Limits',aLim,'CAxis',[0 5]);
+                        
+                    case 'Field Density'
+                        figure(X.Plot(f).Figure); clf;
+                        X.Plot(f).Return = fPlotField2D(oData,X.Time.Dump,fTranslateField(X.Plot(f).Data,'FromLong'), ...
+                            'IsSubPlot','No','AutoResize','Off','HideDump','Yes','Limits',aLim);
+
+                    otherwise
+                        return;
                                                                        
                 end % switch
                 
@@ -638,6 +684,16 @@ function Analyse2D
         
         fRefresh(f);
     
+    end % function
+
+    function fPlotSetField(uiSrc,~,f)
+        
+        iField = get(uiSrc,'Value');
+        sField = X.Data.Field{iField};
+        
+        X.Plot(f).Data = sField;
+        fRefresh(f);
+        
     end % function
    
 end % function

@@ -72,54 +72,102 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
     
     if ~isField(sField)
         fprintf(2, 'Error: Non-existent field specified.\n');
+        return;
     end % if
+    
+    sFType = upper(sField(1));
 
-    
-    % Simulation
-    dBoxZ  = oData.Config.Variables.Simulation.BoxX1Max;
-    dBoxR  = oData.Config.Variables.Simulation.BoxX2Max;
-    iBoxNZ = oData.Config.Variables.Simulation.BoxNX1;
-    iBoxNR = oData.Config.Variables.Simulation.BoxNX2;
-    
-    % Factors
-    dTFac = oData.Config.Variables.Convert.SI.TimeFac;
-    dLFac = oData.Config.Variables.Convert.SI.LengthFac;
-    dE0   = oData.Config.Variables.Convert.SI.E0;
-    
-    % Plasma
-    dPSt  = oData.Config.Variables.Plasma.PlasmaStart;
-    
-    % Colormap
-    aCDec = linspace(1,0,256);
-    aCInc = linspace(0,1,256);
-    aCMid = linspace(1,1,256);
-    aCMap = [transpose([aCInc;aCInc;aCMid]);transpose([aCMid;aCDec;aCDec])];
+    % Prepare Data
 
-    % Data
-    aData = oData.Data(iTime, 'FLD', sField, '');
-    aData = aData.*dE0*1e-9;
-    aPlot = transpose([fliplr(aData), aData]);
-    
-    % Limits
-    dAMax = max(abs(aData(:)));
-    
-    % Axes
-    aXAxis = linspace(0,dBoxZ*dLFac,iBoxNZ).*1e3;
-    aYAxis = linspace(-dBoxR*dLFac,dBoxR*dLFac,2*iBoxNR).*1e3;
+    switch(sFType)
+        case 'E'
+            oFLD = EField(oData, sField, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
+            sBaseUnit = 'eV';
+        case 'B'
+            oFLD = BField(oData, sField, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
+            sBaseUnit = 'T';
+    end % switch
+    oFLD.Time = iTime;
 
+    if length(stOpt.Limits) == 4
+        oFLD.X1Lim = stOpt.Limits(1:2);
+        oFLD.X2Lim = stOpt.Limits(3:4);
+    end % if
+    
+    stData = oFLD.Density;
+
+    aData  = stData.Data;
+    aZAxis = stData.X1Axis;
+    aRAxis = stData.X2Axis;
+    dZPos  = stData.ZPos;
+    
+    dPeak  = max(abs(aData(:)));
+    [dTemp, sFUnit] = fAutoScale(dPeak, sBaseUnit);
+    dScale = dTemp/dPeak;
+
+    stReturn.X1Axis    = stData.X1Axis;
+    stReturn.X2Axis    = stData.X2Axis;
+    stReturn.ZPos      = stData.ZPos;
+    stReturn.AxisFac   = oFLD.AxisFac;
+    stReturn.AxisRange = oFLD.AxisRange;
+    
     % Plot
     
-    imagesc(aXAxis, aYAxis, aPlot);
-    caxis([-dAMax,dAMax]);
-    %colormap(aCMap);
-    colorbar;
+    if strcmpi(stOpt.IsSubPlot, 'No')
+        clf;
+        if strcmpi(stOpt.AutoResize, 'On')
+            fFigureSize(gcf, stOpt.FigureSize);
+        end % if
+        set(gcf,'Name',sprintf('Field Density (%s #%d)',oData.Config.Name,iTime))
+    else
+        cla;
+    end % if
 
-    dPosition = (iTime*dTFac - dPSt)*dLFac;
-    sTitle    = sprintf('Field %s in GeV after %0.2f metres of plasma (Dump %d)',sField,dPosition,iTime);
+    imagesc(aZAxis, aRAxis, aData*dScale);
+    set(gca,'YDir','Normal');
+    polarmap(jet,0.5);
+    %colormap('jet');
+    hCol = colorbar();
+    if ~isempty(stOpt.CAxis)
+        caxis(stOpt.CAxis);
+    end % if
+
+    hold on;
+
+    %if strcmpi(stOpt.ShowOverlay, 'Yes')
+    %    plot(aZAxis, aProjZ, 'White');
+    %    h = legend(sBeamCharge, 'Location', 'NE');
+    %    set(h,'Box','Off');
+    %    set(h,'TextColor', [1 1 1]);
+    %    set(findobj(h, 'type', 'line'), 'visible', 'off')
+    %end % if
+
+    if strcmpi(oFLD.Coords, 'cylindrical')
+        sRType = 'LongCyl';
+    else
+        sRType = 'Long';
+    end % of
+
+    if strcmpi(stOpt.HideDump, 'No')
+        sTitle = sprintf('%s %s (%s #%d)', fTranslateField(sField,sRType), fPlasmaPosition(oData, iTime), oData.Config.Name, iTime);
+    else
+        sTitle = sprintf('%s %s', fTranslateField(sField,sRType), fPlasmaPosition(oData, iTime));
+    end % if
+
+    title(sTitle);
+    xlabel('\xi [mm]');
+    ylabel('r [mm]');
+    title(hCol,sFUnit);
     
-    title(sTitle,'FontSize',16);
-    xlabel('$z \;\mbox{[mm]}$',   'interpreter','LaTex','FontSize',14);
-    ylabel('$r \;\mbox{[mm]}$',   'interpreter','LaTex','FontSize',14);
+    hold off;
+    
+    
+    % Return
+
+    stReturn.Field = sField;
+    stReturn.XLim  = xlim;
+    stReturn.YLim  = ylim;
+    stReturn.CLim  = caxis;
 
 end
 

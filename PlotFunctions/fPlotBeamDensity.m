@@ -166,10 +166,16 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
         rectangle('Position',[dRX,dRY,2*stOpt.Charge(3),2*stOpt.Charge(4)],'Curvature',[1,1],'EdgeColor','White','LineStyle','--');
     end % if
 
-    if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s Density %s (%s #%d)', fTranslateSpecies(sBeam,'Readable'), fPlasmaPosition(oData, iTime), oData.Config.Name, iTime);
+    if strcmpi(oCH.Coords, 'cylindrical')
+        sRType = 'ReadableCyl';
     else
-        sTitle = sprintf('%s Density %s', fTranslateSpecies(sBeam,'Readable'), fPlasmaPosition(oData, iTime));
+        sRType = 'Readable';
+    end % of
+    
+    if strcmpi(stOpt.HideDump, 'No')
+        sTitle = sprintf('%s Density %s (%s #%d)', fTranslateSpecies(sBeam,sRType), fPlasmaPosition(oData, iTime), oData.Config.Name, iTime);
+    else
+        sTitle = sprintf('%s Density %s', fTranslateSpecies(sBeam,sRType), fPlasmaPosition(oData, iTime));
     end % if
 
     title(sTitle);

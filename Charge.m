@@ -24,6 +24,7 @@ classdef Charge
         AxisFac     = [1.0 1.0 1.0];             % Axes scale factors
         ParticleFac = 1.0;                       % Q-to-particles factor
         ChargeFac   = 1.0;                       % Q-to-charge factor
+        Coords      = '';                        % Coordinates
 
     end % properties
 
@@ -48,7 +49,6 @@ classdef Charge
             obj.Data    = oData;
             obj.Species = fTranslateSpecies(sSpecies);
 
-            
             % Read input parameters
             oOpt = inputParser;
             addParameter(oOpt, 'Units',   'N');
@@ -57,7 +57,6 @@ classdef Charge
             addParameter(oOpt, 'X3Scale', 'Auto');
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
-
 
             % Read config
             dBoxX1Min = obj.Data.Config.Variables.Simulation.BoxX1Min;
@@ -69,10 +68,9 @@ classdef Charge
             sCoords   = obj.Data.Config.Variables.Simulation.Coordinates;
             dLFactor  = obj.Data.Config.Variables.Convert.SI.LengthFac;
 
-
             % Set Scale and Units
             obj.AxisScale = {stOpt.X1Scale, stOpt.X2Scale, stOpt.X3Scale};
-
+            obj.Coords    = sCoords;
 
             % Evaluate units
             switch(lower(stOpt.Units))
@@ -107,7 +105,6 @@ classdef Charge
                     obj.ChargeFac   = obj.Data.Config.Variables.Convert.Norm.ChargeFac;
 
             end % switch
-
 
             % Set defult axis limits
             obj.X1Lim = [dBoxX1Min, dBoxX1Max]*obj.AxisFac(1);
