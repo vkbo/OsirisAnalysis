@@ -12,7 +12,7 @@
 %  Options:
 % ==========
 %  Limits      :: Axis limits
-%  Charge      :: Calculate charge in ellipse two inputs for peak
+%  Charge      :: Calculate charge in ellipse. Two inputs for peak
 %  FigureSize  :: Default [900 500]
 %  HideDump    :: Default No
 %  IsSubplot   :: Default No
@@ -43,7 +43,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
        fprintf('  Options:\n');
        fprintf(' ==========\n');
        fprintf('  Limits      :: Axis limits\n');
-       fprintf('  Charge      :: Calculate charge in ellipse two inputs for peak\n');
+       fprintf('  Charge      :: Calculate charge in ellipse. Two inputs for peak\n');
        fprintf('  FigureSize  :: Default [900 500]\n');
        fprintf('  HideDump    :: Default No\n');
        fprintf('  IsSubplot   :: Default No\n');
@@ -178,10 +178,10 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
         sTitle = sprintf('%s Density %s', fTranslateSpeciesReadable(sBeam), fPlasmaPosition(oData, iTime));
     end % if
 
-    title(sTitle,'FontSize',14);
-    xlabel('\xi [mm]', 'FontSize',12);
-    ylabel('r [mm]', 'FontSize',12);
-    title(hCol, 'n_{pe}/n_0');
+    title(sTitle);
+    xlabel('\xi [mm]');
+    ylabel('r [mm]');
+    title(hCol,'n_{pe}/n_0');
     
     hold off;
     

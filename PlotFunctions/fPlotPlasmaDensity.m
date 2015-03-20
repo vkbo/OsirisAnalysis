@@ -290,10 +290,10 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         sTitle = sprintf('%s Density %s', fTranslateSpeciesReadable(sPlasma), fPlasmaPosition(oData, iTime));
     end % if
 
-    title(sTitle,'FontSize',14);
-    xlabel('\xi [mm]', 'FontSize',12);
-    ylabel('r [mm]', 'FontSize',12);
-    title(hCol, 'n_{pe}/n_0');
+    title(sTitle);
+    xlabel('\xi [mm]');
+    ylabel('r [mm]');
+    title(hCol,'n_{pe}/n_0');
     
     hold off;
     
