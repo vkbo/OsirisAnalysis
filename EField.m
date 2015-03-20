@@ -11,15 +11,17 @@ classdef EField
 
     properties (GetAccess = 'public', SetAccess = 'public')
         
-        Data      = [];                       % OsirisData dataset
-        Time      = 0;                        % Current time (dumb number)
-        X1Lim     = [];                       % Axes limits x1
-        X2Lim     = [];                       % Axes limits x2
-        X3Lim     = [];                       % Axes limits x3
-        Units     = 'N';                      % Units of axes
-        AxisUnits = {'N', 'N', 'N'};          % Units of axes
-        AxisScale = {'Auto', 'Auto', 'Auto'}; % Scale of axes
-        AxisFac   = [1.0, 1.0, 1.0];          % Axes scale factors
+        Data      = [];                        % OsirisData dataset
+        Field     = '';                        % Field to analyse
+        Time      = 0;                         % Current time (dumb number)
+        X1Lim     = [];                        % Axes limits x1
+        X2Lim     = [];                        % Axes limits x2
+        X3Lim     = [];                        % Axes limits x3
+        Units     = 'N';                       % Units of axes
+        AxisUnits = {'N', 'N', 'N'};           % Units of axes
+        AxisScale = {'Auto', 'Auto', 'Auto'};  % Scale of axes
+        AxisRange = [0.0 0.0 0.0 0.0 0.0 0.0]; % Max and min of axes
+        AxisFac   = [1.0, 1.0, 1.0];           % Axes scale factors
         
     end % properties
 
@@ -37,10 +39,11 @@ classdef EField
 
     methods
         
-        function obj = EField(oData, varargin)
+        function obj = EField(oData, sField, varargin)
             
             % Set data
-            obj.Data = oData;
+            obj.Data  = oData;
+            obj.Field = fTranslateField(sField);
 
             % Read input parameters
             oOpt = inputParser;
@@ -71,12 +74,15 @@ classdef EField
             switch(lower(stOpt.Units))
 
                 case 'si'
-                    obj.Units         = 'SI';
-                    [dX1Fac, sX1Unit] = fLengthScale(obj.AxisScale{1}, 'm');
-                    [dX2Fac, sX2Unit] = fLengthScale(obj.AxisScale{2}, 'm');
-                    [dX3Fac, sX3Unit] = fLengthScale(obj.AxisScale{3}, 'm');
-                    obj.AxisFac       = [dLFactor*dX1Fac, dLFactor*dX2Fac, dLFactor*dX3Fac];
-                    obj.AxisUnits     = {sX1Unit, sX2Unit, sX3Unit};
+                    obj.Units          = 'SI';
+                    [dX1Fac, sX1Unit]  = fLengthScale(obj.AxisScale{1}, 'm');
+                    [dX2Fac, sX2Unit]  = fLengthScale(obj.AxisScale{2}, 'm');
+                    [dX3Fac, sX3Unit]  = fLengthScale(obj.AxisScale{3}, 'm');
+                    obj.AxisFac        = [dLFactor*dX1Fac, dLFactor*dX2Fac, dLFactor*dX3Fac];
+                    obj.AxisUnits      = {sX1Unit, sX2Unit, sX3Unit};
+                    obj.AxisRange(1:2) = [dBoxX1Min dBoxX1Max]*obj.AxisFac(1);
+                    obj.AxisRange(3:4) = [dBoxX2Min dBoxX2Max]*obj.AxisFac(2);
+                    obj.AxisRange(5:6) = [dBoxX3Min dBoxX3Max]*obj.AxisFac(3);
 
                 otherwise
                     obj.Units   = 'N';
@@ -86,6 +92,7 @@ classdef EField
                     else
                         obj.AxisUnits = {'c/\omega_p', 'c_/\omega_p', 'c/\omega_p'};
                     end % if
+                    obj.AxisRange   = [dBoxX1Min dBoxX1Max dBoxX2Min dBoxX2Max dBoxX3Min dBoxX3Max];
 
             end % switch
 
@@ -235,6 +242,45 @@ classdef EField
     
     methods (Access = 'public')
         
+        function stReturn = Density(obj)
+
+            % Input/Output
+            stReturn = {};
+
+            % Get simulation variables
+            sCoords = obj.Data.Config.Variables.Simulation.Coordinates;
+            
+            % Get data and axes
+            aData   = obj.Data.Data(obj.Time, 'FLD', obj.Field, '');
+            aX1Axis = obj.fGetBoxAxis('x1');
+            aX2Axis = obj.fGetBoxAxis('x2');
+
+            % Check if cylindrical
+            if strcmpi(sCoords, 'cylindrical')
+                aData   = transpose([fliplr(aData),aData]);
+                aX2Axis = [-fliplr(aX2Axis), aX2Axis];
+            else
+                aData   = transpose(aData);
+            end % if
+            
+            iX1Min = fGetIndex(aX1Axis, obj.X1Lim(1)*obj.AxisFac(1));
+            iX1Max = fGetIndex(aX1Axis, obj.X1Lim(2)*obj.AxisFac(1));
+            iX2Min = fGetIndex(aX2Axis, obj.X2Lim(1)*obj.AxisFac(2));
+            iX2Max = fGetIndex(aX2Axis, obj.X2Lim(2)*obj.AxisFac(2));
+            
+            % Crop and scale dataset
+            aData   = aData(iX2Min:iX2Max,iX1Min:iX1Max)/dNMax;
+            aX1Axis = aX1Axis(iX1Min:iX1Max);
+            aX2Axis = aX2Axis(iX2Min:iX2Max);
+            
+            % Return data
+            stReturn.Data   = aData;
+            stReturn.X1Axis = aX1Axis;
+            stReturn.X2Axis = aX2Axis;
+            stReturn.ZPos   = obj.fGetZPos();        
+        
+        end % function
+        
         function SigmaEToEMean(obj, sStart, sStop)
 
             if nargin < 2
@@ -281,15 +327,49 @@ classdef EField
     
     methods (Access = 'private')
         
-        function aTAxis = fGetTimeAxis(obj);
+        function aReturn = fGetTimeAxis(obj)
             
-            iDumps  = obj.Data.Elements.FLD.e1.Info.Files-1;
+            iDumps  = obj.Data.Elements.DENSITY.(obj.Species).charge.Info.Files-1;
             
             dPStart = obj.Data.Config.Variables.Plasma.PlasmaStart;
             dTFac   = obj.Data.Config.Variables.Convert.SI.TimeFac;
             dLFac   = obj.Data.Config.Variables.Convert.SI.LengthFac;
             
-            aTAxis = (linspace(0.0, dTFac*iDumps, iDumps+1)-dPStart)*dLFac;
+            aReturn = (linspace(0.0, dTFac*iDumps, iDumps+1)-dPStart)*dLFac;
+            
+        end % function
+
+        function aReturn = fGetBoxAxis(obj, sAxis)
+            
+            switch sAxis
+                case 'x1'
+                    dXMin = obj.Data.Config.Variables.Simulation.BoxX1Min;
+                    dXMax = obj.Data.Config.Variables.Simulation.BoxX1Max;
+                    iNX   = obj.Data.Config.Variables.Simulation.BoxNX1;
+                    dLFac = obj.AxisFac(1);
+                case 'x2'
+                    dXMin = obj.Data.Config.Variables.Simulation.BoxX2Min;
+                    dXMax = obj.Data.Config.Variables.Simulation.BoxX2Max;
+                    iNX   = obj.Data.Config.Variables.Simulation.BoxNX2;
+                    dLFac = obj.AxisFac(2);
+                case 'x3'
+                    dXMin = obj.Data.Config.Variables.Simulation.BoxX3Min;
+                    dXMax = obj.Data.Config.Variables.Simulation.BoxX3Max;
+                    iNX   = obj.Data.Config.Variables.Simulation.BoxNX3;
+                    dLFac = obj.AxisFac(3);
+            end % switch
+
+            aReturn = linspace(dXMin, dXMax, iNX)*dLFac;
+            
+        end % function
+        
+        function dReturn = fGetZPos(obj)
+            
+            dLFactor = obj.Data.Config.Variables.Convert.SI.LengthFac;
+            dTFactor = obj.Data.Config.Variables.Convert.SI.TimeFac;
+            dPStart  = obj.Data.Config.Variables.Plasma.PlasmaStart;
+            
+            dReturn  = (obj.Time*dTFactor - dPStart)*dLFactor;
             
         end % function
     

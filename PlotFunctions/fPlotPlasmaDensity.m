@@ -145,12 +145,12 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         oCH.X2Lim = stOpt.Limits(3:4);
     end % if
 
-    stData  = oCH.Density;
+    stData = oCH.Density;
 
-    aData   = stData.Data;
-    aZAxis  = stData.X1Axis;
-    aRAxis  = stData.X2Axis;
-    dZPos   = stData.ZPos;
+    aData  = stData.Data;
+    aZAxis = stData.X1Axis;
+    aRAxis = stData.X2Axis;
+    dZPos  = stData.ZPos;
 
     stReturn.X1Axis    = stData.X1Axis;
     stReturn.X2Axis    = stData.X2Axis;
@@ -251,20 +251,11 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
             aProjZ = abs(sum(stBeam.Data));
             aProjZ = 0.15*(aRAxis(end)-aRAxis(1))*aProjZ/max(abs(aProjZ))+aRAxis(1);
             stQTot = oBeam.BeamCharge;
-            dQ     = stQTot.QTotal*1e9;
-            
 
-            if abs(dQ) < 1.0e-3
-                sBeamCharge = sprintf('Q_{tot}^{%s} = %.2f fC', fTranslateSpeciesShort(stOLBeam{i}), dQ*1e6);
-            elseif abs(dQ) < 1.0
-                sBeamCharge = sprintf('Q_{tot}^{%s} = %.2f pC', fTranslateSpeciesShort(stOLBeam{i}), dQ*1e3);
-            else
-                sBeamCharge = sprintf('Q_{tot}^{%s} = %.2f nC', fTranslateSpeciesShort(stOLBeam{i}), dQ);
-            end % if
+            [dQ, sQUnit] = fAutoScale(stQTot.QTotal,'C');
 
             plot(aZAxis, aProjZ, 'Color', aCol(i,:));
-            
-            stOLLeg{i} = sBeamCharge;
+            stOLLeg{i} = sprintf('Q_{tot}^{%s} = %.2f %s', fTranslateSpecies(stOLBeam{i},'Short'), dQ, sQUnit);
 
         end % if
 
@@ -285,9 +276,9 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     %
     
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s Density %s (%s #%d)', fTranslateSpeciesReadable(sPlasma), fPlasmaPosition(oData, iTime), oData.Config.Name, iTime);
+        sTitle = sprintf('%s Density %s (%s #%d)', fTranslateSpecies(sPlasma,'Readable'), fPlasmaPosition(oData, iTime), oData.Config.Name, iTime);
     else
-        sTitle = sprintf('%s Density %s', fTranslateSpeciesReadable(sPlasma), fPlasmaPosition(oData, iTime));
+        sTitle = sprintf('%s Density %s', fTranslateSpecies(sPlasma,'Readable'), fPlasmaPosition(oData, iTime));
     end % if
 
     title(sTitle);

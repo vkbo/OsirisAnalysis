@@ -19,7 +19,7 @@
 %  AutoResize  :: Default On
 %  CAxis       :: Color axis limits
 %  ShowOverlay :: Default Yes
-%  Absolute    :: Absolute value, default No
+%  Absolute    :: Use absolute charge. Default No
 %
 
 function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
@@ -50,6 +50,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
        fprintf('  AutoResize  :: Default On\n');
        fprintf('  CAxis       :: Color axis limits\n');
        fprintf('  ShowOverlay :: Default Yes\n');
+       fprintf('  Absolute    :: Use absolute charge. Default No\n');
        fprintf('\n');
        return;
     end % if
@@ -92,12 +93,12 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
         oCH.X2Lim = stOpt.Limits(3:4);
     end % if
     
-    stData  = oCH.Density;
+    stData = oCH.Density;
 
-    aData   = stData.Data;
-    aZAxis  = stData.X1Axis;
-    aRAxis  = stData.X2Axis;
-    dZPos   = stData.ZPos;
+    aData  = stData.Data;
+    aZAxis = stData.X1Axis;
+    aRAxis = stData.X2Axis;
+    dZPos  = stData.ZPos;
 
     stReturn.X1Axis    = stData.X1Axis;
     stReturn.X2Axis    = stData.X2Axis;
@@ -109,8 +110,8 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
         aData = abs(aData);
     end % if
     
-    aProjZ  = abs(sum(aData));
-    aProjZ  = 0.15*(aRAxis(end)-aRAxis(1))*aProjZ/max(abs(aProjZ))+aRAxis(1);
+    aProjZ = abs(sum(aData));
+    aProjZ = 0.15*(aRAxis(end)-aRAxis(1))*aProjZ/max(abs(aProjZ))+aRAxis(1);
 
     if length(stOpt.Charge) == 2
         [~,iZPeak] = max(sum(abs(aData),1));
@@ -121,15 +122,8 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     else
         stQTot = oCH.BeamCharge;
     end % if
-    dQ = stQTot.QTotal*1e9;
-    
-    if abs(dQ) < 1.0e-3
-        sBeamCharge = sprintf('Q_{tot} = %.2f fC', dQ*1e6);
-    elseif abs(dQ) < 1.0
-        sBeamCharge = sprintf('Q_{tot} = %.2f pC', dQ*1e3);
-    else
-        sBeamCharge = sprintf('Q_{tot} = %.2f nC', dQ);
-    end % if
+    [dQ, sQUnit] = fAutoScale(stQTot.QTotal,'C');
+    sBeamCharge  = sprintf('Q_{tot} = %.2f %s', dQ, sQUnit);
     
 
     % Plot
@@ -173,9 +167,9 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     end % if
 
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s Density %s (%s #%d)', fTranslateSpeciesReadable(sBeam), fPlasmaPosition(oData, iTime), oData.Config.Name, iTime);
+        sTitle = sprintf('%s Density %s (%s #%d)', fTranslateSpecies(sBeam,'Readable'), fPlasmaPosition(oData, iTime), oData.Config.Name, iTime);
     else
-        sTitle = sprintf('%s Density %s', fTranslateSpeciesReadable(sBeam), fPlasmaPosition(oData, iTime));
+        sTitle = sprintf('%s Density %s', fTranslateSpecies(sBeam,'Readable'), fPlasmaPosition(oData, iTime));
     end % if
 
     title(sTitle);
