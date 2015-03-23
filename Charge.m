@@ -1,3 +1,4 @@
+
 %
 %  Class Object :: Analyse Species Charge
 % ****************************************
@@ -489,17 +490,21 @@ classdef Charge
             % Values
             dMaxPlasma = obj.Data.Config.Variables.Plasma.MaxPlasmaFac;
             sCoords    = obj.Data.Config.Variables.Simulation.Coordinates;
-
+            dRAWFrac   = obj.Data.Config.Variables.Beam.(obj.Species).RAWFraction;
+            dTFactor   = obj.Data.Config.Variables.Convert.SI.TimeFac;
+            dRQM       = obj.Data.Config.Variables.Beam.(obj.Species).RQM;
+            dSign      = dRQM/abs(dRQM);
 
             % Read input parameters
             oOpt = inputParser;
-            addParameter(oOpt, 'IgnoreLimits', 'No');
-            addParameter(oOpt, 'Threshold',    0.01);
+            addParameter(oOpt, 'IgnoreLimits',    'No');
+            addParameter(oOpt, 'Threshold',       0.01);
+            addParameter(oOpt, 'BeamProminence',  0.5); % In fraction of maximum
             addParameter(oOpt, 'MinPeakDistance', 0.5); % In units of max(lambda_p)
+            addParameter(oOpt, 'SmoothSpan',      0.5); % In units of max(lambda_p)
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
-            
-            
+
             % Species must be a beam
             if ~isBeam(obj.Species)
                 fprintf(2, 'Error: Species %s is not a beam.\n', obj.Species);
@@ -507,53 +512,71 @@ classdef Charge
             end % if
 
             % Load charge density data
-            h5Data  = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
-            h5Data  = double(h5Data);
+            h5Data    = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
+            h5Data    = double(h5Data);
+            [nX1,nX2] = size(h5Data);
 
+            % Get axes
             aX1Axis = obj.fGetBoxAxis('x1');
             aX2Axis = obj.fGetBoxAxis('x2');
             if strcmpi(sCoords, 'Cylindrical')
                 aX2Axis = [fliplr(aX2Axis) aX2Axis];
             end % if
 
+             % Calculate Span value smooth function and MinPeakDistance for findpeaks
+            dSpan     = stOpt.SmoothSpan * 2*pi/sqrt(dMaxPlasma) * obj.AxisFac(1) / (aX1Axis(2)-aX1Axis(1)) / nX1;
             dMinPeakD = stOpt.MinPeakDistance * 2*pi/sqrt(dMaxPlasma) * obj.AxisFac(1) / (aX1Axis(2)-aX1Axis(1));
             
-            % Limit data selection for beamlet detection
-            % (needs to be converted to use global class settings)
-            %if ~isempty(stOpt.X1Lim)
-            %    aData = aData(stOpt.X1Lim(1):stOpt.X1Lim(2),:);
-            %    aX1Axis = aX1Axis(stOpt.X1Lim(1):stOpt.X1Lim(2));
-            %end % if
-            %if ~isempty(stOpt.X2Lim)
-            %    aData = aData(:,stOpt.X2Lim(1):stOpt.X2Lim(2));
-            %end % if
+            % Project data onto x1-axis and smooth
+            aData   = abs(sum(h5Data,2));
+            aSmooth = smooth(aData,dSpan,'loess');
 
-            % Project data onto x1 axis
-            aData = abs(sum(h5Data,2));
+            % Find peaks
+            [aPeaks,aLocs,~,aProms] = findpeaks(aSmooth,'MinPeakDistance',dMinPeakD,'WidthReference','HalfHeight');
             
-            [aPeaks,aLocs,aWidths,aProms] = findpeaks(double(aData),'MinPeakDistance',dMinPeakD,'WidthReference','HalfHeight');
+            % Eliminate peaks with prominence below threshold
+            dMax   = max(abs(aSmooth));
+            dMin   = min(abs(aSmooth));
+            dThres = stOpt.BeamProminence*(dMax-dMin)+dMin;
+            aPeaks = aPeaks.*(aProms >= dThres);
+            aProms = aProms.*(aProms >= dThres);
+            aPeaks(aPeaks == 0) = [];
+            aProms(aProms == 0) = [];
             
+            % Find peak boundaries based in soothed data
             iPeaks = length(aPeaks);
-            aSpan  = zeros(2,length(aPeaks));
-            
+            aSpan  = zeros(2,iPeaks);
             if iPeaks > 0
-                [~,iLoc] = min(flipud(aData(1:aLocs(1))));
+                [~,iLoc] = min(flipud(aSmooth(1:aLocs(1))));
                 aSpan(1,1) = aLocs(1)-iLoc;
                 for i=2:iPeaks
-                    [~,iLoc] = min(flipud(aData(aLocs(i-1):aLocs(i))));
+                    [~,iLoc] = min(flipud(aSmooth(aLocs(i-1):aLocs(i))));
                     aSpan(1,i) = aLocs(i)-iLoc;
                 end % for
                 for i=1:iPeaks-1
-                    [~,iLoc] = min(aData(aLocs(i):aLocs(i+1)));
+                    [~,iLoc] = min(aSmooth(aLocs(i):aLocs(i+1)));
                     aSpan(2,i) = aLocs(i)+iLoc;
                 end % for
-                [~,iLoc] = min(aData(aLocs(end):length(aData)));
+                [~,iLoc] = min(aSmooth(aLocs(end):length(aSmooth)));
                 aSpan(2,end) = aLocs(end)+iLoc;
-            else
-                aSpan = [1;1];
             end % if
 
-            stBeamlets = {};
+            % Preview plot for test purposes
+            %figure(2);
+            %plot(aData, 'r');
+            %hold on;
+            %plot(aSmooth,'b','LineWidth',2);
+            %scatter(aSpan(1,:), ones(1,length(aSpan(1,:)))*-0.2, 'k+');
+            %scatter(aSpan(2,:), ones(1,length(aSpan(2,:)))*-0.3, 'r+');
+            %hold off;
+            
+            % Get RAW data
+            aRaw      = obj.Data.Data(obj.Time, 'RAW', '', obj.Species);
+            aRaw(:,1) = aRaw(:,1) - dTFactor*obj.Time;
+            aRaw(:,1) = aRaw(:,1)*obj.AxisFac(1);
+            
+            % Create return matrix
+            stBeamlets(iPeaks) = struct();
             for i=1:iPeaks
                 stBeamlets(i).X1Start = aX1Axis(aSpan(1,i));
                 stBeamlets(i).X1Stop  = aX1Axis(aSpan(2,i));
@@ -566,22 +589,23 @@ classdef Charge
                 stBeamlets(i).X1Std  = wstd(aX1Axis(aSpan(1,i):aSpan(2,i)), stBeamlets(i).X1Proj);
                 stBeamlets(i).X2Mean = wmean(aX2Axis, stBeamlets(i).X2Proj);
                 stBeamlets(i).X2Std  = wstd(aX2Axis, stBeamlets(i).X2Proj);
+                stBeamlets(i).Charge = sum(aRaw(:,8).*( ...
+                                           aRaw(:,1) >= aX1Axis(aSpan(1,i)) & ...
+                                           aRaw(:,1) <= aX1Axis(aSpan(2,i))   ...
+                                          ))*obj.ChargeFac/dRAWFrac;
             end % for
             
-            stReturn.RAWData    = aData;
-            stReturn.X1Axis     = aX1Axis;
-            stReturn.Beamlets   = iPeaks;
-            stReturn.Peaks      = aX1Axis(aLocs);
-            %stReturn.FWHM       = aWidths;
-            stReturn.Prominence = transpose(aProms);
-            stReturn.Span       = aSpan;
-            stReturn.Beamlets   = stBeamlets;
-            %stReturn.Data      = aData;
-            %stReturn.Threshold = aThreshold;
-            %stReturn.Count     = length(aBeamlets(1,:));
-            %stReturn.Fraction  = aFraction;
-            %stReturn.Total     = dTotal;
-            %stReturn.Missing   = dMissing;
+            % Return data
+            stReturn.RAWData     = h5Data;
+            stReturn.X1Axis      = aX1Axis;
+            stReturn.X2Axis      = aX2Axis;
+            stReturn.Projection  = aData';
+            stReturn.Smooth      = aSmooth';
+            stReturn.Peaks       = iPeaks;
+            stReturn.Prominence  = transpose(aProms);
+            stReturn.Span        = aSpan;
+            stReturn.Beamlets    = stBeamlets;
+            stReturn.TotalCharge = sum(aRaw(:,8))*obj.ChargeFac/dRAWFrac;
             
         end % function
         
