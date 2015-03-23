@@ -331,9 +331,8 @@ classdef Charge
         function stReturn = Wavelet(obj, aRange, varargin)
             
             % Input/Output
-            
             stReturn = {};
-            
+
             if nargin < 2
                 aRange = [];
             end % if
@@ -342,21 +341,17 @@ classdef Charge
             addParameter(oOpt, 'Octaves', 7);
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
-            
 
             % Simulation parameters
-
             dPlasmaFac = obj.Data.Config.Variables.Plasma.MaxPlasmaFac;
             iBoxNX     = obj.Data.Config.Variables.Simulation.BoxNX1;
             dXMin      = obj.Data.Config.Variables.Simulation.BoxX1Min;
             dXMax      = obj.Data.Config.Variables.Simulation.BoxX1Max;
             dBoxSize   = dXMax-dXMin;
 
-            
             % Get dataset
-            
             aData = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
-            
+
             if isempty(aRange)
                 aProj = abs(sum(transpose(aData),1));
             else
@@ -366,26 +361,20 @@ classdef Charge
                     aProj = abs(sum(transpose(aData(:,aRange(1):aRange(1))),1));
                 end % if
             end % if
-            
+
             aProj = aProj/max(aProj);
-            
 
             % Wavelet parameters
-            
             dZ    = dBoxSize/double(iBoxNX)/sqrt(dPlasmaFac);
             iPad  = 1;
             dDJ   = 0.02;
             dS0   = 2*dZ;
             dJ1   = stOpt.Octaves/dDJ;
 
-            
             % Wavelet
-            
             [aWave, aPeriod, aScale, aCOI] = wavelet(aProj, dZ, iPad, dDJ, dS0, dJ1, 'MORLET', 6);
-            
-            
+
             % Return
-            
             stReturn.Input     = aProj;
             stReturn.Data      = aWave;
             stReturn.Real      = real(aWave);
@@ -483,7 +472,6 @@ classdef Charge
             dRAWFrac   = obj.Data.Config.Variables.Beam.(obj.Species).RAWFraction;
             dTFactor   = obj.Data.Config.Variables.Convert.SI.TimeFac;
             dRQM       = obj.Data.Config.Variables.Beam.(obj.Species).RQM;
-            dSign      = dRQM/abs(dRQM);
 
             % Read input parameters
             oOpt = inputParser;
@@ -502,9 +490,9 @@ classdef Charge
             end % if
 
             % Load charge density data
-            h5Data    = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
-            h5Data    = double(h5Data);
-            [nX1,nX2] = size(h5Data);
+            h5Data  = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
+            h5Data  = double(h5Data);
+            [nX1,~] = size(h5Data);
 
             % Get axes
             aX1Axis = obj.fGetBoxAxis('x1');
@@ -513,7 +501,7 @@ classdef Charge
                 aX2Axis = [fliplr(aX2Axis) aX2Axis];
             end % if
 
-             % Calculate Span value smooth function and MinPeakDistance for findpeaks
+            % Calculate Span value for smooth function and MinPeakDistance for findpeaks
             dSpan     = stOpt.SmoothSpan * 2*pi/sqrt(dMaxPlasma) * obj.AxisFac(1) / (aX1Axis(2)-aX1Axis(1)) / nX1;
             dMinPeakD = stOpt.MinPeakDistance * 2*pi/sqrt(dMaxPlasma) * obj.AxisFac(1) / (aX1Axis(2)-aX1Axis(1));
             
@@ -533,7 +521,7 @@ classdef Charge
             aPeaks(aPeaks == 0) = [];
             aProms(aProms == 0) = [];
             
-            % Find peak boundaries based in soothed data
+            % Find peak boundaries based on soothed data
             iPeaks = length(aPeaks);
             aSpan  = zeros(2,iPeaks);
             if iPeaks > 0
@@ -562,8 +550,7 @@ classdef Charge
             
             % Get RAW data
             aRaw      = obj.Data.Data(obj.Time, 'RAW', '', obj.Species);
-            aRaw(:,1) = aRaw(:,1) - dTFactor*obj.Time;
-            aRaw(:,1) = aRaw(:,1)*obj.AxisFac(1);
+            aRaw(:,1) = (aRaw(:,1) - dTFactor*obj.Time)*obj.AxisFac(1);
             
             % Create return matrix
             stBeamlets(iPeaks) = struct();
