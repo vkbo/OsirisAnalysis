@@ -491,14 +491,14 @@ classdef Charge
 
             % Load charge density data
             h5Data  = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
-            h5Data  = double(h5Data);
+            h5Data  = double(abs(h5Data));
             [nX1,~] = size(h5Data);
 
             % Get axes
             aX1Axis = obj.fGetBoxAxis('x1');
             aX2Axis = obj.fGetBoxAxis('x2');
             if strcmpi(sCoords, 'Cylindrical')
-                aX2Axis = [fliplr(aX2Axis) aX2Axis];
+                aX2Axis = [-fliplr(aX2Axis) aX2Axis];
             end % if
 
             % Calculate Span value for smooth function and MinPeakDistance for findpeaks

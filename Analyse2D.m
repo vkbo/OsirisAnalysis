@@ -68,7 +68,6 @@ function Analyse2D
     aFPos = get(fMain, 'Position');
     
     % Set figure properties
-    
     set(fMain, 'Units', 'Pixels');
     set(fMain, 'Position', [aFPos(1:2) 560 540]);
     set(fMain, 'Name', 'Osiris 2D Analysis');
