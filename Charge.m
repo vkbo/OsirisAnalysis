@@ -476,10 +476,10 @@ classdef Charge
             % Read input parameters
             oOpt = inputParser;
             addParameter(oOpt, 'IgnoreLimits',    'No');
-            addParameter(oOpt, 'Threshold',       0.01);
             addParameter(oOpt, 'BeamProminence',  0.5); % In fraction of maximum
             addParameter(oOpt, 'MinPeakDistance', 0.5); % In units of max(lambda_p)
             addParameter(oOpt, 'SmoothSpan',      0.5); % In units of max(lambda_p)
+            addParameter(oOpt, 'RadialInclude',   0.9); % How much radial charge to include
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
 
@@ -555,17 +555,79 @@ classdef Charge
             % Create return matrix
             stBeamlets(iPeaks) = struct();
             for i=1:iPeaks
-                stBeamlets(i).X1Start = aX1Axis(aSpan(1,i));
-                stBeamlets(i).X1Stop  = aX1Axis(aSpan(2,i));
-                stBeamlets(i).X1Proj  = aData(aSpan(1,i):aSpan(2,i)).';
-                stBeamlets(i).X2Proj  = sum(h5Data(aSpan(1,i):aSpan(2,i),:),1);
+                
+                % X! Data
+                aProj = aData(aSpan(1,i):aSpan(2,i)).';
+                aAxis = aX1Axis(aSpan(1,i):aSpan(2,i));
+                
+                [dMax,iMax] = max(aProj);
+                dHalfMax    = dMax/2.0;
+                iUpper      = 0;
+                iLower      = 0;
+                for k=iMax:length(aProj)
+                    if aProj(k) <= dHalfMax
+                        iUpper = k;
+                        break;
+                    end % if
+                end % for
+                for k=iMax:-1:1
+                    if aProj(k) <= dHalfMax
+                        iLower = k;
+                        break;
+                    end % if
+                end % for
+
+                stBeamlets(i).X1Start = aAxis(1);
+                stBeamlets(i).X1Stop  = aAxis(end);
+                stBeamlets(i).X1Proj  = aProj;
+                stBeamlets(i).X1Peak  = aAxis(iMax);
+                stBeamlets(i).X1FWHM  = [aAxis(iLower) aAxis(iUpper)];
+                stBeamlets(i).X1Mean  = wmean(aAxis, aProj);
+                stBeamlets(i).X1Std   = wstd(aAxis, aProj);
+                
+                % X2 Data
+                aProj = sum(h5Data(aSpan(1,i):aSpan(2,i),:),1);
+                aAxis = aX2Axis;
+                dAQ     = 0.0;
+                dSum    = sum(aProj);
+                iRLim   = length(aProj);
+                for r=1:length(aProj)
+                    dAQ = dAQ + aProj(r);
+                    if dAQ >= stOpt.RadialInclude*dSum
+                        iRLim = r;
+                        break;
+                    end % if
+                end % for
                 if strcmpi(sCoords, 'Cylindrical')
-                    stBeamlets(i).X2Proj = [fliplr(stBeamlets(i).X2Proj) stBeamlets(i).X2Proj];
+                    aProj = [fliplr(aProj) aProj];
                 end % if
-                stBeamlets(i).X1Mean = wmean(aX1Axis(aSpan(1,i):aSpan(2,i)), stBeamlets(i).X1Proj);
-                stBeamlets(i).X1Std  = wstd(aX1Axis(aSpan(1,i):aSpan(2,i)), stBeamlets(i).X1Proj);
-                stBeamlets(i).X2Mean = wmean(aX2Axis, stBeamlets(i).X2Proj);
-                stBeamlets(i).X2Std  = wstd(aX2Axis, stBeamlets(i).X2Proj);
+
+                [dMax,iMax] = max(aProj);
+                dHalfMax    = dMax/2.0;
+                iUpper      = 0;
+                iLower      = 0;
+                for k=iMax:length(aProj)
+                    if aProj(k) <= dHalfMax
+                        iUpper = k;
+                        break;
+                    end % if
+                end % for
+                for k=iMax:-1:1
+                    if aProj(k) <= dHalfMax
+                        iLower = k;
+                        break;
+                    end % if
+                end % for
+
+                stBeamlets(i).X2Start = 0.0;
+                stBeamlets(i).X2Stop  = iRLim;
+                stBeamlets(i).X2Proj  = aProj;
+                stBeamlets(i).X2Peak  = aAxis(iMax);
+                stBeamlets(i).X2FWHM  = [aAxis(iLower) aAxis(iUpper)];
+                stBeamlets(i).X2Mean  = wmean(aX2Axis, stBeamlets(i).X2Proj);
+                stBeamlets(i).X2Std   = wstd(aX2Axis, stBeamlets(i).X2Proj);
+
+                % Beamlet Charge
                 stBeamlets(i).Charge = sum(aRaw(:,8).*( ...
                                            aRaw(:,1) >= aX1Axis(aSpan(1,i)) & ...
                                            aRaw(:,1) <= aX1Axis(aSpan(2,i))   ...

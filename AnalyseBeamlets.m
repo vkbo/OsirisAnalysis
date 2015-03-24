@@ -40,6 +40,11 @@ function AnalyseBeamlets(oData, sTime, sBeam)
 
     function fRefreshPlots(iBeamlet)
 
+        % Define colours
+        cDistCol  = [0.4 0.6 0.4];
+        cPeakCol  = [0.6 0.4 0.4];
+        cGaussCol = [0.4 0.4 0.6];
+
         % Get values
         aSpan    = stData.Span;
         aX1Axis  = stData.X1Axis(aSpan(1,iBeamlet):aSpan(2,iBeamlet));
@@ -48,62 +53,103 @@ function AnalyseBeamlets(oData, sTime, sBeam)
         dX1Start = stData.Beamlets(iBeamlet).X1Start;
         dX1Stop  = stData.Beamlets(iBeamlet).X1Stop;
         aX1Proj  = stData.Beamlets(iBeamlet).X1Proj;
+        aX1Peak  = stData.Beamlets(iBeamlet).X1Peak;
+        aX1FWHM  = stData.Beamlets(iBeamlet).X1FWHM;
+        dX1Mean  = stData.Beamlets(iBeamlet).X1Mean;
+        dX1Std   = stData.Beamlets(iBeamlet).X1Std;
+
+        dX2Start = stData.Beamlets(iBeamlet).X2Start;
+        dX2Stop  = stData.Beamlets(iBeamlet).X2Stop;
         aX2Proj  = stData.Beamlets(iBeamlet).X2Proj;
-        dMeanX1  = stData.Beamlets(iBeamlet).X1Mean;
-        dStdX1   = stData.Beamlets(iBeamlet).X1Std;
-        dMeanX2  = stData.Beamlets(iBeamlet).X2Mean;
-        dStdX2   = stData.Beamlets(iBeamlet).X2Std;
+        aX2Peak  = stData.Beamlets(iBeamlet).X2Peak;
+        aX2FWHM  = stData.Beamlets(iBeamlet).X2FWHM;
+        dX2Mean  = stData.Beamlets(iBeamlet).X2Mean;
+        dX2Std   = stData.Beamlets(iBeamlet).X2Std;
 
 
         %  X1 Projection
         % ***************
         
-        % Curve fitting with Gaussian 2
-        oFitX1 = fit(aX1Axis.',aX1Proj.','gauss2');
-        aCfX1  = coeffvalues(oFitX1);
-        dAmX1a = aCfX1(1);
-        dMuX1a = aCfX1(2);
-        dSiX1a = aCfX1(3)/sqrt(2);
-        dAmX1b = aCfX1(4);
-        dMuX1b = aCfX1(5);
-        dSiX1b = aCfX1(6)/sqrt(2);
+        % Curve fitting
+        stReturn  = fAutoGaussian(aX1Axis, aX1Proj, 2);
+        [~,iMain] = max(stReturn.Amp);
+        dGMean    = stReturn.Mean(iMain);
+        dGSigma   = stReturn.Sigma(iMain);
 
-        % Generate fit curve
-        aX1Fit = dAmX1a*exp(-(aX1Axis-dMuX1a).^2./(2*dSiX1a^2)) + dAmX1b*exp(-(aX1Axis-dMuX1b).^2./(2*dSiX1b^2));
+        % Line values
+        dHalfMax  = max(aX1Proj)/2;
+        aEndLine  = 0.08*[-dHalfMax dHalfMax];
 
+        
         % Plot
         set(fMain,'CurrentAxes',axPrjX);
         plot(aX1Axis, aX1Proj);
         hold on;
-        plot(aX1Axis, aX1Fit, 'r--');
+        %plot(aX1Axis, stReturn.Smooth, 'g--');
+        plot(aX1Axis, stReturn.Fit, 'r--');
         hold off;
         
+        dOffset = dHalfMax;
+        line([aX1Peak aX1Peak],      aEndLine+dOffset, 'Color',cPeakCol);
+        line([aX1FWHM(1) aX1FWHM(2)],[dOffset dOffset],'Color',cPeakCol);
+        line([aX1FWHM(1) aX1FWHM(1)],aEndLine+dOffset, 'Color',cPeakCol);
+        line([aX1FWHM(2) aX1FWHM(2)],aEndLine+dOffset, 'Color',cPeakCol);
+ 
+        dOffset = 0.8*dHalfMax;
+        line([dX1Mean dX1Mean],              aEndLine+dOffset, 'Color',cDistCol);
+        line([dX1Mean-dX1Std dX1Mean+dX1Std],[dOffset dOffset],'Color',cDistCol);
+        line([dX1Mean-dX1Std dX1Mean-dX1Std],aEndLine+dOffset, 'Color',cDistCol);
+        line([dX1Mean+dX1Std dX1Mean+dX1Std],aEndLine+dOffset, 'Color',cDistCol);
+
+        dOffset = 1.2*dHalfMax;
+        line([dGMean dGMean],                aEndLine+dOffset, 'Color',cGaussCol);
+        line([dGMean-dGSigma dGMean+dGSigma],[dOffset dOffset],'Color',cGaussCol);
+        line([dGMean-dGSigma dGMean-dGSigma],aEndLine+dOffset, 'Color',cGaussCol);
+        line([dGMean+dGSigma dGMean+dGSigma],aEndLine+dOffset, 'Color',cGaussCol);
+
         xlim([aX1Axis(1) aX1Axis(end)]);
         
 
         %  X2 Projection
         % ***************
 
-        % Curve fitting with Gaussian
-        oFitX2 = fit(aX2Axis.',aX2Proj.','gauss2');
-        aCfX2  = coeffvalues(oFitX2);
-        dAmX2a = aCfX2(1);
-        dMuX2a = aCfX2(2);
-        dSiX2a = aCfX2(3)/sqrt(2)
-        dAmX2b = aCfX2(4);
-        dMuX2b = aCfX2(5);
-        dSiX2b = aCfX2(6)/sqrt(2)
-        
-        % Generate fit curve
-        aX2Fit = dAmX2a*exp(-(aX2Axis-dMuX2a).^2./(2*dSiX2a^2)) + dAmX2b*exp(-(aX2Axis-dMuX2b).^2./(2*dSiX2b^2));
+        % Curve fitting
+        stReturn  = fAutoGaussian(aX2Axis, aX2Proj, 2);
+        [~,iMain] = max(stReturn.Amp);
+        dGMean    = stReturn.Mean(iMain);
+        dGSigma   = stReturn.Sigma(iMain);
+
+        % Line values
+        dHalfMax  = max(aX1Proj)/2;
+        aEndLine  = 0.08*[-dHalfMax dHalfMax];
 
         % Plot
         set(fMain,'CurrentAxes',axPrjY);
         plot(aX2Axis, aX2Proj);
         hold on;
-        plot(aX2Axis, aX2Fit, 'r--');
+        %plot(aX2Axis, stReturn.Smooth, 'g--');
+        plot(aX2Axis, stReturn.Fit, 'r--');
         hold off;
-        xlim([-5*(dSiX2a+dSiX2b) 5*(dSiX2a+dSiX2b)]);
+
+        dOffset = dHalfMax;
+        line([aX2Peak aX2Peak],      aEndLine+dOffset, 'Color',cPeakCol);
+        line([aX2FWHM(1) aX2FWHM(2)],[dOffset dOffset],'Color',cPeakCol);
+        line([aX2FWHM(1) aX2FWHM(1)],aEndLine+dOffset, 'Color',cPeakCol);
+        line([aX2FWHM(2) aX2FWHM(2)],aEndLine+dOffset, 'Color',cPeakCol);
+ 
+        dOffset = 0.8*dHalfMax;
+        line([dX2Mean dX2Mean],              aEndLine+dOffset, 'Color',cDistCol);
+        line([dX2Mean-dX2Std dX2Mean+dX2Std],[dOffset dOffset],'Color',cDistCol);
+        line([dX2Mean-dX2Std dX2Mean-dX2Std],aEndLine+dOffset, 'Color',cDistCol);
+        line([dX2Mean+dX2Std dX2Mean+dX2Std],aEndLine+dOffset, 'Color',cDistCol);
+
+        dOffset = 1.2*dHalfMax;
+        line([dGMean dGMean],                aEndLine+dOffset, 'Color',cGaussCol);
+        line([dGMean-dGSigma dGMean+dGSigma],[dOffset dOffset],'Color',cGaussCol);
+        line([dGMean-dGSigma dGMean-dGSigma],aEndLine+dOffset, 'Color',cGaussCol);
+        line([dGMean+dGSigma dGMean+dGSigma],aEndLine+dOffset, 'Color',cGaussCol);
+
+        xlim(3*aX2FWHM);
 
 
         %  Density Plot
@@ -111,8 +157,8 @@ function AnalyseBeamlets(oData, sTime, sBeam)
         
         % Calculate limits
         dWidth  = dX1Stop-dX1Start;
-        dHeight = 10*(dSiX2a+dSiX2b);
-        aLimits = [dX1Start-dWidth dX1Stop+dWidth -dHeight dHeight];
+        dHeight = 3*(aX2FWHM(2) - aX2FWHM(1));
+        aLimits = [dX1Start-dWidth dX1Stop+dWidth 5*aX2FWHM];
 
         % Plot
         set(fMain,'CurrentAxes',axDens);
@@ -121,5 +167,6 @@ function AnalyseBeamlets(oData, sTime, sBeam)
         rectangle('Position',[dX1Start -0.5*dHeight dWidth dHeight],'EdgeColor',[1.0 1.0 1.0],'LineStyle','--');
 
     end % function
+
     
 end % function
