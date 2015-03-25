@@ -80,12 +80,10 @@ function AnalyseBeamlets(oData, sTime, sBeam)
         dHalfMax  = max(aX1Proj)/2;
         aEndLine  = 0.08*[-dHalfMax dHalfMax];
 
-        
         % Plot
         set(fMain,'CurrentAxes',axPrjX);
         plot(aX1Axis, aX1Proj);
         hold on;
-        %plot(aX1Axis, stReturn.Smooth, 'g--');
         plot(aX1Axis, stReturn.Fit, 'r--');
         hold off;
         
@@ -127,7 +125,6 @@ function AnalyseBeamlets(oData, sTime, sBeam)
         set(fMain,'CurrentAxes',axPrjY);
         plot(aX2Axis, aX2Proj);
         hold on;
-        %plot(aX2Axis, stReturn.Smooth, 'g--');
         plot(aX2Axis, stReturn.Fit, 'r--');
         hold off;
 

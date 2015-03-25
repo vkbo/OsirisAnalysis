@@ -556,7 +556,7 @@ classdef Charge
             stBeamlets(iPeaks) = struct();
             for i=1:iPeaks
                 
-                % X! Data
+                % X1 Data
                 aProj = aData(aSpan(1,i):aSpan(2,i)).';
                 aAxis = aX1Axis(aSpan(1,i):aSpan(2,i));
                 
