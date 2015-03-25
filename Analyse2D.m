@@ -198,8 +198,8 @@ function Analyse2D
     uicontrol(bgTabX,'Style','Text','String','Dump','Position',[240 iY+1 45 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
 
     btnFig(7) = uicontrol(bgTabX,'Style','PushButton','String','','Position',[210 iY 20 20],'BackgroundColor',cButtonOff,'Callback',{@fToggleXFig,7});
-    edtT8(1)  = uicontrol(bgTabX,'Style','Edit','String','0','Position',[290 iY 50 20],'BackgroundColor',cWhite,'Callback',{@fToggleXVal,7});
-    edtT8(2)  = uicontrol(bgTabX,'Style','Edit','String','0','Position',[345 iY 50 20],'BackgroundColor',cWhite,'Callback',{@fToggleXVal,7});
+    edtT8(1)  = uicontrol(bgTabX,'Style','Edit','String','0','Position',[290 iY 50 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,7});
+    edtT8(2)  = uicontrol(bgTabX,'Style','Edit','String','0','Position',[345 iY 50 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,7});
 
     % Sigma E to E Mean Ratio
     iY = iY - 25;
@@ -209,8 +209,8 @@ function Analyse2D
     uicontrol(bgTabX,'Style','Text','String','Dump','Position',[240 iY+1 45 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
 
     btnFig(8) = uicontrol(bgTabX,'Style','PushButton','String','','Position',[210 iY 20 20],'BackgroundColor',cButtonOff,'Callback',{@fToggleXFig,8});
-    edtT9(1)  = uicontrol(bgTabX,'Style','Edit','String','0','Position',[290 iY 50 20],'BackgroundColor',cWhite,'Callback',{@fToggleXVal,8});
-    edtT9(2)  = uicontrol(bgTabX,'Style','Edit','String','0','Position',[345 iY 50 20],'BackgroundColor',cWhite,'Callback',{@fToggleXVal,8});
+    edtT9(1)  = uicontrol(bgTabX,'Style','Edit','String','0','Position',[290 iY 50 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,8});
+    edtT9(2)  = uicontrol(bgTabX,'Style','Edit','String','0','Position',[345 iY 50 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,8});
 
     set(hTabGroup,'SelectedTab',hTabX);
     
@@ -274,8 +274,8 @@ function Analyse2D
         
         iY = iY - 25;
         uicontrol(bgTab(t),'Style','Text','String','Fields','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','Checkbox','String',fTranslateField('e1',sField),'Value',X.Plot(f).OvField(1),'Position',[ 85 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotOvField,t,1});
-        uicontrol(bgTab(t),'Style','Checkbox','String',fTranslateField('e2',sField),'Value',X.Plot(f).OvField(2),'Position',[135 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotOvField,t,2});
+        uicontrol(bgTab(t),'Style','Checkbox','String',fTranslateField('e1',sField),'Value',X.Plot(t).OvField(1),'Position',[ 85 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotOvField,t,1});
+        uicontrol(bgTab(t),'Style','Checkbox','String',fTranslateField('e2',sField),'Value',X.Plot(t).OvField(2),'Position',[135 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotOvField,t,2});
 
     end % function
     
@@ -574,7 +574,7 @@ function Analyse2D
         
     end % function
 
-    function fToggleXVal(~,~,f)
+    function fChangeXVal(~,~,f)
         
         if X.DataSet == 0
             return;

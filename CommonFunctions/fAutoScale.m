@@ -8,6 +8,11 @@ function [dValue, sUnit] = fAutoScale(dBaseValue, sBaseUnit)
     dValue = dBaseValue;
     sUnit  = sBaseUnit;
     
+    if abs(dBaseValue) < 1e-18
+        dValue = 0.0;
+        return;
+    end % if
+    
     if abs(dBaseValue) > 1.0
         if abs(dBaseValue) > 1e18
             dValue = dBaseValue*1e-18;
