@@ -57,7 +57,7 @@ function sReturn = fTranslateField(sInput, sMode)
                     sReturn = 'B_{\theta}';
 
             end % switch
-        % end case 'readable'
+        % end case 'readablecyl'
 
         case 'readable'
             switch(sInput)
@@ -80,6 +80,50 @@ function sReturn = fTranslateField(sInput, sMode)
 
             end % switch
         % end case 'readable'
+
+        case 'notexcyl'
+            switch(sInput)
+                
+                % E-Fields
+                case 'e1'
+                    sReturn = 'Ez';
+                case 'e2'
+                    sReturn = 'Er';
+                case 'e3'
+                    sReturn = 'Eo}';
+
+                % B-Fields
+                case 'b1'
+                    sReturn = 'Bz';
+                case 'b2'
+                    sReturn = 'Br';
+                case 'b3'
+                    sReturn = 'Bo';
+
+            end % switch
+        % end case 'notexcyl'
+
+        case 'notex'
+            switch(sInput)
+                
+                % E-Fields
+                case 'e1'
+                    sReturn = 'Ez';
+                case 'e2'
+                    sReturn = 'Ex';
+                case 'e3'
+                    sReturn = 'Ey';
+
+                % B-Fields
+                case 'b1'
+                    sReturn = 'Bz';
+                case 'b2'
+                    sReturn = 'Bx';
+                case 'b3'
+                    sReturn = 'By';
+
+            end % switch
+        % end case 'notex'
         
         case 'longcyl'
             switch(sInput)

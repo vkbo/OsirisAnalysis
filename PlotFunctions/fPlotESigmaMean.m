@@ -1,3 +1,4 @@
+
 %
 %  Function: fPlotESigmaMean
 % ***************************
@@ -87,7 +88,7 @@ function stReturn = fPlotESigmaMean(oData, sSpecies, varargin)
         sRType = 'ReadableCyl';
     else
         sRType = 'Readable';
-    end % of
+    end % if
 
     sTitle = sprintf('%s Mean Energy', fTranslateSpecies(sSpecies,sRType));
     title(sTitle);

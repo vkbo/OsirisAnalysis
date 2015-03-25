@@ -1,3 +1,4 @@
+
 %
 %  Function: fPlotESigmaMeanRatio
 % ********************************
@@ -12,6 +13,8 @@
 % ==========
 %  FigureSize  :: Default [900 500]
 %  IsSubplot   :: Default No
+%  Start       :: Default Plasma Start
+%  End         :: Default Plasma End
 %
 
 function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
@@ -33,6 +36,8 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
        fprintf(' ==========\n');
        fprintf('  FigureSize  :: Default [900 500]\n');
        fprintf('  IsSubplot   :: Default No\n');
+       fprintf('  Start       :: Default Plasma Start\n');
+       fprintf('  End         :: Default Plasma End\n');
        fprintf('\n');
        return;
     end % if
@@ -60,7 +65,10 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
 
     if strcmpi(stOpt.IsSubPlot, 'No')
         clf;
-        fFigureSize(gcf, stOpt.FigureSize);
+        if strcmpi(stOpt.AutoResize, 'On')
+            fFigureSize(gcf, stOpt.FigureSize);
+        end % if
+        set(gcf,'Name',sprintf('Sigma E to E Mean Ratio (%s)',oData.Config.Name))
     else
         cla;
     end % if
@@ -71,10 +79,16 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
     
     xlim([stData.TimeAxis(1),stData.TimeAxis(end)]);
 
-    sTitle = sprintf('%s Energy Mean to Sigma Ratio', fTranslateSpeciesReadable(sSpecies));
-    title(sTitle, 'FontSize', 16);
-    xlabel('z [m]', 'FontSize', 12);
-    ylabel('<E> / \sigma_E', 'FontSize', 12);
+    if strcmpi(oMom.Coords, 'cylindrical')
+        sRType = 'ReadableCyl';
+    else
+        sRType = 'Readable';
+    end % if
+
+    sTitle = sprintf('%s Energy Sigma to Mean Ratio', fTranslateSpecies(sSpecies,sRType));
+    title(sTitle);
+    xlabel('z [m]');
+    ylabel('\sigma_E/<E>');
     
     hold off;
 

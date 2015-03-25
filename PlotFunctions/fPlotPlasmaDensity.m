@@ -1,3 +1,4 @@
+
 %
 %  Function: fPlotPlasmaDensity
 % ******************************
@@ -82,6 +83,8 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     addParameter(oOpt, 'Filter',      'Charge');
     addParameter(oOpt, 'Filter1',     'Charge');
     addParameter(oOpt, 'Filter2',     'Charge');
+    addParameter(oOpt, 'E1',          []);
+    addParameter(oOpt, 'E2',          []);
     parse(oOpt, varargin{:});
     stOpt = oOpt.Results;
 
@@ -99,6 +102,21 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     end % if
     if ~isempty(stOpt.Overlay2)
         stOLBeam{2} = stOpt.Overlay2;
+    end % if
+    
+    stField = {};
+    iField = 1;
+    if ~isempty(stOpt.E1)
+        stField(iField).Name  = 'e1';
+        stField(iField).Range = stOpt.E1;
+        stField(iField).Color = [0.7 1.0 0.7];
+        iField = iField + 1;
+    end % if
+    if ~isempty(stOpt.E2)
+        stField(iField).Name  = 'e2';
+        stField(iField).Range = stOpt.E2;
+        stField(iField).Color = [0.9 0.9 0.7];
+        iField = iField + 1;
     end % if
 
     stSCBeam = {};
@@ -215,13 +233,20 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
 
             stScatter = oBeam.ParticleSample('Sample', aSample(i), 'Filter', stFilter{i});
 
-            scatter(stScatter.X1, stScatter.X2, stScatter.Area, aCol(i,:), 'Filled');
+            scatter(stScatter.X1,stScatter.X2,stScatter.Area,aCol(i,:),'Filled','HandleVisibility','Off');
             stReturn.Scatter = stScatter;
 
         end % if
         
     end % for
+
+    %
+    %  Overlay Plot Start
+    % ********************
+    %
     
+    iOLNum  = 1;
+    stOLLeg = {};
 
     %
     %  Plot Beam Overlay
@@ -255,10 +280,56 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
             [dQ, sQUnit] = fAutoScale(stQTot.QTotal,'C');
 
             plot(aZAxis, aProjZ, 'Color', aCol(i,:));
-            stOLLeg{i} = sprintf('Q_{tot}^{%s} = %.2f %s', fTranslateSpecies(stOLBeam{i},'Short'), dQ, sQUnit);
+            stOLLeg{iOLNum} = sprintf('Q_{tot}^{%s} = %.2f %s', fTranslateSpecies(stOLBeam{i},'Short'), dQ, sQUnit);
+            iOLNum = iOLNum + 1;
 
         end % if
+    
+    end % for
 
+    %
+    %  Plot Field Overlay
+    % ********************
+    %
+    
+    for i=1:length(stField)
+        
+        if length(stField(i).Range) == 2
+            iS = stField(i).Range(1);
+            iA = stField(i).Range(2);
+        else
+            iS = 3;
+            iA = 3;
+        end % if
+        
+        oEF = EField(oData,stField(i).Name,'Units','SI','X1Scale',oCH.AxisScale{1},'X2Scale','m');
+        oEF.Time = iTime;
+        
+        if length(stOpt.Limits) == 4
+            oEF.X1Lim = stOpt.Limits(1:2);
+        end % if
+
+        stEF    = oEF.Lineout(iS,iA);
+        aEFData = 0.15*(aRAxis(end)-aRAxis(1))*stEF.Data/max(abs(stEF.Data));
+
+        [dEne,  sEne]  = fAutoScale(max(abs(stEF.Data)), 'eV');
+        [dEVal, sUnit] = fAutoScale(stEF.X2Range(2), 'm');
+        dSVal          = stEF.X2Range(1)*dEVal/stEF.X2Range(2);
+        
+        plot(stEF.X1Axis,aEFData,'Color',stField(i).Color);
+        stOLLeg{iOLNum} = sprintf('%s^{%.0f–%.0f %s} < %.1f %s',fTranslateField(stField(i).Name,'ReadableCyl'),dSVal,dEVal,sUnit,dEne,sEne);
+        %stOLLeg{iOLNum} = sprintf('%s < %.1f %s',fTranslateField(stField(i).Name,'ReadableCyl'),dEne,sEne);
+        iOLNum = iOLNum + 1;
+        
+    end % if
+    
+    %
+    %  Finish
+    % ********
+    %
+
+    if ~isempty(stOLLeg)
+        
         h = legend(stOLLeg, 'Location', 'NE');
         set(h,'Box','Off');
         set(h,'TextColor', 'White');
@@ -266,14 +337,8 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         if length(stOLBeam) == 1
             set(findobj(h, 'type', 'line'), 'visible', 'off')
         end % if
-    
-    end % for
-    
-    
-    %
-    %  Finish
-    % ********
-    %
+
+    end % if
     
     if strcmpi(oCH.Coords, 'cylindrical')
         sRType = 'ReadableCyl';
