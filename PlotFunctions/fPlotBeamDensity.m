@@ -30,30 +30,30 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     stReturn = {};
 
     if nargin == 0
-       fprintf('\n');
-       fprintf('  Function: fPlotBeamDensity\n');
-       fprintf(' ****************************\n');
-       fprintf('  Plots density plot\n');
-       fprintf('\n');
-       fprintf('  Inputs:\n');
-       fprintf(' =========\n');
-       fprintf('  oData :: OsirisData object\n');
-       fprintf('  sTime :: Time dump\n');
-       fprintf('  sBeam :: Which beam to look at\n');
-       fprintf('\n');
-       fprintf('  Options:\n');
-       fprintf(' ==========\n');
-       fprintf('  Limits      :: Axis limits\n');
-       fprintf('  Charge      :: Calculate charge in ellipse. Two inputs for peak\n');
-       fprintf('  FigureSize  :: Default [900 500]\n');
-       fprintf('  HideDump    :: Default No\n');
-       fprintf('  IsSubplot   :: Default No\n');
-       fprintf('  AutoResize  :: Default On\n');
-       fprintf('  CAxis       :: Color axis limits\n');
-       fprintf('  ShowOverlay :: Default Yes\n');
-       fprintf('  Absolute    :: Use absolute charge. Default No\n');
-       fprintf('\n');
-       return;
+        fprintf('\n');
+        fprintf('  Function: fPlotBeamDensity\n');
+        fprintf(' ****************************\n');
+        fprintf('  Plots density plot\n');
+        fprintf('\n');
+        fprintf('  Inputs:\n');
+        fprintf(' =========\n');
+        fprintf('  oData :: OsirisData object\n');
+        fprintf('  sTime :: Time dump\n');
+        fprintf('  sBeam :: Which beam to look at\n');
+        fprintf('\n');
+        fprintf('  Options:\n');
+        fprintf(' ==========\n');
+        fprintf('  Limits      :: Axis limits\n');
+        fprintf('  Charge      :: Calculate charge in ellipse. Two inputs for peak\n');
+        fprintf('  FigureSize  :: Default [900 500]\n');
+        fprintf('  HideDump    :: Default No\n');
+        fprintf('  IsSubplot   :: Default No\n');
+        fprintf('  AutoResize  :: Default On\n');
+        fprintf('  CAxis       :: Color axis limits\n');
+        fprintf('  ShowOverlay :: Default Yes\n');
+        fprintf('  Absolute    :: Use absolute charge. Default No\n');
+        fprintf('\n');
+        return;
     end % if
     
     sBeam = fTranslateSpecies(sBeam);

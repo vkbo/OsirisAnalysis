@@ -409,7 +409,7 @@ classdef OsirisData
             sSpecies  = fTranslateSpecies(sSpecies); % Species translated to standard format
 
             if isempty(sType)
-                fprintf(2, 'Error: Data type needs to be specified\n');
+                fprintf(2, 'Error: Data type needs to be specified.\n');
                 return;
             end % if
             if isempty(sSet)
@@ -417,6 +417,11 @@ classdef OsirisData
             end % if
             if isempty(sSpecies)
                 sSpecies = 'None';
+            end % if
+            
+            if ~obj.DataSetExists(sType, sSet, sSpecies)
+                fprintf(2, 'Error: Specified data set does not exist.\n');
+                return;
             end % if
 
             % Extract path
@@ -568,6 +573,20 @@ classdef OsirisData
 
         end % function
         
+        function bReturn = DataSetExists(obj, sType, sSet, sSpecies)
+            
+            bReturn = false;
+            
+            [~,iMS] = size(obj.MSData.Data);
+            for m=1:iMS
+                if strcmp(obj.MSData.Data(m).Type, sType) && strcmp(obj.MSData.Data(m).Set, sSet) && strcmp(obj.MSData.Data(m).Species, sSpecies)
+                    bReturn = true;
+                    break;
+                end % if
+            end % for
+            
+        end % function
+
     end % methods
     
     %
@@ -739,7 +758,7 @@ classdef OsirisData
             stReturn.MaxFiles = iMax;
             
         end % function
-
+        
     end % methods
     
 end % classdef

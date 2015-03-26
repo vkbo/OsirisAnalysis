@@ -32,32 +32,32 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     stReturn = {};
 
     if nargin == 0
-       fprintf('\n');
-       fprintf('  Function: fPlotPlasmaDensity\n');
-       fprintf(' ******************************\n');
-       fprintf('  Plots density plot\n');
-       fprintf('\n');
-       fprintf('  Inputs:\n');
-       fprintf(' =========\n');
-       fprintf('  oData   :: OsirisData object\n');
-       fprintf('  sTime   :: Time dump\n');
-       fprintf('  sPlasma :: Which plasma to look at\n');
-       fprintf('\n');
-       fprintf('  Options:\n');
-       fprintf(' ==========\n');
-       fprintf('  Limits       :: Axis limits\n');
-       fprintf('  FigureSize   :: Default [1100 600]\n');
-       fprintf('  HideDump     :: Default No\n');
-       fprintf('  IsSubplot    :: Default No\n');
-       fprintf('  AutoResize   :: Default On\n');
-       fprintf('  CAxis        :: Color axis limits\n');
-       fprintf('  Absolute     :: Use absolute value of charge\n');
-       fprintf('  Overlay[1,2] :: Beam projection overlay\n');
-       fprintf('  Scatter[1,2] :: Beam scatter overlay\n');
-       fprintf('  Sample[1,2]  :: Beam scatter sample size [200]\n');
-       fprintf('  Filter[1,2]  :: Beam scatter filter type: Charge or Random\n');
-       fprintf('\n');
-       return;
+        fprintf('\n');
+        fprintf('  Function: fPlotPlasmaDensity\n');
+        fprintf(' ******************************\n');
+        fprintf('  Plots density plot\n');
+        fprintf('\n');
+        fprintf('  Inputs:\n');
+        fprintf(' =========\n');
+        fprintf('  oData   :: OsirisData object\n');
+        fprintf('  sTime   :: Time dump\n');
+        fprintf('  sPlasma :: Which plasma to look at\n');
+        fprintf('\n');
+        fprintf('  Options:\n');
+        fprintf(' ==========\n');
+        fprintf('  Limits       :: Axis limits\n');
+        fprintf('  FigureSize   :: Default [1100 600]\n');
+        fprintf('  HideDump     :: Default No\n');
+        fprintf('  IsSubplot    :: Default No\n');
+        fprintf('  AutoResize   :: Default On\n');
+        fprintf('  CAxis        :: Color axis limits\n');
+        fprintf('  Absolute     :: Use absolute value of charge\n');
+        fprintf('  Overlay[1,2] :: Beam projection overlay\n');
+        fprintf('  Scatter[1,2] :: Beam scatter overlay\n');
+        fprintf('  Sample[1,2]  :: Beam scatter sample size [200]\n');
+        fprintf('  Filter[1,2]  :: Beam scatter filter type: Charge or Random\n');
+        fprintf('\n');
+        return;
     end % if
     
     sPlasma = fTranslateSpecies(sPlasma);
