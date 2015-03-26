@@ -11,16 +11,17 @@ classdef OsirisConfig
     
     properties (GetAccess = 'public', SetAccess = 'public')
 
-        Path      = '';  % Path to data directory
-        File      = '';  % Config file within data directory
-        Name      = '';  % Name of the loaded dataset
-        Raw       = {};  % Matrix of config file data
-        Variables = {};  % Struct for all variables
-        N0        = 0.0; % N0
-        HasData   = 0;   % 1 if folder 'MS' exists, otherwise 0
-        HasTracks = 0;   % 1 if folder 'MS/TRACKS' exists, otherwise 0
-        Completed = 0;   % 1 if folder 'TIMINGS' exists, otherwise 0
-        Silent    = 0;   % Set to 1 to disable command window output
+        Path       = '';    % Path to data directory
+        File       = '';    % Config file within data directory
+        Name       = '';    % Name of the loaded dataset
+        Raw        = {};    % Matrix of config file data
+        Variables  = {};    % Struct for all variables
+        N0         = 0.0;   % N0
+        HasData    = false; % True if folder 'MS' exists
+        HasTracks  = false; % True if folder 'MS/TRACKS' exists
+        Completed  = false; % True if folder 'TIMINGS' exists
+        Consistent = false; % True if all data folders have the same number of files
+        Silent     = false; % Set to true to disable command window output
 
     end % properties
 

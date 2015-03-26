@@ -314,14 +314,15 @@ function Analyse2D
         X.DataSet  = iSet;
         X.Data     = {};
 
-        X.Data.Name      = oData.Config.Name;
-        X.Data.Beam      = oData.Config.Variables.Species.Beam;
-        X.Data.Plasma    = oData.Config.Variables.Species.Plasma;
-        X.Data.Field     = oData.Config.Variables.Fields.Field;
-        X.Data.Completed = oData.Config.Completed;
-        X.Data.HasData   = oData.Config.HasData;
-        X.Data.HasTracks = oData.Config.HasTracks;
-        X.Data.Coords    = oData.Config.Variables.Simulation.Coordinates;
+        X.Data.Name       = oData.Config.Name;
+        X.Data.Beam       = oData.Config.Variables.Species.Beam;
+        X.Data.Plasma     = oData.Config.Variables.Species.Plasma;
+        X.Data.Field      = oData.Config.Variables.Fields.Field;
+        X.Data.Completed  = oData.Config.Completed;
+        X.Data.HasData    = oData.Config.HasData;
+        X.Data.HasTracks  = oData.Config.HasTracks;
+        X.Data.Consistent = oData.Config.Consistent;
+        X.Data.Coords     = oData.Config.Variables.Simulation.Coordinates;
         
         % Geometry
         if strcmpi(X.Data.Coords, 'cylindrical')
@@ -343,6 +344,10 @@ function Analyse2D
                 set(lblInfo(2),'String','Completed','BackgroundColor',cInfoG);
             else
                 set(lblInfo(2),'String','Incomplete','BackgroundColor',cInfoY);
+            end % if
+
+            if ~X.Data.Consistent
+                set(lblInfo(2),'String','Inconsistent','BackgroundColor',cInfoY);
             end % if
 
             X.Time.Limits(1) = fStringToDump(oData, 'Start');
