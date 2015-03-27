@@ -254,8 +254,7 @@ classdef BField
 
             % Get simulation variables
             sCoords = obj.Data.Config.Variables.Simulation.Coordinates;
-           %dE0     = obj.Data.Config.Variables.Convert.SI.E0;
-            dB0     = 1.0;
+            dB0     = obj.Data.Config.Variables.Convert.SI.B0;
             
             % Get data and axes
             aData   = obj.Data.Data(obj.Time, 'FLD', obj.Field, '');

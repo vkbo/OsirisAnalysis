@@ -292,6 +292,64 @@ classdef Charge
             
         end % function
 
+        function stReturn = Current(obj, sAxis)
+            
+            % Input/Output
+            stReturn = {};
+            
+            sAxis = lower(sAxis);
+            if ~ismember(sAxis, {'j1','j2','j3'}) || ~obj.Data.DataSetExists('DENSITY',sAxis,obj.Species)
+                fprintf(2, 'Error: Current %s does not exist in dataset.\n', sAxis);
+                return;
+            end % if
+
+            % Get simulation variables
+            sCoords = obj.Data.Config.Variables.Simulation.Coordinates;
+            
+            if strcmpi(obj.Units, 'SI')
+                switch(sAxis)
+                    case 'j1'
+                        dJFac = obj.Data.Config.Variables.Convert.SI.J1Fac;
+                    case 'j2'
+                        dJFac = obj.Data.Config.Variables.Convert.SI.J2Fac;
+                    case 'j3'
+                        dJFac = obj.Data.Config.Variables.Convert.SI.J3Fac;
+                end % switch
+            else
+                dJFac = 1.0;
+            end % if
+            
+            % Get data and axes
+            aData   = obj.Data.Data(obj.Time, 'DENSITY', sAxis, obj.Species);
+            aX1Axis = obj.fGetBoxAxis('x1');
+            aX2Axis = obj.fGetBoxAxis('x2');
+
+            % Check if cylindrical
+            if strcmpi(sCoords, 'cylindrical')
+                aData   = transpose([fliplr(aData),aData]);
+                aX2Axis = [-fliplr(aX2Axis), aX2Axis];
+            else
+                aData   = transpose(aData);
+            end % if
+            
+            iX1Min = fGetIndex(aX1Axis, obj.X1Lim(1)*obj.AxisFac(1));
+            iX1Max = fGetIndex(aX1Axis, obj.X1Lim(2)*obj.AxisFac(1));
+            iX2Min = fGetIndex(aX2Axis, obj.X2Lim(1)*obj.AxisFac(2));
+            iX2Max = fGetIndex(aX2Axis, obj.X2Lim(2)*obj.AxisFac(2));
+
+            % Crop and scale dataset
+            aData   = aData(iX2Min:iX2Max,iX1Min:iX1Max)*dJFac;
+            aX1Axis = aX1Axis(iX1Min:iX1Max);
+            aX2Axis = aX2Axis(iX2Min:iX2Max);
+            
+            % Return data
+            stReturn.Data   = aData;
+            stReturn.X1Axis = aX1Axis;
+            stReturn.X2Axis = aX2Axis;
+            stReturn.ZPos   = obj.fGetZPos();
+            
+        end % function
+
         function stReturn = Fourier(obj, aRange)
             
             stReturn = {};
@@ -670,15 +728,15 @@ classdef Charge
             iCount    = length(aRaw(:,1));
             aRaw(:,1) = aRaw(:,1) - dTFactor*obj.Time;
 
-            iCount = stOpt.Sample;
-            if iCount > length(aRaw(:,1))
-                iCount = length(aRaw(:,1));
-            end % if
-
             % Removing elements outside box
             aRaw(:,8) = aRaw(:,8).*(aRaw(:,1) >= obj.X1Lim(1) & aRaw(:,1) <= obj.X1Lim(2));
             aRaw(:,8) = aRaw(:,8).*(aRaw(:,2) >= obj.X2Lim(1) & aRaw(:,2) <= obj.X2Lim(2));
             aRaw      = aRaw(find(aRaw(:,8)),:);
+
+            iCount = stOpt.Sample;
+            if iCount > length(aRaw(:,1))
+                iCount = length(aRaw(:,1));
+            end % if
             
             if strcmpi(sCoords, 'cylindrical')
                 aRaw(:,8) = aRaw(:,8)./aRaw(:,2);

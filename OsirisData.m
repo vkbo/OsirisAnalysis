@@ -412,16 +412,15 @@ classdef OsirisData
                 fprintf(2, 'Error: Data type needs to be specified.\n');
                 return;
             end % if
+            if ~obj.DataSetExists(sType, sSet, sSpecies)
+                fprintf(2, 'Error: Specified data set does not exist.\n');
+                return;
+            end % if
             if isempty(sSet)
                 sSet = 'None';
             end % if
             if isempty(sSpecies)
                 sSpecies = 'None';
-            end % if
-            
-            if ~obj.DataSetExists(sType, sSet, sSpecies)
-                fprintf(2, 'Error: Specified data set does not exist.\n');
-                return;
             end % if
 
             % Extract path

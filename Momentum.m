@@ -278,9 +278,16 @@ classdef Momentum
                 k = i-iStart+1;
                 
                 h5Data    = obj.Data.Data(i, 'RAW', '', obj.Beam);
-                aMean(k)  = obj.MomentumToEnergy(wmean(h5Data(:,4), abs(h5Data(:,8))));
-                aSigma(k) = obj.MomentumToEnergy(wstd(h5Data(:,4), abs(h5Data(:,8))));
-                aData(k)  = aSigma(k)/aMean(k);
+                
+                if length(h5Data(:,8)) == 1 && h5Data(1,8) == 0
+                    aMean(k)  = 0.0;
+                    aSigma(k) = 0.0;
+                    aData(k)  = 0.0;
+                else
+                    aMean(k)  = obj.MomentumToEnergy(wmean(h5Data(:,4), abs(h5Data(:,8))));
+                    aSigma(k) = obj.MomentumToEnergy(wstd(h5Data(:,4), abs(h5Data(:,8))));
+                    aData(k)  = aSigma(k)/aMean(k);
+                end % if
                 
             end % for
             
@@ -535,11 +542,11 @@ classdef Momentum
             end % if
             
             sAxis = '';
-            if obj.Data.DataSetExists('PHA',sprintf('%s%s'.sAxis1,sAxis2),obj.Beam)
-                sAxis = sprintf('%s%s'.sAxis1,sAxis2);
+            if obj.Data.DataSetExists('PHA',sprintf('%s%s',sAxis1,sAxis2),obj.Beam)
+                sAxis = sprintf('%s%s',sAxis1,sAxis2);
             end % if
-            if obj.Data.DataSetExists('PHA',sprintf('%s%s'.sAxis2,sAxis1),obj.Beam)
-                sAxis = sprintf('%s%s'.sAxis2,sAxis1);
+            if obj.Data.DataSetExists('PHA',sprintf('%s%s',sAxis2,sAxis1),obj.Beam)
+                sAxis = sprintf('%s%s',sAxis2,sAxis1);
             end % if
             if isempty(sAxis)
                 fprintf(2, 'There is no combined phase data for %s and %s.\n',sAxis1,sAxis2);

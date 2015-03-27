@@ -73,6 +73,7 @@ function Analyse2D
     
     % Set figure properties
     set(fMain, 'Units', 'Pixels');
+    set(fMain, 'MenuBar', 'None');
     set(fMain, 'Position', [aFPos(1:2) 560 540]);
     set(fMain, 'Name', 'Osiris 2D Analysis');
     
@@ -129,7 +130,7 @@ function Analyse2D
     %  Simulation Info
     % =================
 
-    bgInfo = uibuttongroup('Title','Sim. Info','Units','Pixels','Position',[430 390 110 100],'BackgroundColor',cBackGround);
+    bgInfo = uibuttongroup('Title','Simulation','Units','Pixels','Position',[430 390 110 100],'BackgroundColor',cBackGround);
     
     lblInfo(1) = uicontrol(bgInfo,'Style','Text','String','Geometry','Position',[9 60 90 17],'BackgroundColor',cInfoBack);
     lblInfo(2) = uicontrol(bgInfo,'Style','Text','String','Status',  'Position',[9 35 90 17],'BackgroundColor',cInfoBack);

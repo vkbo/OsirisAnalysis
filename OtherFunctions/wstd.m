@@ -9,6 +9,12 @@
 
 function dReturn = wstd(aData, aWeights)
 
+    dReturn = 0;
+
+    if isempty(aData) || isempty(aWeights)
+        return;
+    end % if
+
     aWeights = aWeights/sum(aWeights);
     dReturn  = sqrt(var(aData, aWeights));
 

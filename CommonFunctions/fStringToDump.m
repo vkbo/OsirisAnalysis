@@ -34,6 +34,9 @@ function iDump = fStringToDump(oData, vValue)
 
     if strcmpi(sString, 'End')
         iDump = oData.MSData.MinFiles - 1;
+        if iDump < 0
+            iDump = 0;
+        end % if
         return;
     end % if
 
@@ -45,6 +48,9 @@ function iDump = fStringToDump(oData, vValue)
         if iDump > oData.MSData.MinFiles - 1
             iDump = oData.MSData.MinFiles - 1;
         end % if
+        if iDump < 0
+            iDump = 0;
+        end % if
         return;
     end % if
 
@@ -55,6 +61,9 @@ function iDump = fStringToDump(oData, vValue)
         iDump     = floor(dPEnd/(dTimeStep*iNDump));
         if iDump > oData.MSData.MinFiles - 1
             iDump = oData.MSData.MinFiles - 1;
+        end % if
+        if iDump < 0
+            iDump = 0;
         end % if
         return;
     end % if
