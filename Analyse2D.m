@@ -56,7 +56,9 @@ function Analyse2D
         X.Plot(f).MaxLim  = [0.0 0.0 0.0 0.0];
         X.Plot(f).Limits  = [0.0 0.0 0.0 0.0];
     end % for
-    for f=7:8
+    
+    iXFig = 9;
+    for f=7:iXFig
         X.Plot(f).Figure  = f+1;
         X.Plot(f).Enabled = 0;
     end % for
@@ -213,6 +215,17 @@ function Analyse2D
     edtT9(1)  = uicontrol(bgTabX,'Style','Edit','String','0','Position',[290 iY 50 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,8});
     edtT9(2)  = uicontrol(bgTabX,'Style','Edit','String','0','Position',[345 iY 50 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,8});
 
+    % Beam Slip
+    iY = iY - 25;
+
+    uicontrol(bgTabX,'Style','Text','String','#10','Position',[5 iY+1 30 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    uicontrol(bgTabX,'Style','Text','String','Beam Slip','Position',[40 iY+1 160 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    uicontrol(bgTabX,'Style','Text','String','Dump','Position',[240 iY+1 45 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+
+    btnFig(9) = uicontrol(bgTabX,'Style','PushButton','String','','Position',[210 iY 20 20],'BackgroundColor',cButtonOff,'Callback',{@fToggleXFig,9});
+    edtT10(1) = uicontrol(bgTabX,'Style','Edit','String','0','Position',[290 iY 50 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,9});
+    edtT10(2) = uicontrol(bgTabX,'Style','Edit','String','0','Position',[345 iY 50 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,9});
+
     set(hTabGroup,'SelectedTab',hTabX);
     
     %
@@ -334,6 +347,10 @@ function Analyse2D
             X.Data.CoordsPF = '';
         end % if
         
+        % Beams
+        X.Data.Witness = oData.Config.Variables.Species.WitnessBeam;
+        X.Data.Drive   = oData.Config.Variables.Species.DriveBeam;
+        
         % Translate Fields
         for i=1:length(X.Data.Field)
             X.Data.Field{i} = fTranslateField(X.Data.Field{i},['Long',X.Data.CoordsPF]);
@@ -388,10 +405,12 @@ function Analyse2D
         end % for
         
         % Set 'Time Plots' values
-        set(edtT8(1), 'String', X.Time.Limits(2));
-        set(edtT8(2), 'String', X.Time.Limits(4));
-        set(edtT9(1), 'String', X.Time.Limits(2));
-        set(edtT9(2), 'String', X.Time.Limits(4));
+        set(edtT8(1),  'String', X.Time.Limits(2));
+        set(edtT8(2),  'String', X.Time.Limits(4));
+        set(edtT9(1),  'String', X.Time.Limits(2));
+        set(edtT9(2),  'String', X.Time.Limits(4));
+        set(edtT10(1), 'String', X.Time.Limits(1));
+        set(edtT10(2), 'String', X.Time.Limits(4));
         
         % Refresh
         fRefresh;
@@ -721,12 +740,12 @@ function Analyse2D
         % If plot not specified, refresh all plots
         if nargin < 1
             a = 7;
-            b = 8;
+            b = iXFig;
         else
             a = p;
             b = p;
         end % if
-
+        
         for f=a:b
             if X.Plot(f).Enabled
                 switch(f)
@@ -735,13 +754,19 @@ function Analyse2D
                         sStart = get(edtT8(1),'String');
                         sEnd   = get(edtT8(2),'String');
                         figure(X.Plot(7).Figure); clf;
-                        fPlotESigmaMean(oData,'EB','Start',sStart,'End',sEnd);
+                        fPlotESigmaMean(oData,X.Data.Witness{1},'Start',sStart,'End',sEnd,'HideDump','Yes');
                     
                     case 8
                         sStart = get(edtT9(1),'String');
                         sEnd   = get(edtT9(2),'String');
                         figure(X.Plot(8).Figure); clf;
-                        fPlotESigmaMeanRatio(oData,'EB','Start',sStart,'End',sEnd);
+                        fPlotESigmaMeanRatio(oData,X.Data.Witness{1},'Start',sStart,'End',sEnd,'HideDump','Yes');
+
+                    case 9
+                        sStart = get(edtT10(1),'String');
+                        sEnd   = get(edtT10(2),'String');
+                        figure(X.Plot(9).Figure); clf;
+                        fPlotBeamSlip(oData,X.Data.Witness{1},'Start',sStart,'End',sEnd,'HideDump','Yes');
 
                 end % switch
             end % if

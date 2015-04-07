@@ -464,11 +464,10 @@ classdef Momentum
             iStop  = fStringToDump(obj.Data, sStop);
             
             % Variables
-            dLFac     = obj.Data.Config.Variables.Convert.SI.LengthFac;
+            dLFac     = obj.AxisFac(1);
             dTimeStep = obj.Data.Config.Variables.Simulation.TimeStep;
             iNDump    = obj.Data.Config.Variables.Simulation.NDump;
             dDeltaZ   = dTimeStep*iNDump;
-            dLFac     = dLFac*1e3;
             
             for i=iStart:iStop
                 

@@ -12,7 +12,9 @@
 %  Options:
 % ==========
 %  FigureSize  :: Default [900 500]
+%  HideDump    :: Default No
 %  IsSubplot   :: Default No
+%  AutoResize  :: Default On
 %  Start       :: Default Plasma Start
 %  End         :: Default Plasma End
 %
@@ -21,35 +23,38 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
 
     % Input/Output
 
+    stReturn = {};
+
     if nargin == 0
-       fprintf('\n');
-       fprintf('  Function: fPlotESigmaMeanRatio\n');
-       fprintf(' ********************************n');
-       fprintf('  Plots the evolution of mean energy of a beam\n');
-       fprintf('\n');
-       fprintf('  Inputs:\n');
-       fprintf(' =========\n');
-       fprintf('  oData    :: OsirisData object\n');
-       fprintf('  sSpecies :: Which species\n');
-       fprintf('\n');
-       fprintf('  Options:\n');
-       fprintf(' ==========\n');
-       fprintf('  FigureSize  :: Default [900 500]\n');
-       fprintf('  IsSubplot   :: Default No\n');
-       fprintf('  Start       :: Default Plasma Start\n');
-       fprintf('  End         :: Default Plasma End\n');
-       fprintf('\n');
-       return;
+        fprintf('\n');
+        fprintf('  Function: fPlotESigmaMeanRatio\n');
+        fprintf(' ********************************n');
+        fprintf('  Plots the evolution of mean energy of a beam\n');
+        fprintf('\n');
+        fprintf('  Inputs:\n');
+        fprintf(' =========\n');
+        fprintf('  oData    :: OsirisData object\n');
+        fprintf('  sSpecies :: Which species\n');
+        fprintf('\n');
+        fprintf('  Options:\n');
+        fprintf(' ==========\n');
+        fprintf('  FigureSize  :: Default [900 500]\n');
+        fprintf('  HideDump    :: Default No\n');
+        fprintf('  IsSubplot   :: Default No\n');
+        fprintf('  AutoResize  :: Default On\n');
+        fprintf('  Start       :: Default Plasma Start\n');
+        fprintf('  End         :: Default Plasma End\n');
+        fprintf('\n');
+        return;
     end % if
 
-    stReturn = {};
     sSpecies = fTranslateSpecies(sSpecies);
 
     oOpt = inputParser;
-    addParameter(oOpt, 'FigureSize',  [900 500]);
-    addParameter(oOpt, 'HideDump',    'No');
-    addParameter(oOpt, 'IsSubPlot',   'No');
-    addParameter(oOpt, 'AutoResize',  'On');
+    addParameter(oOpt, 'FigureSize', [900 500]);
+    addParameter(oOpt, 'HideDump',   'No');
+    addParameter(oOpt, 'IsSubPlot',  'No');
+    addParameter(oOpt, 'AutoResize', 'On');
     addParameter(oOpt, 'Start',      'PStart');
     addParameter(oOpt, 'End',        'PEnd');
     parse(oOpt, varargin{:});
@@ -85,7 +90,12 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
         sRType = 'Readable';
     end % if
 
-    sTitle = sprintf('%s Energy Sigma to Mean Ratio', fTranslateSpecies(sSpecies,sRType));
+    if strcmpi(stOpt.HideDump, 'No')
+        sTitle = sprintf('%s Energy Sigma to Mean Ratio (%s #%d)',fTranslateSpecies(sSpecies,sRType),oData.Config.Name,iTime);
+    else
+        sTitle = sprintf('%s Energy Sigma to Mean Ratio',fTranslateSpecies(sSpecies,sRType));
+    end % if
+
     title(sTitle);
     xlabel('z [m]');
     ylabel('\sigma_E/<E>');
