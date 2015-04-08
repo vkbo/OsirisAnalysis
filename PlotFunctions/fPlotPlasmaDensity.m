@@ -13,7 +13,7 @@
 %  Options:
 % ==========
 %  Limits       :: Axis limits
-%  FigureSize   :: Default [1100 600]
+%  FigureSize   :: Default [900 500]
 %  HideDump     :: Default No
 %  IsSubplot    :: Default No
 %  AutoResize   :: Default On
@@ -46,7 +46,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         fprintf('  Options:\n');
         fprintf(' ==========\n');
         fprintf('  Limits       :: Axis limits\n');
-        fprintf('  FigureSize   :: Default [1100 600]\n');
+        fprintf('  FigureSize   :: Default [900 500]\n');
         fprintf('  HideDump     :: Default No\n');
         fprintf('  IsSubplot    :: Default No\n');
         fprintf('  AutoResize   :: Default On\n');
@@ -65,7 +65,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
 
     oOpt = inputParser;
     addParameter(oOpt, 'Limits',      []);
-    addParameter(oOpt, 'FigureSize',  [1100 600]);
+    addParameter(oOpt, 'FigureSize',  [900 500]);
     addParameter(oOpt, 'HideDump',    'No');
     addParameter(oOpt, 'IsSubPlot',   'No');
     addParameter(oOpt, 'AutoResize',  'On');
