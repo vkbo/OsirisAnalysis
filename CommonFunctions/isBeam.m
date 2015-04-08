@@ -1,7 +1,7 @@
 %
 %  Function: isBeam
 % ******************
-%  Checks if species is a beam speacies
+%  Checks if species is a beam species
 %
 
 function iBool = isBeam(sSpecies)

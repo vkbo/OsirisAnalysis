@@ -1,3 +1,4 @@
+
 %
 %  Function: fPlotBeamSlip
 % *************************
@@ -10,9 +11,12 @@
 %
 %  Options:
 % ==========
-%  Limits      :: Axis limits
 %  FigureSize  :: Default [900 500]
+%  HideDump    :: Default No
 %  IsSubplot   :: Default No
+%  AutoResize  :: Default On
+%  Start       :: Default Plasma Start
+%  End         :: Default Plasma End
 %  LambdaRel   :: Relative to start and lambda_p
 %
 
@@ -23,32 +27,38 @@ function stReturn = fPlotBeamSlip(oData, sBeam, varargin)
     stReturn = {};
 
     if nargin == 0
-       fprintf('\n');
-       fprintf('  Function: fPlotBeamSlip\n');
-       fprintf(' *************************\n');
-       fprintf('  Plots the slippage of a beam through the simulation\n');
-       fprintf('\n');
-       fprintf('  Inputs:\n');
-       fprintf(' =========\n');
-       fprintf('  oData    :: OsirisData object\n');
-       fprintf('  sBeam    :: Beam\n');
-       fprintf('\n');
-       fprintf('  Options:\n');
-       fprintf(' ==========\n');
-       fprintf('  Limits      :: Axis limits\n');
-       fprintf('  FigureSize  :: Default [900 500]\n');
-       fprintf('  IsSubplot   :: Default No\n');
-       fprintf('  LambdaRel   :: Relative to start and lambda_p\n');
-       fprintf('\n');
-       return;
+        fprintf('\n');
+        fprintf('  Function: fPlotBeamSlip\n');
+        fprintf(' *************************\n');
+        fprintf('  Plots the slippage of a beam through the simulation\n');
+        fprintf('\n');
+        fprintf('  Inputs:\n');
+        fprintf(' =========\n');
+        fprintf('  oData    :: OsirisData object\n');
+        fprintf('  sBeam    :: Beam\n');
+        fprintf('\n');
+        fprintf('  Options:\n');
+        fprintf(' ==========\n');
+        fprintf('  FigureSize  :: Default [900 500]\n');
+        fprintf('  HideDump    :: Default No\n');
+        fprintf('  IsSubplot   :: Default No\n');
+        fprintf('  AutoResize  :: Default On\n');
+        fprintf('  Start       :: Default Plasma Start\n');
+        fprintf('  End         :: Default Plasma End\n');
+        fprintf('  LambdaRel   :: Relative to start and lambda_p\n');
+        fprintf('\n');
+        return;
     end % if
 
     sBeam = fTranslateSpecies(sBeam);
 
     oOpt = inputParser;
-    addParameter(oOpt, 'Limits',     []);
     addParameter(oOpt, 'FigureSize', [900 500]);
+    addParameter(oOpt, 'HideDump',   'No');
     addParameter(oOpt, 'IsSubPlot',  'No');
+    addParameter(oOpt, 'AutoResize', 'On');
+    addParameter(oOpt, 'Start',      'PStart');
+    addParameter(oOpt, 'End',        'PEnd');
     addParameter(oOpt, 'LambdaRel',  'No');
     addParameter(oOpt, 'AddEnergy',  0);
     parse(oOpt, varargin{:});
@@ -57,8 +67,8 @@ function stReturn = fPlotBeamSlip(oData, sBeam, varargin)
 
     % Data
 
-    oM        = Momentum(oData, sBeam);
-    stData    = oM.BeamSlip('Start', 'End', stOpt.AddEnergy);
+    oMom      = Momentum(oData,sBeam,'Units','SI','X1Scale','mm');
+    stData    = oMom.BeamSlip(stOpt.Start,stOpt.End,stOpt.AddEnergy);
     
     aTAxis    = stData.TAxis;
     aActual   = stData.Position.Median;
@@ -89,12 +99,14 @@ function stReturn = fPlotBeamSlip(oData, sBeam, varargin)
     end % if
     
     
-    
     % Plot
     
     if strcmpi(stOpt.IsSubPlot, 'No')
         clf;
-        fFigureSize(gcf, stOpt.FigureSize);
+        if strcmpi(stOpt.AutoResize, 'On')
+            fFigureSize(gcf, stOpt.FigureSize);
+        end % if
+        set(gcf,'Name',sprintf('%s Beam Slip (%s)',sBeam,oData.Config.Name))
     else
         cla;
     end % if
@@ -113,15 +125,29 @@ function stReturn = fPlotBeamSlip(oData, sBeam, varargin)
     
     xlim([aTAxis(1), aTAxis(end)]);
     
-    sTitle = sprintf('%s Slipping', fTranslateSpeciesReadable(sBeam));
-    title(sTitle,'FontSize',14);
+    if strcmpi(oMom.Coords, 'cylindrical')
+        sRType = 'ReadableCyl';
+    else
+        sRType = 'Readable';
+    end % if
 
-    xlabel(sXLabel, 'FontSize', 12);
-    ylabel(sYLabel, 'FontSize', 12);
+    if strcmpi(stOpt.HideDump, 'No')
+        sTitle = sprintf('%s Slipping (%s #%d)',fTranslateSpecies(sBeam,sRType),oData.Config.Name,iTime);
+    else
+        sTitle = sprintf('%s Slipping',fTranslateSpecies(sBeam,sRType));
+    end % if
+
+    title(sTitle);
+    xlabel(sXLabel);
+    ylabel(sYLabel);
     
     hold off;
     
+    % Returns
+    stReturn.Beam  = sBeam;
     stReturn.TAxis = aTAxis;
+    stReturn.XLim  = get(gca, 'XLim');
+    stReturn.YLim  = get(gca, 'YLim');
 
 end
 

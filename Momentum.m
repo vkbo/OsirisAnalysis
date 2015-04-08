@@ -11,16 +11,18 @@ classdef Momentum
 
     properties (GetAccess = 'public', SetAccess = 'public')
         
-        Data      = [];                       % OsirisData dataset
-        Beam      = '';                       % What beam to ananlyse
-        Time      = 0;                        % Current time (dumb number)
-        X1Lim     = [];                       % Axes limits x1
-        X2Lim     = [];                       % Axes limits x2
-        X3Lim     = [];                       % Axes limits x3
-        Units     = 'N';                      % Units of axes
-        AxisUnits = {'N', 'N', 'N'};          % Units of axes
-        AxisScale = {'Auto', 'Auto', 'Auto'}; % Scale of axes
-        AxisFac   = [1.0, 1.0, 1.0];          % Axes scale factors
+        Data      = [];                        % OsirisData dataset
+        Beam      = '';                        % What beam to ananlyse
+        Time      = 0;                         % Current time (dumb number)
+        X1Lim     = [];                        % Axes limits x1
+        X2Lim     = [];                        % Axes limits x2
+        X3Lim     = [];                        % Axes limits x3
+        Units     = 'N';                       % Units of axes
+        AxisUnits = {'N', 'N', 'N'};           % Units of axes
+        AxisScale = {'Auto', 'Auto', 'Auto'};  % Scale of axes
+        AxisRange = [0.0 0.0 0.0 0.0 0.0 0.0]; % Max and min of axes
+        AxisFac   = [1.0, 1.0, 1.0];           % Axes scale factors
+        Coords    = '';                        % Coordinates
         
     end % properties
 
@@ -49,7 +51,6 @@ classdef Momentum
                 return;
             end % if
 
-            
             % Read input parameters
             oOpt = inputParser;
             addParameter(oOpt, 'Units',   'N');
@@ -58,7 +59,6 @@ classdef Momentum
             addParameter(oOpt, 'X3Scale', 'Auto');
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
-
 
             % Read config
             dBoxX1Min = obj.Data.Config.Variables.Simulation.BoxX1Min;
@@ -70,21 +70,23 @@ classdef Momentum
             sCoords   = obj.Data.Config.Variables.Simulation.Coordinates;
             dLFactor  = obj.Data.Config.Variables.Convert.SI.LengthFac;
 
-
             % Set Scale and Units
             obj.AxisScale = {stOpt.X1Scale, stOpt.X2Scale, stOpt.X3Scale};
-
+            obj.Coords    = sCoords;
 
             % Evaluate units
             switch(lower(stOpt.Units))
 
                 case 'si'
-                    obj.Units         = 'SI';
-                    [dX1Fac, sX1Unit] = fLengthScale(obj.AxisScale{1}, 'm');
-                    [dX2Fac, sX2Unit] = fLengthScale(obj.AxisScale{2}, 'm');
-                    [dX3Fac, sX3Unit] = fLengthScale(obj.AxisScale{3}, 'm');
-                    obj.AxisFac       = [dLFactor*dX1Fac, dLFactor*dX2Fac, dLFactor*dX3Fac];
-                    obj.AxisUnits     = {sX1Unit, sX2Unit, sX3Unit};
+                    obj.Units          = 'SI';
+                    [dX1Fac, sX1Unit]  = fLengthScale(obj.AxisScale{1}, 'm');
+                    [dX2Fac, sX2Unit]  = fLengthScale(obj.AxisScale{2}, 'm');
+                    [dX3Fac, sX3Unit]  = fLengthScale(obj.AxisScale{3}, 'm');
+                    obj.AxisFac        = [dLFactor*dX1Fac, dLFactor*dX2Fac, dLFactor*dX3Fac];
+                    obj.AxisUnits      = {sX1Unit, sX2Unit, sX3Unit};
+                    obj.AxisRange(1:2) = [dBoxX1Min dBoxX1Max]*obj.AxisFac(1);
+                    obj.AxisRange(3:4) = [dBoxX2Min dBoxX2Max]*obj.AxisFac(2);
+                    obj.AxisRange(5:6) = [dBoxX3Min dBoxX3Max]*obj.AxisFac(3);
 
                 otherwise
                     obj.Units   = 'N';
@@ -94,6 +96,7 @@ classdef Momentum
                     else
                         obj.AxisUnits = {'c/\omega_p', 'c_/\omega_p', 'c/\omega_p'};
                     end % if
+                    obj.AxisRange = [dBoxX1Min dBoxX1Max dBoxX2Min dBoxX2Max dBoxX3Min dBoxX3Max];
 
             end % switch
 
@@ -275,9 +278,16 @@ classdef Momentum
                 k = i-iStart+1;
                 
                 h5Data    = obj.Data.Data(i, 'RAW', '', obj.Beam);
-                aMean(k)  = obj.MomentumToEnergy(wmean(h5Data(:,4), abs(h5Data(:,8))));
-                aSigma(k) = obj.MomentumToEnergy(wstd(h5Data(:,4), abs(h5Data(:,8))));
-                aData(k)  = aSigma(k)/aMean(k);
+                
+                if length(h5Data(:,8)) == 1 && h5Data(1,8) == 0
+                    aMean(k)  = 0.0;
+                    aSigma(k) = 0.0;
+                    aData(k)  = 0.0;
+                else
+                    aMean(k)  = obj.MomentumToEnergy(wmean(h5Data(:,4), abs(h5Data(:,8))));
+                    aSigma(k) = obj.MomentumToEnergy(wstd(h5Data(:,4), abs(h5Data(:,8))));
+                    aData(k)  = aSigma(k)/aMean(k);
+                end % if
                 
             end % for
             
@@ -384,7 +394,7 @@ classdef Momentum
         function aReturn = MomentumToEnergy(obj, aMomentum)
             
             dRQM    = obj.Data.Config.Variables.Beam.(obj.Beam).RQM;
-            dEMass  = obj.Data.Config.Variables.Constants.ElectronMassMeV;
+            dEMass  = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
 
             dPFac   = abs(dRQM)*dEMass;
             %dSign   = dRQM/abs(dRQM);
@@ -454,11 +464,10 @@ classdef Momentum
             iStop  = fStringToDump(obj.Data, sStop);
             
             % Variables
-            dLFac     = obj.Data.Config.Variables.Convert.SI.LengthFac;
+            dLFac     = obj.AxisFac(1);
             dTimeStep = obj.Data.Config.Variables.Simulation.TimeStep;
             iNDump    = obj.Data.Config.Variables.Simulation.NDump;
             dDeltaZ   = dTimeStep*iNDump;
-            dLFac     = dLFac*1e3;
             
             for i=iStart:iStop
                 
@@ -514,6 +523,35 @@ classdef Momentum
             stReturn.DeltaZ = dDeltaZ;
             stReturn.TAxis  = aTAxis(iStart+1:iStop+1);
     
+        end % function
+        
+        function stReturn = Phase(obj, sAxis1, sAxis2, varargin)
+            
+            % Input/Output
+            stReturn = {};
+            
+            if ~isAxis(sAxis1)
+                fprintf(2, '%s is not a valid axis.\n',sAxis1);
+                return;
+            end % if
+
+            if ~isAxis(sAxis2)
+                fprintf(2, '%s is not a valid axis.\n',sAxis2);
+                return;
+            end % if
+            
+            sAxis = '';
+            if obj.Data.DataSetExists('PHA',sprintf('%s%s',sAxis1,sAxis2),obj.Beam)
+                sAxis = sprintf('%s%s',sAxis1,sAxis2);
+            end % if
+            if obj.Data.DataSetExists('PHA',sprintf('%s%s',sAxis2,sAxis1),obj.Beam)
+                sAxis = sprintf('%s%s',sAxis2,sAxis1);
+            end % if
+            if isempty(sAxis)
+                fprintf(2, 'There is no combined phase data for %s and %s.\n',sAxis1,sAxis2);
+                return;
+            end % if
+            
         end % function
     
     end % methods

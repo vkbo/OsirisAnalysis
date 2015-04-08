@@ -1,3 +1,4 @@
+
 %
 %  Function: fPlotBeamDensity
 % ****************************
@@ -11,15 +12,16 @@
 %
 %  Options:
 % ==========
+%  Current     :: Optional current instead of charge
 %  Limits      :: Axis limits
-%  Charge      :: Calculate charge in ellipse two inputs for peak
+%  Charge      :: Calculate charge in ellipse. Two inputs for peak
 %  FigureSize  :: Default [900 500]
 %  HideDump    :: Default No
 %  IsSubplot   :: Default No
 %  AutoResize  :: Default On
 %  CAxis       :: Color axis limits
 %  ShowOverlay :: Default Yes
-%  Absolute    :: Absolute value, default No
+%  Absolute    :: Use absolute charge. Default No
 %
 
 function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
@@ -29,35 +31,38 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     stReturn = {};
 
     if nargin == 0
-       fprintf('\n');
-       fprintf('  Function: fPlotBeamDensity\n');
-       fprintf(' ****************************\n');
-       fprintf('  Plots density plot\n');
-       fprintf('\n');
-       fprintf('  Inputs:\n');
-       fprintf(' =========\n');
-       fprintf('  oData :: OsirisData object\n');
-       fprintf('  sTime :: Time dump\n');
-       fprintf('  sBeam :: Which beam to look at\n');
-       fprintf('\n');
-       fprintf('  Options:\n');
-       fprintf(' ==========\n');
-       fprintf('  Limits      :: Axis limits\n');
-       fprintf('  Charge      :: Calculate charge in ellipse two inputs for peak\n');
-       fprintf('  FigureSize  :: Default [900 500]\n');
-       fprintf('  HideDump    :: Default No\n');
-       fprintf('  IsSubplot   :: Default No\n');
-       fprintf('  AutoResize  :: Default On\n');
-       fprintf('  CAxis       :: Color axis limits\n');
-       fprintf('  ShowOverlay :: Default Yes\n');
-       fprintf('\n');
-       return;
+        fprintf('\n');
+        fprintf('  Function: fPlotBeamDensity\n');
+        fprintf(' ****************************\n');
+        fprintf('  Plots density plot\n');
+        fprintf('\n');
+        fprintf('  Inputs:\n');
+        fprintf(' =========\n');
+        fprintf('  oData :: OsirisData object\n');
+        fprintf('  sTime :: Time dump\n');
+        fprintf('  sBeam :: Which beam to look at\n');
+        fprintf('\n');
+        fprintf('  Options:\n');
+        fprintf(' ==========\n');
+        fprintf('  Current     :: Optional current instead of charge\n');
+        fprintf('  Limits      :: Axis limits\n');
+        fprintf('  Charge      :: Calculate charge in ellipse. Two inputs for peak\n');
+        fprintf('  FigureSize  :: Default [900 500]\n');
+        fprintf('  HideDump    :: Default No\n');
+        fprintf('  IsSubplot   :: Default No\n');
+        fprintf('  AutoResize  :: Default On\n');
+        fprintf('  CAxis       :: Color axis limits\n');
+        fprintf('  ShowOverlay :: Default Yes\n');
+        fprintf('  Absolute    :: Use absolute charge. Default No\n');
+        fprintf('\n');
+        return;
     end % if
     
     sBeam = fTranslateSpecies(sBeam);
     iTime = fStringToDump(oData, num2str(sTime));
 
     oOpt = inputParser;
+    addParameter(oOpt, 'Current',     '');
     addParameter(oOpt, 'Limits',      []);
     addParameter(oOpt, 'Charge',      []);
     addParameter(oOpt, 'FigureSize',  [900 500]);
@@ -83,7 +88,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
 
     
     % Prepare Data
-
+    
     oCH      = Charge(oData, sBeam, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
     oCH.Time = iTime;
 
@@ -92,12 +97,27 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
         oCH.X2Lim = stOpt.Limits(3:4);
     end % if
     
-    stData  = oCH.Density;
+    if isempty(stOpt.Current)
+        stData = oCH.Density;
+    else
+        stData = oCH.Current(stOpt.Current);
+    end % if
+    
+    if isempty(stData)
+        fprintf(2, 'Error: No data.\n');
+        return;
+    end % if
 
-    aData   = stData.Data;
-    aZAxis  = stData.X1Axis;
-    aRAxis  = stData.X2Axis;
-    dZPos   = stData.ZPos;
+    aData  = stData.Data;
+    aZAxis = stData.X1Axis;
+    aRAxis = stData.X2Axis;
+    dZPos  = stData.ZPos;
+    
+    if ~isempty(stOpt.Current)
+        dMax  = max(abs(aData(:)));
+        [dCMax,dCUnit] = fAutoScale(dMax,'A');
+        aData = aData*dCMax/dMax;
+    end % if
 
     stReturn.X1Axis    = stData.X1Axis;
     stReturn.X2Axis    = stData.X2Axis;
@@ -109,8 +129,8 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
         aData = abs(aData);
     end % if
     
-    aProjZ  = abs(sum(aData));
-    aProjZ  = 0.15*(aRAxis(end)-aRAxis(1))*aProjZ/max(abs(aProjZ))+aRAxis(1);
+    aProjZ = abs(sum(aData));
+    aProjZ = 0.15*(aRAxis(end)-aRAxis(1))*aProjZ/max(abs(aProjZ))+aRAxis(1);
 
     if length(stOpt.Charge) == 2
         [~,iZPeak] = max(sum(abs(aData),1));
@@ -121,15 +141,8 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     else
         stQTot = oCH.BeamCharge;
     end % if
-    dQ = stQTot.QTotal*1e9;
-    
-    if abs(dQ) < 1.0e-3
-        sBeamCharge = sprintf('Q_{tot} = %.2f fC', dQ*1e6);
-    elseif abs(dQ) < 1.0
-        sBeamCharge = sprintf('Q_{tot} = %.2f pC', dQ*1e3);
-    else
-        sBeamCharge = sprintf('Q_{tot} = %.2f nC', dQ);
-    end % if
+    [dQ, sQUnit] = fAutoScale(stQTot.QTotal,'C');
+    sBeamCharge  = sprintf('Q_{tot} = %.2f %s', dQ, sQUnit);
     
 
     % Plot
@@ -172,16 +185,34 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
         rectangle('Position',[dRX,dRY,2*stOpt.Charge(3),2*stOpt.Charge(4)],'Curvature',[1,1],'EdgeColor','White','LineStyle','--');
     end % if
 
-    if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s Density %s (%s #%d)', fTranslateSpeciesReadable(sBeam), fPlasmaPosition(oData, iTime), oData.Config.Name, iTime);
+    if strcmpi(oCH.Coords, 'cylindrical')
+        sRType = 'ReadableCyl';
+        sLType = 'LongCyl';
     else
-        sTitle = sprintf('%s Density %s', fTranslateSpeciesReadable(sBeam), fPlasmaPosition(oData, iTime));
+        sRType = 'Readable';
+        sLType = 'Long';
+    end % of
+    
+    if isempty(stOpt.Current)
+        sPlot = 'Density';
+    else
+        sPlot = fTranslateField(stOpt.Current,sLType);
     end % if
 
-    title(sTitle,'FontSize',14);
-    xlabel('\xi [mm]', 'FontSize',12);
-    ylabel('r [mm]', 'FontSize',12);
-    title(hCol, 'n_{pe}/n_0');
+    if strcmpi(stOpt.HideDump, 'No')
+        sTitle = sprintf('%s %s %s (%s #%d)',fTranslateSpecies(sBeam,sRType),sPlot,fPlasmaPosition(oData, iTime),oData.Config.Name,iTime);
+    else
+        sTitle = sprintf('%s %s %s',fTranslateSpecies(sBeam,sRType),sPlot,fPlasmaPosition(oData, iTime));
+    end % if
+
+    title(sTitle);
+    xlabel('\xi [mm]');
+    ylabel('r [mm]');
+    if isempty(stOpt.Current)
+        title(hCol,'n_{pe}/n_0');
+    else
+        title(hCol,sprintf('%s %s',fTranslateField(stOpt.Current,sRType),dCUnit));
+    end % if
     
     hold off;
     

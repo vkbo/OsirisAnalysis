@@ -1,3 +1,4 @@
+
 %
 %  Function: fPlotPlasmaDensity
 % ******************************
@@ -12,7 +13,7 @@
 %  Options:
 % ==========
 %  Limits       :: Axis limits
-%  FigureSize   :: Default [1100 600]
+%  FigureSize   :: Default [900 500]
 %  HideDump     :: Default No
 %  IsSubplot    :: Default No
 %  AutoResize   :: Default On
@@ -31,32 +32,32 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     stReturn = {};
 
     if nargin == 0
-       fprintf('\n');
-       fprintf('  Function: fPlotPlasmaDensity\n');
-       fprintf(' ******************************\n');
-       fprintf('  Plots density plot\n');
-       fprintf('\n');
-       fprintf('  Inputs:\n');
-       fprintf(' =========\n');
-       fprintf('  oData   :: OsirisData object\n');
-       fprintf('  sTime   :: Time dump\n');
-       fprintf('  sPlasma :: Which plasma to look at\n');
-       fprintf('\n');
-       fprintf('  Options:\n');
-       fprintf(' ==========\n');
-       fprintf('  Limits       :: Axis limits\n');
-       fprintf('  FigureSize   :: Default [1100 600]\n');
-       fprintf('  HideDump     :: Default No\n');
-       fprintf('  IsSubplot    :: Default No\n');
-       fprintf('  AutoResize   :: Default On\n');
-       fprintf('  CAxis        :: Color axis limits\n');
-       fprintf('  Absolute     :: Use absolute value of charge\n');
-       fprintf('  Overlay[1,2] :: Beam projection overlay\n');
-       fprintf('  Scatter[1,2] :: Beam scatter overlay\n');
-       fprintf('  Sample[1,2]  :: Beam scatter sample size [200]\n');
-       fprintf('  Filter[1,2]  :: Beam scatter filter type: Charge or Random\n');
-       fprintf('\n');
-       return;
+        fprintf('\n');
+        fprintf('  Function: fPlotPlasmaDensity\n');
+        fprintf(' ******************************\n');
+        fprintf('  Plots density plot\n');
+        fprintf('\n');
+        fprintf('  Inputs:\n');
+        fprintf(' =========\n');
+        fprintf('  oData   :: OsirisData object\n');
+        fprintf('  sTime   :: Time dump\n');
+        fprintf('  sPlasma :: Which plasma to look at\n');
+        fprintf('\n');
+        fprintf('  Options:\n');
+        fprintf(' ==========\n');
+        fprintf('  Limits       :: Axis limits\n');
+        fprintf('  FigureSize   :: Default [900 500]\n');
+        fprintf('  HideDump     :: Default No\n');
+        fprintf('  IsSubplot    :: Default No\n');
+        fprintf('  AutoResize   :: Default On\n');
+        fprintf('  CAxis        :: Color axis limits\n');
+        fprintf('  Absolute     :: Use absolute value of charge\n');
+        fprintf('  Overlay[1,2] :: Beam projection overlay\n');
+        fprintf('  Scatter[1,2] :: Beam scatter overlay\n');
+        fprintf('  Sample[1,2]  :: Beam scatter sample size [200]\n');
+        fprintf('  Filter[1,2]  :: Beam scatter filter type: Charge or Random\n');
+        fprintf('\n');
+        return;
     end % if
     
     sPlasma = fTranslateSpecies(sPlasma);
@@ -64,7 +65,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
 
     oOpt = inputParser;
     addParameter(oOpt, 'Limits',      []);
-    addParameter(oOpt, 'FigureSize',  [1100 600]);
+    addParameter(oOpt, 'FigureSize',  [900 500]);
     addParameter(oOpt, 'HideDump',    'No');
     addParameter(oOpt, 'IsSubPlot',   'No');
     addParameter(oOpt, 'AutoResize',  'On');
@@ -82,6 +83,8 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     addParameter(oOpt, 'Filter',      'Charge');
     addParameter(oOpt, 'Filter1',     'Charge');
     addParameter(oOpt, 'Filter2',     'Charge');
+    addParameter(oOpt, 'E1',          []);
+    addParameter(oOpt, 'E2',          []);
     parse(oOpt, varargin{:});
     stOpt = oOpt.Results;
 
@@ -99,6 +102,21 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     end % if
     if ~isempty(stOpt.Overlay2)
         stOLBeam{2} = stOpt.Overlay2;
+    end % if
+    
+    stField = {};
+    iField = 1;
+    if ~isempty(stOpt.E1)
+        stField(iField).Name  = 'e1';
+        stField(iField).Range = stOpt.E1;
+        stField(iField).Color = [0.7 1.0 0.7];
+        iField = iField + 1;
+    end % if
+    if ~isempty(stOpt.E2)
+        stField(iField).Name  = 'e2';
+        stField(iField).Range = stOpt.E2;
+        stField(iField).Color = [0.9 0.9 0.7];
+        iField = iField + 1;
     end % if
 
     stSCBeam = {};
@@ -145,12 +163,12 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         oCH.X2Lim = stOpt.Limits(3:4);
     end % if
 
-    stData  = oCH.Density;
+    stData = oCH.Density;
 
-    aData   = stData.Data;
-    aZAxis  = stData.X1Axis;
-    aRAxis  = stData.X2Axis;
-    dZPos   = stData.ZPos;
+    aData  = stData.Data;
+    aZAxis = stData.X1Axis;
+    aRAxis = stData.X2Axis;
+    dZPos  = stData.ZPos;
 
     stReturn.X1Axis    = stData.X1Axis;
     stReturn.X2Axis    = stData.X2Axis;
@@ -215,13 +233,20 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
 
             stScatter = oBeam.ParticleSample('Sample', aSample(i), 'Filter', stFilter{i});
 
-            scatter(stScatter.X1, stScatter.X2, stScatter.Area, aCol(i,:), 'Filled');
+            scatter(stScatter.X1,stScatter.X2,stScatter.Area,aCol(i,:),'Filled','HandleVisibility','Off');
             stReturn.Scatter = stScatter;
 
         end % if
         
     end % for
+
+    %
+    %  Overlay Plot Start
+    % ********************
+    %
     
+    iOLNum  = 1;
+    stOLLeg = {};
 
     %
     %  Plot Beam Overlay
@@ -251,23 +276,59 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
             aProjZ = abs(sum(stBeam.Data));
             aProjZ = 0.15*(aRAxis(end)-aRAxis(1))*aProjZ/max(abs(aProjZ))+aRAxis(1);
             stQTot = oBeam.BeamCharge;
-            dQ     = stQTot.QTotal*1e9;
-            
 
-            if abs(dQ) < 1.0e-3
-                sBeamCharge = sprintf('Q_{tot}^{%s} = %.2f fC', fTranslateSpeciesShort(stOLBeam{i}), dQ*1e6);
-            elseif abs(dQ) < 1.0
-                sBeamCharge = sprintf('Q_{tot}^{%s} = %.2f pC', fTranslateSpeciesShort(stOLBeam{i}), dQ*1e3);
-            else
-                sBeamCharge = sprintf('Q_{tot}^{%s} = %.2f nC', fTranslateSpeciesShort(stOLBeam{i}), dQ);
-            end % if
+            [dQ, sQUnit] = fAutoScale(stQTot.QTotal,'C');
 
             plot(aZAxis, aProjZ, 'Color', aCol(i,:));
-            
-            stOLLeg{i} = sBeamCharge;
+            stOLLeg{iOLNum} = sprintf('Q_{tot}^{%s} = %.2f %s', fTranslateSpecies(stOLBeam{i},'Short'), dQ, sQUnit);
+            iOLNum = iOLNum + 1;
 
         end % if
+    
+    end % for
 
+    %
+    %  Plot Field Overlay
+    % ********************
+    %
+    
+    for i=1:length(stField)
+        
+        if length(stField(i).Range) == 2
+            iS = stField(i).Range(1);
+            iA = stField(i).Range(2);
+        else
+            iS = 3;
+            iA = 3;
+        end % if
+        
+        oEF = EField(oData,stField(i).Name,'Units','SI','X1Scale',oCH.AxisScale{1},'X2Scale','m');
+        oEF.Time = iTime;
+        
+        if length(stOpt.Limits) == 4
+            oEF.X1Lim = stOpt.Limits(1:2);
+        end % if
+
+        stEF    = oEF.Lineout(iS,iA);
+        aEFData = 0.15*(aRAxis(end)-aRAxis(1))*stEF.Data/max(abs(stEF.Data));
+
+        [dEne,  sEne]  = fAutoScale(max(abs(stEF.Data)), 'eV');
+        [dEVal, sUnit] = fAutoScale(stEF.X2Range(2), 'm');
+        dSVal          = stEF.X2Range(1)*dEVal/stEF.X2Range(2);
+        
+        plot(stEF.X1Axis,aEFData,'Color',stField(i).Color);
+        stOLLeg{iOLNum} = sprintf('%s^{%.0f–%.0f %s} < %.1f %s',fTranslateField(stField(i).Name,'ReadableCyl'),dSVal,dEVal,sUnit,dEne,sEne);
+        iOLNum = iOLNum + 1;
+        
+    end % if
+    
+    %
+    %  Finish
+    % ********
+    %
+
+    if ~isempty(stOLLeg)
+        
         h = legend(stOLLeg, 'Location', 'NE');
         set(h,'Box','Off');
         set(h,'TextColor', 'White');
@@ -275,25 +336,25 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         if length(stOLBeam) == 1
             set(findobj(h, 'type', 'line'), 'visible', 'off')
         end % if
+
+    end % if
     
-    end % for
-    
-    
-    %
-    %  Finish
-    % ********
-    %
-    
-    if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s Density %s (%s #%d)', fTranslateSpeciesReadable(sPlasma), fPlasmaPosition(oData, iTime), oData.Config.Name, iTime);
+    if strcmpi(oCH.Coords, 'cylindrical')
+        sRType = 'ReadableCyl';
     else
-        sTitle = sprintf('%s Density %s', fTranslateSpeciesReadable(sPlasma), fPlasmaPosition(oData, iTime));
+        sRType = 'Readable';
+    end % of
+
+    if strcmpi(stOpt.HideDump, 'No')
+        sTitle = sprintf('%s Density %s (%s #%d)', fTranslateSpecies(sPlasma,sRType), fPlasmaPosition(oData, iTime), oData.Config.Name, iTime);
+    else
+        sTitle = sprintf('%s Density %s', fTranslateSpecies(sPlasma,sRType), fPlasmaPosition(oData, iTime));
     end % if
 
-    title(sTitle,'FontSize',14);
-    xlabel('\xi [mm]', 'FontSize',12);
-    ylabel('r [mm]', 'FontSize',12);
-    title(hCol, 'n_{pe}/n_0');
+    title(sTitle);
+    xlabel('\xi [mm]');
+    ylabel('r [mm]');
+    title(hCol,'n_{pe}/n_0');
     
     hold off;
     

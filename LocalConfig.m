@@ -3,8 +3,10 @@
 %
 
 % Local temp directory
-
 sLocalTemp = '/home/vkbo/Temp';
+
+% Output directory for animated plots
+sAnimPath = '/scratch/Code/Osiris/Matlab/Movies';
 
 %  List of data folders to scan
 % *******************************

@@ -1,3 +1,4 @@
+
 %
 %  Class Object to hold the Osiris Config file
 % *********************************************
@@ -11,16 +12,17 @@ classdef OsirisConfig
     
     properties (GetAccess = 'public', SetAccess = 'public')
 
-        Path      = '';  % Path to data directory
-        File      = '';  % Config file within data directory
-        Name      = '';  % Name of the loaded dataset
-        Raw       = {};  % Matrix of config file data
-        Variables = {};  % Struct for all variables
-        N0        = 0.0; % N0
-        HasData   = 0;   % 1 if folder 'MS' exists, otherwise 0
-        HasTracks = 0;   % 1 if folder 'MS/TRACKS' exists, otherwise 0
-        Completed = 0;   % 1 if folder 'TIMINGS' exists, otherwise 0
-        Silent    = 0;   % Set to 1 to disable command window output
+        Path       = '';    % Path to data directory
+        File       = '';    % Config file within data directory
+        Name       = '';    % Name of the loaded dataset
+        Raw        = {};    % Matrix of config file data
+        Variables  = {};    % Struct for all variables
+        N0         = 0.0;   % N0
+        HasData    = false; % True if folder 'MS' exists
+        HasTracks  = false; % True if folder 'MS/TRACKS' exists
+        Completed  = false; % True if folder 'TIMINGS' exists
+        Consistent = false; % True if all data folders have the same number of files
+        Silent     = false; % Set to true to disable command window output
 
     end % properties
 
@@ -50,6 +52,7 @@ classdef OsirisConfig
             
             obj.Variables.Constants   = struct;
             obj.Variables.Simulation  = struct;
+            obj.Variables.Fields      = struct;
             obj.Variables.Species     = struct;
             obj.Variables.Plasma      = struct;
             obj.Variables.Beam        = struct;
@@ -148,6 +151,7 @@ classdef OsirisConfig
                 obj = obj.fGetSpecies();
                 obj = obj.fGetPlasmaVariables();
                 obj = obj.fGetBeamVariables();
+                obj = obj.fGetFields();
                 
             end % if
 
@@ -486,11 +490,13 @@ classdef OsirisConfig
             % Calculating conversion variables
             
             dSIE0    = 1e-7 * dEMass * dC^3 * dOmegaP * 4*pi*dEpsilon0 / dECharge;
+            dSIB0    = 1e-7 * dEMass * dC^2 * dOmegaP * 4*pi*dEpsilon0 / dECharge;
             dLFactor = dC / dOmegaP;
 
             % Setting conversion variables
             
             obj.Variables.Convert.SI.E0        = dSIE0;
+            obj.Variables.Convert.SI.B0        = dSIB0;
             obj.Variables.Convert.SI.LengthFac = dLFactor;
 
 
@@ -506,16 +512,25 @@ classdef OsirisConfig
             dBoxX1Size = obj.Variables.Simulation.BoxX1Max - obj.Variables.Simulation.BoxX1Min;
             dBoxX2Size = obj.Variables.Simulation.BoxX2Max - obj.Variables.Simulation.BoxX2Min;
             dBoxX3Size = obj.Variables.Simulation.BoxX3Max - obj.Variables.Simulation.BoxX3Min;
+            
+            dDX1 = dBoxX1Size/dBoxNX1;
+            dDX2 = dBoxX2Size/dBoxNX2;
+            if iDim == 2
+                dDX3 = 1.0;
+            else
+                dDX3 = dBoxX3Size/dBoxNX3;
+            end % if
 
             dQFac = 1.0;    % Factor for charge in normalised units
             dPFac = obj.N0; % Density is relative to N0
             
             % 2D cylindrical
-            if iDim == 2 && strcmpi(sCoords, 'cylindrical')
-                dQFac = dQFac*2*pi;               % Cylindrical factor
-                dPFac = dPFac*dBoxX1Size/dBoxNX1; % Longitudinal cell size
-                dPFac = dPFac*dBoxX2Size/dBoxNX2; % Radial cell size
+            if strcmpi(sCoords, 'cylindrical')
+                dQFac = dQFac*2*pi; % Cylindrical factor
             end % if
+            dPFac = dPFac*dDX1; % Longitudinal cell size
+            dPFac = dPFac*dDX2; % Radial/X cell size
+            dPFac = dPFac*dDX3; % Azimuthal/Y cell size
 
             dPFac = dPFac*dLFactor^3; % Convert from normalised units to unitless
             dPFac = dPFac*dQFac;      % Combine particle factor and charge factor
@@ -527,6 +542,30 @@ classdef OsirisConfig
             obj.Variables.Convert.CGS.ChargeFac    = dPFac*dEChargeCGS;
             obj.Variables.Convert.CGS.ParticleFac  = dPFac;
             
+            % Current
+            
+            aJFac = [1.0 1.0 1.0]; % In normalised units
+            if strcmpi(sCoords, 'cylindrical')
+                aJFacSI  = aJFac     * dPFac*dECharge*dC;
+                aJFacSI  = aJFacSI  ./ (2*pi*[dDX1 dDX2 dDX3]*dLFactor);
+                aJFacCGS = aJFac     * dPFac*dEChargeCGS*dC;
+                aJFacCGS = aJFacCGS ./ (2*pi*[dDX1 dDX2 dDX3]*dLFactor);
+            else
+                aJFacSI  = aJFac     * dPFac*dECharge*dC;
+                aJFacSI  = aJFacSI  ./ ([dDX1 dDX2 dDX3]*dLFactor);
+                aJFacCGS = aJFac     * dPFac*dEChargeCGS*dC;
+                aJFacCGS = aJFacCGS ./ ([dDX1 dDX2 dDX3]*dLFactor);
+            end % if
+            
+            obj.Variables.Convert.Norm.J1Fac = aJFac(1);
+            obj.Variables.Convert.Norm.J2Fac = aJFac(2);
+            obj.Variables.Convert.Norm.J3Fac = aJFac(3);
+            obj.Variables.Convert.SI.J1Fac   = aJFacSI(1);
+            obj.Variables.Convert.SI.J2Fac   = aJFacSI(2);
+            obj.Variables.Convert.SI.J3Fac   = aJFacSI(3);
+            obj.Variables.Convert.CGS.J1Fac  = aJFacCGS(1);
+            obj.Variables.Convert.CGS.J2Fac  = aJFacCGS(2);
+            obj.Variables.Convert.CGS.J3Fac  = aJFacCGS(3);
             
             % Setting plasma profile
             
@@ -716,6 +755,31 @@ classdef OsirisConfig
                 obj.Variables.Beam.(sBeam).SigmaX1 = dSigmaX1;
                 obj.Variables.Beam.(sBeam).SigmaX2 = dSigmaX2;
                 
+            end % for
+            
+        end % function
+        
+        function obj = fGetFields(obj)
+            
+            sFields = fExtractRaw(obj, '', 'diag_emf', 'reports', 0);
+            
+            sFields = strrep(sFields, '"', '');
+            aFields = strsplit(sFields, ',');
+            obj.Variables.Fields.Field  = aFields;
+            obj.Variables.Fields.EField = {};
+            obj.Variables.Fields.BField = {};
+            
+            iE = 1;
+            iB = 1;
+            for i=1:length(aFields)
+                if strcmpi(aFields{i}(1), 'e')
+                    obj.Variables.Fields.EField{iE} = aFields{i};
+                    iE = iE + 1;
+                end % if
+                if strcmpi(aFields{i}(1), 'b')
+                    obj.Variables.Fields.BField{iB} = aFields{i};
+                    iB = iB + 1;
+                end % if
             end % for
             
         end % function

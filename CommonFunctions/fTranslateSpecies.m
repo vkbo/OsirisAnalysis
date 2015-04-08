@@ -4,51 +4,119 @@
 %  Translates Species name to the value the analysis code uses
 %
 
-function sReturn = fTranslateSpecies(sInput)
+function sReturn = fTranslateSpecies(sInput, sMode)
 
-    switch(lower(sInput))
+    % If no mode specified, translate to standard file name format
+    if nargin < 2
+        sMode = 'Standard';
+    end % if
+    
+    sReturn = sInput;
+
+    switch(lower(sMode))
         
-        % Plasma :: Elctrons
-        case 'electrons'
-            sReturn = 'PlasmaElectrons';
-        case 'pe'
-            sReturn = 'PlasmaElectrons';
+        case 'standard'
+            switch(lower(sInput))
 
-        % Plasma :: Protons
-        case 'pp'
-            sReturn = 'PlasmaProtons';
+                % Plasma :: Elctrons
+                case 'electrons'
+                    sReturn = 'PlasmaElectrons';
+                case 'pe'
+                    sReturn = 'PlasmaElectrons';
 
-        % Plasma :: Ions
-        case 'ions'
-            sReturn = 'PlasmaIons';
-        case 'pi'
-            sReturn = 'PlasmaIons';
+                % Plasma :: Protons
+                case 'pp'
+                    sReturn = 'PlasmaProtons';
 
-        % Beam :: Electrons
-        case 'electron_beam'
-            sReturn = 'ElectronBeam';
-        case 'eb'
-            sReturn = 'ElectronBeam';
-        case 'e-b'
-            sReturn = 'ElectronBeam';
+                % Plasma :: Ions
+                case 'ions'
+                    sReturn = 'PlasmaIons';
+                case 'pi'
+                    sReturn = 'PlasmaIons';
 
-        % Beam :: Positrons
-        case 'positron_beam'
-            sReturn = 'PositronBeam';
-        case 'e+b'
-            sReturn = 'PositronBeam';
-        case 'ptb'
-            sReturn = 'PositronBeam';
+                % Beam :: Electrons
+                case 'electron_beam'
+                    sReturn = 'ElectronBeam';
+                case 'eb'
+                    sReturn = 'ElectronBeam';
+                case 'e-b'
+                    sReturn = 'ElectronBeam';
+
+                % Beam :: Positrons
+                case 'positron_beam'
+                    sReturn = 'PositronBeam';
+                case 'e+b'
+                    sReturn = 'PositronBeam';
+                case 'ptb'
+                    sReturn = 'PositronBeam';
+
+                % Beam :: Protons
+                case 'proton_beam'
+                    sReturn = 'ProtonBeam';
+                case 'pb'
+                    sReturn = 'ProtonBeam';
+
+            end % switch
+        % end case 'standard'
         
-        % Beam :: Protons
-        case 'proton_beam'
-            sReturn = 'ProtonBeam';
-        case 'pb'
-            sReturn = 'ProtonBeam';
+        case 'readable'
+            switch(sInput)
+                case 'PlasmaElectrons'
+                    sReturn = 'Plasma Electron';
+                case 'PlasmaProtons'
+                    sReturn = 'Plasma Proton';
+                case 'PlasmaIons'
+                    sReturn = 'Plasma Ions';
+                case 'ElectronBeam'
+                    sReturn = 'Electron Beam';
+                case 'PositronBeam'
+                    sReturn = 'Positron Beam';
+                case 'ProtonBeam'
+                    sReturn = 'Proton Beam';
 
-        otherwise
-            sReturn = sInput;
+            end % switch
+        % end case 'readable'
+        
+        case 'short'
+            switch(lower(sInput))
 
+                % Plasma :: Elctrons
+                case 'electrons'
+                    sReturn = 'PE';
+                case 'plasmaelectrons'
+                    sReturn = 'PE';
+
+                % Plasma :: Protons
+                case 'plasmaprotons'
+                    sReturn = 'PP';
+
+                % Plasma :: Ions
+                case 'ions'
+                    sReturn = 'PI';
+                case 'plasmaions'
+                    sReturn = 'PI';
+
+                % Beam :: Electrons
+                case 'electron_beam'
+                    sReturn = 'EB';
+                case 'electronbeam'
+                    sReturn = 'EB';
+
+                % Beam :: Positrons
+                case 'positron_beam'
+                    sReturn = 'PtB';
+                case 'positronbeam'
+                    sReturn = 'PtB';
+
+                % Beam :: Protons
+                case 'proton_beam'
+                    sReturn = 'PB';
+                case 'protonbeam'
+                    sReturn = 'PB';
+
+            end % switch
+        % end case 'short'
+        
     end % switch
 
 end

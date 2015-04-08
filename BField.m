@@ -1,9 +1,9 @@
 %
-%  Class Object to analyse E-fields
+%  Class Object to analyse B-fields
 % **********************************
 %
 
-classdef EField
+classdef BField
 
     %
     % Public Properties
@@ -40,17 +40,17 @@ classdef EField
 
     methods
         
-        function obj = EField(oData, sField, varargin)
+        function obj = BField(oData, sField, varargin)
             
             % Set data
             obj.Data  = oData;
 
             sField = fTranslateField(sField);
-            if ismember(sField, {'e1','e2','e3'})
+            if ismember(sField, {'b1','b2','b3'})
                 obj.Field = sField;
             else
-                obj.Field = 'e1';
-                fprintf('Unknown field %s specified, using e1\n', sField);
+                obj.Field = 'b1';
+                fprintf('Unknown field %s specified, using b1\n', sField);
             end % if
 
             % Read input parameters
@@ -71,7 +71,7 @@ classdef EField
             dBoxX3Max = obj.Data.Config.Variables.Simulation.BoxX3Max;
             sCoords   = obj.Data.Config.Variables.Simulation.Coordinates;
             dLFactor  = obj.Data.Config.Variables.Convert.SI.LengthFac;
-            
+
             % Set Scale and Units
             obj.AxisScale = {stOpt.X1Scale, stOpt.X2Scale, stOpt.X3Scale};
             obj.Coords    = sCoords;
@@ -254,7 +254,7 @@ classdef EField
 
             % Get simulation variables
             sCoords = obj.Data.Config.Variables.Simulation.Coordinates;
-            dE0     = obj.Data.Config.Variables.Convert.SI.E0;
+            dB0     = obj.Data.Config.Variables.Convert.SI.B0;
             
             % Get data and axes
             aData   = obj.Data.Data(obj.Time, 'FLD', obj.Field, '');
@@ -275,7 +275,7 @@ classdef EField
             iX2Max = fGetIndex(aX2Axis, obj.X2Lim(2)*obj.AxisFac(2));
             
             % Crop and scale dataset
-            aData   = aData(iX2Min:iX2Max,iX1Min:iX1Max)*dE0;
+            aData   = aData(iX2Min:iX2Max,iX1Min:iX1Max)*dB0;
             aX1Axis = aX1Axis(iX1Min:iX1Max);
             aX2Axis = aX2Axis(iX2Min:iX2Max);
             
@@ -284,67 +284,6 @@ classdef EField
             stReturn.X1Axis = aX1Axis;
             stReturn.X2Axis = aX2Axis;
             stReturn.ZPos   = obj.fGetZPos();        
-        
-        end % function
-
-        function stReturn = Lineout(obj, iStart, iAverage)
-
-            % Input/Output
-            stReturn = {};
-            
-            if nargin < 3
-                iAverage = 1;
-            end % if
-            
-            if nargin < 2
-                iStart = 3;
-            end % if
-            
-            % Get simulation variables
-            dE0     = obj.Data.Config.Variables.Convert.SI.E0;
-            
-            % Get data and axes
-            aData   = obj.Data.Data(obj.Time, 'FLD', obj.Field, '');
-            aX1Axis = obj.fGetBoxAxis('x1');
-            aX2Axis = obj.fGetBoxAxis('x2');
-            
-            iX1Min = fGetIndex(aX1Axis, obj.X1Lim(1)*obj.AxisFac(1));
-            iX1Max = fGetIndex(aX1Axis, obj.X1Lim(2)*obj.AxisFac(1));
-            
-            % Crop and scale dataset
-            iEnd    = iStart+iAverage-1;
-            aData   = transpose(mean(aData(iX1Min:iX1Max,iStart:iEnd),2))*dE0;
-            aX1Axis = aX1Axis(iX1Min:iX1Max);
-            
-            % Return data
-            stReturn.Data    = aData;
-            stReturn.X1Axis  = aX1Axis;
-            stReturn.X2Range = [aX2Axis(iStart) aX2Axis(iEnd+1)];
-            stReturn.ZPos    = obj.fGetZPos();        
-        
-        end % function
-        
-        function FieldEvolution(obj, sStart, sStop)
-
-            if nargin < 2
-                sStart = 'Start';
-            end % if
-
-            if nargin < 3
-                sStop = 'End';
-            end % if
-            
-            iStart = fStringToDump(obj.Data, sStart);
-            iStop  = fStringToDump(obj.Data, sStop);
-            
-            aTAxis = obj.fGetTimeAxis;
-            aTAxis = aTAxis(iStart+1:iStop+1);
-            
-            for i=iStart:iStop
-                
-                
-                
-            end % for
         
         end % function
     
