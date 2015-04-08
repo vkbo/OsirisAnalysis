@@ -319,7 +319,7 @@ classdef EField
             % Return data
             stReturn.Data    = aData;
             stReturn.X1Axis  = aX1Axis;
-            stReturn.X2Range = [aX2Axis(iStart) aX2Axis(iEnd)];
+            stReturn.X2Range = [aX2Axis(iStart) aX2Axis(iEnd+1)];
             stReturn.ZPos    = obj.fGetZPos();        
         
         end % function

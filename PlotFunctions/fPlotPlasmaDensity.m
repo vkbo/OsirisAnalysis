@@ -318,7 +318,6 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         
         plot(stEF.X1Axis,aEFData,'Color',stField(i).Color);
         stOLLeg{iOLNum} = sprintf('%s^{%.0f–%.0f %s} < %.1f %s',fTranslateField(stField(i).Name,'ReadableCyl'),dSVal,dEVal,sUnit,dEne,sEne);
-        %stOLLeg{iOLNum} = sprintf('%s < %.1f %s',fTranslateField(stField(i).Name,'ReadableCyl'),dEne,sEne);
         iOLNum = iOLNum + 1;
         
     end % if

@@ -1,3 +1,4 @@
+
 %
 %  Class Object to hold the Osiris Config file
 % *********************************************

@@ -88,7 +88,6 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
 
     
     % Prepare Data
-
     
     oCH      = Charge(oData, sBeam, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
     oCH.Time = iTime;
@@ -103,11 +102,22 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     else
         stData = oCH.Current(stOpt.Current);
     end % if
+    
+    if isempty(stData)
+        fprintf(2, 'Error: No data.\n');
+        return;
+    end % if
 
     aData  = stData.Data;
     aZAxis = stData.X1Axis;
     aRAxis = stData.X2Axis;
     dZPos  = stData.ZPos;
+    
+    if ~isempty(stOpt.Current)
+        dMax  = max(abs(aData(:)));
+        [dCMax,dCUnit] = fAutoScale(dMax,'A');
+        aData = aData*dCMax/dMax;
+    end % if
 
     stReturn.X1Axis    = stData.X1Axis;
     stReturn.X2Axis    = stData.X2Axis;
@@ -201,7 +211,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     if isempty(stOpt.Current)
         title(hCol,'n_{pe}/n_0');
     else
-        title(hCol,sprintf('%s A',fTranslateField(stOpt.Current,sRType)));
+        title(hCol,sprintf('%s %s',fTranslateField(stOpt.Current,sRType),dCUnit));
     end % if
     
     hold off;

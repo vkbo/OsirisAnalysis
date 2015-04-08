@@ -253,6 +253,10 @@ function Analyse2D
         iY = iY - 25;
         uicontrol(bgTab(t),'Style','Text','String','Beam','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         pumData(t) = uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Beam,'Value',1,'Position',[85 iY 150 20],'Callback',{@fPlotSetBeam,t});
+
+        iY = iY - 25;
+        uicontrol(bgTab(t),'Style','Text','String','Density','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        pumDensity(t) = uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Density,'Value',1,'Position',[85 iY 150 20],'Callback',{@fPlotSetDensity,t});
         
     end % function
 
@@ -354,6 +358,12 @@ function Analyse2D
         % Translate Fields
         for i=1:length(X.Data.Field)
             X.Data.Field{i} = fTranslateField(X.Data.Field{i},['Long',X.Data.CoordsPF]);
+        end % for
+
+        % Translate densities
+        X.Data.Density = {'charge','j1','j2','j3'};
+        for i=1:length(X.Data.Density)
+            X.Data.Density{i} = fTranslateField(X.Data.Density{i},['Long',X.Data.CoordsPF]);
         end % for
         
         % Simulation Status
@@ -542,7 +552,8 @@ function Analyse2D
             switch(X.Plots{iOpt})
 
                 case 'Beam Density'
-                    X.Plot(f).Data = X.Data.Beam{1};
+                    X.Plot(f).Data    = X.Data.Beam{1};
+                    X.Plot(f).Density = X.Data.Density{1};
                     fCtrlBeamDensity(f);
                     fFigureSize(figure(f+1), [900 500]);
 
@@ -673,7 +684,13 @@ function Analyse2D
                     
                     case 'Beam Density'
                         figure(X.Plot(f).Figure); clf;
-                        X.Plot(f).Return = fPlotBeamDensity(oData,X.Time.Dump,X.Plot(f).Data, ...
+                        if strcmpi(X.Plot(f).Density,'charge')
+                            sCurrent = '';
+                        else
+                            sCurrent = fTranslateField(X.Plot(f).Density,'FromLong');
+                        end % if
+
+                        X.Plot(f).Return = fPlotBeamDensity(oData,X.Time.Dump,X.Plot(f).Data,'Current',sCurrent, ...
                             'IsSubPlot','No','AutoResize','Off','HideDump','Yes','Absolute','Yes','ShowOverlay','Yes','Limits',aLim);
 
                     case 'Plasma Density'
@@ -850,6 +867,16 @@ function Analyse2D
         sField = X.Data.Field{iField};
         
         X.Plot(f).Data = sField;
+        fRefresh(f);
+        
+    end % function
+
+    function fPlotSetDensity(uiSrc,~,f)
+        
+        iDensity = get(uiSrc,'Value');
+        sDensity = X.Data.Density{iDensity};
+        
+        X.Plot(f).Density = sDensity;
         fRefresh(f);
         
     end % function

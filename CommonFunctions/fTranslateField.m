@@ -57,6 +57,10 @@ function sReturn = fTranslateField(sInput, sMode)
                 case 'jy'
                     sReturn = 'j3';
 
+                % Charge
+                case 'q'
+                    sReturn = 'charge';
+
             end % switch
         % end case 'standard'
         
@@ -89,6 +93,12 @@ function sReturn = fTranslateField(sInput, sMode)
                 case 'j3'
                     sReturn = 'J_{\theta}';
 
+                % Charge
+                case 'q'
+                    sReturn = 'Charge';
+                case 'charge'
+                    sReturn = 'Charge';
+
             end % switch
         % end case 'readablecyl'
 
@@ -118,6 +128,12 @@ function sReturn = fTranslateField(sInput, sMode)
                     sReturn = 'J_x';
                 case 'j3'
                     sReturn = 'J_y';
+
+                % Charge
+                case 'q'
+                    sReturn = 'Charge';
+                case 'charge'
+                    sReturn = 'Charge';
 
             end % switch
         % end case 'readable'
@@ -151,6 +167,12 @@ function sReturn = fTranslateField(sInput, sMode)
                 case 'j3'
                     sReturn = 'Jo';
 
+                % Charge
+                case 'q'
+                    sReturn = 'Q';
+                case 'charge'
+                    sReturn = 'Q';
+
             end % switch
         % end case 'notexcyl'
 
@@ -180,6 +202,12 @@ function sReturn = fTranslateField(sInput, sMode)
                     sReturn = 'Jx';
                 case 'j3'
                     sReturn = 'Jy';
+
+                % Charge
+                case 'q'
+                    sReturn = 'Q';
+                case 'charge'
+                    sReturn = 'Q';
 
             end % switch
         % end case 'notex'
@@ -213,6 +241,12 @@ function sReturn = fTranslateField(sInput, sMode)
                 case 'j3'
                     sReturn = 'Azimuthal Current';
 
+                % Charge
+                case 'q'
+                    sReturn = 'Charge';
+                case 'charge'
+                    sReturn = 'Charge';
+
             end % switch
         % end case 'long-cyl'
 
@@ -242,6 +276,12 @@ function sReturn = fTranslateField(sInput, sMode)
                     sReturn = 'Horizontal Current';
                 case 'j3'
                     sReturn = 'Vertical Current';
+
+                % Charge
+                case 'q'
+                    sReturn = 'Charge';
+                case 'charge'
+                    sReturn = 'Charge';
 
             end % switch
         % end case 'long'
@@ -286,6 +326,12 @@ function sReturn = fTranslateField(sInput, sMode)
                     sReturn = 'j3';
                 case 'Azimuthal Current'
                     sReturn = 'j3';
+
+                % Charge
+                case 'Charge'
+                    sReturn = 'charge';
+                case 'Q'
+                    sReturn = 'charge';
 
             end % switch
         % end case 'long'
