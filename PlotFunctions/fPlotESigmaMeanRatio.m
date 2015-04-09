@@ -63,8 +63,12 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
 
     % Data
     oMom   = Momentum(oData, sSpecies);
-    stData = oMom.SigmaEToEMean('PStart','PEnd');
+    stData = oMom.SigmaEToEMean(stOpt.Start,stOpt.End);
     
+    if isempty(stData)
+        fprintf(2, 'Error: No data.\n');
+        return;
+    end % if
 
     % Plot
 

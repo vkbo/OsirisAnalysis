@@ -555,7 +555,7 @@ function Analyse2D
                     X.Plot(f).Data    = X.Data.Beam{1};
                     X.Plot(f).Density = X.Data.Density{1};
                     fCtrlBeamDensity(f);
-                    fFigureSize(figure(f+1), [900 500]);
+                    fFigureSize(figure(f+1), [900 550]);
 
                 case 'Plasma Density'
                     X.Plot(f).Data = X.Data.Plasma{1};
@@ -564,12 +564,12 @@ function Analyse2D
                     X.Plot(f).ScatterNum = [2000 2000];
                     X.Plot(f).OvField = [1 1];
                     fCtrlPlasmaDensity(f);
-                    fFigureSize(figure(f+1), [900 500]);
+                    fFigureSize(figure(f+1), [900 550]);
 
                 case 'Field Density'
                     X.Plot(f).Data = X.Data.Field{1};
                     fCtrlFieldDensity(f);
-                    fFigureSize(figure(f+1), [900 500]);
+                    fFigureSize(figure(f+1), [900 550]);
 
             end % switch
 

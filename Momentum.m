@@ -12,7 +12,7 @@ classdef Momentum
     properties (GetAccess = 'public', SetAccess = 'public')
         
         Data      = [];                        % OsirisData dataset
-        Beam      = '';                        % What beam to ananlyse
+        Beam      = '';                        % What beam to analyse
         Time      = 0;                         % Current time (dumb number)
         X1Lim     = [];                        % Axes limits x1
         X2Lim     = [];                        % Axes limits x2
@@ -523,35 +523,6 @@ classdef Momentum
             stReturn.DeltaZ = dDeltaZ;
             stReturn.TAxis  = aTAxis(iStart+1:iStop+1);
     
-        end % function
-        
-        function stReturn = Phase(obj, sAxis1, sAxis2, varargin)
-            
-            % Input/Output
-            stReturn = {};
-            
-            if ~isAxis(sAxis1)
-                fprintf(2, '%s is not a valid axis.\n',sAxis1);
-                return;
-            end % if
-
-            if ~isAxis(sAxis2)
-                fprintf(2, '%s is not a valid axis.\n',sAxis2);
-                return;
-            end % if
-            
-            sAxis = '';
-            if obj.Data.DataSetExists('PHA',sprintf('%s%s',sAxis1,sAxis2),obj.Beam)
-                sAxis = sprintf('%s%s',sAxis1,sAxis2);
-            end % if
-            if obj.Data.DataSetExists('PHA',sprintf('%s%s',sAxis2,sAxis1),obj.Beam)
-                sAxis = sprintf('%s%s',sAxis2,sAxis1);
-            end % if
-            if isempty(sAxis)
-                fprintf(2, 'There is no combined phase data for %s and %s.\n',sAxis1,sAxis2);
-                return;
-            end % if
-            
         end % function
     
     end % methods

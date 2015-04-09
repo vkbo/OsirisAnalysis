@@ -64,6 +64,11 @@ function stReturn = fPlotESigmaMean(oData, sSpecies, varargin)
     % Data
     oMom   = Momentum(oData, sSpecies);
     stData = oMom.SigmaEToEMean(stOpt.Start, stOpt.End);
+
+    if isempty(stData)
+        fprintf(2, 'Error: No data.\n');
+        return;
+    end % if
     
     dPeak  = max(abs(stData.Mean+stData.Sigma));
     [dTemp, sPUnit] = fAutoScale(dPeak, 'eV');

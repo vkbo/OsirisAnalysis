@@ -13,7 +13,7 @@ classdef Charge
     properties (GetAccess = 'public', SetAccess = 'public')
         
         Data        = [];                        % OsirisData dataset
-        Species     = '';                        % Species to ananlyse
+        Species     = '';                        % Species to analyse
         Time        = 0;                         % Current time (dumb number)
         X1Lim       = [];                        % Axes limits x1
         X2Lim       = [];                        % Axes limits x2
