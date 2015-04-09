@@ -634,6 +634,61 @@ classdef OsirisConfig
             obj.Variables.Plasma.MaxOmegaP    = dOmegaP  * sqrt(dPlasmaMax);
             obj.Variables.Plasma.MaxLambdaP   = dLambdaP / sqrt(dPlasmaMax);
             
+            % Extract plasma species variables
+            [iRows,~] = size(obj.Variables.Species.Plasma);
+            
+            for i=1:iRows
+                
+                sPlasma = obj.Variables.Species.Plasma{i,1};
+                
+                obj.Variables.Plasma.(sPlasma) = {};
+                
+                % Species
+
+                aValue = obj.fExtractFixedNum(sPlasma,'species','rqm',[0]);
+                obj.Variables.Plasma.(sPlasma).RQM       = double(aValue(1));
+
+                % Space output
+                
+                aValue = obj.fExtractFixedNum(sPlasma,'diag_species','ps_xmin',[0.0,0.0,0.0]);
+                obj.Variables.Plasma.(sPlasma).DiagX1Min = double(aValue(1));
+                obj.Variables.Plasma.(sPlasma).DiagX2Min = double(aValue(2));
+                obj.Variables.Plasma.(sPlasma).DiagX3Min = double(aValue(3));
+
+                aValue = obj.fExtractFixedNum(sPlasma,'diag_species','ps_xmax',[0.0,0.0,0.0]);
+                obj.Variables.Plasma.(sPlasma).DiagX1Max = double(aValue(1));
+                obj.Variables.Plasma.(sPlasma).DiagX2Max = double(aValue(2));
+                obj.Variables.Plasma.(sPlasma).DiagX3Max = double(aValue(3));
+
+                aValue = obj.fExtractFixedNum(sPlasma,'diag_species','ps_nx',[0,0,0]);
+                obj.Variables.Plasma.(sPlasma).DiagNX1   = int64(aValue(1));
+                obj.Variables.Plasma.(sPlasma).DiagNX2   = int64(aValue(2));
+                obj.Variables.Plasma.(sPlasma).DiagNX3   = int64(aValue(3));
+
+                % Momentum output
+                
+                aValue = obj.fExtractFixedNum(sPlasma,'diag_species','ps_pmin',[0.0,0.0,0.0]);
+                obj.Variables.Plasma.(sPlasma).DiagP1Min = double(aValue(1));
+                obj.Variables.Plasma.(sPlasma).DiagP2Min = double(aValue(2));
+                obj.Variables.Plasma.(sPlasma).DiagP3Min = double(aValue(3));
+
+                aValue = obj.fExtractFixedNum(sPlasma,'diag_species','ps_pmax',[0.0,0.0,0.0]);
+                obj.Variables.Plasma.(sPlasma).DiagP1Max = double(aValue(1));
+                obj.Variables.Plasma.(sPlasma).DiagP2Max = double(aValue(2));
+                obj.Variables.Plasma.(sPlasma).DiagP3Max = double(aValue(3));
+
+                aValue = obj.fExtractFixedNum(sPlasma,'diag_species','ps_np',[0,0,0]);
+                obj.Variables.Plasma.(sPlasma).DiagNP1   = int64(aValue(1));
+                obj.Variables.Plasma.(sPlasma).DiagNP2   = int64(aValue(2));
+                obj.Variables.Plasma.(sPlasma).DiagNP3   = int64(aValue(3));
+                
+                % RAW output
+                
+                aValue = obj.fExtractFixedNum(sPlasma,'diag_species','raw_fraction',[0]);
+                obj.Variables.Plasma.(sPlasma).RAWFraction = double(aValue(1));
+                                
+            end % for
+            
         end % function
         
         function obj = fGetBeamVariables(obj)
