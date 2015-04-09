@@ -149,7 +149,7 @@ function sReturn = fTranslateField(sInput, sMode)
                 case 'e2'
                     sReturn = 'Er';
                 case 'e3'
-                    sReturn = 'Eo}';
+                    sReturn = 'Eo';
 
                 % B-Fields
                 case 'b1'

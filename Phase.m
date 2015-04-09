@@ -266,10 +266,12 @@ classdef Phase
             
             sAxis = '';
             if obj.Data.DataSetExists('PHA',sprintf('%s%s',sAxis1,sAxis2),obj.Species)
-                sAxis = sprintf('%s%s',sAxis1,sAxis2);
+                sAxis   = sprintf('%s%s',sAxis1,sAxis2);
+                bRotate = false;
             end % if
             if obj.Data.DataSetExists('PHA',sprintf('%s%s',sAxis2,sAxis1),obj.Species)
-                sAxis = sprintf('%s%s',sAxis2,sAxis1);
+                sAxis   = sprintf('%s%s',sAxis2,sAxis1);
+                bRotate = true;
             end % if
             if isempty(sAxis)
                 fprintf(2, 'There is no combined phase data for %s and %s.\n',sAxis1,sAxis2);
@@ -278,16 +280,156 @@ classdef Phase
             
             % Read input parameters
             oOpt = inputParser;
-            addParameter(oOpt, 'Limits', []);
+            addParameter(oOpt, 'HLim',  []);
+            addParameter(oOpt, 'HAuto', 'No');
+            addParameter(oOpt, 'VLim',  []);
+            addParameter(oOpt, 'VAuto', 'No');
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
             
+            % Get dataset values
+            dEMass = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
+            
             % Retrieve data
             aData = obj.Data.Data(obj.Time,'PHA',sAxis,obj.Species);
+            aData = 100*aData/sum(aData(:));
             
-            stReturn.Data  = aData;
-            %stReturn.XAxis = aXAxis;
-            %stReturn.YAxis = aYAxis;
+            if bRotate
+                aData = transpose(aData);
+            end % if
+            
+            aHAxis = obj.fGetDiagAxis(sAxis1);
+            aVAxis = obj.fGetDiagAxis(sAxis2);
+
+            % Return ranges
+            stReturn.AxisRange = [aHAxis(1) aHAxis(end) aVAxis(1) aVAxis(end)];
+            stReturn.AxisFac   = obj.AxisFac(1)*[1.0 1.0];
+            stReturn.AxisUnit  = {'N','N'};
+            aLimScale          = [1.0 1.0];
+
+            if strcmpi(obj.Units, 'SI')
+                stReturn.AxisUnit  = {'m','m'};
+                aLimScale          = [1.0e-3 1.0e-3];
+                if strcmpi(sAxis1(1),'p')
+                    stReturn.AxisFac(1)  = dEMass;
+                    stReturn.AxisUnit{1} = 'eV';
+                    aLimScale(1)         = 1e6;
+                end % if
+                if strcmpi(sAxis2(1),'p')
+                    stReturn.AxisFac(2)  = dEMass;
+                    stReturn.AxisUnit{2} = 'eV';
+                    aLimScale(2)         = 1e6;
+                end % if
+            end % if
+
+            stReturn.AxisRange(1:2) = stReturn.AxisRange(1:2)/aLimScale(1);
+            stReturn.AxisRange(3:4) = stReturn.AxisRange(3:4)/aLimScale(2);
+            
+            % Crop data and axes
+            if ~isempty(stOpt.HLim) || strcmpi(stOpt.HAuto, 'Yes')
+
+                if strcmpi(stOpt.HAuto, 'No')
+                
+                    iMin = fGetIndex(aHAxis, stOpt.HLim(1)*aLimScale(1));
+                    iMax = fGetIndex(aHAxis, stOpt.HLim(2)*aLimScale(1));
+                    
+                else
+                    
+                    % Auto scale
+                    iLen = length(aHAxis);
+
+                    iMin = 1;
+                    for i=1:iLen
+                        if sum(aData(:,i)) > 0
+                            iMin = i;
+                            break;
+                        end % if
+                    end % for
+
+                    iMax = iLen;
+                    for i=iMax:-1:1
+                        if sum(aData(:,i)) > 0
+                            iMax = i;
+                            break;
+                        end % if
+                    end % for
+                    
+                    iMargin = floor((iMax-iMin)*0.5);
+                    if iMargin < 10
+                        iMargin = 10;
+                    end % if
+                    iMin = iMin-iMargin;
+                    iMax = iMax+iMargin;
+                    
+                    if iMin < 1
+                        iMin = 1;
+                    end % if
+                    if iMax > iLen
+                        iMax = iLen;
+                    end % if
+
+                end % if
+
+                % Crop
+                aData  = aData(:,iMin:iMax);
+                aHAxis = aHAxis(iMin:iMax);
+
+            end % if
+
+            if ~isempty(stOpt.VLim) || strcmpi(stOpt.VAuto, 'Yes')
+
+                if strcmpi(stOpt.VAuto, 'No')
+                
+                    iMin   = fGetIndex(aVAxis, stOpt.VLim(1)*aLimScale(2));
+                    iMax   = fGetIndex(aVAxis, stOpt.VLim(2)*aLimScale(2));
+                    
+                else
+                    
+                    % Auto scale
+                    iLen = length(aVAxis);
+                    
+                    iMin = 1;
+                    for i=1:iLen
+                        if sum(aData(i,:)) > 0
+                            iMin = i;
+                            break;
+                        end % if
+                    end % for
+
+                    iMax = iLen;
+                    for i=iMax:-1:1
+                        if sum(aData(i,:)) > 0
+                            iMax = i;
+                            break;
+                        end % if
+                    end % for
+                    
+                    iMargin = floor((iMax-iMin)*0.5);
+                    if iMargin < 10
+                        iMargin = 10;
+                    end % if
+                    iMin = iMin-iMargin;
+                    iMax = iMax+iMargin;
+                    
+                    if iMin < 1
+                        iMin = 1;
+                    end % if
+                    if iMax > iLen
+                        iMax = iLen;
+                    end % if
+                    
+                end % if
+
+                % Crop
+                aData  = aData(iMin:iMax,:);
+                aVAxis = aVAxis(iMin:iMax);
+                
+            end % if
+            
+            stReturn.Data    = aData;
+            stReturn.HAxis   = aHAxis;
+            stReturn.VAxis   = aVAxis;
+            stReturn.DataSet = sAxis;
             
         end % function
     
@@ -335,27 +477,48 @@ classdef Phase
             
         end % function
 
-        function aReturn = fGetPhaseAxis(obj, sAxis)
+        function aReturn = fGetDiagAxis(obj, sAxis)
+            
+            sSPType = fSpeciesType(obj.Species);
             
             switch sAxis
                 case 'x1'
-                    dXMin = obj.Data.Config.Variables.Simulation.BoxX1Min;
-                    dXMax = obj.Data.Config.Variables.Simulation.BoxX1Max;
-                    iNX   = obj.Data.Config.Variables.Simulation.BoxNX1;
-                    dLFac = obj.AxisFac(1);
+                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagX1Min;
+                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagX1Max;
+                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagNX1;
+                    dFac = obj.AxisFac(1);
                 case 'x2'
-                    dXMin = obj.Data.Config.Variables.Simulation.BoxX2Min;
-                    dXMax = obj.Data.Config.Variables.Simulation.BoxX2Max;
-                    iNX   = obj.Data.Config.Variables.Simulation.BoxNX2;
-                    dLFac = obj.AxisFac(2);
+                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagX2Min;
+                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagX2Max;
+                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagNX2;
+                    dFac = obj.AxisFac(2);
                 case 'x3'
-                    dXMin = obj.Data.Config.Variables.Simulation.BoxX3Min;
-                    dXMax = obj.Data.Config.Variables.Simulation.BoxX3Max;
-                    iNX   = obj.Data.Config.Variables.Simulation.BoxNX3;
-                    dLFac = obj.AxisFac(3);
+                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagX3Min;
+                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagX3Max;
+                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagNX3;
+                    dFac = obj.AxisFac(3);
+                case 'p1'
+                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagP1Min;
+                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagP1Max;
+                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagNP1;
+                    dFac = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
+                case 'p2'
+                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagP2Min;
+                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagP2Max;
+                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagNP2;
+                    dFac = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
+                case 'p3'
+                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagP3Min;
+                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagP3Max;
+                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagNP3;
+                    dFac = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
             end % switch
+            
+            if strcmpi(obj.Units, 'N')
+                dFac = 1.0;
+            end % if
 
-            aReturn = linspace(dXMin, dXMax, iNX)*dLFac;
+            aReturn = linspace(dMin, dMax, iN)*dFac;
             
         end % function
         

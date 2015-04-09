@@ -339,16 +339,10 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
 
     end % if
     
-    if strcmpi(oCH.Coords, 'cylindrical')
-        sRType = 'ReadableCyl';
-    else
-        sRType = 'Readable';
-    end % of
-
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s Density %s (%s #%d)', fTranslateSpecies(sPlasma,sRType), fPlasmaPosition(oData, iTime), oData.Config.Name, iTime);
+        sTitle = sprintf('%s Density %s (%s #%d)', fTranslateSpecies(sPlasma,'Readable'), fPlasmaPosition(oData, iTime), oData.Config.Name, iTime);
     else
-        sTitle = sprintf('%s Density %s', fTranslateSpecies(sPlasma,sRType), fPlasmaPosition(oData, iTime));
+        sTitle = sprintf('%s Density %s', fTranslateSpecies(sPlasma,'Readable'), fPlasmaPosition(oData, iTime));
     end % if
 
     title(sTitle);
