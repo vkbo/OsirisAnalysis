@@ -11,7 +11,7 @@
 %
 %  Options:
 % ==========
-%  FigureSize  :: Default [900 500]
+%  FigureSize  :: Default [750 450]
 %  HideDump    :: Default No
 %  IsSubplot   :: Default No
 %  AutoResize  :: Default On
@@ -38,7 +38,7 @@ function stReturn = fPlotESigmaMean(oData, sSpecies, varargin)
         fprintf('\n');
         fprintf('  Options:\n');
         fprintf(' ==========\n');
-        fprintf('  FigureSize  :: Default [900 500]\n');
+        fprintf('  FigureSize  :: Default [750 450]\n');
         fprintf('  HideDump    :: Default No\n');
         fprintf('  IsSubplot   :: Default No\n');
         fprintf('  AutoResize  :: Default On\n');
@@ -51,7 +51,7 @@ function stReturn = fPlotESigmaMean(oData, sSpecies, varargin)
     sSpecies = fTranslateSpecies(sSpecies); 
 
     oOpt = inputParser;
-    addParameter(oOpt, 'FigureSize',  [900 500]);
+    addParameter(oOpt, 'FigureSize',  [750 450]);
     addParameter(oOpt, 'HideDump',    'No');
     addParameter(oOpt, 'IsSubPlot',   'No');
     addParameter(oOpt, 'AutoResize',  'On');

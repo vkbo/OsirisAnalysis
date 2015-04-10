@@ -27,18 +27,23 @@ function Analyse2D
     
     % Data
     
+    iXFig = 9;
     oData = OsirisData('Silent','Yes');
 
     X.DataSet     = 0;
     X.Time.Dump   = 0;
     X.Time.Limits = [0 0 0 0];
+    X.Data.Beam   = {' '};
     
     % Settings
     
+    stSettings.LoadData = {'','',''};
+    for i=1:iXFig
+        stSettings.Position(i).Pos  = [0 0];
+        stSettings.Position(i).Size = [0 0];
+    end % for
     if exist(strcat(oData.Temp, '/OsirisAnalyseSettings.mat'), 'file')
         stSettings = load(strcat(oData.Temp, '/OsirisAnalyseSettings.mat'));
-    else
-        stSettings.LoadData = {'','',''};
     end % if
 
     X.Plots{1} = 'Beam Density';
@@ -56,10 +61,8 @@ function Analyse2D
         X.Plot(f).Enabled = 0;
         X.Plot(f).MaxLim  = [0.0 0.0 0.0 0.0];
         X.Plot(f).Limits  = [0.0 0.0 0.0 0.0];
-        X.Plot(f).LimPres = [2   2   2   2];
+        X.Plot(f).Scale   = [1.0 1.0];
     end % for
-    
-    iXFig = 9;
     for f=7:iXFig
         X.Plot(f).Figure  = f+1;
         X.Plot(f).Enabled = 0;
@@ -200,33 +203,36 @@ function Analyse2D
 
     uicontrol(bgTabX,'Style','Text','String','#8','Position',[5 iY+1 30 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
     uicontrol(bgTabX,'Style','Text','String','Sigma E to E Mean','Position',[40 iY+1 160 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-    uicontrol(bgTabX,'Style','Text','String','Dump','Position',[240 iY+1 45 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    uicontrol(bgTabX,'Style','Text','String','T =','Position',[395 iY+1 25 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
 
     btnFig(7) = uicontrol(bgTabX,'Style','PushButton','String','','Position',[210 iY 20 20],'BackgroundColor',cButtonOff,'Callback',{@fToggleXFig,7});
-    edtT8(1)  = uicontrol(bgTabX,'Style','Edit','String','0','Position',[290 iY 50 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,7});
-    edtT8(2)  = uicontrol(bgTabX,'Style','Edit','String','0','Position',[345 iY 50 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,7});
+    pumT8(1)  = uicontrol(bgTabX,'Style','PopupMenu','String',X.Data.Beam,'Value',1,'Position',[240 iY 150 20],'Callback',{@fPlotSetBeam,7});
+    edtT8(1)  = uicontrol(bgTabX,'Style','Edit','String','0','Position',[425 iY 40 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,7});
+    edtT8(2)  = uicontrol(bgTabX,'Style','Edit','String','0','Position',[470 iY 40 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,7});
 
     % Sigma E to E Mean Ratio
     iY = iY - 25;
 
     uicontrol(bgTabX,'Style','Text','String','#9','Position',[5 iY+1 30 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
     uicontrol(bgTabX,'Style','Text','String','Sigma E to E Mean Ratio','Position',[40 iY+1 160 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-    uicontrol(bgTabX,'Style','Text','String','Dump','Position',[240 iY+1 45 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    uicontrol(bgTabX,'Style','Text','String','T =','Position',[395 iY+1 25 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
 
     btnFig(8) = uicontrol(bgTabX,'Style','PushButton','String','','Position',[210 iY 20 20],'BackgroundColor',cButtonOff,'Callback',{@fToggleXFig,8});
-    edtT9(1)  = uicontrol(bgTabX,'Style','Edit','String','0','Position',[290 iY 50 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,8});
-    edtT9(2)  = uicontrol(bgTabX,'Style','Edit','String','0','Position',[345 iY 50 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,8});
+    pumT9(1)  = uicontrol(bgTabX,'Style','PopupMenu','String',X.Data.Beam,'Value',1,'Position',[240 iY 150 20],'Callback',{@fPlotSetBeam,8});
+    edtT9(1)  = uicontrol(bgTabX,'Style','Edit','String','0','Position',[425 iY 40 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,8});
+    edtT9(2)  = uicontrol(bgTabX,'Style','Edit','String','0','Position',[470 iY 40 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,8});
 
     % Beam Slip
     iY = iY - 25;
 
     uicontrol(bgTabX,'Style','Text','String','#10','Position',[5 iY+1 30 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
     uicontrol(bgTabX,'Style','Text','String','Beam Slip','Position',[40 iY+1 160 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-    uicontrol(bgTabX,'Style','Text','String','Dump','Position',[240 iY+1 45 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    uicontrol(bgTabX,'Style','Text','String','T =','Position',[395 iY+1 25 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
 
     btnFig(9) = uicontrol(bgTabX,'Style','PushButton','String','','Position',[210 iY 20 20],'BackgroundColor',cButtonOff,'Callback',{@fToggleXFig,9});
-    edtT10(1) = uicontrol(bgTabX,'Style','Edit','String','0','Position',[290 iY 50 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,9});
-    edtT10(2) = uicontrol(bgTabX,'Style','Edit','String','0','Position',[345 iY 50 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,9});
+    pumT10(1) = uicontrol(bgTabX,'Style','PopupMenu','String',X.Data.Beam,'Value',1,'Position',[240 iY 150 20],'Callback',{@fPlotSetBeam,9});
+    edtT10(1) = uicontrol(bgTabX,'Style','Edit','String','0','Position',[425 iY 40 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,9});
+    edtT10(2) = uicontrol(bgTabX,'Style','Edit','String','0','Position',[470 iY 40 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,9});
 
     set(hTabGroup,'SelectedTab',hTabX);
     
@@ -254,11 +260,11 @@ function Analyse2D
         
         iY = iY - 25;
         uicontrol(bgTab(t),'Style','Text','String','Beam','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        pumData(t) = uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Beam,'Value',1,'Position',[85 iY 150 20],'Callback',{@fPlotSetBeam,t});
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Beam,'Value',1,'Position',[85 iY 150 20],'Callback',{@fPlotSetBeam,t});
 
         iY = iY - 25;
         uicontrol(bgTab(t),'Style','Text','String','Density','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        pumDensity(t) = uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Density,'Value',1,'Position',[85 iY 150 20],'Callback',{@fPlotSetDensity,t});
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Density,'Value',1,'Position',[85 iY 150 20],'Callback',{@fPlotSetDensity,t});
         
     end % function
 
@@ -278,7 +284,7 @@ function Analyse2D
         
         iY = iY - 25;
         uicontrol(bgTab(t),'Style','Text','String','Plasma','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        pumData(t) = uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Plasma,'Value',1,'Position',[85 iY 150 20],'Callback',{@fPlotSetPlasma,t});
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Plasma,'Value',1,'Position',[85 iY 150 20],'Callback',{@fPlotSetPlasma,t});
 
         iY = iY - 25;
         uicontrol(bgTab(t),'Style','Text','String','Scatter 1','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
@@ -294,8 +300,8 @@ function Analyse2D
         
         iY = iY - 25;
         uicontrol(bgTab(t),'Style','Text','String','Fields','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','Checkbox','String',fTranslateField('e1',sField),'Value',X.Plot(t).OvField(1),'Position',[ 85 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotOvField,t,1});
-        uicontrol(bgTab(t),'Style','Checkbox','String',fTranslateField('e2',sField),'Value',X.Plot(t).OvField(2),'Position',[135 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotOvField,t,2});
+        uicontrol(bgTab(t),'Style','Checkbox','String',fTranslateField('e1',sField),'Value',X.Plot(t).Settings(1),'Position',[ 85 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,1});
+        uicontrol(bgTab(t),'Style','Checkbox','String',fTranslateField('e2',sField),'Value',X.Plot(t).Settings(2),'Position',[135 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,2});
 
     end % function
     
@@ -310,7 +316,7 @@ function Analyse2D
         
         iY = iY - 25;
         uicontrol(bgTab(t),'Style','Text','String','Field','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        pumData(t) = uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Field,'Value',1,'Position',[85 iY 150 20],'Callback',{@fPlotSetField,t});
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Field,'Value',1,'Position',[85 iY 150 20],'Callback',{@fPlotSetField,t});
         
     end % function
 
@@ -326,14 +332,17 @@ function Analyse2D
         iY = iY - 25;
         uicontrol(bgTab(t),'Style','Text','String','Species','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Species,'Value',1,'Position',[115 iY 150 20],'Callback',{@fPlotSetSpecies,t});
+        uicontrol(bgTab(t),'Style','Checkbox','String','Plot Macro Particles','Value',X.Plot(t).Settings(1),'Position',[305 iY 150 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,1});
 
         iY = iY - 25;
         uicontrol(bgTab(t),'Style','Text','String','Horizontal Axis','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Axis,'Value',1,'Position',[115 iY 180 20],'Callback',{@fPlotSetPhase,1,t});
+        uicontrol(bgTab(t),'Style','Checkbox','String','Auto Scale','Value',X.Plot(t).Settings(2),'Position',[305 iY 150 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,2});
 
         iY = iY - 25;
         uicontrol(bgTab(t),'Style','Text','String','Vertical Axis','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Axis,'Value',4,'Position',[115 iY 180 20],'Callback',{@fPlotSetPhase,2,t});
+        uicontrol(bgTab(t),'Style','Checkbox','String','Auto Scale','Value',X.Plot(t).Settings(3),'Position',[305 iY 150 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,3});
         
     end % function
 
@@ -355,7 +364,6 @@ function Analyse2D
 
         oData.Path = stSettings.LoadData{iSet};
         X.DataSet  = iSet;
-        X.Data     = {};
 
         X.Data.Name       = oData.Config.Name;
         X.Data.Beam       = oData.Config.Variables.Species.Beam;
@@ -380,6 +388,13 @@ function Analyse2D
         % Beams
         X.Data.Witness = oData.Config.Variables.Species.WitnessBeam;
         X.Data.Drive   = oData.Config.Variables.Species.DriveBeam;
+
+        % Index Beams
+        for i=1:length(X.Data.Beam)
+            if strcmpi(X.Data.Beam{i}, X.Data.Witness)
+                X.Data.WitnessIdx = i;
+            end % if
+        end % for
         
         % Translate Fields
         for i=1:length(X.Data.Field)
@@ -454,6 +469,18 @@ function Analyse2D
         set(edtT10(1), 'String', X.Time.Limits(1));
         set(edtT10(2), 'String', X.Time.Limits(4));
         
+        set(pumT8(1),  'String', X.Data.Beam);
+        set(pumT9(1),  'String', X.Data.Beam);
+        set(pumT10(1), 'String', X.Data.Beam);
+
+        set(pumT8(1),  'Value',  X.Data.WitnessIdx);
+        set(pumT9(1),  'Value',  X.Data.WitnessIdx);
+        set(pumT10(1), 'Value',  X.Data.WitnessIdx);
+        
+        X.Plot(7).Data = X.Data.Beam{X.Data.WitnessIdx};
+        X.Plot(8).Data = X.Data.Beam{X.Data.WitnessIdx};
+        X.Plot(9).Data = X.Data.Beam{X.Data.WitnessIdx};
+
         % Refresh
         fRefresh;
         fRefreshX;
@@ -491,13 +518,17 @@ function Analyse2D
 
     % Zoom
     
-    function fZoom(uiSrc,~,iDim,f)
+    function fZoom(uiSrc,~,d,f)
         
         % Collect values
         dValue = str2num(get(uiSrc,'String'));
         
         if ~isempty(dValue)
-            X.Plot(f).Limits(iDim) = dValue;
+            if d <= 2
+                X.Plot(f).Limits(d) = dValue/X.Plot(f).Scale(1);
+            else
+                X.Plot(f).Limits(d) = dValue/X.Plot(f).Scale(2);
+            end % if
         end % if
         
         % Check X range
@@ -531,14 +562,22 @@ function Analyse2D
         if X.X1Link(f)
             for i=1:6
                 if X.X1Link(i) && X.Figure(i) > 0
-                    X.Plot(i).Limits(1:2) = X.Plot(f).Limits(1:2);
+                    X.Plot(i).Limits(1:2) = X.Plot(f).Limits(1:2)*X.Plot(f).Scale(1)/X.Plot(i).Scale(1);
                 end % if
+                for j=1:2
+                    if X.Plot(i).Limits(j) < X.Plot(i).MaxLim(1)
+                        X.Plot(i).Limits(j) = X.Plot(i).MaxLim(1);
+                    end % if
+                    if X.Plot(i).Limits(j) > X.Plot(i).MaxLim(2)
+                        X.Plot(i).Limits(j) = X.Plot(i).MaxLim(2);
+                    end % if
+                end % for
             end % for
         end % if
 
         % Check to update other Y limit
         if X.X2Sym(f)
-            switch(iDim)
+            switch(d)
                 case 3
                     X.Plot(f).Limits(3) = -abs(X.Plot(f).Limits(3));
                     X.Plot(f).Limits(4) =  abs(X.Plot(f).Limits(3));
@@ -551,8 +590,16 @@ function Analyse2D
         if X.X2Link(f)
             for i=1:6
                 if X.X2Link(i) && X.Figure(i) > 0
-                    X.Plot(i).Limits(3:4) = X.Plot(f).Limits(3:4);
+                    X.Plot(i).Limits(3:4) = X.Plot(f).Limits(3:4)*X.Plot(f).Scale(2)/X.Plot(i).Scale(2);
                 end % if
+                for j=3:4
+                    if X.Plot(i).Limits(j) < X.Plot(i).MaxLim(3)
+                        X.Plot(i).Limits(j) = X.Plot(i).MaxLim(3);
+                    end % if
+                    if X.Plot(i).Limits(j) > X.Plot(i).MaxLim(4)
+                        X.Plot(i).Limits(j) = X.Plot(i).MaxLim(4);
+                    end % if
+                end % for
             end % for
         end % if
         
@@ -580,6 +627,7 @@ function Analyse2D
             set(btnFig(f), 'BackgroundColor', cButtonOn);
             X.Figure(f) = iOpt;
             figure(f+1); clf;
+            aFigSize = [200 200];
 
             switch(X.Plots{iOpt})
 
@@ -587,29 +635,36 @@ function Analyse2D
                     X.Plot(f).Data    = X.Data.Beam{1};
                     X.Plot(f).Density = X.Data.Density{1};
                     fCtrlBeamDensity(f);
-                    fFigureSize(figure(f+1), [900 550]);
+                    aFigSize = [900 500];
 
                 case 'Plasma Density'
-                    X.Plot(f).Data = X.Data.Plasma{1};
+                    X.Plot(f).Data       = X.Data.Plasma{1};
                     X.Plot(f).ScatterOpt = ['Off'; X.Data.Beam];
-                    X.Plot(f).Scatter = {'',''};
+                    X.Plot(f).Scatter    = {'',''};
                     X.Plot(f).ScatterNum = [2000 2000];
-                    X.Plot(f).OvField = [1 1];
+                    X.Plot(f).Settings   = [0 0];
                     fCtrlPlasmaDensity(f);
-                    fFigureSize(figure(f+1), [900 550]);
+                    aFigSize = [900 500];
 
                 case 'Field Density'
                     X.Plot(f).Data = X.Data.Field{1};
                     fCtrlFieldDensity(f);
-                    fFigureSize(figure(f+1), [900 550]);
+                    aFigSize = [900 500];
 
                 case 'Phase 2D'
-                    X.Plot(f).Data = X.Data.Species{1};
-                    X.Plot(f).Axis = {X.Data.Axis{1},X.Data.Axis{4}};
+                    X.Plot(f).Data     = X.Data.Species{1};
+                    X.Plot(f).Axis     = {X.Data.Axis{1},X.Data.Axis{4}};
+                    X.Plot(f).Settings = [0 0 0];
                     fCtrlPhase2D(f);
-                    fFigureSize(figure(f+1), [700 550]);
+                    aFigSize = [700 500];
 
             end % switch
+
+            if sum(stSettings.Position(f).Pos) == 0
+                fFigureSize(figure(f+1), aFigSize);
+            else
+                set(figure(f+1), 'Position', [stSettings.Position(f).Pos aFigSize]);
+            end % if
 
             set(hTabGroup,'SelectedTab',hTabs(f));
             fRefresh(f);
@@ -617,12 +672,19 @@ function Analyse2D
         else
             
             set(btnFig(f), 'BackgroundColor', cButtonOff);
+            
             X.Figure(f) = 0;
             X.X1Link(f) = 0;
             X.X2Sym(f)  = 0;
             X.Plot(f).MaxLim  = [0.0 0.0 0.0 0.0];
             X.Plot(f).Limits  = [0.0 0.0 0.0 0.0];
             X.Plot(f).LimPres = [2   2   2   2];
+            
+            aFigPos = get(figure(f+1), 'Position');
+            stSettings.Position(f).Pos  = aFigPos(1:2);
+            stSettings.Position(f).Size = aFigPos(3:4);
+            fSaveVariables;
+
             close(figure(f+1));
             fResetTab(f);
             fRefresh(f);
@@ -644,6 +706,12 @@ function Analyse2D
         else
             set(btnFig(f), 'BackgroundColor', cButtonOff);
             X.Plot(f).Enabled = 0;
+            
+            aFigPos = get(figure(f+1), 'Position');
+            stSettings.Position(f).Pos  = aFigPos(1:2);
+            stSettings.Position(f).Size = aFigPos(3:4);
+            fSaveVariables;
+
             close(figure(f+1));
         end % if
         
@@ -715,11 +783,9 @@ function Analyse2D
 
                 % Apply limits if > 0
                 if sum(X.Plot(f).Limits) > 0
-                    aLim  = X.Plot(f).Limits;
                     aHLim = X.Plot(f).Limits(1:2);
                     aVLim = X.Plot(f).Limits(3:4);
                 else
-                    aLim  = [];
                     aHLim = [];
                     aVLim = [];
                 end % if
@@ -736,14 +802,14 @@ function Analyse2D
                         iMakeSym = 1;
 
                         X.Plot(f).Return = fPlotBeamDensity(oData,X.Time.Dump,X.Plot(f).Data,'Current',sCurrent, ...
-                            'IsSubPlot','No','AutoResize','Off','HideDump','Yes','Absolute','Yes','ShowOverlay','Yes','Limits',aLim);
+                            'IsSubPlot','No','AutoResize','Off','HideDump','Yes','Absolute','Yes','ShowOverlay','Yes','Limits',[aHLim aVLim]);
 
                     case 'Plasma Density'
                         stEF(2) = struct();
-                        for e=1:2
-                            stEF(e).Range = [];
-                            if X.Plot(f).OvField(e)
-                                stEF(e).Range = [3,3];
+                        for s=1:2
+                            stEF(s).Range = [];
+                            if X.Plot(f).Settings(s)
+                                stEF(s).Range = [3,3];
                             end % if
                         end % for
                         iMakeSym = 1;
@@ -755,29 +821,29 @@ function Analyse2D
                             'Sample1',X.Plot(f).ScatterNum(1),'Sample2',X.Plot(f).ScatterNum(2), ...
                             'Overlay1',X.Plot(f).Scatter{1},'Overlay2',X.Plot(f).Scatter{2}, ...
                             'E1',stEF(1).Range,'E2',stEF(2).Range, ...
-                            'Limits',aLim,'CAxis',[0 5]);
+                            'Limits',[aHLim aVLim],'CAxis',[0 5]);
                         
                     case 'Field Density'
                         iMakeSym = 1;
                         figure(X.Plot(f).Figure); clf;
                         X.Plot(f).Return = fPlotField2D(oData,X.Time.Dump,fTranslateField(X.Plot(f).Data,'FromLong'), ...
-                            'IsSubPlot','No','AutoResize','Off','HideDump','Yes','Limits',aLim);
+                            'IsSubPlot','No','AutoResize','Off','HideDump','Yes','Limits',[aHLim aVLim]);
 
                     case 'Phase 2D'
                         iMakeSym = 0;
-                        X.Plot(f).LimPres = [2 2 0 0];
                         figure(X.Plot(f).Figure); clf;
                         X.Plot(f).Return = fPlotPhase2D(oData,X.Time.Dump,X.Plot(f).Data, ...
                             fTranslateAxis(X.Plot(f).Axis{1},'FromLong'), ...
                             fTranslateAxis(X.Plot(f).Axis{2},'FromLong'), ...
                             'HLim',aHLim,'VLim',aVLim, ...
                             'IsSubPlot','No','AutoResize','Off','HideDump','Yes');
+                        X.Plot(f).Scale = X.Plot(f).Return.AxisScale(1:2);
 
                     otherwise
                         return;
                                                                        
                 end % switch
-                
+
                 % Set default zoom levels
                 if sum(X.Plot(f).MaxLim) == 0.0
 
@@ -796,41 +862,10 @@ function Analyse2D
                 
             end % if
             
-            switch(X.Plot(f).LimPres(1))
-                case 0
-                    set(edtXMin(f), 'String', sprintf('%.0f', X.Plot(f).Limits(1)));
-                case 1
-                    set(edtXMin(f), 'String', sprintf('%.1f', X.Plot(f).Limits(1)));
-                case 2
-                    set(edtXMin(f), 'String', sprintf('%.2f', X.Plot(f).Limits(1)));
-            end % switch
-
-            switch(X.Plot(f).LimPres(2))
-                case 0
-                    set(edtXMax(f), 'String', sprintf('%.0f', X.Plot(f).Limits(2)));
-                case 1
-                    set(edtXMax(f), 'String', sprintf('%.1f', X.Plot(f).Limits(2)));
-                case 2
-                    set(edtXMax(f), 'String', sprintf('%.2f', X.Plot(f).Limits(2)));
-            end % switch
-
-            switch(X.Plot(f).LimPres(3))
-                case 0
-                    set(edtYMin(f), 'String', sprintf('%.0f', X.Plot(f).Limits(3)));
-                case 1
-                    set(edtYMin(f), 'String', sprintf('%.1f', X.Plot(f).Limits(3)));
-                case 2
-                    set(edtYMin(f), 'String', sprintf('%.2f', X.Plot(f).Limits(3)));
-            end % switch
-
-            switch(X.Plot(f).LimPres(4))
-                case 0
-                    set(edtYMax(f), 'String', sprintf('%.0f', X.Plot(f).Limits(4)));
-                case 1
-                    set(edtYMax(f), 'String', sprintf('%.1f', X.Plot(f).Limits(4)));
-                case 2
-                    set(edtYMax(f), 'String', sprintf('%.2f', X.Plot(f).Limits(4)));
-            end % switch
+            set(edtXMin(f), 'String', sprintf('%.2f', X.Plot(f).Limits(1)*X.Plot(f).Scale(1)));
+            set(edtXMax(f), 'String', sprintf('%.2f', X.Plot(f).Limits(2)*X.Plot(f).Scale(1)));
+            set(edtYMin(f), 'String', sprintf('%.2f', X.Plot(f).Limits(3)*X.Plot(f).Scale(2)));
+            set(edtYMax(f), 'String', sprintf('%.2f', X.Plot(f).Limits(4)*X.Plot(f).Scale(2)));
 
             set(chkX1(f), 'Value', X.X1Link(f));
             set(chkX2(f), 'Value', X.X2Link(f));
@@ -859,7 +894,7 @@ function Analyse2D
                         sStart = get(edtT8(1),'String');
                         sEnd   = get(edtT8(2),'String');
                         figure(X.Plot(7).Figure); clf;
-                        fPlotESigmaMean(oData,X.Data.Witness{1},'Start',sStart,'End',sEnd,'HideDump','Yes');
+                        fPlotESigmaMean(oData,X.Plot(f).Data,'Start',sStart,'End',sEnd,'HideDump','Yes');
                     
                     case 8
                         sStart = get(edtT9(1),'String');
@@ -874,6 +909,12 @@ function Analyse2D
                         fPlotBeamSlip(oData,X.Data.Witness{1},'Start',sStart,'End',sEnd,'HideDump','Yes');
 
                 end % switch
+                
+                if sum(stSettings.Position(f).Pos) > 0
+                    aFigSize = get(figure(f+1), 'Position');
+                    set(figure(f+1), 'Position', [stSettings.Position(f).Pos aFigSize(3:4)]);
+                end % if
+
             end % if
         end % for
         
@@ -897,7 +938,11 @@ function Analyse2D
         sBeam = X.Data.Beam{iBeam};
         
         X.Plot(f).Data = sBeam;
-        fRefresh(f);
+        if f < 7
+            fRefresh(f);
+        else
+            fRefreshX(f);
+        end % if
         
     end % function
 
@@ -920,6 +965,8 @@ function Analyse2D
         switch(X.Plots{X.Figure(f)})
             case 'Phase 2D'
                 X.Plot(f).MaxLim = [0.0 0.0 0.0 0.0];
+                X.Plot(f).Limits = [0.0 0.0 0.0 0.0];
+                X.Plot(f).Scale  = [1.0 1.0];
         end % switch        
         
         fRefresh(f);
@@ -957,13 +1004,6 @@ function Analyse2D
     
     end % function
 
-    function fPlotOvField(uiSrc,~,f,e)
-        
-        X.Plot(f).OvField(e) = get(uiSrc, 'Value');
-        fRefresh(f);
-        
-    end % function
-
     function fPlotSetField(uiSrc,~,f)
         
         iField = get(uiSrc,'Value');
@@ -992,6 +1032,13 @@ function Analyse2D
         X.Plot(f).Density = sDensity;
         fRefresh(f);
         
+    end % function
+
+    function fPlotSetting(uiSrc,~,f,s)
+    
+        X.Plot(f).Settings(s) = get(uiSrc,'Value');
+        fRefresh(f);
+
     end % function
    
 end % function

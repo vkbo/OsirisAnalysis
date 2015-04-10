@@ -292,7 +292,8 @@ classdef Phase
             
             % Retrieve data
             aData = obj.Data.Data(obj.Time,'PHA',sAxis,obj.Species);
-            aData = 100*aData/sum(aData(:));
+            dSum  = sum(aData(:));
+            aData = aData/dSum;
             
             if bRotate
                 aData = transpose(aData);
@@ -305,33 +306,26 @@ classdef Phase
             stReturn.AxisRange = [aHAxis(1) aHAxis(end) aVAxis(1) aVAxis(end)];
             stReturn.AxisFac   = obj.AxisFac(1)*[1.0 1.0];
             stReturn.AxisUnit  = {'N','N'};
-            aLimScale          = [1.0 1.0];
 
             if strcmpi(obj.Units, 'SI')
                 stReturn.AxisUnit  = {'m','m'};
-                aLimScale          = [1.0e-3 1.0e-3];
                 if strcmpi(sAxis1(1),'p')
                     stReturn.AxisFac(1)  = dEMass;
                     stReturn.AxisUnit{1} = 'eV';
-                    aLimScale(1)         = 1e6;
                 end % if
                 if strcmpi(sAxis2(1),'p')
                     stReturn.AxisFac(2)  = dEMass;
                     stReturn.AxisUnit{2} = 'eV';
-                    aLimScale(2)         = 1e6;
                 end % if
             end % if
 
-            stReturn.AxisRange(1:2) = stReturn.AxisRange(1:2)/aLimScale(1);
-            stReturn.AxisRange(3:4) = stReturn.AxisRange(3:4)/aLimScale(2);
-            
             % Crop data and axes
             if ~isempty(stOpt.HLim) || strcmpi(stOpt.HAuto, 'Yes')
 
                 if strcmpi(stOpt.HAuto, 'No')
                 
-                    iMin = fGetIndex(aHAxis, stOpt.HLim(1)*aLimScale(1));
-                    iMax = fGetIndex(aHAxis, stOpt.HLim(2)*aLimScale(1));
+                    iMin = fGetIndex(aHAxis, stOpt.HLim(1));
+                    iMax = fGetIndex(aHAxis, stOpt.HLim(2));
                     
                 else
                     
@@ -380,8 +374,8 @@ classdef Phase
 
                 if strcmpi(stOpt.VAuto, 'No')
                 
-                    iMin   = fGetIndex(aVAxis, stOpt.VLim(1)*aLimScale(2));
-                    iMax   = fGetIndex(aVAxis, stOpt.VLim(2)*aLimScale(2));
+                    iMin   = fGetIndex(aVAxis, stOpt.VLim(1));
+                    iMax   = fGetIndex(aVAxis, stOpt.VLim(2));
                     
                 else
                     
@@ -425,8 +419,9 @@ classdef Phase
                 aVAxis = aVAxis(iMin:iMax);
                 
             end % if
-            
+
             stReturn.Data    = aData;
+            stReturn.Ratio   = abs(sum(aData(:)));
             stReturn.HAxis   = aHAxis;
             stReturn.VAxis   = aVAxis;
             stReturn.DataSet = sAxis;

@@ -21,6 +21,7 @@
 %  IsSubplot   :: Default No
 %  AutoResize  :: Default On
 %  CAxis       :: Color axis limits
+%  ShowOverlay :: Default Yes
 %
 
 function stReturn = fPlotPhase2D(oData, sTime, sSpecies, sAxis1, sAxis2, varargin)
@@ -52,6 +53,7 @@ function stReturn = fPlotPhase2D(oData, sTime, sSpecies, sAxis1, sAxis2, varargi
         fprintf('  IsSubplot   :: Default No\n');
         fprintf('  AutoResize  :: Default On\n');
         fprintf('  CAxis       :: Color axis limits\n');
+        fprintf('  ShowOverlay :: Default Yes\n');
         fprintf('\n');
         return;
     end % if
@@ -69,6 +71,7 @@ function stReturn = fPlotPhase2D(oData, sTime, sSpecies, sAxis1, sAxis2, varargi
     addParameter(oOpt, 'IsSubPlot',   'No');
     addParameter(oOpt, 'AutoResize',  'On');
     addParameter(oOpt, 'CAxis',       []);
+    addParameter(oOpt, 'ShowOverlay', 'Yes');
     parse(oOpt, varargin{:});
     stOpt = oOpt.Results;
 
@@ -97,7 +100,7 @@ function stReturn = fPlotPhase2D(oData, sTime, sSpecies, sAxis1, sAxis2, varargi
         return;
     end % if
 
-    aData  = stData.Data;
+    aData  = stData.Data*100;
     aHAxis = stData.HAxis;
     aVAxis = stData.VAxis;
     
@@ -111,8 +114,13 @@ function stReturn = fPlotPhase2D(oData, sTime, sSpecies, sAxis1, sAxis2, varargi
     
     stReturn.DataSet   = stData.DataSet;
     stReturn.AxisRange = stData.AxisRange;
-    stReturn.AxisFac   = stData.AxisFac;
+    stReturn.AxisScale = [dHVal/dHMax dVVal/dVMax];
 
+    % Drojected data
+    aProjZ = abs(sum(aData));
+    aProjZ = 0.15*(aVAxis(end)-aVAxis(1))*aProjZ/max(abs(aProjZ))+aVAxis(1);
+
+    
     % Plot
     
     if strcmpi(stOpt.IsSubPlot, 'No')
@@ -132,6 +140,18 @@ function stReturn = fPlotPhase2D(oData, sTime, sSpecies, sAxis1, sAxis2, varargi
     if ~isempty(stOpt.CAxis)
         caxis(stOpt.CAxis);
     end % if
+
+    hold on;
+
+    if strcmpi(stOpt.ShowOverlay, 'Yes')
+        plot(aHAxis, aProjZ, 'White');
+        h = legend(sprintf('Particles: %.2f %%',stData.Ratio*100), 'Location', 'NE');
+        set(h,'Box','Off');
+        set(h,'TextColor', [1 1 1]);
+        set(findobj(h, 'type', 'line'), 'visible', 'off')
+    end % if
+    
+    hold off;
 
     if strcmpi(oPha.Coords, 'cylindrical')
         sRType = 'ReadableCyl';
