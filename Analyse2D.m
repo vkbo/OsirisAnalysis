@@ -28,7 +28,6 @@ function Analyse2D
     % Data
     
     iXFig = 9;
-    oData = OsirisData('Silent','Yes');
 
     X.DataSet     = 0;
     X.Time.Dump   = 0;
@@ -362,6 +361,7 @@ function Analyse2D
         end % for
         set(btnSet(iSet), 'BackgroundColor', cButtonOn);
 
+        oData      = OsirisData('Silent','Yes');
         oData.Path = stSettings.LoadData{iSet};
         X.DataSet  = iSet;
 
@@ -408,7 +408,7 @@ function Analyse2D
         end % for
 
         % Translate Axes
-        X.Data.Axis = {'x1','x2','x3','p1','p2','p3'};
+        X.Data.Axis = {'x1','x2','p1','p2'};
         for i=1:length(X.Data.Axis)
             X.Data.Axis{i} = fTranslateAxis(X.Data.Axis{i},['Long',X.Data.CoordsPF]);
         end % for
@@ -653,7 +653,7 @@ function Analyse2D
 
                 case 'Phase 2D'
                     X.Plot(f).Data     = X.Data.Species{1};
-                    X.Plot(f).Axis     = {X.Data.Axis{1},X.Data.Axis{4}};
+                    X.Plot(f).Axis     = {X.Data.Axis{1},X.Data.Axis{3}};
                     X.Plot(f).Settings = [0 0 0];
                     fCtrlPhase2D(f);
                     aFigSize = [700 500];
@@ -894,19 +894,19 @@ function Analyse2D
                         sStart = get(edtT8(1),'String');
                         sEnd   = get(edtT8(2),'String');
                         figure(X.Plot(7).Figure); clf;
-                        fPlotESigmaMean(oData,X.Plot(f).Data,'Start',sStart,'End',sEnd,'HideDump','Yes');
+                        fPlotESigmaMean(oData,X.Plot(f).Data,'Start',sStart,'End',sEnd,'HideDump','Yes','IsSubPlot','No','AutoResize','Off');
                     
                     case 8
                         sStart = get(edtT9(1),'String');
                         sEnd   = get(edtT9(2),'String');
                         figure(X.Plot(8).Figure); clf;
-                        fPlotESigmaMeanRatio(oData,X.Data.Witness{1},'Start',sStart,'End',sEnd,'HideDump','Yes');
+                        fPlotESigmaMeanRatio(oData,X.Data.Witness{1},'Start',sStart,'End',sEnd,'HideDump','Yes','IsSubPlot','No','AutoResize','Off');
 
                     case 9
                         sStart = get(edtT10(1),'String');
                         sEnd   = get(edtT10(2),'String');
                         figure(X.Plot(9).Figure); clf;
-                        fPlotBeamSlip(oData,X.Data.Witness{1},'Start',sStart,'End',sEnd,'HideDump','Yes');
+                        fPlotBeamSlip(oData,X.Data.Witness{1},'Start',sStart,'End',sEnd,'HideDump','Yes','IsSubPlot','No','AutoResize','Off');
 
                 end % switch
                 
@@ -1020,6 +1020,12 @@ function Analyse2D
         sAxis = X.Data.Axis{iAxis};
         
         X.Plot(f).Axis{a} = sAxis;
+        switch(X.Plots{X.Figure(f)})
+            case 'Phase 2D'
+                X.Plot(f).MaxLim = [0.0 0.0 0.0 0.0];
+                X.Plot(f).Limits = [0.0 0.0 0.0 0.0];
+                X.Plot(f).Scale  = [1.0 1.0];
+        end % switch        
         fRefresh(f);
         
     end % function

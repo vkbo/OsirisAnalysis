@@ -1,3 +1,4 @@
+
 %
 %  Class Object :: Analyse Beam Momentum
 % ***************************************
@@ -259,13 +260,10 @@ classdef Momentum
             end % if
             
             % Calculate range
-
             iStart = fStringToDump(obj.Data, sStart);
             iStop  = fStringToDump(obj.Data, sStop);
-            
 
             % Calculate axes
-            
             aTAxis = obj.fGetTimeAxis;
             aTAxis = aTAxis(iStart+1:iStop+1);
             
@@ -277,7 +275,7 @@ classdef Momentum
                 
                 k = i-iStart+1;
                 
-                h5Data    = obj.Data.Data(i, 'RAW', '', obj.Beam);
+                h5Data = obj.Data.Data(i, 'RAW', '', obj.Beam);
                 
                 if length(h5Data(:,8)) == 1 && h5Data(1,8) == 0
                     aMean(k)  = 0.0;
@@ -291,38 +289,12 @@ classdef Momentum
                 
             end % for
             
-            
             % Return data
-            
             stReturn.TimeAxis = aTAxis;
             stReturn.Mean     = aMean;
             stReturn.Sigma    = aSigma;
             stReturn.Data     = aData;
 
-        end % function
-
-        function TimeEvolution(obj, sStart, sStop)
-
-            if nargin < 2
-                sStart = 'Start';
-            end % if
-
-            if nargin < 3
-                sStop = 'End';
-            end % if
-            
-            iStart = fStringToDump(obj.Data, sStart);
-            iStop  = fStringToDump(obj.Data, sStop);
-            
-            aTAxis = obj.fGetTimeAxis;
-            aTAxis = aTAxis(iStart+1:iStop+1);
-            
-            for i=iStart:iStop
-                
-                % Code
-                
-            end % for
-        
         end % function
 
         function stReturn = TimeSpaceEvolution(obj, sPDim, sSDim, sStart, sStop)
@@ -402,7 +374,7 @@ classdef Momentum
             
         end % function
         
-        function stReturn = Evolution(obj, sAxis, sStart, sStop)
+        function stReturn = Evolution(obj, sAxis, sStart, sStop, varargin)
 
             stReturn = {};
             
@@ -417,6 +389,20 @@ classdef Momentum
             iStart = fStringToDump(obj.Data, sStart);
             iStop  = fStringToDump(obj.Data, sStop);
 
+            oOpt = inputParser;
+            addParameter(oOpt, 'Percentile', []);
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
+            
+            % Read simulation data
+            dEMass = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
+
+            % Calculate axes
+            aTAxis = obj.fGetTimeAxis;
+            aTAxis = aTAxis(iStart+1:iStop+1);
+
+            stReturn.TimeAxis = aTAxis;
+
             switch(fMomentumAxis(sAxis))
                 case 'p1'
                     iAxis = 4;
@@ -430,17 +416,23 @@ classdef Momentum
                 
                 k = i-iStart+1;
 
-                aRAW = obj.Data.Data(i, 'RAW', '', obj.Beam);
+                aRAW = obj.Data.Data(i, 'RAW', '', obj.Beam)*dEMass;
 
-                stReturn.Average(k)       = wmean(aRAW(:,iAxis),aRAW(:,8));
-                stReturn.Median(k)        = wprctile(aRAW(:,iAxis),50,abs(aRAW(:,8)));
-                stReturn.Percentile10(k)  = wprctile(aRAW(:,iAxis),10,abs(aRAW(:,8)));
-                stReturn.Percentile90(k)  = wprctile(aRAW(:,iAxis),90,abs(aRAW(:,8)));
-                stReturn.FirstQuartile(k) = wprctile(aRAW(:,iAxis),25,abs(aRAW(:,8)));
-                stReturn.ThirdQuartile(k) = wprctile(aRAW(:,iAxis),75,abs(aRAW(:,8)));
+                stReturn.Average(k) = double(wmean(aRAW(:,iAxis),aRAW(:,8)));
+                stReturn.Median(k)  = wprctile(aRAW(:,iAxis),50,abs(aRAW(:,8)));
+                
+                if ~isempty(stOpt.Percentile)
+                    for p=1:length(stOpt.Percentile)
+                        c = stOpt.Percentile(p);
+                        if c < 1 || c > 100
+                            continue;
+                        end % if
+                        sSet = sprintf('Percentile%d', c);
+                        stReturn.(sSet)(k) = wprctile(aRAW(:,iAxis),c,abs(aRAW(:,8)));
+                    end % for
+                end % if
 
             end % for
-            
     
         end % function
 
