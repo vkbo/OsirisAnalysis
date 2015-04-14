@@ -28,6 +28,7 @@ function Analyse2D
     % Data
     
     iXFig = 9;
+    oData = OsirisData('Silent','Yes');
 
     X.DataSet     = 0;
     X.Time.Dump   = 0;
@@ -340,7 +341,7 @@ function Analyse2D
 
         iY = iY - 25;
         uicontrol(bgTab(t),'Style','Text','String','Vertical Axis','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Axis,'Value',4,'Position',[115 iY 180 20],'Callback',{@fPlotSetPhase,2,t});
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Axis,'Value',3,'Position',[115 iY 180 20],'Callback',{@fPlotSetPhase,2,t});
         uicontrol(bgTab(t),'Style','Checkbox','String','Auto Scale','Value',X.Plot(t).Settings(3),'Position',[305 iY 150 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,3});
         
     end % function
@@ -831,18 +832,30 @@ function Analyse2D
 
                     case 'Phase 2D'
                         iMakeSym = 0;
+                        if X.Plot(f).Settings(1) == 1
+                            sUseRaw = 'Yes';
+                        else
+                            sUseRaw = 'No';
+                        end % if
                         figure(X.Plot(f).Figure); clf;
                         X.Plot(f).Return = fPlotPhase2D(oData,X.Time.Dump,X.Plot(f).Data, ...
                             fTranslateAxis(X.Plot(f).Axis{1},'FromLong'), ...
                             fTranslateAxis(X.Plot(f).Axis{2},'FromLong'), ...
-                            'HLim',aHLim,'VLim',aVLim, ...
+                            'HLim',aHLim,'VLim',aVLim,'UseRaw',sUseRaw, ...
                             'IsSubPlot','No','AutoResize','Off','HideDump','Yes');
+                        if isempty(X.Plot(f).Return)
+                            return;
+                        end % if
                         X.Plot(f).Scale = X.Plot(f).Return.AxisScale(1:2);
 
                     otherwise
                         return;
                                                                        
                 end % switch
+
+                if isempty(X.Plot(f).Return)
+                    return;
+                end % if
 
                 % Set default zoom levels
                 if sum(X.Plot(f).MaxLim) == 0.0

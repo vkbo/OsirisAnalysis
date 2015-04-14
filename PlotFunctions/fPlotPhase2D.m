@@ -66,6 +66,8 @@ function stReturn = fPlotPhase2D(oData, sTime, sSpecies, sAxis1, sAxis2, varargi
     addParameter(oOpt, 'HAuto',       'No');
     addParameter(oOpt, 'VLim',        []);
     addParameter(oOpt, 'VAuto',       'No');
+    addParameter(oOpt, 'UseRaw',      'No');
+    addParameter(oOpt, 'Scatter',     0);
     addParameter(oOpt, 'FigureSize',  [900 500]);
     addParameter(oOpt, 'HideDump',    'No');
     addParameter(oOpt, 'IsSubPlot',   'No');
@@ -93,17 +95,37 @@ function stReturn = fPlotPhase2D(oData, sTime, sSpecies, sAxis1, sAxis2, varargi
     % Data
     oPha      = Phase(oData,sSpecies,'Units','SI');
     oPha.Time = iTime;
-    stData    = oPha.Phase2D(sAxis1,sAxis2,'HLim',stOpt.HLim,'VLim',stOpt.VLim,'HAuto',stOpt.HAuto,'VAuto',stOpt.VAuto);
+    if stOpt.Scatter == 0 && strcmpi(stOpt.UseRaw, 'No')
+        stData = oPha.Phase2D(sAxis1,sAxis2,'HLim',stOpt.HLim,'VLim',stOpt.VLim,'HAuto',stOpt.HAuto,'VAuto',stOpt.VAuto);
+    else
+        if stOpt.Scatter == 0
+            stData = oPha.Scatter2D(sAxis1,sAxis2,'HLim',stOpt.HLim,'VLim',stOpt.VLim,'Sample',100000);
+        else
+            stData = oPha.Scatter2D(sAxis1,sAxis2,'HLim',stOpt.HLim,'VLim',stOpt.VLim,'Sample',stOpt.Scatter);
+        end % if
+    end % if
     
     if isempty(stData)
         fprintf(2, 'Error: No data.\n');
         return;
     end % if
 
-    aData  = stData.Data*100;
+    aData = stData.Data;
+
+    if strcmpi(stOpt.UseRaw, 'No')
+        aData = aData*100;
+    else
+        dQTot = sum(aData(:));
+        [dQVal,sQUnit] = fAutoScale(dQTot,'C');
+
+        dDMax = max(abs(aData(:)));
+        [dDVal,sDUnit] = fAutoScale(dDMax,'C');
+        aData = aData*dDVal/dDMax;
+    end % if
+    
     aHAxis = stData.HAxis;
     aVAxis = stData.VAxis;
-    
+
     dHMax = max(abs(aHAxis));
     [dHVal,sHUnit] = fAutoScale(dHMax,stData.AxisUnit{1});
     aHAxis = aHAxis*dHVal/dHMax;
@@ -111,16 +133,11 @@ function stReturn = fPlotPhase2D(oData, sTime, sSpecies, sAxis1, sAxis2, varargi
     dVMax = max(abs(aVAxis));
     [dVVal,sVUnit] = fAutoScale(dVMax,stData.AxisUnit{2});
     aVAxis = aVAxis*dVVal/dVMax;
-    
+
     stReturn.DataSet   = stData.DataSet;
     stReturn.AxisRange = stData.AxisRange;
     stReturn.AxisScale = [dHVal/dHMax dVVal/dVMax];
 
-    % Drojected data
-    aProjZ = abs(sum(aData));
-    aProjZ = 0.15*(aVAxis(end)-aVAxis(1))*aProjZ/max(abs(aProjZ))+aVAxis(1);
-
-    
     % Plot
     
     if strcmpi(stOpt.IsSubPlot, 'No')
@@ -133,25 +150,37 @@ function stReturn = fPlotPhase2D(oData, sTime, sSpecies, sAxis1, sAxis2, varargi
         cla;
     end % if
 
-    imagesc(aHAxis,aVAxis,aData);
-    set(gca,'YDir','Normal');
-    colormap('hot');
-    hCol = colorbar();
-    if ~isempty(stOpt.CAxis)
-        caxis(stOpt.CAxis);
+    if stOpt.Scatter == 0
+        imagesc(aHAxis,aVAxis,aData);
+        set(gca,'YDir','Normal');
+        colormap('hot');
+        hCol = colorbar();
+        if ~isempty(stOpt.CAxis)
+            caxis(stOpt.CAxis);
+        end % if
+    else
+        cMap = hot(stData.Count);
+        scatter(stData.HData, stData.VData, 5, cMap, 'Filled');
     end % if
 
-    hold on;
+    if stOpt.Scatter == 0
+        aProjZ = abs(sum(aData));
+        aProjZ = 0.15*(aVAxis(end)-aVAxis(1))*aProjZ/max(abs(aProjZ))+aVAxis(1);
 
-    if strcmpi(stOpt.ShowOverlay, 'Yes')
-        plot(aHAxis, aProjZ, 'White');
-        h = legend(sprintf('Particles: %.2f %%',stData.Ratio*100), 'Location', 'NE');
-        set(h,'Box','Off');
-        set(h,'TextColor', [1 1 1]);
-        set(findobj(h, 'type', 'line'), 'visible', 'off')
+        hold on;
+        if strcmpi(stOpt.ShowOverlay, 'Yes')
+            plot(aHAxis, aProjZ, 'White');
+            if strcmpi(stOpt.UseRaw, 'No')
+                h = legend(sprintf('Particles: %.2f %%',stData.Ratio*100), 'Location', 'NE');
+            else
+                h = legend(sprintf('Q_{tot} = %.2f %s',dQVal,sQUnit), 'Location', 'NE');
+            end % if
+            set(h,'Box','Off');
+            set(h,'TextColor', [1 1 1]);
+            set(findobj(h, 'type', 'line'), 'visible', 'off')
+        end % if
+        hold off;
     end % if
-    
-    hold off;
 
     if strcmpi(oPha.Coords, 'cylindrical')
         sRType = 'ReadableCyl';
@@ -168,7 +197,14 @@ function stReturn = fPlotPhase2D(oData, sTime, sSpecies, sAxis1, sAxis2, varargi
     title(sTitle);
     xlabel(sprintf('%s [%s]',fTranslateAxis(sAxis1,sRType),sHUnit));
     ylabel(sprintf('%s [%s]',fTranslateAxis(sAxis2,sRType),sVUnit));
-    title(hCol,'%');
+
+    if stOpt.Scatter == 0
+        if strcmpi(stOpt.UseRaw, 'No')
+            title(hCol,'%');
+        else
+            title(hCol,sDUnit);
+        end % if
+    end % if
     
     % Return
 

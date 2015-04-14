@@ -308,7 +308,7 @@ classdef Phase
             stReturn.AxisUnit  = {'N','N'};
 
             if strcmpi(obj.Units, 'SI')
-                stReturn.AxisUnit  = {'m','m'};
+                stReturn.AxisUnit = {'m','m'};
                 if strcmpi(sAxis1(1),'p')
                     stReturn.AxisFac(1)  = dEMass;
                     stReturn.AxisUnit{1} = 'eV';
@@ -425,6 +425,165 @@ classdef Phase
             stReturn.HAxis   = aHAxis;
             stReturn.VAxis   = aVAxis;
             stReturn.DataSet = sAxis;
+            
+        end % function
+        
+        function stReturn = Scatter2D(obj, sAxis1, sAxis2, varargin)
+            
+            % Input/Output
+            stReturn = {};
+            
+            if ~isAxis(sAxis1)
+                fprintf(2, '%s is not a valid axis.\n',sAxis1);
+                return;
+            end % if
+
+            if ~isAxis(sAxis2)
+                fprintf(2, '%s is not a valid axis.\n',sAxis2);
+                return;
+            end % if
+            
+            sAxis = '';
+            if obj.Data.DataSetExists('PHA',sprintf('%s%s',sAxis1,sAxis2),obj.Species)
+                sAxis   = sprintf('%s%s',sAxis1,sAxis2);
+                bRotate = false;
+            end % if
+            if obj.Data.DataSetExists('PHA',sprintf('%s%s',sAxis2,sAxis1),obj.Species)
+                sAxis   = sprintf('%s%s',sAxis2,sAxis1);
+                bRotate = true;
+            end % if
+            if isempty(sAxis)
+                fprintf(2, 'There is no combined phase data for %s and %s.\n',sAxis1,sAxis2);
+                return;
+            end % if
+            
+            % Read input parameters
+            oOpt = inputParser;
+            addParameter(oOpt, 'HLim',   []);
+            addParameter(oOpt, 'VLim',   []);
+            addParameter(oOpt, 'Sample', 10000);
+            addParameter(oOpt, 'Grid1',  100);
+            addParameter(oOpt, 'Grid2',  100);
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
+            
+            % Get dataset values
+            dEMass = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
+            dTFac  = obj.Data.Config.Variables.Convert.SI.TimeFac;
+            dQFac  = obj.Data.Config.Variables.Convert.SI.ChargeFac;
+            
+            % Retrieve data
+            aRaw = obj.Data.Data(obj.Time,'RAW','',obj.Species);
+            
+            % Move x1 to box start
+            aRaw(:,1) = aRaw(:,1) - dTFac*obj.Time;
+
+            % Removing elements outside box on horizontal axis
+            dHFac  = 1.0;
+            sHUnit = 'm';
+            switch(sAxis1(1))
+                case 'x'
+                    stOpt.HLim = stOpt.HLim/obj.AxisFac(fRawAxisToIndex(sAxis1));
+                    dHFac      = obj.AxisFac(fRawAxisToIndex(sAxis1));
+                case 'p'
+                    stOpt.HLim = stOpt.HLim/dEMass;
+                    dHFac      = dEMass;
+                    sHUnit     = 'eV';
+            end % switch
+            if ~isempty(stOpt.HLim)
+                aRaw(:,8) = aRaw(:,8).*(aRaw(:,1) >= stOpt.HLim(1) & aRaw(:,1) <= stOpt.HLim(2));
+            end % if
+
+            % Removing elements outside box on vertical axis
+            dVFac  = 1.0;
+            sVUnit = 'm';
+            switch(sAxis2(1))
+                case 'x'
+                    stOpt.VLim = stOpt.VLim/obj.AxisFac(fRawAxisToIndex(sAxis2));
+                    dVFac      = obj.AxisFac(fRawAxisToIndex(sAxis2));
+                case 'p'
+                    stOpt.VLim = stOpt.VLim/dEMass;
+                    dVFac      = dEMass;
+                    sVUnit     = 'eV';
+            end % switch
+            if ~isempty(stOpt.VLim)
+                aRaw(:,8) = aRaw(:,8).*(aRaw(:,2) >= stOpt.VLim(1) & aRaw(:,2) <= stOpt.VLim(2));
+            end % if
+            
+            % Cut zero data
+            aRaw = aRaw(find(aRaw(:,8)),:);
+            
+            % Sample data
+            iCount = length(aRaw(:,1));
+            if iCount > stOpt.Sample
+                aRand = randperm(iCount);
+                aRaw  = aRaw(aRand(1:stOpt.Sample),:);
+            end % if
+            
+            % Scale axes
+            if strcmpi(obj.Units, 'SI')
+                aRaw(:,1) = aRaw(:,1)*obj.AxisFac(1);
+                aRaw(:,2) = aRaw(:,2)*obj.AxisFac(2);
+                aRaw(:,3) = aRaw(:,3)*obj.AxisFac(3);
+                aRaw(:,4) = aRaw(:,4)*dEMass;
+                aRaw(:,5) = aRaw(:,5)*dEMass;
+                aRaw(:,6) = aRaw(:,6)*dEMass;
+                stReturn.AxisUnit = {sHUnit, sVUnit};
+            else
+                stReturn.AxisUnit = {'N', 'N'};
+            end % if
+            
+            % Select wanted axes
+            [aQ,aI] = sort(abs(aRaw(:,8)));
+            aHData  = aRaw(aI,fRawAxisToIndex(sAxis1));
+            aVData  = aRaw(aI,fRawAxisToIndex(sAxis2));
+            
+            stReturn.Raw   = aRaw;
+            stReturn.HData = aHData;
+            stReturn.VData = aVData;
+            stReturn.Count = length(aHData);
+
+            % Grid data
+            iNH = stOpt.Grid1;
+            iNV = stOpt.Grid2;
+            
+            aQData = aQ*dQFac;
+            aGrid  = zeros(iNV,iNH);
+            
+            if ~isempty(aHData) && ~isempty(aVData)
+
+                dHMin  = min(aHData);
+                aHData = aHData-dHMin;
+                dHMax  = max(aHData);
+                aHData = int16(round(aHData/dHMax*(iNH-1)))+1;
+
+                dVMin  = min(aVData);
+                aVData = aVData-dVMin;
+                dVMax  = max(aVData);
+                aVData = int16(round(aVData/dVMax*(iNV-1)))+1;
+
+                for i=1:length(aHData)
+                    aGrid(aVData(i),aHData(i)) = aGrid(aVData(i),aHData(i))+abs(aQData(i));
+                end % for
+                
+                aHAxis = linspace(dHMin, dHMin+dHMax, iNH);
+                aVAxis = linspace(dVMin, dVMin+dVMax, iNV);
+                aRange = [dHMin dHMin+dHMax dVMin dVMin+dVMax];
+
+            else
+                
+                aHAxis = [];
+                aVAxis = [];
+                aRange = [0 0 0 0];
+
+            end % if
+
+            stReturn.Data      = aGrid*iCount/length(aHData);
+            stReturn.HAxis     = aHAxis;
+            stReturn.VAxis     = aVAxis;
+            stReturn.DataSet   = sAxis;
+            stReturn.AxisRange = aRange;
+            stReturn.AxisFac   = [dHFac dVFac];
             
         end % function
     
