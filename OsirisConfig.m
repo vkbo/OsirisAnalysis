@@ -446,11 +446,15 @@ classdef OsirisConfig
             % Assume first beam in input deck is the drive beam
             if iBeams > 0
                 stSpecies.DriveBeam = stSpecies.Beam(1);
+            else
+                stSpecies.DriveBeam = {};
             end % if
 
             % Assume the rest of the beams are witness beams
             if iBeams > 1
                 stSpecies.WitnessBeam = stSpecies.Beam(2:end);
+            else
+                stSpecies.WitnessBeam = {};
             end % if
             
             stSpecies.BeamCount        = iBeams;

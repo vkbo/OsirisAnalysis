@@ -161,10 +161,11 @@ function Analyse2D
     uicontrol(bgFigs,'Style','Text','String','Y-Max',    'Position',[454 160  55 15],'HorizontalAlignment','Center');
 
     aY = [135 110 85 60 35 10];
+    aP = [1 2 3 4 1 1];
     for f=1:6
         uicontrol(bgFigs,'Style','Text','String',sprintf('#%d',f+1),'Position',[9 aY(f)+1 25 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         
-        pumFig(f)  = uicontrol(bgFigs,'Style','PopupMenu','String',X.Plots,'Value',1,'Position',[34 aY(f) 150 20]);
+        pumFig(f)  = uicontrol(bgFigs,'Style','PopupMenu','String',X.Plots,'Value',aP(f),'Position',[34 aY(f) 150 20]);
         btnFig(f)  = uicontrol(bgFigs,'Style','PushButton','String','','Position',[189 aY(f) 20 20],'BackgroundColor',cButtonOff,'Callback',{@fToggleFig,f});
         
         edtXMin(f) = uicontrol(bgFigs,'Style','Edit','String',sprintf('%.2f',0),'Position',[214 aY(f) 55 20],'BackgroundColor',cWhite,'Callback',{@fZoom,1,f});
@@ -332,7 +333,7 @@ function Analyse2D
         iY = iY - 25;
         uicontrol(bgTab(t),'Style','Text','String','Species','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Species,'Value',1,'Position',[115 iY 150 20],'Callback',{@fPlotSetSpecies,t});
-        uicontrol(bgTab(t),'Style','Checkbox','String','Plot Macro Particles','Value',X.Plot(t).Settings(1),'Position',[305 iY 150 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,1});
+        uicontrol(bgTab(t),'Style','Checkbox','String','Use Raw Data','Value',X.Plot(t).Settings(1),'Position',[305 iY 150 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,1});
 
         iY = iY - 25;
         uicontrol(bgTab(t),'Style','Text','String','Horizontal Axis','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
@@ -391,6 +392,7 @@ function Analyse2D
         X.Data.Drive   = oData.Config.Variables.Species.DriveBeam;
 
         % Index Beams
+        X.Data.WitnessIdx = 1;
         for i=1:length(X.Data.Beam)
             if strcmpi(X.Data.Beam{i}, X.Data.Witness)
                 X.Data.WitnessIdx = i;

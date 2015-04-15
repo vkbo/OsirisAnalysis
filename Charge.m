@@ -747,8 +747,18 @@ classdef Charge
 
             switch(lower(stOpt.Filter))
                 case 'random'
-                    aRand = randperm(length(aRaw(:,1)));
-                    aRaw  = aRaw(aRand(1:iCount),:);
+                    [~,aI] = datasample(aRaw(:,1),iCount,'Replace',false);
+                    aRaw   = aRaw(aI,:);
+                case 'wrandom'
+                    aW     = abs(aRaw(:,8));
+                    aW     = aW/max(aW);
+                    [~,aI] = datasample(aRaw(:,1),iCount,'Replace',false,'Weights',aW);
+                    aRaw   = aRaw(aI,:);
+                case 'w2random'
+                    aW     = abs(aRaw(:,8)).^2;
+                    aW     = aW/max(aW);
+                    [~,aI] = datasample(aRaw(:,1),iCount,'Replace',false,'Weights',aW);
+                    aRaw   = aRaw(aI,:);
                 case 'charge'
                     aRaw  = sortrows(aRaw,9);
                     aRaw  = aRaw(end-iCount+1:end,:);
