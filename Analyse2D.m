@@ -50,6 +50,8 @@ function Analyse2D
     X.Plots{2} = 'Plasma Density';
     X.Plots{3} = 'Field Density';
     X.Plots{4} = 'Phase 2D';
+    
+    X.Opt.Sample = {'Random','WRandom','W2Random','Charge'};
 
     X.Figure = [0 0 0 0 0 0];
     X.X1Link = [0 0 0 0 0 0];
@@ -290,14 +292,18 @@ function Analyse2D
         iY = iY - 25;
         uicontrol(bgTab(t),'Style','Text','String','Scatter 1','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','PopupMenu','String',X.Plot(t).ScatterOpt,'Position',[85 iY 150 20],'Callback',{@fPlotSetScatter,t,1});
-        uicontrol(bgTab(t),'Style','Text','String','Particles','Position',[240 iY+1 60 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','Edit','String',sprintf('%d',X.Plot(t).ScatterNum(1)),'Position',[305 iY 60 20],'Callback',{@fPlotSetScatterNum,t,1});
+        uicontrol(bgTab(t),'Style','Text','String','Count','Position',[240 iY+1 45 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','Edit','String',sprintf('%d',X.Plot(t).ScatterNum(1)),'Position',[285 iY 60 20],'Callback',{@fPlotSetScatterNum,t,1});
+        uicontrol(bgTab(t),'Style','Text','String','Sample','Position',[355 iY+1 55 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Opt.Sample,'Value',X.Plot(t).Sample(1),'Position',[415 iY 90 20],'Callback',{@fPlotSetSample,t,1});
 
         iY = iY - 25;
         uicontrol(bgTab(t),'Style','Text','String','Scatter 2','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','PopupMenu','String',X.Plot(t).ScatterOpt,'Position',[85 iY 150 20],'Callback',{@fPlotSetScatter,t,2});
-        uicontrol(bgTab(t),'Style','Text','String','Particles','Position',[240 iY+1 60 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','Edit','String',sprintf('%d',X.Plot(t).ScatterNum(2)),'Position',[305 iY 60 20],'Callback',{@fPlotSetScatterNum,t,2});
+        uicontrol(bgTab(t),'Style','Text','String','Count','Position',[240 iY+1 45 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','Edit','String',sprintf('%d',X.Plot(t).ScatterNum(2)),'Position',[285 iY 60 20],'Callback',{@fPlotSetScatterNum,t,2});
+        uicontrol(bgTab(t),'Style','Text','String','Sample','Position',[355 iY+1 55 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Opt.Sample,'Value',X.Plot(t).Sample(2),'Position',[415 iY 90 20],'Callback',{@fPlotSetSample,t,2});
         
         iY = iY - 25;
         uicontrol(bgTab(t),'Style','Text','String','Fields','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
@@ -645,6 +651,7 @@ function Analyse2D
                     X.Plot(f).ScatterOpt = ['Off'; X.Data.Beam];
                     X.Plot(f).Scatter    = {'',''};
                     X.Plot(f).ScatterNum = [2000 2000];
+                    X.Plot(f).Sample     = [3 3];
                     X.Plot(f).Settings   = [0 0];
                     fCtrlPlasmaDensity(f);
                     aFigSize = [900 500];
@@ -823,6 +830,7 @@ function Analyse2D
                             'Scatter1',X.Plot(f).Scatter{1},'Scatter2',X.Plot(f).Scatter{2}, ...
                             'Sample1',X.Plot(f).ScatterNum(1),'Sample2',X.Plot(f).ScatterNum(2), ...
                             'Overlay1',X.Plot(f).Scatter{1},'Overlay2',X.Plot(f).Scatter{2}, ...
+                            'Filter1',X.Opt.Sample{X.Plot(f).Sample(1)},'Filter2',X.Opt.Sample{X.Plot(f).Sample(2)}, ...
                             'E1',stEF(1).Range,'E2',stEF(2).Range, ...
                             'Limits',[aHLim aVLim],'CAxis',[0 5]);
                         
@@ -1017,6 +1025,14 @@ function Analyse2D
         
         fRefresh(f);
     
+    end % function
+
+    function fPlotSetSample(uiSrc,~,f,s)
+        
+        iValue = get(uiSrc,'Value');
+        X.Plot(f).Sample(s) = iValue;
+        fRefresh(f);
+        
     end % function
 
     function fPlotSetField(uiSrc,~,f)
