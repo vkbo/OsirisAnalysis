@@ -324,27 +324,108 @@ classdef EField
         
         end % function
         
-        function FieldEvolution(obj, sStart, sStop)
+        function stReturn = Integral(obj, sStart, sStop, aRange)
+
+            % Input/Output
+            stReturn = {};
 
             if nargin < 2
-                sStart = 'Start';
+                sStart = 'PStart';
             end % if
 
             if nargin < 3
                 sStop = 'End';
             end % if
-            
+
+            if nargin < 4
+                aRange = [];
+            end % if
+
             iStart = fStringToDump(obj.Data, sStart);
             iStop  = fStringToDump(obj.Data, sStop);
+
+            % Get simulation variables
+            dE0   = obj.Data.Config.Variables.Convert.SI.E0;
+            dTFac = obj.Data.Config.Variables.Convert.SI.TimeFac;
+            dLFac = obj.Data.Config.Variables.Convert.SI.LengthFac;
+            
+            % Set axes
+            aVAxis = [];
+            aRAxis = [];
+            aVLim  = [];
+            sVUnit = 'N';
+            sTUnit = 'm';
+
+            switch(obj.Field)
+
+                case 'e1'
+                    sVUnit = obj.AxisUnits{1};
+                    aVAxis = obj.fGetBoxAxis('x1');
+                    aRAxis = obj.fGetBoxAxis('x2');
+                    aVLim  = [fGetIndex(aVAxis, obj.X1Lim(1)*obj.AxisFac(1)) ...
+                              fGetIndex(aVAxis, obj.X1Lim(2)*obj.AxisFac(1))];
+                    
+                    if isempty(aRange) || ~length(aRange) == 2
+                        aRange = [3 3];
+                    else
+                        if aRange(1) < 1
+                            aRange(1) = 1;
+                        end % if
+                        if aRange(2) > length(aRAxis)
+                            aRange(2) = length(aRAxis);
+                        end % if
+                    end % if
+
+                case 'e2'
+                    sVUnit = obj.AxisUnits{2};
+                    aVAxis = obj.fGetBoxAxis('x2');
+                    aRAxis = obj.fGetBoxAxis('x1');
+                    aVLim  = [fGetIndex(aVAxis, obj.X2Lim(1)*obj.AxisFac(2)) ...
+                              fGetIndex(aVAxis, obj.X2Lim(2)*obj.AxisFac(2))];
+
+                    if isempty(aRange) || ~length(aRange) == 2
+                        aRange = [1 10];
+                    else
+                        if aRange(1) < 1
+                            aRange(1) = 1;
+                        end % if
+                        if aRange(2) > length(aRAxis)
+                            aRange(2) = length(aRAxis);
+                        end % if
+                    end % if
+                    
+                case 'e3'
+                    return;
+
+            end % switch
             
             aTAxis = obj.fGetTimeAxis;
             aTAxis = aTAxis(iStart+1:iStop+1);
+            dTDiff = aTAxis(end)-aTAxis(1);
+            aVAxis = aVAxis(aVLim(1):aVLim(2));
             
-            for i=iStart:iStop
+            % Extract data
+            aEnergy = zeros(length(aVAxis),length(aTAxis));
+            for t=iStart:iStop
                 
-                
+                aData = obj.Data.Data(t,'FLD',obj.Field,'');
+                switch(obj.Field)
+                    case 'e1'
+                        aEnergy(:,t-iStart+1) = mean(aData(aVLim(1):aVLim(2),aRange(1):aRange(2)),2);
+                    case 'e2'
+                        aEnergy(:,t-iStart+1) = mean(aData(aRange(1):aRange(2),aVLim(1):aVLim(2)),1);
+                end % switch
                 
             end % for
+
+            % Return data
+            stReturn.Energy   = aEnergy*dE0;
+            stReturn.Gradient = cumtrapz(aEnergy,2)*dE0*dTFac*dLFac;
+            stReturn.GainFac  = 1/dTDiff;
+            stReturn.VAxis    = aVAxis;
+            stReturn.TAxis    = aTAxis;
+            stReturn.VUnit    = sVUnit;
+            stReturn.TUnit    = sTUnit;
         
         end % function
     
@@ -358,7 +439,7 @@ classdef EField
         
         function aReturn = fGetTimeAxis(obj)
             
-            iDumps  = obj.Data.Elements.DENSITY.(obj.Species).charge.Info.Files-1;
+            iDumps  = obj.Data.Elements.FLD.(obj.Field).Info.Files-1;
             
             dPStart = obj.Data.Config.Variables.Plasma.PlasmaStart;
             dTFac   = obj.Data.Config.Variables.Convert.SI.TimeFac;
