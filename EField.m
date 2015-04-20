@@ -359,6 +359,7 @@ classdef EField
             switch(obj.Field)
 
                 case 'e1'
+                    dVFac  = obj.AxisFac(1);
                     sVUnit = obj.AxisUnits{1};
                     aVAxis = obj.fGetBoxAxis('x1');
                     aRAxis = obj.fGetBoxAxis('x2');
@@ -377,6 +378,7 @@ classdef EField
                     end % if
 
                 case 'e2'
+                    dVFac  = obj.AxisFac(2);
                     sVUnit = obj.AxisUnits{2};
                     aVAxis = obj.fGetBoxAxis('x2');
                     aRAxis = obj.fGetBoxAxis('x1');
@@ -399,10 +401,11 @@ classdef EField
 
             end % switch
             
-            aTAxis = obj.fGetTimeAxis;
-            aTAxis = aTAxis(iStart+1:iStop+1);
-            dTDiff = aTAxis(end)-aTAxis(1);
-            aVAxis = aVAxis(aVLim(1):aVLim(2));
+            aTAxis  = obj.fGetTimeAxis;
+            aTAxis  = aTAxis(iStart+1:iStop+1);
+            dTDiff  = aTAxis(end)-aTAxis(1);
+            aVRange = [aVAxis(1) aVAxis(end)];
+            aVAxis  = aVAxis(aVLim(1):aVLim(2));
             
             % Extract data
             aEnergy = zeros(length(aVAxis),length(aTAxis));
@@ -419,13 +422,15 @@ classdef EField
             end % for
 
             % Return data
-            stReturn.Energy   = aEnergy*dE0;
-            stReturn.Gradient = cumtrapz(aEnergy,2)*dE0*dTFac*dLFac;
-            stReturn.GainFac  = 1/dTDiff;
-            stReturn.VAxis    = aVAxis;
-            stReturn.TAxis    = aTAxis;
-            stReturn.VUnit    = sVUnit;
-            stReturn.TUnit    = sTUnit;
+            stReturn.Energy    = aEnergy*dE0;
+            stReturn.Integral  = cumtrapz(aEnergy,2)*dE0*dTFac*dLFac;
+            stReturn.GainFac   = 1/dTDiff;
+            stReturn.VAxis     = aVAxis;
+            stReturn.TAxis     = aTAxis;
+            stReturn.VUnit     = sVUnit;
+            stReturn.TUnit     = sTUnit;
+            stReturn.AxisFac   = [1.0 dVFac];
+            stReturn.AxisRange = [iStart iStop aVRange];
         
         end % function
     

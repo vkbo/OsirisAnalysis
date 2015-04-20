@@ -51,10 +51,10 @@ function stReturn = fPlotESigmaMean(oData, sSpecies, varargin)
     sSpecies = fTranslateSpecies(sSpecies); 
 
     oOpt = inputParser;
-    addParameter(oOpt, 'FigureSize',  [750 450]);
-    addParameter(oOpt, 'HideDump',    'No');
-    addParameter(oOpt, 'IsSubPlot',   'No');
-    addParameter(oOpt, 'AutoResize',  'On');
+    addParameter(oOpt, 'FigureSize', [750 450]);
+    addParameter(oOpt, 'HideDump',   'No');
+    addParameter(oOpt, 'IsSubPlot',  'No');
+    addParameter(oOpt, 'AutoResize', 'On');
     addParameter(oOpt, 'Start',      'PStart');
     addParameter(oOpt, 'End',        'PEnd');
     parse(oOpt, varargin{:});
