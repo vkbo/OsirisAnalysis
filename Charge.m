@@ -836,6 +836,10 @@ classdef Charge
             iTags = length(aTags(:,1));
             
             stTags = struct();
+            aMean  = zeros(iStop-iStart+1,8);
+            aWMean = zeros(iStop-iStart+1,8);
+            aMax   = zeros(iStop-iStart+1,8);
+            aMin   = zeros(iStop-iStart+1,8);
             for i=1:iTags
                 sTag = sprintf('tag_%d_%d',aTags(i,1),aTags(i,2));
                 stTags.(sTag)       = zeros(iSteps,12);
@@ -847,6 +851,7 @@ classdef Charge
                 stData = obj.ParticleSample('Time',i,'Tags',aTags);
                 iInd   = i-iStart+1;
                 iTags  = length(stData.X1);
+                aTemp  = [];
                 for t=1:iTags
                     sTag = sprintf('tag_%d_%d',stData.Tag1(t),stData.Tag2(t));
                     stTags.(sTag)(iInd,1)  = stData.X1(t);
@@ -859,10 +864,35 @@ classdef Charge
                     stTags.(sTag)(iInd,8)  = stData.Charge(t);
                     stTags.(sTag)(iInd,11) = stData.Count(t);
                     stTags.(sTag)(iInd,12) = stData.Weights(t);
+                    if stTags.(sTag)(iInd,12)
+                        aTemp(end+1,1) = stData.X1(t);
+                        aTemp(end,  2) = stData.X2(t);
+                        aTemp(end,  3) = stData.X3(t);
+                        aTemp(end,  4) = stData.P1(t);
+                        aTemp(end,  5) = stData.P2(t);
+                        aTemp(end,  6) = stData.P3(t);
+                        aTemp(end,  7) = stData.Energy(t);
+                        aTemp(end,  8) = stData.Charge(t);
+                    end % if
                 end % for
+                
+                aW = abs(aTemp(:,8));
+                aW = aW/sum(aW);
+                for a=1:8
+                    aMean(iInd,a)  = mean(aTemp(:,a));
+                    aWMean(iInd,a) = wmean(aTemp(:,a),aW);
+                    aMin(iInd,a)   = min(aTemp(:,a));
+                    aMax(iInd,a)   = max(aTemp(:,a));
+                end % for
+                
             end % for
             
+            
             stReturn.Data  = stTags;
+            stReturn.Mean  = aMean;
+            stReturn.WMean = aWMean;
+            stReturn.Min   = aMin;
+            stReturn.Max   = aMax;
             stReturn.TAxis = aTAxis(iStart+1:iStop+1);
             
         end % function

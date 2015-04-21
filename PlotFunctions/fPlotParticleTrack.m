@@ -75,6 +75,7 @@ function stReturn = fPlotParticleTrack(oData, sSpecies, sTrack, varargin)
     addParameter(oOpt, 'Sample',     5);
     addParameter(oOpt, 'Filter',     'Top');
     addParameter(oOpt, 'Weights',    'P1');
+    addParameter(oOpt, 'Average',    'No');
     parse(oOpt, varargin{:});
     stOpt = oOpt.Results;
 
@@ -111,6 +112,9 @@ function stReturn = fPlotParticleTrack(oData, sSpecies, sTrack, varargin)
             end % if
         end % for
     end % for
+    
+    aMean = stData.WMean(:,iTrack);
+    aErr  = [stData.Max(:,iTrack)-aMean aMean-stData.Min(:,iTrack)];
 
     dScale = 1.0;
     if iTrack < 4
@@ -135,9 +139,13 @@ function stReturn = fPlotParticleTrack(oData, sSpecies, sTrack, varargin)
     
     hold on;
     
-    for t=1:iTags
-        plot(stPlot.(stTags{t}).Time, stPlot.(stTags{t}).Data*dScale);
-    end % for
+    if strcmpi(stOpt.Average, 'no')
+        for t=1:iTags
+            plot(stPlot.(stTags{t}).Time, stPlot.(stTags{t}).Data*dScale);
+        end % for
+    else
+        shadedErrorBar(stData.TAxis, aMean*dScale, aErr*dScale, {'-b', 'LineWidth', 2});
+    end % if
     xlim([stData.TAxis(1) stData.TAxis(end)]);
     
     if strcmpi(oCH.Coords, 'cylindrical')

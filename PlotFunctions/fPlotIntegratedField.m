@@ -155,7 +155,7 @@ function stReturn = fPlotIntegratedField(oData, sField, varargin)
     title(sTitle);
     xlabel('z [m]');
     ylabel('\xi [mm]');
-    title(hCol,sprintf('%s(m)',sFUnit));
+    title(hCol,sprintf('%s',sFUnit));
     
     
     % Return
