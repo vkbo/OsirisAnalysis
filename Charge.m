@@ -713,70 +713,158 @@ classdef Charge
 
             % Read input parameters
             oOpt = inputParser;
-            addParameter(oOpt, 'Sample', 200);
-            addParameter(oOpt, 'Filter', 'Random');
+            addParameter(oOpt, 'Sample',  200);
+            addParameter(oOpt, 'Mirror',  'Yes');    % Mirror x2 axis if cylindrical
+            addParameter(oOpt, 'Filter',  'Random'); % Random, WRandom, W2Random, Top, Bottom
+            addParameter(oOpt, 'Weights', 'Charge'); % Charge, X1, X2, X3, P1, P2, P3, Energy
+            addParameter(oOpt, 'Tags',    []);       % Return these tags instead (for tracking)
+            addParameter(oOpt, 'Time',    obj.Time); % Possibility to override object time for internal use
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
 
             % Read variables
             sCoords   = obj.Data.Config.Variables.Simulation.Coordinates;
             dTFactor  = obj.Data.Config.Variables.Convert.SI.TimeFac;
+            dEMass    = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
             dRQM      = obj.Data.Config.Variables.Beam.(obj.Species).RQM;
             dSign     = dRQM/abs(dRQM);
             
-            aRaw      = obj.Data.Data(obj.Time, 'RAW', '', obj.Species);
-            iCount    = length(aRaw(:,1));
-            aRaw(:,1) = aRaw(:,1) - dTFactor*obj.Time;
-
-            % Removing elements outside box
-            aRaw(:,8) = aRaw(:,8).*(aRaw(:,1) >= obj.X1Lim(1) & aRaw(:,1) <= obj.X1Lim(2));
-            aRaw(:,8) = aRaw(:,8).*(aRaw(:,2) >= obj.X2Lim(1) & aRaw(:,2) <= obj.X2Lim(2));
-            aRaw      = aRaw(find(aRaw(:,8)),:);
-
-            iCount = stOpt.Sample;
-            if iCount > length(aRaw(:,1))
-                iCount = length(aRaw(:,1));
-            end % if
-            
+            aRaw      = obj.Data.Data(stOpt.Time, 'RAW', '', obj.Species);
+            aRaw(:,1) = aRaw(:,1) - dTFactor*stOpt.Time;
             if strcmpi(sCoords, 'cylindrical')
                 aRaw(:,8) = aRaw(:,8)./aRaw(:,2);
-                aRaw      = [aRaw; aRaw(:,1) -aRaw(:,2) aRaw(:,3:end)]; 
             end % if
+            
+            if ~isempty(stOpt.Tags)
+                
+                [~, iC] = size(stOpt.Tags);
+                if iC ~= 2
+                    fprintf(2,'Error: Tags matrix must have two columns.\n');
+                    return;
+                end % if
+                
+                aRaw(:,12) = ismember(aRaw(:,9:10),stOpt.Tags,'Rows');
+                aRaw       = aRaw(aRaw(:,12)~=0,:);
+                aRaw(:,11) = aRaw(:,8)*dSign;
 
-            aRaw(:,9) = aRaw(:,8)*dSign;
+            else
 
-            switch(lower(stOpt.Filter))
-                case 'random'
-                    [~,aI] = datasample(aRaw(:,1),iCount,'Replace',false);
-                    aRaw   = aRaw(aI,:);
-                case 'wrandom'
-                    aW     = abs(aRaw(:,8));
-                    aW     = aW/max(aW);
-                    [~,aI] = datasample(aRaw(:,1),iCount,'Replace',false,'Weights',aW);
-                    aRaw   = aRaw(aI,:);
-                case 'w2random'
-                    aW     = abs(aRaw(:,8)).^2;
-                    aW     = aW/max(aW);
-                    [~,aI] = datasample(aRaw(:,1),iCount,'Replace',false,'Weights',aW);
-                    aRaw   = aRaw(aI,:);
-                case 'charge'
-                    aRaw  = sortrows(aRaw,9);
-                    aRaw  = aRaw(end-iCount+1:end,:);
-            end % switch
+                % Removing elements outside box
+                aRaw(:,8) = aRaw(:,8).*(aRaw(:,1) >= obj.X1Lim(1) & aRaw(:,1) <= obj.X1Lim(2));
+                aRaw(:,8) = aRaw(:,8).*(aRaw(:,2) >= obj.X2Lim(1) & aRaw(:,2) <= obj.X2Lim(2));
+                aRaw      = aRaw(aRaw(:,8)~=0,:);
+
+                iCount = stOpt.Sample;
+                if iCount > length(aRaw(:,1))
+                    iCount = length(aRaw(:,1));
+                end % if
+
+                if strcmpi(sCoords, 'cylindrical') && strcmpi(stOpt.Mirror, 'yes')
+                    aRaw = [aRaw; aRaw(:,1) -aRaw(:,2) aRaw(:,3:end)];
+                end % if
+
+                aRaw(:,11) = aRaw(:,8)*dSign;
+                aRaw(:,12) = abs(aRaw(:,fRawAxisToIndex(lower(stOpt.Weights))));
+                switch(lower(stOpt.Filter))
+                    case 'random'
+                        [~,aI]     = datasample(aRaw(:,1),iCount,'Replace',false);
+                        aRaw       = aRaw(aI,:);
+                    case 'wrandom'
+                        aRaw(:,12) = aRaw(:,12)/max(aRaw(:,12));
+                        [~,aI]     = datasample(aRaw(:,1),iCount,'Replace',false,'Weights',aRaw(:,12));
+                        aRaw       = aRaw(aI,:);
+                    case 'w2random'
+                        aRaw(:,12) = aRaw(:,12).^2;
+                        aRaw(:,12) = aRaw(:,12)/max(aRaw(:,12));
+                        [~,aI]     = datasample(aRaw(:,1),iCount,'Replace',false,'Weights',aRaw(:,12));
+                        aRaw       = aRaw(aI,:);
+                    case 'top'
+                        aRaw       = sortrows(aRaw,12);
+                        aRaw       = aRaw(end-iCount+1:end,:);
+                    case 'bottom'
+                        aRaw       = sortrows(aRaw,12);
+                        aRaw       = aRaw(1:iCount,:);
+                end % switch
+                
+            end % if
             
             % Return data
-            stReturn.X1     = aRaw(:,1)*obj.AxisFac(1);
-            stReturn.X2     = aRaw(:,2)*obj.AxisFac(2);
-            stReturn.X3     = aRaw(:,3)*obj.AxisFac(3);
-            stReturn.P1     = aRaw(:,4);
-            stReturn.P2     = aRaw(:,5);
-            stReturn.P3     = aRaw(:,6);
-            stReturn.Energy = aRaw(:,7);
-            stReturn.Charge = aRaw(:,8)*obj.ChargeFac;
-            stReturn.Count  = aRaw(:,9)*obj.ParticleFac;
-            stReturn.Norm   = aRaw(:,9)./max(aRaw(:,9));
-            stReturn.Area   = 7*(0.4 + stReturn.Norm);
+            stReturn.X1      = aRaw(:,1)*obj.AxisFac(1);
+            stReturn.X2      = aRaw(:,2)*obj.AxisFac(2);
+            stReturn.X3      = aRaw(:,3)*obj.AxisFac(3);
+            stReturn.P1      = aRaw(:,4)*dEMass;
+            stReturn.P2      = aRaw(:,5)*dEMass;
+            stReturn.P3      = aRaw(:,6)*dEMass;
+            stReturn.Energy  = aRaw(:,7);
+            stReturn.Charge  = aRaw(:,8)*obj.ChargeFac;
+            stReturn.Tag1    = aRaw(:,9);
+            stReturn.Tag2    = aRaw(:,10);
+            stReturn.Count   = aRaw(:,11)*obj.ParticleFac;
+            stReturn.Norm    = aRaw(:,11)./max(aRaw(:,9));
+            stReturn.Weights = aRaw(:,12);
+            stReturn.Area    = 7*(0.4 + stReturn.Norm);
 
+        end % function
+        
+        function stReturn = Tracking(obj, sStart, sStop, varargin)
+            
+            % Input/Output
+            stReturn = {};
+
+            % Read input parameters
+            oOpt = inputParser;
+            addParameter(oOpt, 'Sample',  10);
+            addParameter(oOpt, 'Filter',  'Random'); % Random, WRandom, W2Random, Top, Bottom
+            addParameter(oOpt, 'Weights', 'Charge'); % Charge, X1, X2, X3, P1, P2, P3, Energy
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
+
+            iStart = fStringToDump(obj.Data, sStart);
+            iStop  = fStringToDump(obj.Data, sStop);
+            iSteps = iStop-iStart+1;
+
+            % Get Axes
+            aTAxis = obj.fGetTimeAxis;
+            
+            % Get tags
+            stData = obj.ParticleSample('Time',   iStop, ...
+                                        'Sample', stOpt.Sample, ...
+                                        'Mirror', 'No', ...
+                                        'Filter', stOpt.Filter, ...
+                                        'Weights',stOpt.Weights);
+            aTags = [stData.Tag1 stData.Tag2];
+            iTags = length(aTags(:,1));
+            
+            stTags = struct();
+            for i=1:iTags
+                sTag = sprintf('tag_%d_%d',aTags(i,1),aTags(i,2));
+                stTags.(sTag)       = zeros(iSteps,12);
+                stTags.(sTag)(:,9)  = aTags(i,1);
+                stTags.(sTag)(:,10) = aTags(i,2);
+            end % for
+            
+            for i=iStart:iStop
+                stData = obj.ParticleSample('Time',i,'Tags',aTags);
+                iInd   = i-iStart+1;
+                iTags  = length(stData.X1);
+                for t=1:iTags
+                    sTag = sprintf('tag_%d_%d',stData.Tag1(t),stData.Tag2(t));
+                    stTags.(sTag)(iInd,1)  = stData.X1(t);
+                    stTags.(sTag)(iInd,2)  = stData.X2(t);
+                    stTags.(sTag)(iInd,3)  = stData.X3(t);
+                    stTags.(sTag)(iInd,4)  = stData.P1(t);
+                    stTags.(sTag)(iInd,5)  = stData.P2(t);
+                    stTags.(sTag)(iInd,6)  = stData.P3(t);
+                    stTags.(sTag)(iInd,7)  = stData.Energy(t);
+                    stTags.(sTag)(iInd,8)  = stData.Charge(t);
+                    stTags.(sTag)(iInd,11) = stData.Count(t);
+                    stTags.(sTag)(iInd,12) = stData.Weights(t);
+                end % for
+            end % for
+            
+            stReturn.Data  = stTags;
+            stReturn.TAxis = aTAxis(iStart+1:iStop+1);
+            
         end % function
         
     end % methods

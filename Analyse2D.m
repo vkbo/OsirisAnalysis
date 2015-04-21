@@ -51,7 +51,7 @@ function Analyse2D
     X.Plots{3} = 'Field Density';
     X.Plots{4} = 'Phase 2D';
     
-    X.Opt.Sample = {'Random','WRandom','W2Random','Charge'};
+    X.Opt.Sample = {'Random','WRandom','W2Random','Top','Bottom'};
 
     X.Figure = [0 0 0 0 0 0];
     X.X1Link = [0 0 0 0 0 0];
