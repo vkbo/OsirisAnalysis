@@ -6,11 +6,8 @@
 %  Inputs:
 % =========
 %  oData    :: OsirisData object
-%  oRefData :: Reference OsirisData object
 %  sTime    :: Time dump
-%  sRefTime :: Reference time dump
 %  sBeam    :: Beam
-%  sRefBeam :: Reference beam
 %
 %  Options:
 % ==========
@@ -19,11 +16,14 @@
 %  IsSubplot   :: Default No
 %  HideDump    :: Default No
 %  Legend      :: Default 'Beam'
+%  RefData     :: Reference OsirisData object
+%  RefTime     :: Reference time dump
+%  RefBeam     :: Reference beam
 %  RefLegend   :: Default 'Reference Beam'
 %  RRange      :: Radial range to sum over. Default is all
 %
 
-function stReturn = fPlotBeamFourier(oData, oRefData, sTime, sRefTime, sBeam, sRefBeam, varargin)
+function stReturn = fPlotBeamFourier(oData, sTime, sBeam, varargin)
 
     % Input/Output
 
@@ -38,11 +38,8 @@ function stReturn = fPlotBeamFourier(oData, oRefData, sTime, sRefTime, sBeam, sR
        fprintf('  Inputs:\n');
        fprintf(' =========\n');
        fprintf('  oData    :: OsirisData object\n');
-       fprintf('  oRefData :: Reference OsirisData object\n');
        fprintf('  sTime    :: Time dump\n');
-       fprintf('  sRefTime :: Reference time dump\n');
        fprintf('  sBeam    :: Beam\n');
-       fprintf('  sRefBeam :: Reference beam\n');
        fprintf('\n');
        fprintf('  Options:\n');
        fprintf(' ==========\n');
@@ -51,6 +48,9 @@ function stReturn = fPlotBeamFourier(oData, oRefData, sTime, sRefTime, sBeam, sR
        fprintf('  IsSubplot   :: Default No\n');
        fprintf('  HideDump    :: Default No\n');
        fprintf('  Legend      :: Default ''Beam''\n');
+       fprintf('  RefData     :: Reference OsirisData object\n');
+       fprintf('  RefTime     :: Reference time dump\n');
+       fprintf('  RefBeam     :: Reference beam\n');
        fprintf('  RefLegend   :: Default ''Reference Beam''\n');
        fprintf('  RRange      :: Radial range to sum over. Default is all\n');
        fprintf('\n');
@@ -58,9 +58,7 @@ function stReturn = fPlotBeamFourier(oData, oRefData, sTime, sRefTime, sBeam, sR
     end % if
 
     sBeam    = fTranslateSpecies(sBeam);
-    sRefBeam = fTranslateSpecies(sRefBeam);
     iTime    = fStringToDump(oData, num2str(sTime));
-    iRefTime = fStringToDump(oRefData, num2str(sRefTime));
     stRefFFT = {};
 
     oOpt = inputParser;
@@ -69,6 +67,9 @@ function stReturn = fPlotBeamFourier(oData, oRefData, sTime, sRefTime, sBeam, sR
     addParameter(oOpt, 'HideDump',    'No');
     addParameter(oOpt, 'IsSubPlot',   'No');
     addParameter(oOpt, 'Legend',      'Beam');
+    addParameter(oOpt, 'RefData',     []);
+    addParameter(oOpt, 'RefTime',     0);
+    addParameter(oOpt, 'RefBeam',     '');
     addParameter(oOpt, 'RefLegend',   'Reference Beam');
     addParameter(oOpt, 'RRange',      []);
     parse(oOpt, varargin{:});
@@ -76,14 +77,15 @@ function stReturn = fPlotBeamFourier(oData, oRefData, sTime, sRefTime, sBeam, sR
 
 
     % Data
-
     oCH      = Charge(oData, sBeam);
     oCH.Time = iTime;
     stFFT    = oCH.Fourier(stOpt.RRange);
     clear oCH;
 
-    if ~isempty(oRefData)
-        oCH      = Charge(oRefData, sRefBeam);
+    if ~isempty(stOpt.RefData)
+        sRefBeam = fTranslateSpecies(stOpt.RefBeam);
+        iRefTime = fStringToDump(stOpt.RefData, num2str(stOpt.RefTime));
+        oCH      = Charge(stOpt.RefData, sRefBeam);
         oCH.Time = iRefTime;
         stRefFFT = oCH.Fourier(stOpt.RRange);
         clear oCH;
@@ -91,11 +93,12 @@ function stReturn = fPlotBeamFourier(oData, oRefData, sTime, sRefTime, sBeam, sR
 
 
     % Plot
-
     if strcmpi(stOpt.IsSubPlot, 'No')
         clf;
-        fFigureSize(gcf, stOpt.FigureSize);
-        set(gcf,'Name',sprintf('Beam Fourier (Dump %d)',iTime),'NumberTitle','off')
+        if strcmpi(stOpt.AutoResize, 'On')
+            fFigureSize(gcf, stOpt.FigureSize);
+        end % if
+        set(gcf,'Name',sprintf('Beam Fourier (Dump %d)',iTime))
     else
         cla;
     end % if
@@ -103,7 +106,7 @@ function stReturn = fPlotBeamFourier(oData, oRefData, sTime, sRefTime, sBeam, sR
     hold on;
 
     iLegend = 1;
-    if ~isempty(oRefData)
+    if ~isempty(stOpt.RefData)
         area(stRefFFT.XAxis, stRefFFT.Data, 'FaceColor', [1.0, 0.8, 0.8], 'EdgeColor', [1.0, 0.0, 0.0]);
         stLegend{iLegend} = stOpt.RefLegend;
         iLegend = iLegend + 1;
@@ -117,15 +120,15 @@ function stReturn = fPlotBeamFourier(oData, oRefData, sTime, sRefTime, sBeam, sR
     end % if
 
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('Fourier Transform of %s Density %s (Dump %d)', fTranslateSpeciesReadable(sBeam), fPlasmaPosition(oData, iTime), iTime);
+        sTitle = sprintf('%s Fourier Transform %s (%s #%d)', fTranslateSpecies(sBeam,'Readable'), fPlasmaPosition(oData, iTime), oData.Config.Name, iTime);
     else
-        sTitle = sprintf('Fourier Transform of %s Density %s', fTranslateSpeciesReadable(sBeam), fPlasmaPosition(oData, iTime));
+        sTitle = sprintf('%s Fourier Transform %s', fTranslateSpecies(sBeam,'Readable'), fPlasmaPosition(oData, iTime));
     end % if
 
     legend(stLegend, 'Location', 'NE');
-    title(sTitle,'FontSize',14);
-    xlabel('1/k [c/\omega_p]', 'FontSize',12);
-    ylabel('Amplitude', 'FontSize',12);
+    title(sTitle);
+    xlabel('1/k [c/\omega_p]');
+    ylabel('Amplitude');
 
     hold off;
 

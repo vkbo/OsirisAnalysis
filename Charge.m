@@ -847,6 +847,7 @@ classdef Charge
                 stTags.(sTag)(:,10) = aTags(i,2);
             end % for
             
+            fprintf('Tracking: %5.1f%%',0);
             for i=iStart:iStop
                 stData = obj.ParticleSample('Time',i,'Tags',aTags);
                 iInd   = i-iStart+1;
@@ -876,17 +877,21 @@ classdef Charge
                     end % if
                 end % for
                 
-                aW = abs(aTemp(:,8));
-                aW = aW/sum(aW);
-                for a=1:8
-                    aMean(iInd,a)  = mean(aTemp(:,a));
-                    aWMean(iInd,a) = wmean(aTemp(:,a),aW);
-                    aMin(iInd,a)   = min(aTemp(:,a));
-                    aMax(iInd,a)   = max(aTemp(:,a));
-                end % for
+                if ~isempty(aTemp)
+                    aW = abs(aTemp(:,8));
+                    aW = aW/sum(aW);
+                    for a=1:8
+                        aMean(iInd,a)  = mean(aTemp(:,a));
+                        aWMean(iInd,a) = wmean(aTemp(:,a),aW);
+                        aMin(iInd,a)   = min(aTemp(:,a));
+                        aMax(iInd,a)   = max(aTemp(:,a));
+                    end % for
+                end % if
+        
+                fprintf('\b\b\b\b\b\b%5.1f%%',100.0*(i-iStart)/(iStop-iStart));
                 
             end % for
-            
+            fprintf('\n');
             
             stReturn.Data  = stTags;
             stReturn.Mean  = aMean;
