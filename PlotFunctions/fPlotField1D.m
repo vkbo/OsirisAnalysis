@@ -125,25 +125,25 @@ function stReturn = fPlotField1D(oData, sTime, sField, varargin)
         cla;
     end % if
 
-    plot(aXAxis, aData*dScale);
+    plot(aXAxis, aData*dScale,'Color','Blue');
 
     hold on;
 
     if strcmpi(oFLD.Coords, 'cylindrical')
-        sRType = 'LongCyl';
+        sCType = 'Cyl';
     else
-        sRType = 'Long';
+        sCType = '';
     end % of
 
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s %s (%s #%d)', fTranslateField(sField,sRType), fPlasmaPosition(oData, iTime), oData.Config.Name, iTime);
+        sTitle = sprintf('%s %s (%s #%d)', fTranslateField(sField,['Long',sCType]),fPlasmaPosition(oData,iTime),oData.Config.Name,iTime);
     else
-        sTitle = sprintf('%s %s', fTranslateField(sField,sRType), fPlasmaPosition(oData, iTime));
+        sTitle = sprintf('%s %s', fTranslateField(sField,['Long',sCType]),fPlasmaPosition(oData,iTime));
     end % if
 
     title(sTitle);
     xlabel('\xi [mm]');
-    ylabel(sprintf('%s [%s]',sFType,sFUnit));
+    ylabel(sprintf('%s [%s]',fTranslateField(sField,['Readable',sCType]),sFUnit));
     xlim([aXAxis(1) aXAxis(end)]);
     
     hold off;
