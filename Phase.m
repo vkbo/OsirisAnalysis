@@ -311,11 +311,11 @@ classdef Phase
                 stReturn.AxisUnit = {'m','m'};
                 if strcmpi(sAxis1(1),'p')
                     stReturn.AxisFac(1)  = dEMass;
-                    stReturn.AxisUnit{1} = 'eV';
+                    stReturn.AxisUnit{1} = 'eV/c';
                 end % if
                 if strcmpi(sAxis2(1),'p')
                     stReturn.AxisFac(2)  = dEMass;
-                    stReturn.AxisUnit{2} = 'eV';
+                    stReturn.AxisUnit{2} = 'eV/c';
                 end % if
             end % if
 
