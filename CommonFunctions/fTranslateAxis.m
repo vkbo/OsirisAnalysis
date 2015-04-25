@@ -63,7 +63,7 @@ function sReturn = fTranslateAxis(sInput, sMode)
 
                 % P Axes
                 case 'p1'
-                    sReturn = 'p_{\xi}';
+                    sReturn = 'p_{z}';
                 case 'p2'
                     sReturn = 'p_r';
                 case 'p3'

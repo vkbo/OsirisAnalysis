@@ -71,7 +71,7 @@ function sReturn = fTranslateField(sInput, sMode)
                 
                 % E-Fields
                 case 'e1'
-                    sReturn = 'E_{\xi}';
+                    sReturn = 'E_{z}';
                 case 'e2'
                     sReturn = 'E_r';
                 case 'e3'
@@ -79,7 +79,7 @@ function sReturn = fTranslateField(sInput, sMode)
 
                 % B-Fields
                 case 'b1'
-                    sReturn = 'B_{\xi}';
+                    sReturn = 'B_{z}';
                 case 'b2'
                     sReturn = 'B_r';
                 case 'b3'
@@ -87,7 +87,7 @@ function sReturn = fTranslateField(sInput, sMode)
 
                 % Current
                 case 'j1'
-                    sReturn = 'J_{\xi}';
+                    sReturn = 'J_{z}';
                 case 'j2'
                     sReturn = 'J_r';
                 case 'j3'
@@ -107,7 +107,7 @@ function sReturn = fTranslateField(sInput, sMode)
                 
                 % E-Fields
                 case 'e1'
-                    sReturn = 'E_{\xi}';
+                    sReturn = 'E_{z}';
                 case 'e2'
                     sReturn = 'E_x';
                 case 'e3'
@@ -115,7 +115,7 @@ function sReturn = fTranslateField(sInput, sMode)
 
                 % B-Fields
                 case 'b1'
-                    sReturn = 'B_{\xi}';
+                    sReturn = 'B_{z}';
                 case 'b2'
                     sReturn = 'B_x';
                 case 'b3'
@@ -123,7 +123,7 @@ function sReturn = fTranslateField(sInput, sMode)
 
                 % Current
                 case 'j1'
-                    sReturn = 'J_{\xi}';
+                    sReturn = 'J_{z}';
                 case 'j2'
                     sReturn = 'J_x';
                 case 'j3'

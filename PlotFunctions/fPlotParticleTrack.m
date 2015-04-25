@@ -120,7 +120,7 @@ function stReturn = fPlotParticleTrack(oData, sSpecies, sTrack, varargin)
     if iTrack < 4
         sUnit = oCH.AxisUnits{iTrack};
     else
-        sUnit = 'eV';
+        sUnit = 'eV/c';
         [dTemp,sUnit] = fAutoScale(dMax,sUnit);
         dScale = dTemp/dMax;
     end % if
