@@ -58,8 +58,7 @@ function iDump = fStringToDump(oData, vValue)
         dPEnd     = oData.Config.Variables.Plasma.PlasmaEnd;
         dTimeStep = oData.Config.Variables.Simulation.TimeStep;
         iNDump    = oData.Config.Variables.Simulation.NDump;
-        % Plasma end means box is outside plasma, so end - 1 is more natural.
-        iDump     = floor(dPEnd/(dTimeStep*iNDump))-1;
+        iDump     = floor(dPEnd/(dTimeStep*iNDump));
         if iDump > oData.MSData.MinFiles - 1
             iDump = oData.MSData.MinFiles - 1;
         end % if

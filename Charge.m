@@ -800,7 +800,7 @@ classdef Charge
             stReturn.Tag1    = aRaw(:,9);
             stReturn.Tag2    = aRaw(:,10);
             stReturn.Count   = aRaw(:,11)*obj.ParticleFac;
-            stReturn.Norm    = aRaw(:,11)./max(aRaw(:,9));
+            stReturn.Norm    = aRaw(:,11)./max(aRaw(:,11));
             stReturn.Weights = aRaw(:,12);
             stReturn.Area    = 7*(0.4 + stReturn.Norm);
 

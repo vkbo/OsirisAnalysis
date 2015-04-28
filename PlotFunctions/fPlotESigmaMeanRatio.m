@@ -84,7 +84,7 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
     
     hold on;
     
-    H(1) = plot(stData.TimeAxis, stData.Data, '-b', 'LineWidth', 2);
+    H(1) = plot(stData.TimeAxis, stData.Data*100, '-b', 'LineWidth', 2);
     
     xlim([stData.TimeAxis(1),stData.TimeAxis(end)]);
 
@@ -102,7 +102,7 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
 
     title(sTitle);
     xlabel('z [m]');
-    ylabel('\sigma_E/<E>');
+    ylabel('\sigma_E/<E> [%]');
     
     hold off;
 

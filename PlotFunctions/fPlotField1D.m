@@ -53,7 +53,7 @@ function stReturn = fPlotField1D(oData, sTime, sField, varargin)
     end % if
 
     sField = fTranslateField(sField);
-    iTime = fStringToDump(oData, num2str(sTime));
+    iTime  = fStringToDump(oData, num2str(sTime));
 
     oOpt = inputParser;
     addParameter(oOpt, 'Limits',      []);
