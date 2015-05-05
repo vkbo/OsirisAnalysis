@@ -127,7 +127,7 @@ function stReturn = fPlotBeamFourier(oData, sTime, sBeam, varargin)
 
     legend(stLegend, 'Location', 'NE');
     title(sTitle);
-    xlabel('k_p [\omega_p/c]');
+    xlabel('k_p/2\pi [\omega_p/c]');
     ylabel('Amplitude');
 
     hold off;
