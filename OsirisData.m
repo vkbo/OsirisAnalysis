@@ -2,7 +2,7 @@
 %
 %  Class Object to hold Osiris data
 % **********************************
-%  Version 0.7
+%  Version 1.0
 %
 
 classdef OsirisData
@@ -227,13 +227,15 @@ classdef OsirisData
 
         end % function
         
-        function PlasmaInfo(obj)
+        function stReturn = PlasmaInfo(obj)
             
             %
             %  Prints basic plasma info extracted from Config object
             % *******************************************************
             %
             
+            stReturn  = {};
+
             dPStart   = obj.Config.Variables.Plasma.PlasmaStart;
             dPEnd     = obj.Config.Variables.Plasma.PlasmaEnd;
             dTFac     = obj.Config.Variables.Convert.SI.TimeFac;
@@ -246,25 +248,27 @@ classdef OsirisData
             dMLambdaP = obj.Config.Variables.Plasma.MaxLambdaP;
             dPMax     = obj.Config.Variables.Plasma.MaxPlasmaFac;
             
-            fprintf('\n');
-            fprintf(' Plasma Info\n');
-            fprintf('*************\n');
-            fprintf('\n');
-            fprintf(' Plasma Start:     %8.2f between dump %03d and %03d\n', dPStart, floor(dPStart/dTFac), ceil(dPStart/dTFac));
-            fprintf(' Plasma End:       %8.2f between dump %03d and %03d\n', dPEnd,   floor(dPEnd/dTFac),   ceil(dPEnd/dTFac));
-            fprintf('\n');
-            fprintf(' Plasma Start:     %8.2f m\n', dPStart*dLFac);
-            fprintf(' Plasma End:       %8.2f m\n', dPEnd*dLFac);
-            fprintf(' Plasma Length:    %8.2f m\n', (dPEnd-dPStart)*dLFac);
-            fprintf('\n');
-            fprintf(' Nomralised Plasma Density:    %8.2e m^-3\n', dN0);
-            fprintf(' Normalised Plasma Frequency:  %8.2e s^-1\n', dNOmegaP);
-            fprintf(' Normalised Plasma Skin Depth: %8.2e mm\n',   dNLambdaP*1e3);
-            fprintf('\n');
-            fprintf(' Peak Plasma Density:          %8.2e m^-3\n', dN0*dPMax);
-            fprintf(' Peak Plasma Frequency:        %8.2e s^-1\n', dMOmegaP);
-            fprintf(' Peak Plasma Skin Depth:       %8.2e mm\n',   dMLambdaP*1e3);
-            fprintf('\n');
+            if ~obj.Silent
+                fprintf('\n');
+                fprintf(' Plasma Info\n');
+                fprintf('*************\n');
+                fprintf('\n');
+                fprintf(' Plasma Start:     %8.2f between dump %03d and %03d\n', dPStart, floor(dPStart/dTFac), ceil(dPStart/dTFac));
+                fprintf(' Plasma End:       %8.2f between dump %03d and %03d\n', dPEnd,   floor(dPEnd/dTFac),   ceil(dPEnd/dTFac));
+                fprintf('\n');
+                fprintf(' Plasma Start:     %8.2f m\n', dPStart*dLFac);
+                fprintf(' Plasma End:       %8.2f m\n', dPEnd*dLFac);
+                fprintf(' Plasma Length:    %8.2f m\n', (dPEnd-dPStart)*dLFac);
+                fprintf('\n');
+                fprintf(' Nomralised Plasma Density:    %8.2e m^-3\n', dN0);
+                fprintf(' Normalised Plasma Frequency:  %8.2e s^-1\n', dNOmegaP);
+                fprintf(' Normalised Plasma Skin Depth: %8.2e mm\n',   dNLambdaP*1e3);
+                fprintf('\n');
+                fprintf(' Peak Plasma Density:          %8.2e m^-3\n', dN0*dPMax);
+                fprintf(' Peak Plasma Frequency:        %8.2e s^-1\n', dMOmegaP);
+                fprintf(' Peak Plasma Skin Depth:       %8.2e mm\n',   dMLambdaP*1e3);
+                fprintf('\n');
+            end % if
             
         end % function
         
@@ -311,8 +315,8 @@ classdef OsirisData
                 fprintf('\n');
             end % if
 
-            stFunc    = fExtractEq(sMathFunc, iDim, [dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max]);
-            fProfile  = @(x1,x2) eval(stFunc.ForEval);
+            stFunc   = fExtractEq(sMathFunc, iDim, [dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max]);
+            fProfile = @(x1,x2) eval(stFunc.ForEval);
             
             if strcmpi(sCoords, 'cylindrical')
 

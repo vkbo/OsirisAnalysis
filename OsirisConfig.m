@@ -508,7 +508,9 @@ classdef OsirisConfig
             
             sCoords    = obj.Variables.Simulation.Coordinates;
             iDim       = obj.Variables.Simulation.Dimensions;
-            
+            dTMin      = obj.Variables.Simulation.TMin;
+            dTMax      = obj.Variables.Simulation.TMax;
+
             dBoxNX1    = double(obj.Variables.Simulation.BoxNX1);
             dBoxNX2    = double(obj.Variables.Simulation.BoxNX2);
             dBoxNX3    = double(obj.Variables.Simulation.BoxNX3);
@@ -516,7 +518,7 @@ classdef OsirisConfig
             dBoxX1Size = obj.Variables.Simulation.BoxX1Max - obj.Variables.Simulation.BoxX1Min;
             dBoxX2Size = obj.Variables.Simulation.BoxX2Max - obj.Variables.Simulation.BoxX2Min;
             dBoxX3Size = obj.Variables.Simulation.BoxX3Max - obj.Variables.Simulation.BoxX3Min;
-            
+
             dDX1 = dBoxX1Size/dBoxNX1;
             dDX2 = dBoxX2Size/dBoxNX2;
             if iDim == 2
@@ -527,7 +529,7 @@ classdef OsirisConfig
 
             dQFac = 1.0;    % Factor for charge in normalised units
             dPFac = obj.N0; % Density is relative to N0
-            
+
             % 2D cylindrical
             if strcmpi(sCoords, 'cylindrical')
                 dQFac = dQFac*2*pi; % Cylindrical factor
@@ -538,16 +540,16 @@ classdef OsirisConfig
 
             dPFac = dPFac*dLFactor^3; % Convert from normalised units to unitless
             dPFac = dPFac*dQFac;      % Combine particle factor and charge factor
-            
+
             obj.Variables.Convert.Norm.ChargeFac   = dQFac;
             obj.Variables.Convert.Norm.ParticleFac = dPFac;
             obj.Variables.Convert.SI.ChargeFac     = dPFac*dECharge;
             obj.Variables.Convert.SI.ParticleFac   = dPFac;
             obj.Variables.Convert.CGS.ChargeFac    = dPFac*dEChargeCGS;
             obj.Variables.Convert.CGS.ParticleFac  = dPFac;
-            
+
             % Current
-            
+
             aJFac = [1.0 1.0 1.0]; % In normalised units
             if strcmpi(sCoords, 'cylindrical')
                 aJFacSI  = aJFac     * dPFac*dECharge*dC;
@@ -560,7 +562,7 @@ classdef OsirisConfig
                 aJFacCGS = aJFac     * dPFac*dEChargeCGS*dC;
                 aJFacCGS = aJFacCGS ./ ([dDX1 dDX2 dDX3]*dLFactor);
             end % if
-            
+
             obj.Variables.Convert.Norm.J1Fac = aJFac(1);
             obj.Variables.Convert.Norm.J2Fac = aJFac(2);
             obj.Variables.Convert.Norm.J3Fac = aJFac(3);
@@ -570,16 +572,16 @@ classdef OsirisConfig
             obj.Variables.Convert.CGS.J1Fac  = aJFacCGS(1);
             obj.Variables.Convert.CGS.J2Fac  = aJFacCGS(2);
             obj.Variables.Convert.CGS.J3Fac  = aJFacCGS(3);
-            
+
             % Setting plasma profile
-            
+
             aFX1 = obj.fExtractVarNum('PlasmaElectrons','profile','fx',1);
             aX1  = obj.fExtractVarNum('PlasmaElectrons','profile','x' ,1);
             aFX2 = obj.fExtractVarNum('PlasmaElectrons','profile','fx',2);
             aX2  = obj.fExtractVarNum('PlasmaElectrons','profile','x' ,2);
             aFX3 = obj.fExtractVarNum('PlasmaElectrons','profile','fx',3);
             aX3  = obj.fExtractVarNum('PlasmaElectrons','profile','x' ,3);
-            
+
             dMaxFX1 = max(aFX1);
             dMaxFX2 = max(aFX2);
             dMaxFX3 = max(aFX3);
@@ -590,9 +592,39 @@ classdef OsirisConfig
                 aX3     = 0;
             end % if
 
+            iTMin = floor(dTMin);
+            iTMax = floor(dTMax);
+            iNT   = iTMax-iTMin+1;
+            aPD   = zeros(1,iNT);
+            aZ    = linspace(iTMin,iTMax,iNT);
+            iPR   = 0;
+            aReg  = zeros(1,2);
+            for i=1:length(aFX1)-1
+                iSMin = floor(aX1(i))+iTMin;
+                iSMax = floor(aX1(i+1))+iTMin;
+                iNS   = iSMax-iSMin+1;
+                aSPD  = linspace(aFX1(i),aFX1(i+1),iNS);
+                aPD(iSMin+1:iSMax+1) = aSPD;
+                if aFX1(i+1) > 0 && aFX1(i) == 0
+                    iPR = iPR + 1;
+                    aReg(iPR,1) = aX1(i);
+                end % if
+                if aFX1(i+1) == 0 && aFX1(i) > 0
+                    aReg(iPR,2) = aX1(i);
+                end % if
+            end % for
+            
+            if aReg(iPR,2) == 0
+                aReg(iPR,2) = aX1(end);
+            end % if
+            
+            obj.Variables.Plasma.DensityProfile = aPD;
+            obj.Variables.Plasma.DensityAxis    = aZ;
+            obj.Variables.Plasma.PlasmaRegions  = aReg;
+            
             dPStart = -1.0;
             dPEnd   = -1.0;
-           
+
             for i=1:length(aFX1)
                 if dPStart < 0.0
                     if aFX1(i) > 0.9*dMaxFX1
