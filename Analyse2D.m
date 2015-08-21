@@ -15,9 +15,13 @@ function Analyse2D
     
     cBackGround  = [0.94 0.94 0.94];
     cWhite       = [1.00 1.00 1.00];
+    cBlack       = [0.00 0.00 0.00];
     cInfoText    = [1.00 1.00 0.00];
+    cOutText     = [0.00 1.00 0.00];
     cGreyText    = [0.50 0.50 0.50];
     cInfoBack    = [0.80 0.80 0.80];
+    cInfoBtn     = [0.00 0.55 0.88];
+    cFocusBtn    = [0.00 0.55 0.00];
     cInfoR       = [1.00 0.50 0.50];
     cInfoY       = [1.00 1.00 0.50];
     cInfoG       = [0.50 1.00 0.50];
@@ -83,8 +87,9 @@ function Analyse2D
     % Set figure properties
     set(fMain, 'Units', 'Pixels');
     set(fMain, 'MenuBar', 'None');
-    set(fMain, 'Position', [aFPos(1:2) 560 540]);
+    set(fMain, 'Position', [aFPos(1:2) 560 640]);
     set(fMain, 'Name', 'Osiris 2D Analysis');
+    set(fMain, 'KeyPressFcn', @fKeyPress);
     
     % Set background color to default
     cBackGround = get(fMain, 'Color');
@@ -95,15 +100,24 @@ function Analyse2D
     %
     
     set(0, 'CurrentFigure', fMain);
-    uicontrol('Style','Text','String','Controls','FontSize',20,'Position',[20 502 140 25],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-    
-    lblData = uicontrol('Style','Text','String','No Data','FontSize',18,'Position',[240 500 300 25],'ForegroundColor',cInfoText,'BackgroundColor',cInfoBack);
+    uicontrol('Style','Text','String','Controls','FontSize',20,'Position',[20 602 140 25],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    uicontrol('Style','PushButton','String','i','FontSize',15,'FontName','FixedWidth','FontWeight','Bold','Position',[210 600 25 25],'BackgroundColor',cButtonOff,'ForegroundColor',cInfoBtn,'Callback',{@fShowSimInfo});
+    uicontrol('Style','PushButton','String','f','FontSize',15,'FontName','FixedWidth','FontWeight','Bold','Position',[180 600 25 25],'BackgroundColor',cButtonOff,'ForegroundColor',cFocusBtn,'Callback',{@fFocus});
 
+    lblData = uicontrol('Style','Text','String','No Data','FontSize',18,'Position',[240 600 300 25],'ForegroundColor',cInfoText,'BackgroundColor',cInfoBack);
+
+    % Output Window
+    lstOut = uicontrol('Style','Listbox','String','OsirisAnalysis','FontName','FixedWidth','Position',[20 20 520 87],'HorizontalAlignment','Left','BackgroundColor',cBlack,'ForegroundColor',cOutText);
+    jOut   = findjobj(lstOut);
+    jList  = jOut.getViewport.getComponent(0);
+    set(jList, 'SelectionBackground', java.awt.Color.black);
+    set(jList, 'SelectionForeground', java.awt.Color.green);
+    jList.setSelectionAppearanceReflectsFocus(0);
 
     %  Data Set Controls
     % ===================
 
-    bgData = uibuttongroup('Title','Load Data','Units','Pixels','Position',[20 390 250 100],'BackgroundColor',cBackGround);
+    bgData = uibuttongroup('Title','Load Data','Units','Pixels','Position',[20 490 250 100],'BackgroundColor',cBackGround);
     
     aY = [60 35 10];
     for i=1:3
@@ -118,7 +132,7 @@ function Analyse2D
     %  Time Dump Controls
     % ====================
 
-    bgTime = uibuttongroup('Title','Time Dump','Units','Pixels','Position',[280 390 140 100],'BackgroundColor',cBackGround);
+    bgTime = uibuttongroup('Title','Time Dump','Units','Pixels','Position',[280 490 140 100],'BackgroundColor',cBackGround);
 
     uicontrol(bgTime,'Style','PushButton','String','<<','Position',[ 9 60 30 20],'BackgroundColor',cButtonOff,'Callback',{@fDump, -10});
     uicontrol(bgTime,'Style','PushButton','String','<', 'Position',[39 60 30 20],'BackgroundColor',cButtonOff,'Callback',{@fDump,  -1});
@@ -139,7 +153,7 @@ function Analyse2D
     %  Simulation Info
     % =================
 
-    bgInfo = uibuttongroup('Title','Simulation','Units','Pixels','Position',[430 390 110 100],'BackgroundColor',cBackGround);
+    bgInfo = uibuttongroup('Title','Simulation','Units','Pixels','Position',[430 490 110 100],'BackgroundColor',cBackGround);
     
     lblInfo(1) = uicontrol(bgInfo,'Style','Text','String','Geometry','Position',[9 60 90 17],'BackgroundColor',cInfoBack);
     lblInfo(2) = uicontrol(bgInfo,'Style','Text','String','Status',  'Position',[9 35 90 17],'BackgroundColor',cInfoBack);
@@ -149,7 +163,7 @@ function Analyse2D
     %  Figure Controls
     % =================
 
-    bgFigs = uibuttongroup('Title','Figures','Units','Pixels','Position',[20 180 520 200],'BackgroundColor',cBackGround);
+    bgFigs = uibuttongroup('Title','Figures','Units','Pixels','Position',[20 280 520 200],'BackgroundColor',cBackGround);
     
     uicontrol(bgFigs,'Style','Text','String','Fig',      'Position',[  9 160  20 15],'HorizontalAlignment','Left');
     uicontrol(bgFigs,'Style','Text','String','Plot Type','Position',[ 34 160 150 15],'HorizontalAlignment','Center');
@@ -184,7 +198,7 @@ function Analyse2D
     %  Tabs
     % ======
 
-    hTabGroup = uitabgroup('Units','Pixels','Position',[20 20 520 150]);
+    hTabGroup = uitabgroup('Units','Pixels','Position',[20 120 520 150]);
     
     for t=1:6
         hTabs(t) = uitab(hTabGroup,'Title',sprintf('Plot %d', t+1));
@@ -238,6 +252,7 @@ function Analyse2D
     edtT10(2) = uicontrol(bgTabX,'Style','Edit','String','0','Position',[470 iY 40 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,9});
 
     set(hTabGroup,'SelectedTab',hTabX);
+    
     
     %
     %  Tab Controls
@@ -383,6 +398,9 @@ function Analyse2D
         X.Data.HasTracks  = oData.Config.HasTracks;
         X.Data.Consistent = oData.Config.Consistent;
         X.Data.Coords     = oData.Config.Variables.Simulation.Coordinates;
+
+        % Output
+        fOut(sprintf('Loading %s',X.Data.Name),1);
         
         % Geometry
         if strcmpi(X.Data.Coords, 'cylindrical')
@@ -494,7 +512,7 @@ function Analyse2D
         fRefresh;
         fRefreshX;
         
-        % save settings to file
+        % Save settings to file
         fSaveVariables;
         
     end % function
@@ -507,10 +525,12 @@ function Analyse2D
         
         if X.Time.Dump < X.Time.Limits(1)
             X.Time.Dump = X.Time.Limits(1);
+            fOut('At the start of the dataset',2);
         end % if
 
         if X.Time.Dump > X.Time.Limits(4)
             X.Time.Dump = X.Time.Limits(4);
+            fOut('At the end of the dataset',2);
         end % if
         
         fRefresh;
@@ -946,6 +966,100 @@ function Analyse2D
     function fSaveVariables
         
         save(strcat(oData.Temp,'/OsirisAnalyseSettings.mat'),'-struct','stSettings');
+        
+    end % function
+
+    % Control Functions
+    
+    function fOut(sText, iType)
+        
+        stCol = {'#00ff00;','#ffdd66;','#ff6666;'};
+        stPrefix = {'','','Error: '};
+        aTime = clock;
+        sStamp = sprintf('%02d:%02d:%02.0f> ',aTime(4),aTime(5),floor(aTime(6)));
+        sText = sprintf('<html><font style="color: %s">%s%s%s</font></html>',stCol{iType},sStamp,stPrefix{iType},sText);
+        
+        stCurr = get(lstOut, 'String');
+        stCurr = [stCurr;{sText}];
+        [iN, ~] = size(stCurr);
+        
+        if iN > 100
+            stCurr(1) = [];
+            iN = 100;
+        end % if
+
+        set(lstOut, 'String', stCurr);
+        set(lstOut, 'Value', iN);
+        
+    end % function
+    
+    function fFocus(~,~)
+        
+        for f=1:iXFig
+            if X.Plot(f).Enabled
+                figure(f+1);
+            end % if
+        end % for
+        figure(1);
+        
+    end % function
+
+    function fShowSimInfo(~,~)
+        
+    end % function
+
+    function fKeyPress(~,uiEvt)
+        
+        % Debug
+        %disp(uiEvt.Key);
+        
+        switch(uiEvt.Key)
+
+            % Dump
+            case 'uparrow'
+                fDump(0,0,10);
+            case 'rightarrow'
+                fDump(0,0,1);
+            case 'leftarrow'
+                fDump(0,0,-1);
+            case 'downarrow'
+                fDump(0,0,-10);
+                
+            % Jump
+            case 'home'
+                fJump(0,0,1);
+                fOut('Jumping to start of simulation',1);
+            case 'pageup'
+                fJump(0,0,2);
+                fOut('Jumping to start of plasma',1);
+            case 'pagedown'
+                fJump(0,0,3);
+                fOut('Jumping to end of plasma',1);
+            case 'end'
+                fJump(0,0,4);
+                fOut('Jumping to end of simulation',1);
+                
+            % Control Functions
+            case 'f'
+                fFocus(0,0);
+            case 'i'
+                fShowSimInfo(0,0);
+                
+            % Load DataSet
+            case '1'
+                if strcmpi(uiEvt.Modifier, 'control')
+                    fLoadSet(0,0,1);
+                end % if
+            case '2'
+                if strcmpi(uiEvt.Modifier, 'control')
+                    fLoadSet(0,0,2);
+                end % if
+            case '3'
+                if strcmpi(uiEvt.Modifier, 'control')
+                    fLoadSet(0,0,3);
+                end % if
+            
+        end % switch
         
     end % function
 
