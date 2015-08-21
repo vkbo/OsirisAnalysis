@@ -15,6 +15,9 @@
   Development History
  =====================
 
+  Version 1.0
+  - Added GUI and updated all plot functions accordingly
+
   Version 0.7
   - Added charge conversion calculations to OsirisConfig
   - Changed how Osiris datasets are opened

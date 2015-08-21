@@ -2,7 +2,7 @@
 %
 %  Class Object to hold Osiris data
 % **********************************
-%  Version 1.0
+%  Version 1.1
 %
 
 classdef OsirisData
@@ -201,7 +201,7 @@ classdef OsirisData
         
         function Version(obj)
             
-            fprintf('OsirisAnalysis Version 1.0\n');
+            fprintf('OsirisAnalysis Version 1.1\n');
             
         end % function
 
