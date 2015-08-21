@@ -27,8 +27,11 @@ function Analyse2D
     
     % Data
     
-    iXFig = 9;
-    oData = OsirisData('Silent','Yes');
+    iXFig = 9;                          % Extra figures. Number plus 6
+    iTFig = iXFig+2;                    % Tools figures. Number pluss extra figures
+    oData = OsirisData('Silent','Yes'); % Whether to output text from OsirisData object
+    
+    global X;
 
     X.DataSet     = 0;
     X.Time.Dump   = 0;
@@ -52,6 +55,7 @@ function Analyse2D
     X.Plots{4} = 'Phase 2D';
     
     X.Tools{1} = 'Beamlet Analysis';
+    X.Tools{2} = 'Density Tracking';
     
     X.Opt.Sample = {'Random','WRandom','W2Random','Top','Bottom'};
 
@@ -60,6 +64,7 @@ function Analyse2D
     X.X2Link = [0 0 0 0 0 0];
     X.X2Sym  = [0 0 0 0 0 0];
     
+    % Setting up Plot Figures
     for f=1:6
         X.Plot(f).Figure  = f+1;
         X.Plot(f).Enabled = 0;
@@ -67,7 +72,15 @@ function Analyse2D
         X.Plot(f).Limits  = [0.0 0.0 0.0 0.0];
         X.Plot(f).Scale   = [1.0 1.0];
     end % for
+    
+    % Setting up Extra Figures
     for f=7:iXFig
+        X.Plot(f).Figure  = f+1;
+        X.Plot(f).Enabled = 0;
+    end % for
+    
+    % Setting up Tools Figures
+    for f=iXFig+1:iTFig
         X.Plot(f).Figure  = f+1;
         X.Plot(f).Enabled = 0;
     end % for
@@ -85,7 +98,7 @@ function Analyse2D
     % Set figure properties
     set(fMain, 'Units', 'Pixels');
     set(fMain, 'MenuBar', 'None');
-    set(fMain, 'Position', [aFPos(1:2) 560 570]);
+    set(fMain, 'Position', [aFPos(1:2) 550 570]);
     set(fMain, 'Name', 'Osiris 2D Analysis');
     
     % Set background color to default
@@ -969,6 +982,36 @@ function Analyse2D
     end % function
 
     function fLoadTool(uiSrc,~)
+        
+        iOpt = get(uiSrc, 'Value');
+        iFig = iOpt + iXFig + 1;
+        
+        if X.Plot(iFig).Enabled == 0
+
+            X.Plot(iFig).Enabled = 1;
+
+            switch(X.Tools{iOpt})
+
+                case 'Beamlet Analysis'
+                    AnalyseBeamlets(oData, iFig+1);
+
+                case 'Density Tracking'
+
+            end % switch
+
+        else
+            
+            X.Plot(iFig).Enabled = 0;
+            
+            aFigPos = get(figure(iFig+1), 'Position');
+            stSettings.Position(iFig).Pos  = aFigPos(1:2);
+            stSettings.Position(iFig).Size = aFigPos(3:4);
+            fSaveVariables;
+
+            close(figure(iFig+1));
+
+        end % if
+        
     end % function
 
 

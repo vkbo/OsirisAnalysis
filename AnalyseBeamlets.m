@@ -4,14 +4,17 @@
 % *************************
 %
 
-function AnalyseBeamlets(oData, sTime, sBeam)
+function AnalyseBeamlets(oData, iFig)
 
     % Input
+    sBeam = 'EB';
+    sTime = 'PStart';
+    
     sBeam = fTranslateSpecies(sBeam);
     iTime = fStringToDump(oData, num2str(sTime));
 
     % Figure
-    fMain = gcf; clf;
+    fMain = figure(iFig); clf;
     aFPos = get(fMain, 'Position');
     
     % Set figure properties
