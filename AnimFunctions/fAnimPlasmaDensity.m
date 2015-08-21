@@ -11,14 +11,14 @@
 %
 %  Options:
 % ==========
-%  FigureSize  :: Default [900 500]
+%  FigureSize  :: Default [1100 600]
 %  DriveCut    :: Drive beam limits
 %  WitnessCut  :: Witness beam limits
 %  Start       :: First dump (default = 0)
 %  End         :: Last dump (default = end)
 %
 
-function stReturn = fAnimBeamDensity(oData, sDrive, sWitness, varargin)
+function stReturn = fAnimPlasmaDensity(oData, sDrive, sWitness, varargin)
 
     % Input/Output
 
@@ -36,9 +36,8 @@ function stReturn = fAnimBeamDensity(oData, sDrive, sWitness, varargin)
        fprintf('\n');
        fprintf('  Options:\n');
        fprintf(' ==========\n');
-       fprintf('  FigureSize  :: Default [900 500]\n');
-       fprintf('  DriveCut    :: Drive beam limits\n');
-       fprintf('  WitnessCut  :: Witness beam limits\n');
+       fprintf('  FigureSize  :: Default [1100 600]\n');
+       fprintf('  Limits      :: Limits\n');
        fprintf('  Start       :: First dump (default = 0)\n');
        fprintf('  End         :: Last dump (default = end)\n');
        fprintf('\n');
@@ -46,28 +45,20 @@ function stReturn = fAnimBeamDensity(oData, sDrive, sWitness, varargin)
     end % if
     
     stReturn   = {};
-    sDrive     = fTranslateSpecies(sDrive);
-    sWitness   = fTranslateSpecies(sWitness);
-    sMovieFile = 'AnimPBDensity';
+    sMovieFile = sprintf('AnimPlasmaDensity-%s', oData.Config.Name);
 
     oOpt = inputParser;
-    if strcmp(sWitness, '')
-        addParameter(oOpt, 'FigureSize',  [900 500]);
-    else
-        addParameter(oOpt, 'FigureSize',  [1200 500]);
-    end % if
-    addParameter(oOpt, 'DriveCut',    [  0.0, 315.0, -2.0, 2.0]);
-    addParameter(oOpt, 'WitnessCut',  [217.0, 220.0, -0.3, 0.3]);
+    addParameter(oOpt, 'FigureSize',  [1100 600]);
+    addParameter(oOpt, 'Limits',      []);
     addParameter(oOpt, 'Start',       'Start');
     addParameter(oOpt, 'End',         'End');
     parse(oOpt, varargin{:});
     stOpt = oOpt.Results;
 
-    iStart = fStringToDump(oData, stOpt.Start);
-    iEnd   = fStringToDump(oData, stOpt.End);
-    aDim   = stOpt.FigureSize;
-    aB1Cut = stOpt.DriveCut;
-    aB2Cut = stOpt.WitnessCut;
+    iStart  = fStringToDump(oData, stOpt.Start);
+    iEnd    = fStringToDump(oData, stOpt.End);
+    aDim    = stOpt.FigureSize;
+    aLimits = stOpt.Limits;
 
 
     % Animation Loop
@@ -80,21 +71,13 @@ function stReturn = fAnimBeamDensity(oData, sDrive, sWitness, varargin)
         clf;
         i = k-iStart+1;
 
-        % Beam 1
-        if ~strcmpi(sWitness, '')
-            subplot(1,3,[1:2]);
-        end % if
-        stB1Info = fPlotBeamDensity(oData, k, sDrive, 'Limits', aB1Cut, 'CAxis', [0.0 0.01], 'IsSubPlot', 'Yes');
-        colorbar('off');
-
-        % Beam 2
-        if ~strcmpi(sWitness, '')
-            subplot(1,3,3);
-            stB2Info = fPlotBeamDensity(oData, k, sWitness, 'Limits', aB2Cut, 'IsSubPlot', 'Yes', 'Absolute', 'Yes');
-            title(sprintf('%s Density', fTranslateSpeciesReadable(sWitness)), 'FontSize', 14);
-            colorbar('off');
-            sMovieFile = 'AnimPBEBDensity';
-        end % if
+        % Call plot
+        stInfo = fPlotPlasmaDensity(oData, k, 'PE', 'Absolute', 'Yes', 'Limits', aLimits, 'CAxis', [0 5], ...
+                                      'Overlay1', sDrive, 'Overlay2', sWitness, ...
+                                      'Scatter1', sDrive, 'Sample1', 3000, 'Filter1', 'W2Random', ...
+                                      'Scatter2', sWitness, 'Sample2', 1000, 'Filter2', 'W2Random', ...
+                                      'E1',[3,3],'E2',[3,3], ...
+                                      'FigureSize', stOpt.FigureSize);
 
         drawnow;
 
@@ -106,14 +89,14 @@ function stReturn = fAnimBeamDensity(oData, sDrive, sWitness, varargin)
 
     end % for
 
+    LocalConfig;
     movie2avi(M, '/tmp/osiris-temp.avi', 'fps', 6, 'Compression', 'None');
-    [~,~] = system(sprintf('avconv -i /tmp/osiris-temp.avi -c:v libx264 -crf 1 -s %dx%d -b:v 50000k Movies/%s-%s.mp4', aDim(1), aDim(2), sMovieFile, fTimeStamp));
+    [~,~] = system(sprintf('avconv -i /tmp/osiris-temp.avi -c:v libx264 -crf 1 -s %dx%d -b:v 50000k %s/%s-%s.mp4', aDim(1), aDim(2), sAnimPath, sMovieFile, fTimeStamp));
     [~,~] = system('rm /tmp/osiris-temp.avi');
     
     
     % Return values
-    stReturn.Movie           = M;
-    stReturn.DriveBeamInfo   = stB1Info;
-    stReturn.WitnessBeamInfo = stB2Info;
+    stReturn.Movie      = M;
+    stReturn.PlotInfo   = stInfo;
 
 end % function

@@ -5,11 +5,11 @@
 %
 %  Inputs:
 % =========
-%  sAxis    :: Axis label
+%  sAxis :: Axis label
 %
 %  Outputs:
 % ==========
-%  iAxis    :: Axis index
+%  iAxis :: Axis index
 %
 
 function iAxis = fRawAxisToIndex(sAxis)
@@ -29,7 +29,11 @@ function iAxis = fRawAxisToIndex(sAxis)
             iAxis = 6;
         case 'ene'
             iAxis = 7;
+        case 'energy'
+            iAxis = 7;
         case 'q'
+            iAxis = 8;
+        case 'charge'
             iAxis = 8;
         case 'tag1'
             iAxis = 9;

@@ -1,3 +1,8 @@
+%
+%  External Code: wavelet
+% ************************
+%
+
 %WAVELET  1D Wavelet transform with optional singificance testing
 %
 %   [WAVE,PERIOD,SCALE,COI] = wavelet(Y,DT,PAD,DJ,S0,J1,MOTHER,PARAM)
