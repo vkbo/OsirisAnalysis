@@ -1,7 +1,9 @@
+
 %
 %  Function: fLengthScale
 % ************************
 %  Converts length scale to value
+%
 
 function [dScale, sUnit] = fLengthScale(sToUnit, sFromUnit)
 

@@ -11,7 +11,7 @@
 %
 %  Options:
 % ==========
-%  FigureSize  :: Default [900 500]
+%  FigureSize  :: Default [750 450]
 %  HideDump    :: Default No
 %  IsSubplot   :: Default No
 %  AutoResize  :: Default On
@@ -38,7 +38,7 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
         fprintf('\n');
         fprintf('  Options:\n');
         fprintf(' ==========\n');
-        fprintf('  FigureSize  :: Default [900 500]\n');
+        fprintf('  FigureSize  :: Default [750 450]\n');
         fprintf('  HideDump    :: Default No\n');
         fprintf('  IsSubplot   :: Default No\n');
         fprintf('  AutoResize  :: Default On\n');
@@ -51,7 +51,7 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
     sSpecies = fTranslateSpecies(sSpecies);
 
     oOpt = inputParser;
-    addParameter(oOpt, 'FigureSize', [900 500]);
+    addParameter(oOpt, 'FigureSize', [750 450]);
     addParameter(oOpt, 'HideDump',   'No');
     addParameter(oOpt, 'IsSubPlot',  'No');
     addParameter(oOpt, 'AutoResize', 'On');
@@ -63,8 +63,12 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
 
     % Data
     oMom   = Momentum(oData, sSpecies);
-    stData = oMom.SigmaEToEMean('PStart','PEnd');
+    stData = oMom.SigmaEToEMean(stOpt.Start,stOpt.End);
     
+    if isempty(stData)
+        fprintf(2, 'Error: No data.\n');
+        return;
+    end % if
 
     % Plot
 
@@ -80,7 +84,7 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
     
     hold on;
     
-    H(1) = plot(stData.TimeAxis, stData.Data, '-b', 'LineWidth', 2);
+    H(1) = plot(stData.TimeAxis, stData.Data*100, '-b', 'LineWidth', 2);
     
     xlim([stData.TimeAxis(1),stData.TimeAxis(end)]);
 
@@ -98,7 +102,7 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
 
     title(sTitle);
     xlabel('z [m]');
-    ylabel('\sigma_E/<E>');
+    ylabel('\sigma_E/<E> [%]');
     
     hold off;
 

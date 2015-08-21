@@ -227,13 +227,15 @@ classdef OsirisData
 
         end % function
         
-        function PlasmaInfo(obj)
+        function stReturn = PlasmaInfo(obj)
             
             %
             %  Prints basic plasma info extracted from Config object
             % *******************************************************
             %
             
+            stReturn  = {};
+
             dPStart   = obj.Config.Variables.Plasma.PlasmaStart;
             dPEnd     = obj.Config.Variables.Plasma.PlasmaEnd;
             dTFac     = obj.Config.Variables.Convert.SI.TimeFac;
@@ -246,35 +248,38 @@ classdef OsirisData
             dMLambdaP = obj.Config.Variables.Plasma.MaxLambdaP;
             dPMax     = obj.Config.Variables.Plasma.MaxPlasmaFac;
             
-            fprintf('\n');
-            fprintf(' Plasma Info\n');
-            fprintf('*************\n');
-            fprintf('\n');
-            fprintf(' Plasma Start:     %8.2f between dump %03d and %03d\n', dPStart, floor(dPStart/dTFac), ceil(dPStart/dTFac));
-            fprintf(' Plasma End:       %8.2f between dump %03d and %03d\n', dPEnd,   floor(dPEnd/dTFac),   ceil(dPEnd/dTFac));
-            fprintf('\n');
-            fprintf(' Plasma Start:     %8.2f m\n', dPStart*dLFac);
-            fprintf(' Plasma End:       %8.2f m\n', dPEnd*dLFac);
-            fprintf(' Plasma Length:    %8.2f m\n', (dPEnd-dPStart)*dLFac);
-            fprintf('\n');
-            fprintf(' Nomralised Plasma Density:    %8.2e m^-3\n', dN0);
-            fprintf(' Normalised Plasma Frequency:  %8.2e s^-1\n', dNOmegaP);
-            fprintf(' Normalised Plasma Skin Depth: %8.2e mm\n',   dNLambdaP*1e3);
-            fprintf('\n');
-            fprintf(' Peak Plasma Density:          %8.2e m^-3\n', dN0*dPMax);
-            fprintf(' Peak Plasma Frequency:        %8.2e s^-1\n', dMOmegaP);
-            fprintf(' Peak Plasma Skin Depth:       %8.2e mm\n',   dMLambdaP*1e3);
-            fprintf('\n');
+            if ~obj.Silent
+                fprintf('\n');
+                fprintf(' Plasma Info\n');
+                fprintf('*************\n');
+                fprintf('\n');
+                fprintf(' Plasma Start:     %8.2f between dump %03d and %03d\n', dPStart, floor(dPStart/dTFac), ceil(dPStart/dTFac));
+                fprintf(' Plasma End:       %8.2f between dump %03d and %03d\n', dPEnd,   floor(dPEnd/dTFac),   ceil(dPEnd/dTFac));
+                fprintf('\n');
+                fprintf(' Plasma Start:     %8.2f m\n', dPStart*dLFac);
+                fprintf(' Plasma End:       %8.2f m\n', dPEnd*dLFac);
+                fprintf(' Plasma Length:    %8.2f m\n', (dPEnd-dPStart)*dLFac);
+                fprintf('\n');
+                fprintf(' Nomralised Plasma Density:    %8.2e m^-3\n', dN0);
+                fprintf(' Normalised Plasma Frequency:  %8.2e s^-1\n', dNOmegaP);
+                fprintf(' Normalised Plasma Skin Depth: %8.2e mm\n',   dNLambdaP*1e3);
+                fprintf('\n');
+                fprintf(' Peak Plasma Density:          %8.2e m^-3\n', dN0*dPMax);
+                fprintf(' Peak Plasma Frequency:        %8.2e s^-1\n', dMOmegaP);
+                fprintf(' Peak Plasma Skin Depth:       %8.2e mm\n',   dMLambdaP*1e3);
+                fprintf('\n');
+            end % if
             
         end % function
         
-        function BeamInfo(obj, sSpecies)
+        function stReturn = BeamInfo(obj, sSpecies)
             
             %
             %  Attempts to calculate beam data
             % *********************************
             %
             
+            stReturn  = {};
             sSpecies  = fTranslateSpecies(sSpecies);
             
             dC        = obj.Config.Variables.Constants.SpeedOfLight;
@@ -303,13 +308,15 @@ classdef OsirisData
             dSigmaX1  = obj.Config.Variables.Beam.(sSpecies).SigmaX1;
             dSigmaX2  = obj.Config.Variables.Beam.(sSpecies).SigmaX2;
             
-            fprintf('\n');
-            fprintf(' Beam Info for %s\n',sSpecies);
-            fprintf('************************************\n');
-            fprintf('\n');
+            if ~obj.Silent
+                fprintf('\n');
+                fprintf(' Beam Info for %s\n',sSpecies);
+                fprintf('************************************\n');
+                fprintf('\n');
+            end % if
 
-            stFunc    = fExtractEq(sMathFunc, iDim, [dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max]);
-            fProfile  = @(x1,x2) eval(stFunc.ForEval);
+            stFunc   = fExtractEq(sMathFunc, iDim, [dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max]);
+            fProfile = @(x1,x2) eval(stFunc.ForEval);
             
             if strcmpi(sCoords, 'cylindrical')
 
@@ -318,16 +325,24 @@ classdef OsirisData
                 dSISigmaX1 = dSigmaX1*dLFac;
                 dSISigmaX2 = dSigmaX2*dLFac;
                 
+                stReturn.Equation = stFunc.Equation;
+                stReturn.X1Mean   = dSIMeanX1;
+                stReturn.X2Mean   = dSIMeanX2;
+                stReturn.X1Sigma  = dSISigmaX1;
+                stReturn.X2Sigma  = dSISigmaX2;
+
                 [dSIMeanX1,  sUnitM1] = fAutoScale(dSIMeanX1, 'm');
                 [dSIMeanX2,  sUnitM2] = fAutoScale(dSIMeanX2, 'm');
                 [dSISigmaX1, sUnitS1] = fAutoScale(dSISigmaX1, 'm');
                 [dSISigmaX2, sUnitS2] = fAutoScale(dSISigmaX2, 'm');
 
                 sFunction = sprintf('%s.*x2', stFunc.ForEval);
-                fprintf(' Density Function:       %s\n', stFunc.Equation);
-                fprintf(' X1 Mean, Sigma:         %7.2f, %9.4f [%7.2f %s, %7.2f %s]\n', dMeanX1, dSigmaX1, dSIMeanX1, sUnitM1, dSISigmaX1, sUnitS1);
-                fprintf(' X2 Mean, Sigma:         %7.2f, %9.4f [%7.2f %s, %7.2f %s]\n', dMeanX2, dSigmaX2, dSIMeanX2, sUnitM2, dSISigmaX2, sUnitS2);
-                fprintf('\n');
+                if ~obj.Silent
+                    fprintf(' Density Function:       %s\n', stFunc.Equation);
+                    fprintf(' X1 Mean, Sigma:         %7.2f, %9.4f [%7.2f %s, %7.2f %s]\n', dMeanX1, dSigmaX1, dSIMeanX1, sUnitM1, dSISigmaX1, sUnitS1);
+                    fprintf(' X2 Mean, Sigma:         %7.2f, %9.4f [%7.2f %s, %7.2f %s]\n', dMeanX2, dSigmaX2, dSIMeanX2, sUnitM2, dSISigmaX2, sUnitS2);
+                    fprintf('\n');
+                end % if
                 
                 % Beam integral
                 aSpanX1 = stFunc.Lims(1):dT:stFunc.Lims(2);
@@ -343,27 +358,38 @@ classdef OsirisData
                 dBeamCharge  = dBeamNum * dE;
                 dBeamDensity = dBeamNum/dBeamVol;
                 dBeamPlasma  = dBeamDensity/(dN0*dPMax);
-                
                 dPeakCurrent = dBeamCharge*dC / sqrt(2*pi*(dSigmaX1*dLFac)^2);
+                
+                stReturn.Volume    = dBeamVol;
+                stReturn.Particles = dBeamNum;
+                stReturn.Charge    = dBeamCharge;
+                stReturn.Density   = dBeamDensity;
+                stReturn.Ratio     = dBeamPlasma;
+                stReturn.Current   = dPeakCurrent;
+                
                 [dPeakCurrent, dCurrentUnit] = fAutoScale(dPeakCurrent, 'A');
                 [dBeamCharge,  sChargeUnit]  = fAutoScale(dBeamCharge,  'C');
                 
-                fprintf(' Max Plasma Density:     %0.3e m^-3\n', dN0*dPMax);
-                fprintf(' Max Plasma Frequency:   %0.3e s^-1\n', dMOmegaP);
-                fprintf('\n');
-                fprintf(' Beam Integral:          %0.3f \n',     dBeamInt);
-                fprintf(' Beam Volume:            %0.3e m^3\n',  dBeamVol);
-                fprintf(' Beam Charge:            %0.3f %s\n',   dBeamCharge, sChargeUnit);
-                fprintf(' Beam Particle Count:    %0.3e \n',     dBeamNum);
-                fprintf(' Beam Density:           %0.3e M^-3\n', dBeamDensity);
-                fprintf('\n');
-                fprintf(' Beam/Plasma Ratio:      %0.3e \n',     dBeamPlasma);
-                fprintf('\n');
-                fprintf(' Beam Peak Current:      %0.3f %s\n',    dPeakCurrent, dCurrentUnit);
+                if ~obj.Silent
+                    fprintf(' Max Plasma Density:     %0.3e m^-3\n', dN0*dPMax);
+                    fprintf(' Max Plasma Frequency:   %0.3e s^-1\n', dMOmegaP);
+                    fprintf('\n');
+                    fprintf(' Beam Integral:          %0.3f \n',     dBeamInt);
+                    fprintf(' Beam Volume:            %0.3e m^3\n',  dBeamVol);
+                    fprintf(' Beam Charge:            %0.3f %s\n',   dBeamCharge, sChargeUnit);
+                    fprintf(' Beam Particle Count:    %0.3e \n',     dBeamNum);
+                    fprintf(' Beam Density:           %0.3e M^-3\n', dBeamDensity);
+                    fprintf('\n');
+                    fprintf(' Beam/Plasma Ratio:      %0.3e \n',     dBeamPlasma);
+                    fprintf('\n');
+                    fprintf(' Beam Peak Current:      %0.3f %s\n',    dPeakCurrent, dCurrentUnit);
+                end % if
 
             end % if
             
-            fprintf('\n');
+            if ~obj.Silent
+                fprintf('\n');
+            end % if
             
         end % function
 

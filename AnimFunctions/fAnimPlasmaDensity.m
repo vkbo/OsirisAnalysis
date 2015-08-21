@@ -11,7 +11,7 @@
 %
 %  Options:
 % ==========
-%  FigureSize  :: Default [900 500]
+%  FigureSize  :: Default [1100 600]
 %  DriveCut    :: Drive beam limits
 %  WitnessCut  :: Witness beam limits
 %  Start       :: First dump (default = 0)
@@ -36,7 +36,7 @@ function stReturn = fAnimPlasmaDensity(oData, sDrive, sWitness, varargin)
        fprintf('\n');
        fprintf('  Options:\n');
        fprintf(' ==========\n');
-       fprintf('  FigureSize  :: Default [900 500]\n');
+       fprintf('  FigureSize  :: Default [1100 600]\n');
        fprintf('  Limits      :: Limits\n');
        fprintf('  Start       :: First dump (default = 0)\n');
        fprintf('  End         :: Last dump (default = end)\n');
@@ -74,9 +74,10 @@ function stReturn = fAnimPlasmaDensity(oData, sDrive, sWitness, varargin)
         % Call plot
         stInfo = fPlotPlasmaDensity(oData, k, 'PE', 'Absolute', 'Yes', 'Limits', aLimits, 'CAxis', [0 5], ...
                                       'Overlay1', sDrive, 'Overlay2', sWitness, ...
-                                      'Scatter1', sDrive, 'Sample1', 3000, ...
-                                      'Scatter2', sWitness, 'Sample2', 1000, ...
-                                      'E1',[3,3],'E2',[3,3]);
+                                      'Scatter1', sDrive, 'Sample1', 3000, 'Filter1', 'W2Random', ...
+                                      'Scatter2', sWitness, 'Sample2', 1000, 'Filter2', 'W2Random', ...
+                                      'E1',[3,3],'E2',[3,3], ...
+                                      'FigureSize', stOpt.FigureSize);
 
         drawnow;
 

@@ -12,17 +12,18 @@
 %
 %  Options:
 % ==========
-%  Limits       :: Axis limits
-%  FigureSize   :: Default [900 500]
-%  HideDump     :: Default No
-%  IsSubplot    :: Default No
-%  AutoResize   :: Default On
-%  CAxis        :: Color axis limits
-%  Absolute     :: Use absolute value of charge
-%  Overlay[1,2] :: Beam projection overlay
-%  Scatter[1,2] :: Beam scatter overlay
-%  Sample[1,2]  :: Beam scatter sample size [200]
-%  Filter[1,2]  :: Beam scatter filter type: Charge or Random
+%  Limits     :: Axis limits
+%  FigureSize :: Default [900 500]
+%  HideDump   :: Default No
+%  IsSubplot  :: Default No
+%  AutoResize :: Default On
+%  CAxis      :: Color axis limits
+%  Absolute   :: Use absolute value of charge
+%  Overlay1/2 :: Beam projection overlay
+%  Scatter1/2 :: Beam scatter overlay
+%  Sample1/2  :: Beam scatter sample size [200]
+%  Filter1/2  :: Beam scatter filter type: Charge, Random, WRandom or W2Random
+%  E1/2       :: E-field overlay range average over [Start, Count]
 %
 
 function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
@@ -45,17 +46,18 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         fprintf('\n');
         fprintf('  Options:\n');
         fprintf(' ==========\n');
-        fprintf('  Limits       :: Axis limits\n');
-        fprintf('  FigureSize   :: Default [900 500]\n');
-        fprintf('  HideDump     :: Default No\n');
-        fprintf('  IsSubplot    :: Default No\n');
-        fprintf('  AutoResize   :: Default On\n');
-        fprintf('  CAxis        :: Color axis limits\n');
-        fprintf('  Absolute     :: Use absolute value of charge\n');
-        fprintf('  Overlay[1,2] :: Beam projection overlay\n');
-        fprintf('  Scatter[1,2] :: Beam scatter overlay\n');
-        fprintf('  Sample[1,2]  :: Beam scatter sample size [200]\n');
-        fprintf('  Filter[1,2]  :: Beam scatter filter type: Charge or Random\n');
+        fprintf('  Limits     :: Axis limits\n');
+        fprintf('  FigureSize :: Default [900 500]\n');
+        fprintf('  HideDump   :: Default No\n');
+        fprintf('  IsSubplot  :: Default No\n');
+        fprintf('  AutoResize :: Default On\n');
+        fprintf('  CAxis      :: Color axis limits\n');
+        fprintf('  Absolute   :: Use absolute value of charge\n');
+        fprintf('  Overlay1/2 :: Beam projection overlay\n');
+        fprintf('  Scatter1/2 :: Beam scatter overlay\n');
+        fprintf('  Sample1/2  :: Beam scatter sample size [200]\n');
+        fprintf('  Filter1/2  :: Beam scatter filter type: Charge, Random, WRandom or W2Random\n');
+        fprintf('  E1/2       :: E-field overlay range average over [Start, Count]\n');
         fprintf('\n');
         return;
     end % if
@@ -339,16 +341,10 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
 
     end % if
     
-    if strcmpi(oCH.Coords, 'cylindrical')
-        sRType = 'ReadableCyl';
-    else
-        sRType = 'Readable';
-    end % of
-
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s Density %s (%s #%d)', fTranslateSpecies(sPlasma,sRType), fPlasmaPosition(oData, iTime), oData.Config.Name, iTime);
+        sTitle = sprintf('%s Density %s (%s #%d)', fTranslateSpecies(sPlasma,'Readable'), fPlasmaPosition(oData, iTime), oData.Config.Name, iTime);
     else
-        sTitle = sprintf('%s Density %s', fTranslateSpecies(sPlasma,sRType), fPlasmaPosition(oData, iTime));
+        sTitle = sprintf('%s Density %s', fTranslateSpecies(sPlasma,'Readable'), fPlasmaPosition(oData, iTime));
     end % if
 
     title(sTitle);

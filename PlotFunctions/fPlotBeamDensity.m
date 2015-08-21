@@ -186,10 +186,8 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     end % if
 
     if strcmpi(oCH.Coords, 'cylindrical')
-        sRType = 'ReadableCyl';
         sLType = 'LongCyl';
     else
-        sRType = 'Readable';
         sLType = 'Long';
     end % of
     
@@ -200,9 +198,9 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     end % if
 
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s %s %s (%s #%d)',fTranslateSpecies(sBeam,sRType),sPlot,fPlasmaPosition(oData, iTime),oData.Config.Name,iTime);
+        sTitle = sprintf('%s %s %s (%s #%d)',fTranslateSpecies(sBeam,'Readable'),sPlot,fPlasmaPosition(oData, iTime),oData.Config.Name,iTime);
     else
-        sTitle = sprintf('%s %s %s',fTranslateSpecies(sBeam,sRType),sPlot,fPlasmaPosition(oData, iTime));
+        sTitle = sprintf('%s %s %s',fTranslateSpecies(sBeam,'Readable'),sPlot,fPlasmaPosition(oData, iTime));
     end % if
 
     title(sTitle);
@@ -211,7 +209,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     if isempty(stOpt.Current)
         title(hCol,'n_{pe}/n_0');
     else
-        title(hCol,sprintf('%s %s',fTranslateField(stOpt.Current,sRType),dCUnit));
+        title(hCol,sprintf('%s %s',fTranslateField(stOpt.Current,'Readable'),dCUnit));
     end % if
     
     hold off;
