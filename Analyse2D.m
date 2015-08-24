@@ -31,11 +31,8 @@ function Analyse2D
     
     % Data
     
-    iXFig = 9;                          % Extra figures. Number plus 6
-    iTFig = iXFig+2;                    % Tools figures. Number pluss extra figures
-    oData = OsirisData('Silent','Yes'); % Whether to output text from OsirisData object
-    
-    global X;
+    iXFig = 9;
+    oData = OsirisData('Silent','Yes');
 
     X.DataSet     = 0;
     X.Time.Dump   = 0;
@@ -58,9 +55,6 @@ function Analyse2D
     X.Plots{3} = 'Field Density';
     X.Plots{4} = 'Phase 2D';
     
-    X.Tools{1} = 'Beamlet Analysis';
-    X.Tools{2} = 'Density Tracking';
-    
     X.Opt.Sample = {'Random','WRandom','W2Random','Top','Bottom'};
 
     X.Figure = [0 0 0 0 0 0];
@@ -68,7 +62,6 @@ function Analyse2D
     X.X2Link = [0 0 0 0 0 0];
     X.X2Sym  = [0 0 0 0 0 0];
     
-    % Setting up Plot Figures
     for f=1:6
         X.Plot(f).Figure  = f+1;
         X.Plot(f).Enabled = 0;
@@ -76,15 +69,7 @@ function Analyse2D
         X.Plot(f).Limits  = [0.0 0.0 0.0 0.0];
         X.Plot(f).Scale   = [1.0 1.0];
     end % for
-    
-    % Setting up Extra Figures
     for f=7:iXFig
-        X.Plot(f).Figure  = f+1;
-        X.Plot(f).Enabled = 0;
-    end % for
-    
-    % Setting up Tools Figures
-    for f=iXFig+1:iTFig
         X.Plot(f).Figure  = f+1;
         X.Plot(f).Enabled = 0;
     end % for
@@ -102,11 +87,7 @@ function Analyse2D
     % Set figure properties
     set(fMain, 'Units', 'Pixels');
     set(fMain, 'MenuBar', 'None');
-<<<<<<< HEAD
     set(fMain, 'Position', [aFPos(1:2) 560 640]);
-=======
-    set(fMain, 'Position', [aFPos(1:2) 550 570]);
->>>>>>> 5ebd85d07094e78a6eef72ac05d51f3433bd6fa9
     set(fMain, 'Name', 'Osiris 2D Analysis');
     set(fMain, 'KeyPressFcn', @fKeyPress);
     
@@ -119,7 +100,6 @@ function Analyse2D
     %
     
     set(0, 'CurrentFigure', fMain);
-<<<<<<< HEAD
     uicontrol('Style','Text','String','Controls','FontSize',20,'Position',[20 602 140 25],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
     uicontrol('Style','PushButton','String','i','FontSize',15,'FontName','FixedWidth','FontWeight','Bold','Position',[210 600 25 25],'BackgroundColor',cButtonOff,'ForegroundColor',cInfoBtn,'Callback',{@fShowSimInfo});
     uicontrol('Style','PushButton','String','f','FontSize',15,'FontName','FixedWidth','FontWeight','Bold','Position',[180 600 25 25],'BackgroundColor',cButtonOff,'ForegroundColor',cFocusBtn,'Callback',{@fFocus});
@@ -133,25 +113,11 @@ function Analyse2D
     set(jList, 'SelectionBackground', java.awt.Color.black);
     set(jList, 'SelectionForeground', java.awt.Color.green);
     jList.setSelectionAppearanceReflectsFocus(0);
-=======
-    uicontrol('Style','Text','String','Controls','FontSize',20,'Position',[20 532 140 25],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-    
-    lblData = uicontrol('Style','Text','String','No Data','FontSize',18,'Position',[240 530 300 25],'ForegroundColor',cInfoText,'BackgroundColor',cInfoBack);
-
-    uicontrol('Style','PushButton','String','Focus',          'Position',[ 20 20  50 20],'BackgroundColor',cButtonOff,'Callback',{@fFocus});
-    uicontrol('Style','Text',      'String','Load Tool',      'Position',[170 22 100 15],'HorizontalAlignment','Right');
-    uicontrol('Style','PopupMenu', 'String',X.Tools,'Value',1,'Position',[280 20 200 20]);
-    uicontrol('Style','PushButton','String','Load',           'Position',[490 20  50 20],'BackgroundColor',cButtonOff,'Callback',{@fLoadTool});
->>>>>>> 5ebd85d07094e78a6eef72ac05d51f3433bd6fa9
 
     %  Data Set Controls
     % ===================
 
-<<<<<<< HEAD
     bgData = uibuttongroup('Title','Load Data','Units','Pixels','Position',[20 490 250 100],'BackgroundColor',cBackGround);
-=======
-    bgData = uibuttongroup('Title','Load Data','Units','Pixels','Position',[20 420 250 100],'BackgroundColor',cBackGround);
->>>>>>> 5ebd85d07094e78a6eef72ac05d51f3433bd6fa9
     
     aY = [60 35 10];
     for i=1:3
@@ -166,11 +132,7 @@ function Analyse2D
     %  Time Dump Controls
     % ====================
 
-<<<<<<< HEAD
     bgTime = uibuttongroup('Title','Time Dump','Units','Pixels','Position',[280 490 140 100],'BackgroundColor',cBackGround);
-=======
-    bgTime = uibuttongroup('Title','Time Dump','Units','Pixels','Position',[280 420 140 100],'BackgroundColor',cBackGround);
->>>>>>> 5ebd85d07094e78a6eef72ac05d51f3433bd6fa9
 
     uicontrol(bgTime,'Style','PushButton','String','<<','Position',[ 9 60 30 20],'BackgroundColor',cButtonOff,'Callback',{@fDump, -10});
     uicontrol(bgTime,'Style','PushButton','String','<', 'Position',[39 60 30 20],'BackgroundColor',cButtonOff,'Callback',{@fDump,  -1});
@@ -191,11 +153,7 @@ function Analyse2D
     %  Simulation Info
     % =================
 
-<<<<<<< HEAD
     bgInfo = uibuttongroup('Title','Simulation','Units','Pixels','Position',[430 490 110 100],'BackgroundColor',cBackGround);
-=======
-    bgInfo = uibuttongroup('Title','Simulation','Units','Pixels','Position',[430 420 110 100],'BackgroundColor',cBackGround);
->>>>>>> 5ebd85d07094e78a6eef72ac05d51f3433bd6fa9
     
     lblInfo(1) = uicontrol(bgInfo,'Style','Text','String','Geometry','Position',[9 60 90 17],'BackgroundColor',cInfoBack);
     lblInfo(2) = uicontrol(bgInfo,'Style','Text','String','Status',  'Position',[9 35 90 17],'BackgroundColor',cInfoBack);
@@ -205,11 +163,7 @@ function Analyse2D
     %  Figure Controls
     % =================
 
-<<<<<<< HEAD
     bgFigs = uibuttongroup('Title','Figures','Units','Pixels','Position',[20 280 520 200],'BackgroundColor',cBackGround);
-=======
-    bgFigs = uibuttongroup('Title','Figures','Units','Pixels','Position',[20 210 520 200],'BackgroundColor',cBackGround);
->>>>>>> 5ebd85d07094e78a6eef72ac05d51f3433bd6fa9
     
     uicontrol(bgFigs,'Style','Text','String','Fig',      'Position',[  9 160  20 15],'HorizontalAlignment','Left');
     uicontrol(bgFigs,'Style','Text','String','Plot Type','Position',[ 34 160 150 15],'HorizontalAlignment','Center');
@@ -244,11 +198,7 @@ function Analyse2D
     %  Tabs
     % ======
 
-<<<<<<< HEAD
     hTabGroup = uitabgroup('Units','Pixels','Position',[20 120 520 150]);
-=======
-    hTabGroup = uitabgroup('Units','Pixels','Position',[20 50 520 150]);
->>>>>>> 5ebd85d07094e78a6eef72ac05d51f3433bd6fa9
     
     for t=1:6
         hTabs(t) = uitab(hTabGroup,'Title',sprintf('Plot %d', t+1));
@@ -1021,7 +971,6 @@ function Analyse2D
 
     % Control Functions
     
-<<<<<<< HEAD
     function fOut(sText, iType)
         
         stCol = {'#00ff00;','#ffdd66;','#ff6666;'};
@@ -1044,8 +993,6 @@ function Analyse2D
         
     end % function
     
-=======
->>>>>>> 5ebd85d07094e78a6eef72ac05d51f3433bd6fa9
     function fFocus(~,~)
         
         for f=1:iXFig
@@ -1057,7 +1004,6 @@ function Analyse2D
         
     end % function
 
-<<<<<<< HEAD
     function fShowSimInfo(~,~)
         
     end % function
@@ -1114,38 +1060,6 @@ function Analyse2D
                 end % if
             
         end % switch
-=======
-    function fLoadTool(uiSrc,~)
-        
-        iOpt = get(uiSrc, 'Value');
-        iFig = iOpt + iXFig + 1;
-        
-        if X.Plot(iFig).Enabled == 0
-
-            X.Plot(iFig).Enabled = 1;
-
-            switch(X.Tools{iOpt})
-
-                case 'Beamlet Analysis'
-                    AnalyseBeamlets(oData, iFig+1);
-
-                case 'Density Tracking'
-
-            end % switch
-
-        else
-            
-            X.Plot(iFig).Enabled = 0;
-            
-            aFigPos = get(figure(iFig+1), 'Position');
-            stSettings.Position(iFig).Pos  = aFigPos(1:2);
-            stSettings.Position(iFig).Size = aFigPos(3:4);
-            fSaveVariables;
-
-            close(figure(iFig+1));
-
-        end % if
->>>>>>> 5ebd85d07094e78a6eef72ac05d51f3433bd6fa9
         
     end % function
 
