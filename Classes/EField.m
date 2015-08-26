@@ -435,7 +435,7 @@ classdef EField
             stReturn.AxisRange = [iStart iStop aVRange];
         
         end % function
-    
+        
     end % methods
     
     %

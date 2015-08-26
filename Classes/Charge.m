@@ -292,6 +292,44 @@ classdef Charge
             
         end % function
 
+        function stReturn = Lineout(obj, iStart, iAverage)
+
+            % Input/Output
+            stReturn = {};
+            
+            if nargin < 3
+                iAverage = 1;
+            end % if
+            
+            if nargin < 2
+                iStart = 3;
+            end % if
+            
+            % Get simulation variables
+            dE0     = obj.Data.Config.Variables.Convert.SI.E0;
+            
+            % Get data and axes
+            aData   = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
+            aX1Axis = obj.fGetBoxAxis('x1');
+            aX2Axis = obj.fGetBoxAxis('x2');
+            
+            iX1Min = fGetIndex(aX1Axis, obj.X1Lim(1)*obj.AxisFac(1));
+            iX1Max = fGetIndex(aX1Axis, obj.X1Lim(2)*obj.AxisFac(1));
+            
+            % Crop and scale dataset
+            iEnd    = iStart+iAverage-1;
+            aData   = transpose(mean(aData(iX1Min:iX1Max,iStart:iEnd),2))*dE0;
+            aX1Axis = aX1Axis(iX1Min:iX1Max);
+            
+            % Return data
+            stReturn.Data    = aData;
+            stReturn.X1Axis  = aX1Axis;
+            stReturn.X1Range = obj.AxisRange(1:2);
+            stReturn.X2Range = [aX2Axis(iStart) aX2Axis(iEnd+1)];
+            stReturn.ZPos    = obj.fGetZPos();        
+        
+        end % function
+
         function stReturn = Current(obj, sAxis)
             
             % Input/Output
