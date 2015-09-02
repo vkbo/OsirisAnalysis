@@ -31,7 +31,7 @@ function Analyse2D
     
     % Data
     
-    iXFig = 9;
+    iXFig = 10;
     oData = OsirisData('Silent','Yes');
 
     X.DataSet     = 0;
@@ -206,52 +206,65 @@ function Analyse2D
         uicontrol(bgTab(t),'Style','Text','String','No settings','FontSize',15,'Position',[10 85 140 25],'HorizontalAlignment','Left','BackgroundColor',cBackGround,'ForegroundColor',cGreyText);
     end % for
     
-    hTabX  = uitab(hTabGroup,'Title','Time Plots');
-    bgTabX = uibuttongroup(hTabX,'Title','','BorderType','None','Units','Pixels','Position',[3 3 514 120],'BackgroundColor',cBackGround);
-    
 
     %  Time Plots
     % ============
 
     iY = 115;
+    hTabX(1)  = uitab(hTabGroup,'Title','Time Plots');
+    bgTabX(1) = uibuttongroup(hTabX(1),'Title','','BorderType','None','Units','Pixels','Position',[3 3 514 120],'BackgroundColor',cBackGround);
         
     % Sigma E to E Mean
     iY = iY - 25;
 
-    uicontrol(bgTabX,'Style','Text','String','#8','Position',[5 iY+1 30 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-    uicontrol(bgTabX,'Style','Text','String','Sigma E to E Mean','Position',[40 iY+1 160 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-    uicontrol(bgTabX,'Style','Text','String','T =','Position',[395 iY+1 25 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    uicontrol(bgTabX(1),'Style','Text','String','#8','Position',[5 iY+1 30 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    uicontrol(bgTabX(1),'Style','Text','String','Sigma E to E Mean','Position',[40 iY+1 160 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    uicontrol(bgTabX(1),'Style','Text','String','T =','Position',[395 iY+1 25 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
 
-    btnFig(7) = uicontrol(bgTabX,'Style','PushButton','String','','Position',[210 iY 20 20],'BackgroundColor',cButtonOff,'Callback',{@fToggleXFig,7});
-    pumT8(1)  = uicontrol(bgTabX,'Style','PopupMenu','String',X.Data.Beam,'Value',1,'Position',[240 iY 150 20],'Callback',{@fPlotSetBeam,7});
-    edtT8(1)  = uicontrol(bgTabX,'Style','Edit','String','0','Position',[425 iY 40 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,7});
-    edtT8(2)  = uicontrol(bgTabX,'Style','Edit','String','0','Position',[470 iY 40 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,7});
+    btnFig(7) = uicontrol(bgTabX(1),'Style','PushButton','String','','Position',[210 iY 20 20],'BackgroundColor',cButtonOff,'Callback',{@fToggleXFig,7});
+    pumT8(1)  = uicontrol(bgTabX(1),'Style','PopupMenu','String',X.Data.Beam,'Value',1,'Position',[240 iY 150 20],'Callback',{@fPlotSetBeam,7});
+    edtT8(1)  = uicontrol(bgTabX(1),'Style','Edit','String','0','Position',[425 iY 40 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,7});
+    edtT8(2)  = uicontrol(bgTabX(1),'Style','Edit','String','0','Position',[470 iY 40 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,7});
 
     % Sigma E to E Mean Ratio
     iY = iY - 25;
 
-    uicontrol(bgTabX,'Style','Text','String','#9','Position',[5 iY+1 30 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-    uicontrol(bgTabX,'Style','Text','String','Sigma E to E Mean Ratio','Position',[40 iY+1 160 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-    uicontrol(bgTabX,'Style','Text','String','T =','Position',[395 iY+1 25 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    uicontrol(bgTabX(1),'Style','Text','String','#9','Position',[5 iY+1 30 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    uicontrol(bgTabX(1),'Style','Text','String','Sigma E to E Mean Ratio','Position',[40 iY+1 160 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    uicontrol(bgTabX(1),'Style','Text','String','T =','Position',[395 iY+1 25 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
 
-    btnFig(8) = uicontrol(bgTabX,'Style','PushButton','String','','Position',[210 iY 20 20],'BackgroundColor',cButtonOff,'Callback',{@fToggleXFig,8});
-    pumT9(1)  = uicontrol(bgTabX,'Style','PopupMenu','String',X.Data.Beam,'Value',1,'Position',[240 iY 150 20],'Callback',{@fPlotSetBeam,8});
-    edtT9(1)  = uicontrol(bgTabX,'Style','Edit','String','0','Position',[425 iY 40 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,8});
-    edtT9(2)  = uicontrol(bgTabX,'Style','Edit','String','0','Position',[470 iY 40 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,8});
+    btnFig(8) = uicontrol(bgTabX(1),'Style','PushButton','String','','Position',[210 iY 20 20],'BackgroundColor',cButtonOff,'Callback',{@fToggleXFig,8});
+    pumT9(1)  = uicontrol(bgTabX(1),'Style','PopupMenu','String',X.Data.Beam,'Value',1,'Position',[240 iY 150 20],'Callback',{@fPlotSetBeam,8});
+    edtT9(1)  = uicontrol(bgTabX(1),'Style','Edit','String','0','Position',[425 iY 40 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,8});
+    edtT9(2)  = uicontrol(bgTabX(1),'Style','Edit','String','0','Position',[470 iY 40 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,8});
 
     % Beam Slip
     iY = iY - 25;
 
-    uicontrol(bgTabX,'Style','Text','String','#10','Position',[5 iY+1 30 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-    uicontrol(bgTabX,'Style','Text','String','Beam Slip','Position',[40 iY+1 160 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-    uicontrol(bgTabX,'Style','Text','String','T =','Position',[395 iY+1 25 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    uicontrol(bgTabX(1),'Style','Text','String','#10','Position',[5 iY+1 30 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    uicontrol(bgTabX(1),'Style','Text','String','Beam Slip','Position',[40 iY+1 160 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    uicontrol(bgTabX(1),'Style','Text','String','T =','Position',[395 iY+1 25 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
 
-    btnFig(9) = uicontrol(bgTabX,'Style','PushButton','String','','Position',[210 iY 20 20],'BackgroundColor',cButtonOff,'Callback',{@fToggleXFig,9});
-    pumT10(1) = uicontrol(bgTabX,'Style','PopupMenu','String',X.Data.Beam,'Value',1,'Position',[240 iY 150 20],'Callback',{@fPlotSetBeam,9});
-    edtT10(1) = uicontrol(bgTabX,'Style','Edit','String','0','Position',[425 iY 40 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,9});
-    edtT10(2) = uicontrol(bgTabX,'Style','Edit','String','0','Position',[470 iY 40 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,9});
+    btnFig(9) = uicontrol(bgTabX(1),'Style','PushButton','String','','Position',[210 iY 20 20],'BackgroundColor',cButtonOff,'Callback',{@fToggleXFig,9});
+    pumT10(1) = uicontrol(bgTabX(1),'Style','PopupMenu','String',X.Data.Beam,'Value',1,'Position',[240 iY 150 20],'Callback',{@fPlotSetBeam,9});
+    edtT10(1) = uicontrol(bgTabX(1),'Style','Edit','String','0','Position',[425 iY 40 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,9});
+    edtT10(2) = uicontrol(bgTabX(1),'Style','Edit','String','0','Position',[470 iY 40 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,9});
 
-    set(hTabGroup,'SelectedTab',hTabX);
+    
+    %  GUI Tools
+    % ===========
+
+    iY = 115;
+    hTabX(2)  = uitab(hTabGroup,'Title','GUI Tools');
+    bgTabX(2) = uibuttongroup(hTabX(2),'Title','','BorderType','None','Units','Pixels','Position',[3 3 514 120],'BackgroundColor',cBackGround);
+        
+    % Track Density
+    iY = iY - 25;
+    uicontrol(bgTabX(2),'Style','Text','String','#11','Position',[5 iY+1 30 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    uicontrol(bgTabX(2),'Style','Text','String','Track Density','Position',[40 iY+1 160 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    btnFig(10) = uicontrol(bgTabX(2),'Style','PushButton','String','','Position',[210 iY 20 20],'BackgroundColor',cButtonOff,'Callback',{@fToggleXFig,10});
+
+    set(hTabGroup,'SelectedTab',hTabX(2));
     
     
     %
@@ -936,20 +949,24 @@ function Analyse2D
                     case 7
                         sStart = get(edtT8(1),'String');
                         sEnd   = get(edtT8(2),'String');
-                        figure(X.Plot(7).Figure); clf;
+                        figure(X.Plot(f).Figure); clf;
                         fPlotESigmaMean(oData,X.Plot(f).Data,'Start',sStart,'End',sEnd,'HideDump','Yes','IsSubPlot','No','AutoResize','Off');
                     
                     case 8
                         sStart = get(edtT9(1),'String');
                         sEnd   = get(edtT9(2),'String');
-                        figure(X.Plot(8).Figure); clf;
+                        figure(X.Plot(f).Figure); clf;
                         fPlotESigmaMeanRatio(oData,X.Data.Witness{1},'Start',sStart,'End',sEnd,'HideDump','Yes','IsSubPlot','No','AutoResize','Off');
 
                     case 9
                         sStart = get(edtT10(1),'String');
                         sEnd   = get(edtT10(2),'String');
-                        figure(X.Plot(9).Figure); clf;
+                        figure(X.Plot(f).Figure); clf;
                         fPlotBeamSlip(oData,X.Data.Witness{1},'Start',sStart,'End',sEnd,'HideDump','Yes','IsSubPlot','No','AutoResize','Off');
+
+                    case 10
+                        figure(X.Plot(f).Figure); clf;
+                        uiTrackDensity(oData);
 
                 end % switch
                 
