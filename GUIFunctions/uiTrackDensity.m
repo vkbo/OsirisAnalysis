@@ -6,39 +6,45 @@
 
 function uiTrackDensity(oData)
 
+    %
+    %  Data Struct
+    % *************
+    %
+    
+    X.Size  = 30.0;              % Main window width in mm
+    X.Lim   = [0.0 30.0];        % Initial window limits in mm
+    X.Range = [0 1];             % Xi range of dataset
+    X.Field = struct();          % Container for field data
+    X.Name  = oData.Config.Name; % Name of dataset
 
-    % Data
+    X.Sets.E1 = {};              % Container for tracking data for EField 1
+    X.Sets.E2 = {};              % Container for tracking data for EField 2
+    X.Sets.WB = {};              % Container for tracking data for witness beam
+    X.Sets.DB = {};              % Container for tracking data for drive beam
     
-    X.Size  = 30.0;
-    X.Lim   = [0.0 30.0];
-    X.Range = [0 1];
-    X.Field = struct();
-    X.Track.Name = '';
-    X.Track.Source = 1;
-    X.Track.Width = 0.5;
-    X.Track.Pos   = X.Track.Width/2;
-    X.Track.Anchor = X.Track.Pos;
-    X.Limits(1) = fStringToDump(oData,'Start');
-    X.Limits(2) = fStringToDump(oData,'PStart');
-    X.Limits(3) = fStringToDump(oData,'PEnd');
-    X.Limits(4) = fStringToDump(oData,'End');
-    X.Dump = X.Limits(2);
+    % Time Limits
+    X.Limits(1) = fStringToDump(oData,'Start');  % Start of simulation
+    X.Limits(2) = fStringToDump(oData,'PStart'); % Start of plasma
+    X.Limits(3) = fStringToDump(oData,'PEnd');   % End of plasma
+    X.Limits(4) = fStringToDump(oData,'End');    % End of simulation
+    X.Dump      = X.Limits(2);
     
-    X.Track.Time = [X.Limits(2) X.Limits(3)];
-    X.Track.Data = [];
+    % Tracking Parameters
+    X.Track.Width  = 0.5;             % Width of window for polyfit
+    X.Track.Pos    = X.Track.Width/2; % Initial position for tracking
+    
+    X.Track.Time     = [X.Limits(2) X.Limits(3)];
+    X.Track.Data     = [];
     X.Track.Tracking = 0;
     
-    X.Track.Point = 1;
-    X.Track.PolyFit = 3;
-    
-    X.Sets.E1 = {};
-    X.Sets.E2 = {};
-    X.Sets.EB = {};
-    X.Sets.PB = {};
-    
-    X.Values.Point = {'Zero','Minimum','Maximum'};
+    % Tracking Settings
+    X.Values.Point   = {'Zero','Minimum','Maximum'};
     X.Values.PolyFit = {'PolyFit 1','PolyFit 2','PolyFit 3','PolyFit 4','PolyFit 5'};
-    X.Values.Source = {'EField 1','EField 2','EBeam','PBeam'};
+    X.Values.Source  = {'EField 1','EField 2','Witness Beam','Drive Beam'};
+
+    X.Track.Point   = 3; % Default to maximum
+    X.Track.PolyFit = 3; % Default to PolyFit3
+    X.Track.Source  = 1; % Default to EField 1
 
     % Get Time Axis
     iDumps  = oData.Elements.FLD.e1.Info.Files-1;
@@ -47,22 +53,29 @@ function uiTrackDensity(oData)
     dLFac   = oData.Config.Variables.Convert.SI.LengthFac;
     X.TAxis = (linspace(0.0, dTFac*iDumps, iDumps+1)-dPStart)*dLFac;
     
-    % Figure
+
+    %
+    %  Figure
+    % ********
+    %
+    
     fMain = gcf; clf;
     aFPos = get(fMain, 'Position');
     iH    = 770;
     
-    % Set figure properties
+    % Set Figure Properties
     set(fMain, 'Units', 'Pixels');
+    set(fMain, 'MenuBar', 'None');
     set(fMain, 'Position', [aFPos(1:2) 915 iH]);
     set(fMain, 'Name', 'Track Density');
     
-    % Density Class
+    % Field and Density Classes
     oFieldE1 = [];
     oFieldE2 = [];
     oDensEB  = [];
     oDensPB  = [];
     
+    % Load Initial Field
     fLoadField();
 
     X.Range = oFieldE1.AxisRange(1:2);
@@ -72,8 +85,10 @@ function uiTrackDensity(oData)
     end % if
 
 
+    %
     %  Controls
     % **********
+    %
     
     % Axes
     axMain   = axes('Units','Pixels','Position',[340 iH-290 550 230]);
@@ -81,62 +96,66 @@ function uiTrackDensity(oData)
     axResult = axes('Units','Pixels','Position',[450 iH-700 400 250]);
     
     uicontrol('Style','Text','String','Track Density','FontSize',20,'Position',[20 iH-50 200 35],'HorizontalAlignment','Left');
+
+    % Main Controls
+
+    bgCtrl = uibuttongroup('Title','Controls','Units','Pixels','Position',[20 iH-380 250 330]);
     
-    % Controls
+    uicontrol(bgCtrl,'Style','Text','String',X.Name,'FontSize',18,'Position',[10 285 225 25],'ForegroundColor',[1.00 1.00 0.00],'BackgroundColor',[0.80 0.80 0.80]); 
 
-    bgCtrl = uibuttongroup('Title','Controls','Units','Pixels','Position',[20 iH-240 250 190]);
+    uicontrol(bgCtrl,'Style','Text','String','Track Start','Position',[10 255 100 20],'HorizontalAlignment','Left');
+    uicontrol(bgCtrl,'Style','Text','String','Track Stop', 'Position',[10 230 100 20],'HorizontalAlignment','Left');
+    uicontrol(bgCtrl,'Style','Text','String','Source Data','Position',[10 205 100 20],'HorizontalAlignment','Left');
+    uicontrol(bgCtrl,'Style','Text','String','Fit Method', 'Position',[10 180 100 20],'HorizontalAlignment','Left');
+    uicontrol(bgCtrl,'Style','Text','String','Track Point','Position',[10 155 100 20],'HorizontalAlignment','Left');
+    uicontrol(bgCtrl,'Style','Text','String','Track Width','Position',[10 130 100 20],'HorizontalAlignment','Left');
+
+    uicontrol(bgCtrl,'Style','PushButton','String','<S','Position',[175 260 30 20],'Callback',{@fJump, 1});
+    uicontrol(bgCtrl,'Style','PushButton','String','<P','Position',[205 260 30 20],'Callback',{@fJump, 2});
+    uicontrol(bgCtrl,'Style','PushButton','String','P>','Position',[175 235 30 20],'Callback',{@fJump, 3});
+    uicontrol(bgCtrl,'Style','PushButton','String','S>','Position',[205 235 30 20],'Callback',{@fJump, 4});
+    uicontrol(bgCtrl,'Style','Text',      'String','mm','Position',[175 130 50 20],'HorizontalAlignment','Left');
+
+    edtStart   = uicontrol(bgCtrl,'Style','Edit',     'String',X.Track.Time(1), 'Position',[115 260  55 20],'Callback',{@fSetStart});
+    edtStop    = uicontrol(bgCtrl,'Style','Edit',     'String',X.Track.Time(2), 'Position',[115 235  55 20],'Callback',{@fSetStop});
+    pumSource  = uicontrol(bgCtrl,'Style','PopupMenu','String',X.Values.Source, 'Position',[115 210 120 20],'Callback',{@fSetSource});
+    pumPolyFit = uicontrol(bgCtrl,'Style','PopupMenu','String',X.Values.PolyFit,'Position',[115 185 120 20],'Callback',{@fTrackPolyFit});
+    pumPoint   = uicontrol(bgCtrl,'Style','PopupMenu','String',X.Values.Point,  'Position',[115 160 120 20],'Callback',{@fTrackPoint});
+    edtWidth   = uicontrol(bgCtrl,'Style','Edit',     'String',X.Track.Width,   'Position',[115 135  55 20],'Callback',{@fSetWidth});
     
-    uicontrol(bgCtrl,'Style','Text','String','Track Start','Position',[10 140 100 20],'HorizontalAlignment','Left');
-    uicontrol(bgCtrl,'Style','Text','String','Track Stop', 'Position',[10 115 100 20],'HorizontalAlignment','Left');
-    uicontrol(bgCtrl,'Style','Text','String','Source Data','Position',[10  90 100 20],'HorizontalAlignment','Left');
-    uicontrol(bgCtrl,'Style','Text','String','Fit Method', 'Position',[10  65 100 20],'HorizontalAlignment','Left');
-    uicontrol(bgCtrl,'Style','Text','String','Track Point','Position',[10  40 100 20],'HorizontalAlignment','Left');
+    % Default Values
+    pumSource.Value  = X.Track.Source;
+    pumPolyFit.Value = X.Track.PolyFit;
+    pumPoint.Value   = X.Track.Point;
 
-    uicontrol(bgCtrl,'Style','PushButton','String','<S','Position',[175 145 30 20],'Callback',{@fJump, 1});
-    uicontrol(bgCtrl,'Style','PushButton','String','<P','Position',[205 145 30 20],'Callback',{@fJump, 2});
-    uicontrol(bgCtrl,'Style','PushButton','String','P>','Position',[175 120 30 20],'Callback',{@fJump, 3});
-    uicontrol(bgCtrl,'Style','PushButton','String','S>','Position',[205 120 30 20],'Callback',{@fJump, 4});
+    % Control Buttons
+    btnTrack   = uicontrol(bgCtrl,'Style','PushButton','String','Start Tracking','Position',[ 10 80 225 25],'Callback',{@fStartTrack});
+    btnSave    = uicontrol(bgCtrl,'Style','PushButton','String','Save Data',     'Position',[ 10 50 110 25],'Callback',{@fSaveData});
+    btnPlot    = uicontrol(bgCtrl,'Style','PushButton','String','Large Plot',    'Position',[125 50 110 25],'Callback',{@fLargePlot});
+    btnReset   = uicontrol(bgCtrl,'Style','PushButton','String','Reset All Data','Position',[ 10 10 225 25],'Callback',{@fResetTrack});
 
-    edtStart   = uicontrol(bgCtrl,'Style','Edit',     'String',X.Track.Time(1),           'Position',[115 145  55 20],'Callback',{@fSetStart});
-    edtStop    = uicontrol(bgCtrl,'Style','Edit',     'String',X.Track.Time(2),           'Position',[115 120  55 20],'Callback',{@fSetStop});
-    pumSource  = uicontrol(bgCtrl,'Style','PopupMenu','String',X.Values.Source, 'Value',1,'Position',[115  95 120 20],'Callback',{@fSetSource});
-    pumPolyFit = uicontrol(bgCtrl,'Style','PopupMenu','String',X.Values.PolyFit,'Value',3,'Position',[115  70 120 20],'Callback',{@fTrackPolyFit});
-    pumPoint   = uicontrol(bgCtrl,'Style','PopupMenu','String',X.Values.Point,  'Value',1,'Position',[115  45 120 20],'Callback',{@fTrackPoint});
-
-    btnTrack   = uicontrol(bgCtrl,'Style','PushButton','String','Start Tracking','Position',[ 10 10 120 25],'Callback',{@fStartTrack});
-    btnReset   = uicontrol(bgCtrl,'Style','PushButton','String','Reset',         'Position',[135 10 100 25],'Callback',{@fResetTrack});
-
-    % Tracking Sets
-    
-    bgSets = uibuttongroup('Title','Tracking Data','Units','Pixels','Position',[20 iH-380 250 140]);
-    
-    lstSets   = uicontrol(bgSets,'Style','Listbox','Position',[10 35 225 80],'Callback',{@fTrackSets});
-    btnLoad   = uicontrol(bgSets,'Style','PushButton','String','Load',  'Position',[ 110 10 60 20],'Callback',{@fSetLoad});
-    btnDelete = uicontrol(bgSets,'Style','PushButton','String','Delete','Position',[ 175 10 60 20],'Callback',{@fSetLoad});
-
-    
-    dMax = X.Range(2)-X.Size;
+    % Sliders
     lblMain  = uicontrol('Style','Text','String','Window','Position',[280 iH-365 60 20],'HorizontalAlignment','Left');
     sldMain  = uicontrol('Style','Slider','Position',[340 iH-360 550 15],'Callback',{@fMainPos});
-               set(sldMain, 'Min',        0.0);
-               set(sldMain, 'Max',        dMax);
-               set(sldMain, 'Value',      0.0);
-               set(sldMain, 'SliderStep', [0.02 0.2]);
+               sldMain.Min        = 0.0;
+               sldMain.Max        = X.Range(2)-X.Size;
+               sldMain.Value      = 0.0;
+               sldMain.SliderStep = [0.02 0.2];
 
     lblTrack = uicontrol('Style','Text','String','Tracking','Position',[280 iH-385 60 20],'HorizontalAlignment','Left');
     sldTrack = uicontrol('Style','Slider','Position',[340 iH-380 550 15],'Callback',{@fTrackPos});
-               set(sldTrack, 'Min',        X.Lim(1));
-               set(sldTrack, 'Max',        X.Lim(2));
-               set(sldTrack, 'Value',      X.Lim(1));
-               set(sldTrack, 'SliderStep', [0.002 0.02]);
+               sldTrack.Min        = X.Lim(1);
+               sldTrack.Max        = X.Lim(2);
+               sldTrack.Value      = X.Lim(1);
+               sldTrack.SliderStep = [0.002 0.02];
     
     iWidth   = X.Track.Time(2)-X.Track.Time(1);
     lblTime  = uicontrol('Style','Text','String','Time','Position',[20 iH-415 60 20],'HorizontalAlignment','Left');
     sldTime  = uicontrol('Style','Slider','Position',[80 iH-410 810 15],'Callback',{@fTrackTime});
-               set(sldTime, 'Min',        X.Track.Time(1));
-               set(sldTime, 'Max',        X.Track.Time(2));
-               set(sldTime, 'Value',      X.Track.Time(1));
-               set(sldTime, 'SliderStep', [1/iWidth 1/iWidth]);
+               sldTime.Min        = X.Track.Time(1);
+               sldTime.Max        = X.Track.Time(2);
+               sldTime.Value      = X.Track.Time(1);
+               sldTime.SliderStep = [1/iWidth 1/iWidth];
     
     % Init
 
@@ -203,12 +222,18 @@ function uiTrackDensity(oData)
             case 2
                 X.Sets.E2 = X.Track;
             case 3
-                X.Sets.EB = X.Track;
+                X.Sets.WB = X.Track;
             case 4
-                X.Sets.PB = X.Track;
+                X.Sets.DB = X.Track;
         end % Switch
         
-        fRefreshResult();
+        fRefreshResult(0);
+        
+    end % function
+
+    function fLargePlot(~,~)
+        
+        fRefreshResult(1);
         
     end % function
 
@@ -217,15 +242,20 @@ function uiTrackDensity(oData)
         X.Track.Data = [];
         X.Track.Tracking = 0;
         X.Track.Width = 0.5;
-        %X.Track.Pos = X.Track.Width/2;
-        %X.Track.Anchor = X.Track.Pos;
+        X.Track.Pos = X.Track.Width/2;
+        X.Track.Anchor = X.Track.Pos;
 
         X.Dump = X.Track.Time(1);
         
-        %sldMain.Value  = sldMain.Min;
-        %sldTrack.Value = sldTrack.Min;
-        sldTime.Value = X.Track.Time(1);
-        
+        sldMain.Value  = sldMain.Min;
+        sldTrack.Value = sldTrack.Min;
+        sldTime.Value  = X.Track.Time(1);
+
+        X.Sets.E1 = {};
+        X.Sets.E2 = {};
+        X.Sets.WB = {};
+        X.Sets.DB = {};
+
         fLoadField();
         fRefreshMain();
         fRefreshTrack();
@@ -263,7 +293,6 @@ function uiTrackDensity(oData)
         X.Track.PolyFit = uiSrc.Value;
         fRefreshMain();
         fRefreshTrack();
-        drawnow;
 
     end % function
 
@@ -306,6 +335,8 @@ function uiTrackDensity(oData)
     function fSetSource(uiSrc,~)
 
         X.Track.Source = uiSrc.Value;
+        X.Track.Tracking = 0;
+        sldTime.Value = sldTime.Min;
         fTrackTime(sldTime,0);
 
     end % function
@@ -328,6 +359,20 @@ function uiTrackDensity(oData)
                 edtStop.String = iTime;
                 fSetStop(edtStop,0);
         end % switch
+        
+    end % function
+
+    function fSetWidth(uiSrc,~)
+        
+        dWidth = abs(str2double(uiSrc.String));
+        if dWidth == 0
+            dWidth = X.Track.Width;
+        end % if
+        uiSrc.Value = dWidth;
+        X.Track.Width = dWidth;
+        
+        fRefreshMain();
+        fRefreshTrack();
         
     end % function
 
@@ -388,11 +433,11 @@ function uiTrackDensity(oData)
         
         % Beams
         
-        aEBeam = abs(X.Field.EB.Data);
-        aPBeam = abs(X.Field.PB.Data);
+        aWBeam = abs(X.Field.EB.Data);
+        aDBeam = abs(X.Field.PB.Data);
         
-        aEBeam = dYMax*aEBeam/max(aEBeam)+dYMin;
-        aPBeam = dYMax*aPBeam/max(aPBeam)+dYMin;
+        aWBeam = dYMax*aWBeam/max(aWBeam)+dYMin;
+        aDBeam = dYMax*aDBeam/max(aDBeam)+dYMin;
         
         
         axes(axMain); cla;
@@ -403,8 +448,8 @@ function uiTrackDensity(oData)
                   'EdgeColor',[0.5 0.5 0.5]);
         
         plot(aAxis, aLine*dFac, 'Color', aCol);
-        plot(aAxis, aEBeam,     'Color', [0.7 0.0 0.0]);
-        plot(aAxis, aPBeam,     'Color', [0.0 0.0 0.7]);
+        plot(aAxis, aWBeam,     'Color', [0.7 0.0 0.0]);
+        plot(aAxis, aDBeam,     'Color', [0.0 0.0 0.7]);
 
         hold off;
 
@@ -511,7 +556,7 @@ function uiTrackDensity(oData)
         
     end % function
 
-    function fRefreshResult()
+    function fRefreshResult(iNewFig)
         
         aAxis = X.TAxis(X.Track.Time(1):X.Track.Time(2));
         
@@ -530,16 +575,16 @@ function uiTrackDensity(oData)
                 dTMax = dMax;
             end % if
         end % if
-        if ~isempty(X.Sets.EB)
-            aDataEB = (X.Sets.EB.Data - X.Sets.EB.Data(1))*1e-3;
-            dMax = max(abs(aDataEB));
+        if ~isempty(X.Sets.WB)
+            aDataWB = (X.Sets.WB.Data - X.Sets.WB.Data(1))*1e-3;
+            dMax = max(abs(aDataWB));
             if dMax > dTMax
                 dTMax = dMax;
             end % if
         end % if
-        if ~isempty(X.Sets.PB)
-            aDataPB = (X.Sets.PB.Data - X.Sets.PB.Data(1))*1e-3;
-            dMax = max(abs(aDataPB));
+        if ~isempty(X.Sets.DB)
+            aDataDB = (X.Sets.DB.Data - X.Sets.DB.Data(1))*1e-3;
+            dMax = max(abs(aDataDB));
             if dMax > dTMax
                 dTMax = dMax;
             end % if
@@ -547,25 +592,63 @@ function uiTrackDensity(oData)
         [dValue, sUnit] = fAutoScale(dTMax, 'm');
         dFac = dValue/dTMax;
         
-        axes(axResult); cla;
+        if iNewFig == 0
+            axes(axResult);
+            cla;
+        else
+            figure('IntegerHandle','Off');
+        end % if;
+        
+        stLegend = {};
+        iPlot = 1;
+
         hold on;
         if ~isempty(X.Sets.E1)
-            plot(aAxis,aDataE1*dFac);
+            plot(aAxis,aDataE1*dFac,'Color',[0.7 0.7 0.0]);
+            if iNewFig == 0
+                stLegend{iPlot} = 'E_{z}';
+            else
+                stLegend{iPlot} = 'Longitudinal EField';
+            end % if
+            iPlot = iPlot+1;
         end % for
         if ~isempty(X.Sets.E2)
-            plot(aAxis,aDataE2*dFac);
+            plot(aAxis,aDataE2*dFac,'Color',[0.0 0.7 0.0]);
+            if iNewFig == 0
+                stLegend{iPlot} = 'E_{r}';
+            else
+                stLegend{iPlot} = 'Radial EField';
+            end % if
+            iPlot = iPlot+1;
         end % for
-        if ~isempty(X.Sets.EB)
-            plot(aAxis,aDataEB*dFac);
+        if ~isempty(X.Sets.WB)
+            plot(aAxis,aDataWB*dFac,'Color',[0.7 0.0 0.0]);
+            if iNewFig == 0
+                stLegend{iPlot} = 'WBeam';
+            else
+                stLegend{iPlot} = 'Witness Beam';
+            end % if
+            iPlot = iPlot+1;
         end % for
-        if ~isempty(X.Sets.PB)
-            plot(aAxis,aDataPB*dFac);
+        if ~isempty(X.Sets.DB)
+            plot(aAxis,aDataDB*dFac,'Color',[0.0 0.0 0.7]);
+            if iNewFig == 0
+                stLegend{iPlot} = 'DBeam';
+            else
+                stLegend{iPlot} = 'Drive Beam';
+            end % if
+            iPlot = iPlot+1;
         end % for
         hold off;
         
         xlim([aAxis(1) aAxis(end)]);
+        legend(stLegend);
 
-        title('Tracking Result');
+        if iNewFig == 0
+            title('Tracking Result');
+        else
+            title(sprintf('Tracking Result for %s',X.Name));
+        end % if
         xlabel('z [m]');
         ylabel(sprintf('\\xi [%s]',sUnit));
         
