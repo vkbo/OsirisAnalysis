@@ -31,7 +31,7 @@ function Analyse2D
     
     % Data
     
-    iXFig = 9;
+    iXFig = 10;
     oData = OsirisData('Silent','Yes');
 
     X.DataSet     = 0;
@@ -258,6 +258,11 @@ function Analyse2D
     hTabX(2)  = uitab(hTabGroup,'Title','GUI Tools');
     bgTabX(2) = uibuttongroup(hTabX(2),'Title','','BorderType','None','Units','Pixels','Position',[3 3 514 120],'BackgroundColor',cBackGround);
         
+    % Track Density
+    iY = iY - 25;
+    uicontrol(bgTabX(2),'Style','Text','String','#11','Position',[5 iY+1 30 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    uicontrol(bgTabX(2),'Style','Text','String','Track Density','Position',[40 iY+1 160 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    btnFig(10) = uicontrol(bgTabX(2),'Style','PushButton','String','','Position',[210 iY 20 20],'BackgroundColor',cButtonOff,'Callback',{@fToggleXFig,10});
 
     set(hTabGroup,'SelectedTab',hTabX(2));
     
@@ -944,20 +949,24 @@ function Analyse2D
                     case 7
                         sStart = get(edtT8(1),'String');
                         sEnd   = get(edtT8(2),'String');
-                        figure(X.Plot(7).Figure); clf;
+                        figure(X.Plot(f).Figure); clf;
                         fPlotESigmaMean(oData,X.Plot(f).Data,'Start',sStart,'End',sEnd,'HideDump','Yes','IsSubPlot','No','AutoResize','Off');
                     
                     case 8
                         sStart = get(edtT9(1),'String');
                         sEnd   = get(edtT9(2),'String');
-                        figure(X.Plot(8).Figure); clf;
+                        figure(X.Plot(f).Figure); clf;
                         fPlotESigmaMeanRatio(oData,X.Data.Witness{1},'Start',sStart,'End',sEnd,'HideDump','Yes','IsSubPlot','No','AutoResize','Off');
 
                     case 9
                         sStart = get(edtT10(1),'String');
                         sEnd   = get(edtT10(2),'String');
-                        figure(X.Plot(9).Figure); clf;
+                        figure(X.Plot(f).Figure); clf;
                         fPlotBeamSlip(oData,X.Data.Witness{1},'Start',sStart,'End',sEnd,'HideDump','Yes','IsSubPlot','No','AutoResize','Off');
+
+                    case 10
+                        figure(X.Plot(f).Figure); clf;
+                        uiTrackDensity(oData);
 
                 end % switch
                 
