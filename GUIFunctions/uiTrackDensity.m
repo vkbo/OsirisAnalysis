@@ -604,7 +604,7 @@ function uiTrackDensity(oData)
 
         hold on;
         if ~isempty(X.Sets.E1)
-            plot(aAxis,aDataE1*dFac,'Color',[0.7 0.7 0.0]);
+            plot(aAxis,aDataE1*dFac,'Color',[0.0 0.7 0.0]);
             if iNewFig == 0
                 stLegend{iPlot} = 'E_{z}';
             else
@@ -613,7 +613,7 @@ function uiTrackDensity(oData)
             iPlot = iPlot+1;
         end % for
         if ~isempty(X.Sets.E2)
-            plot(aAxis,aDataE2*dFac,'Color',[0.0 0.7 0.0]);
+            plot(aAxis,aDataE2*dFac,'Color',[0.7 0.7 0.0]);
             if iNewFig == 0
                 stLegend{iPlot} = 'E_{r}';
             else
