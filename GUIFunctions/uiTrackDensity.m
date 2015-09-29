@@ -650,7 +650,7 @@ function uiTrackDensity(oData)
             title(sprintf('Tracking Result for %s',X.Name));
         end % if
         xlabel('z [m]');
-        ylabel(sprintf('\\xi [%s]',sUnit));
+        ylabel(sprintf('\\Delta\\xi [%s]',sUnit));
         
     end % function
 

@@ -402,6 +402,7 @@ function Analyse2D
         X.DataSet  = iSet;
 
         X.Data.Name       = oData.Config.Name;
+        X.Data.Path       = oData.Config.Path;
         X.Data.Beam       = oData.Config.Variables.Species.Beam;
         X.Data.Plasma     = oData.Config.Variables.Species.Plasma;
         X.Data.Species    = [X.Data.Beam; X.Data.Plasma];
@@ -413,7 +414,7 @@ function Analyse2D
         X.Data.Coords     = oData.Config.Variables.Simulation.Coordinates;
 
         % Output
-        fOut(sprintf('Loading %s',X.Data.Name),1);
+        fOut(sprintf('Loading %s',X.Data.Path),1);
         
         % Geometry
         if strcmpi(X.Data.Coords, 'cylindrical')
