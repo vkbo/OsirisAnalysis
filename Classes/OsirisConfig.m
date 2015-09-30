@@ -184,18 +184,29 @@ classdef OsirisConfig
                 sLine   = aLines{i};
                 iName   = 0;         % 0 for dataset name, 1 between { and }
                 sName   = '';        % The dataset name
+                aBreaks = [];        % Array for variable breaks
                 iComma  = 1;         % Default first comma (actually start of string)
-                iPar    = 0;         % 0 for outside of paranteses, 1 inside 
+                iPar    = 0;         % 0 for outside of paranteses, 1 inside
+                iString = 0;         % 0 for outside of string, 1 inside
 
                 for c=1:length(sLine)
                     
+                    % Inside/outside string
+                    if sLine(c) == '"'
+                        if iString
+                            iString = 0;
+                        else
+                            iString = 1;
+                        end % if
+                    end % if
+
                     % Inside paranteses 
-                    if sLine(c) == '(' 
+                    if sLine(c) == '(' && iString == 0
                         iPar = 1;
                     end % if
 
                     % Outside paranteses
-                    if sLine(c) == ')'
+                    if sLine(c) == ')' && iString == 0
                         iPar = 0;
                     end % if
 
@@ -213,10 +224,10 @@ classdef OsirisConfig
                     % Figure out which commas separate variables.
                     % That is, the last one before an '='
                     if iName == 1
-                        if sLine(c) == ',' && iPar == 0
+                        if sLine(c) == ',' && iPar == 0 && iString == 0
                             iComma = c;
                         end % if
-                        if sLine(c) == '='
+                        if sLine(c) == '=' && iString == 0
                             if iComma > 1
                                 aBreaks(end+1) = iComma;
                             end % if
@@ -225,51 +236,55 @@ classdef OsirisConfig
 
                 end % for
                 
-
                 % Separate labels for data, and store everything
                 aBreaks(end+1) = c;
                 for k=2:length(aBreaks)
   
                     sString = sLine(aBreaks(k-1)+1:aBreaks(k));
-                    aString = strsplit(sString,'=');
+                    aSplit  = strfind(sString,'=');
+                    sLabel  = 'None';
+                    sValue  = '';
                     
-                    aConfig(end+1,1) = {sName};
-                    
-                    if ~isempty(aString)
-                        sLabel = aString{1};
-                        aLabel = strsplit(sLabel,'(');
-
-                        aConfig(end,2) = aLabel(1);
-                        aConfig{end,3} = 0;
-                        aConfig{end,4} = 0;
-                        aConfig{end,5} = 0;
-                        if length(aLabel) > 1
-                            sNum1 = strrep(aLabel{2},')','');
-                            aNum1 = strsplit(sNum1,':');
-
-                            aConfig{end,3} = str2num(aNum1{1});
-                            if length(aNum1) > 1
-                                sNum2 = aNum1{2};
-                                aNum2 = strsplit(sNum2,',');
-
-                                aConfig{end,4} = str2num(aNum2{1});
-                                if length(aNum2) > 1
-                                    aConfig{end,5} = str2num(aNum2{2});
-                                end % if
-                            end % if
-                        end % if
-                            
-                        if length(aString) > 1
-                            sValue = aString{2};
-                            if sValue(end) == ','
-                                sValue = sValue(1:end-1);
-                            end % if
-                            aConfig{end,6} = sValue;
+                    if ~isempty(aSplit)
+                        if aSplit(1) > 1
+                            sLabel = sString(1:aSplit(1)-1);
+                            sValue = sString(aSplit(1)+1:end);
                         end % if
                     end % if
+                    
+                    aLabel = strsplit(sLabel,'(');
+
+                    aConfig{end+1,1} = sName;
+                    aConfig(end,  2) = aLabel(1);
+                    aConfig{end,  3} = 0;
+                    aConfig{end,  4} = 0;
+                    aConfig{end,  5} = 0;
+                    
+                    if length(aLabel) > 1
+                        sNum1 = strrep(aLabel{2},')','');
+                        aNum1 = strsplit(sNum1,':');
+
+                        aConfig{end,3} = str2num(aNum1{1});
+                        if length(aNum1) > 1
+                            sNum2 = aNum1{2};
+                            aNum2 = strsplit(sNum2,',');
+
+                            aConfig{end,4} = str2num(aNum2{1});
+                            if length(aNum2) > 1
+                                aConfig{end,5} = str2num(aNum2{2});
+                            end % if
+                        end % if
+                    end % if
+
+                    if ~isempty(sValue)
+                        if sValue(end) == ','
+                            sValue = sValue(1:end-1);
+                        end % if
+                    end % if
+                    aConfig{end,6} = sValue;
+
                 end % for
     
-                
                 % Find species
                 [iRows,~] = size(aConfig);
                 sSpecies = '';
@@ -284,7 +299,7 @@ classdef OsirisConfig
                     aConfig{k,7} = sSpecies;
 
                 end % for
-
+                
             end % for
             
             obj.Raw = aConfig;
