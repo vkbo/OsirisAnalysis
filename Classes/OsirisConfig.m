@@ -149,6 +149,7 @@ classdef OsirisConfig
 
                 obj = obj.fGetSimulationVariables();
                 obj = obj.fGetSpecies();
+                obj = obj.fGetFieldVariables();
                 obj = obj.fGetPlasmaVariables();
                 obj = obj.fGetBeamVariables();
                 obj = obj.fGetFields();
@@ -306,15 +307,19 @@ classdef OsirisConfig
             
         end % function
 
-        function sReturn = fExtractRaw(obj, sSpecies, sName, sLabel, iIndex)
+        function sReturn = fExtractRaw(obj, sSpecies, sName, sLabel, iIndex, sDefault)
             
             if nargin < 5
                 iIndex = 0;
             end % if
+
+            if nargin < 6
+                sDefault = 0;
+            end % if
             
             [iRows,~] = size(obj.Raw);
             
-            sReturn = '';
+            sReturn = sDefault;
             
             for i=1:iRows
                 if   strcmpi(obj.Raw{i,1},sName)    ...
@@ -360,6 +365,20 @@ classdef OsirisConfig
                 for i=1:length(aValue)
                     aReturn(i) = str2num(aValue{i});
                 end % for
+            end % if
+            
+        end % function
+
+        function dReturn = fExtractSingle(obj, sSpecies, sName, sLabel, dReturn, iIndex)
+            
+            if nargin < 6
+                iIndex = 0;
+            end % if
+            
+            aValue = obj.fExtractVariables(sSpecies, sName, sLabel, iIndex);
+            
+            if ~isempty(aValue)
+                dReturn = str2num(aValue{1});
             end % if
             
         end % function
@@ -481,7 +500,7 @@ classdef OsirisConfig
 
         end % function
 
-        function obj = fGetPlasmaVariables(obj)
+        function obj = fGetFieldVariables(obj)
             
             % Retrieving constants
 
@@ -493,13 +512,11 @@ classdef OsirisConfig
             dMu0        = obj.Variables.Constants.VacuumPermeability;
             
 
-            % Calculating plasma variables
+            % Calculating normalised plasma variables derived from N0
 
             dN0       = obj.N0;
             dOmegaP   = sqrt((dN0 * dECharge^2) / (dEMass * dEpsilon0));
             dLambdaP  = 2*pi * dC / dOmegaP;
-
-            % Setting plasma variables
             
             obj.Variables.Plasma.N0          = dN0;
             obj.Variables.Plasma.NormOmegaP  = dOmegaP;
@@ -588,112 +605,148 @@ classdef OsirisConfig
             obj.Variables.Convert.CGS.J2Fac  = aJFacCGS(2);
             obj.Variables.Convert.CGS.J3Fac  = aJFacCGS(3);
 
-            % Setting plasma profile
+        end % function
 
-            aFX1 = obj.fExtractVarNum('PlasmaElectrons','profile','fx',1);
-            aX1  = obj.fExtractVarNum('PlasmaElectrons','profile','x' ,1);
-            aFX2 = obj.fExtractVarNum('PlasmaElectrons','profile','fx',2);
-            aX2  = obj.fExtractVarNum('PlasmaElectrons','profile','x' ,2);
-            aFX3 = obj.fExtractVarNum('PlasmaElectrons','profile','fx',3);
-            aX3  = obj.fExtractVarNum('PlasmaElectrons','profile','x' ,3);
+        function obj = fGetPlasmaVariables(obj)
+            
+            % Get variables
+            
+            dTMin      = obj.Variables.Simulation.TMin;
+            dTMax      = obj.Variables.Simulation.TMax;
+            dOmegaP    = obj.Variables.Plasma.NormOmegaP;
+            dLambdaP   = obj.Variables.Plasma.NormLambdaP;
 
-            dMaxFX1 = max(aFX1);
-            dMaxFX2 = max(aFX2);
-            dMaxFX3 = max(aFX3);
-
-            if isempty(aFX3)
-                dMaxFX3 = 0;
-                aFX3    = 0;
-                aX3     = 0;
-            end % if
-
-            iTMin = floor(dTMin);
-            iTMax = floor(dTMax);
-            iNT   = iTMax-iTMin+1;
-            aPD   = zeros(1,iNT);
-            aZ    = linspace(iTMin,iTMax,iNT);
-            iPR   = 0;
-            aReg  = zeros(1,2);
-            for i=1:length(aFX1)-1
-                iSMin = floor(aX1(i))+iTMin;
-                iSMax = floor(aX1(i+1))+iTMin;
-                iNS   = iSMax-iSMin+1;
-                aSPD  = linspace(aFX1(i),aFX1(i+1),iNS);
-                aPD(iSMin+1:iSMax+1) = aSPD;
-                if aFX1(i+1) > 0 && aFX1(i) == 0
-                    iPR = iPR + 1;
-                    aReg(iPR,1) = aX1(i);
-                end % if
-                if aFX1(i+1) == 0 && aFX1(i) > 0
-                    aReg(iPR,2) = aX1(i);
-                end % if
-            end % for
-            
-            if aReg(iPR,2) == 0
-                aReg(iPR,2) = aX1(end);
-            end % if
-            
-            obj.Variables.Plasma.DensityProfile = aPD;
-            obj.Variables.Plasma.DensityAxis    = aZ;
-            obj.Variables.Plasma.PlasmaRegions  = aReg;
-            
-            dPStart = -1.0;
-            dPEnd   = -1.0;
-
-            for i=1:length(aFX1)
-                if dPStart < 0.0
-                    if aFX1(i) > 0.9*dMaxFX1
-                        dPStart = aX1(i);
-                    end % if
-                else
-                    if dPEnd < 0.0
-                        if aFX1(i) < 0.1
-                            dPEnd = aX1(i);
-                        end % if
-                    end % if
-                end % if
-            end % for
-            
-            if dPEnd < 0.0
-                dPEnd = obj.Variables.Simulation.TMax;
-            end % if
-            
-            if dPEnd > aX1(end)
-                dPEnd = aX1(end);
-            end % if
-            
-            obj.Variables.Plasma.ProfileFX1   = aFX1;
-            obj.Variables.Plasma.ProfileX1    = aX1;
-            obj.Variables.Plasma.ProfileFX2   = aFX2;
-            obj.Variables.Plasma.ProfileX2    = aX2;
-            obj.Variables.Plasma.ProfileFX3   = aFX3;
-            obj.Variables.Plasma.ProfileX3    = aX3;
-
-            obj.Variables.Plasma.PlasmaMaxFX1 = dMaxFX1;
-            obj.Variables.Plasma.PlasmaMaxFX2 = dMaxFX2;
-            obj.Variables.Plasma.PlasmaMaxFX3 = dMaxFX3;
-            
-            obj.Variables.Plasma.PlasmaStart  = dPStart;
-            obj.Variables.Plasma.PlasmaEnd    = dPEnd;
-
-            dPlasmaMax = dMaxFX1 * dMaxFX2;
-            if dMaxFX3 > 0
-                dPlasmaMax = dPlasmaMax * dMaxFX3;
-            end % if
-            
-            obj.Variables.Plasma.MaxPlasmaFac = dPlasmaMax;
-            obj.Variables.Plasma.MaxOmegaP    = dOmegaP  * sqrt(dPlasmaMax);
-            obj.Variables.Plasma.MaxLambdaP   = dLambdaP / sqrt(dPlasmaMax);
-            
             % Extract plasma species variables
             [iRows,~] = size(obj.Variables.Species.Plasma);
             
             for i=1:iRows
                 
-                sPlasma = obj.Variables.Species.Plasma{i,1};
+                sPlasma    = obj.Variables.Species.Plasma{i,1};
                 
+                dPStart    = -1.0;
+                dPEnd      = -1.0;
+                dPlasmaMax =  1.0;
+
                 obj.Variables.Plasma.(sPlasma) = {};
                 
+                % Extracting plasma profile
+                
+                sProfile = obj.fExtractRaw(sPlasma,'profile','profile_type',0,'uniform');
+                iNumX    = obj.fExtractSingle(sPlasma,'profile','num_x',-1);
+                
+                if iNumX > 0 && strcmpi(sProfile,'uniform')
+                    sProfile = 'piecewise-linear';
+                end % if
+                
+                switch(sProfile)
+                    
+                    case 'piecewise-linear'
+                        
+                        % Piecewise Linear Plasma Function
+
+                        aFX1 = obj.fExtractVarNum(sPlasma,'profile','fx',1);
+                        aX1  = obj.fExtractVarNum(sPlasma,'profile','x' ,1);
+                        aFX2 = obj.fExtractVarNum(sPlasma,'profile','fx',2);
+                        aX2  = obj.fExtractVarNum(sPlasma,'profile','x' ,2);
+                        aFX3 = obj.fExtractVarNum(sPlasma,'profile','fx',3);
+                        aX3  = obj.fExtractVarNum(sPlasma,'profile','x' ,3);
+
+                        dMaxFX1 = max(aFX1);
+                        dMaxFX2 = max(aFX2);
+                        dMaxFX3 = max(aFX3);
+
+                        if isempty(aFX3)
+                            dMaxFX3 = 0;
+                            aFX3    = 0;
+                            aX3     = 0;
+                        end % if
+
+                        iTMin = floor(dTMin);
+                        iTMax = floor(dTMax);
+                        iNT   = iTMax-iTMin+1;
+                        aPD   = zeros(1,iNT);
+                        aZ    = linspace(iTMin,iTMax,iNT);
+                        iPR   = 0;
+                        aReg  = zeros(1,2);
+                        for i=1:length(aFX1)-1
+                            iSMin = floor(aX1(i))+iTMin;
+                            iSMax = floor(aX1(i+1))+iTMin;
+                            iNS   = iSMax-iSMin+1;
+                            aSPD  = linspace(aFX1(i),aFX1(i+1),iNS);
+                            aPD(iSMin+1:iSMax+1) = aSPD;
+                            if aFX1(i+1) > 0 && aFX1(i) == 0
+                                iPR = iPR + 1;
+                                aReg(iPR,1) = aX1(i);
+                            end % if
+                            if aFX1(i+1) == 0 && aFX1(i) > 0
+                                aReg(iPR,2) = aX1(i);
+                            end % if
+                        end % for
+
+                        if aReg(iPR,2) == 0
+                            aReg(iPR,2) = aX1(end);
+                        end % if
+
+                        obj.Variables.Plasma.(sPlasma).DensityProfile = aPD;
+                        obj.Variables.Plasma.(sPlasma).DensityAxis    = aZ;
+                        obj.Variables.Plasma.(sPlasma).PlasmaRegions  = aReg;
+
+                        for i=1:length(aFX1)
+                            if dPStart < 0.0
+                                if aFX1(i) > 0.9*dMaxFX1
+                                    dPStart = aX1(i);
+                                end % if
+                            else
+                                if dPEnd < 0.0
+                                    if aFX1(i) < 0.1
+                                        dPEnd = aX1(i);
+                                    end % if
+                                end % if
+                            end % if
+                        end % for
+
+                        if dPEnd < 0.0
+                            dPEnd = obj.Variables.Simulation.TMax;
+                        end % if
+
+                        if dPEnd > aX1(end)
+                            dPEnd = aX1(end);
+                        end % if
+
+                        dPlasmaMax = dMaxFX1 * dMaxFX2;
+                        if dMaxFX3 > 0
+                            dPlasmaMax = dPlasmaMax * dMaxFX3;
+                        end % if
+
+                        % Save Variables
+
+                        obj.Variables.Plasma.(sPlasma).ProfileFX1   = aFX1;
+                        obj.Variables.Plasma.(sPlasma).ProfileX1    = aX1;
+                        obj.Variables.Plasma.(sPlasma).ProfileFX2   = aFX2;
+                        obj.Variables.Plasma.(sPlasma).ProfileX2    = aX2;
+                        obj.Variables.Plasma.(sPlasma).ProfileFX3   = aFX3;
+                        obj.Variables.Plasma.(sPlasma).ProfileX3    = aX3;
+
+                        obj.Variables.Plasma.(sPlasma).PlasmaMaxFX1 = dMaxFX1;
+                        obj.Variables.Plasma.(sPlasma).PlasmaMaxFX2 = dMaxFX2;
+                        obj.Variables.Plasma.(sPlasma).PlasmaMaxFX3 = dMaxFX3;
+
+                    case 'math func'
+                        
+                        % Math Plasma Function
+
+                        sFunc = obj.fExtractRaw(sPlasma,'profile','math_func_expr');
+                        
+                end % if
+
+
+                obj.Variables.Plasma.PlasmaStart  = dPStart;
+                obj.Variables.Plasma.PlasmaEnd    = dPEnd;
+
+                obj.Variables.Plasma.MaxPlasmaFac = dPlasmaMax;
+                obj.Variables.Plasma.MaxOmegaP    = dOmegaP  * sqrt(dPlasmaMax);
+                obj.Variables.Plasma.MaxLambdaP   = dLambdaP / sqrt(dPlasmaMax);
+
                 % Species
 
                 aValue = obj.fExtractFixedNum(sPlasma,'species','rqm',[0]);
