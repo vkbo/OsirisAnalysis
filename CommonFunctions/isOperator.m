@@ -6,7 +6,7 @@
 
 function bReturn = isOperator(sChar)
 
-    bReturn = ismember(sChar(1), {',','+','-','*','/','(',')','<','>','=','&','|'});
+    bReturn = ismember(sChar(1), {',','+','-','*','/','(',')','<','>','=','&','|','!','^'});
 
 end
 
