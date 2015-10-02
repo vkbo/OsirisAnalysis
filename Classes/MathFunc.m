@@ -14,7 +14,6 @@ classdef MathFunc
         
         Func       = '';
         FuncStruct = {};
-        IFArray    = {};
 
     end % properites
 
@@ -241,16 +240,12 @@ classdef MathFunc
             
             % Set up struct
             stFunc(iC).Level    = [];
-            %stFunc(iC).Parent   = [];
             stFunc(iC).Children = [];
             stFunc(iC).Start    = [];
             stFunc(iC).End      = [];
             stFunc(iC).String   = [];
             stFunc(iC).Clean    = [];
             stFunc(iC).Func     = [];
-            %stFunc(iC).Cond     = [];
-            %stFunc(iC).True     = [];
-            %stFunc(iC).False    = [];
             
             % Root values
             stFunc(1).Level  = 0;
@@ -263,21 +258,17 @@ classdef MathFunc
                 sC = obj.Func(c);
                 
                 if sC == '('
-                    iLevel  = iLevel + 1;
-                    iMaxInd = iMaxInd + 1;
+                    iLevel       = iLevel + 1;
+                    iMaxInd      = iMaxInd + 1;
                     aTree(end+1) = iMaxInd;
-
-                    stFunc(iMaxInd).Level  = iLevel;
-                    %stFunc(iMaxInd).Parent = aTree(end-1);
-                    stFunc(iMaxInd).Start  = c+1;
-
+                    stFunc(iMaxInd).Level = iLevel;
+                    stFunc(iMaxInd).Start = c+1;
                     stFunc(aTree(end-1)).Children(end+1) = iMaxInd;
                 end % if
                 
                 if sC == ')'
                     stFunc(aTree(end)).End    = c-1;
                     stFunc(aTree(end)).String = obj.Func(stFunc(aTree(end)).Start:stFunc(aTree(end)).End);
-
                     aTree(end) = [];
                     iLevel     = iLevel - 1;
                 end % if
@@ -320,145 +311,14 @@ classdef MathFunc
                         break;
                     end % if
                 end % for
-                
-                % Extract if statements
-                %if strcmpi(stFunc(i).Func,'if')
-                %    stSplit = strsplit(stFunc(i).Clean,',');
-                %    if length(stSplit) ~= 3
-                %        fprintf(2,'Error: If statement is not formatted correctly.\n');
-                %    end % if
-                %    stFunc(i).Cond  = stSplit{1};
-                %    stFunc(i).True  = stSplit{2};
-                %    stFunc(i).False = stSplit{3};
-                %    iIfs = iIfs + 1;
-                %end % if
-                
             end % for
             
             obj.FuncStruct = stFunc;
-            
-            return;
-
-            stFuncMap(iC).Func = [];
-            stFuncMap(iC).Eval = [];
-            
-            for i=iC:-1:1
-                
-                sEval = stFunc(i).Clean;
-                if ~isempty(stFunc(i).Children)
-                    aCh = stFunc(i).Children;
-                    for j=1:length(aCh)
-                        sEval = strrep(sEval,stFuncMap(aCh(j)).Func,stFuncMap(aCh(j)).Eval);
-                    end % for
-                end % if
-                
-                sFW = '';
-                sKW = '';
-                if ~isempty(stFunc(i).Func)
-                    sFW = stFunc(i).Func;
-                    switch(stFunc(i).Func)
-                        case 'int'
-                            sKW = 'fix';
-                        case 'ceiling'
-                            sKW = 'ceil';
-                        otherwise
-                            sKW = stFunc(i).Func;
-                    end % switch
-                end % if
-
-                stFuncMap(i).Func = sprintf('%s(#%d)',sFW,i);
-                stFuncMap(i).Eval = sprintf('%s(%s)',sKW,sEval);
-                
-            end % if
-            
-            % Return values
-
-            stReturn = {};
-            if iIfs == 0
-                stReturn(1).Cond   = '';
-                stReturn(1).True   = stFuncMap(1).Eval;
-                stReturn(1).False  = [];
-                return;
-            end % if
-            
-            % Set up if struct
-            aIfMap = zeros(iIfs,2);
-            stReturn(iIfs).Cond   = [];
-            stReturn(iIfs).True   = [];
-            stReturn(iIfs).False  = [];
-            
-            iIfInd = 1;
-            for i=2:iC
-                if strcmpi(stFunc(i).Func,'if')
-                    aIfMap(iIfInd,1) = i;
-                    aIfMap(iIfInd,2) = iIfInd;
-                    
-                    sTrue  = stFunc(i).True;
-                    sFalse = stFunc(i).False;
-                    for j=2:iC
-                        if strcmpi(stFunc(j).Func,'if')
-                            continue;
-                        end % if
-                        sTrue  = strrep(sTrue,stFuncMap(j).Func,stFuncMap(j).Eval);
-                        sFalse = strrep(sFalse,stFuncMap(j).Func,stFuncMap(j).Eval);
-                    end % for
-                    
-                    stReturn(iIfInd).Cond   = obj.fVectorForm(stFunc(i).Cond);
-                    stReturn(iIfInd).True   = obj.fVectorForm(sTrue);
-                    stReturn(iIfInd).False  = obj.fVectorForm(sFalse);
-                    
-                    iIfInd = iIfInd + 1;
-                end % if
-            end % for
-            
-            % Add pointers between if statements
-            for i=1:iIfs
-                for j=1:iIfs
-                    stReturn(i).True  = strrep(stReturn(i).True, sprintf('if(#%d)',aIfMap(j,1)),sprintf('f(:,%d)',aIfMap(j,2)));
-                    stReturn(i).False = strrep(stReturn(i).False,sprintf('if(#%d)',aIfMap(j,1)),sprintf('f(:,%d)',aIfMap(j,2)));
-                end % for
-            end % for
-            
-            % Convert to function handles
-            for i=1:iIfs
-                stReturn(i).Cond  = str2func(sprintf('@(x)%s',   stReturn(i).Cond));
-                stReturn(i).True  = str2func(sprintf('@(x,f)%s', stReturn(i).True));
-                stReturn(i).False = str2func(sprintf('@(x,f)%s', stReturn(i).False));
-            end % for
-
-            obj.FuncStruct = stReturn;
-            
-        end % function
-        
-        function aReturn = fEval(obj, aX1, aX2, aX3)
-            
-            aReturn = [];
-            fFunc  = obj.FuncStruct;
-            [~,iC] = size(fFunc);
-            
-
-            aX = [aX1; aX2; aX3]
-            %aFunc  = zeros(1,iC);
-            
-            for i=iC:-1:1
-                
-                %if fFunc(i).Cond(aValue)
-                %    aFunc(i) = fFunc(i).True(aValue,aFunc);
-                %else
-                %    aFunc(i) = fFunc(i).False(aValue,aFunc);
-                %end % if
-                
-            end % for            
-            
-            %dReturn = aFunc(1);
             
         end % function
         
         function sReturn = fVectorForm(~, sReturn)
             
-            %sReturn = strrep(sReturn,'x1','x(:,1)');
-            %sReturn = strrep(sReturn,'x2','x(:,2)');
-            %sReturn = strrep(sReturn,'x3','x(:,3)');
             sReturn = strrep(sReturn,'*', '.*');
             sReturn = strrep(sReturn,'/', './');
             sReturn = strrep(sReturn,'^', '.^');
@@ -483,28 +343,8 @@ classdef MathFunc
             end % for
         end % function
         
-        %
-        % Check Functions
-        %
-        
         function bReturn = isOperator(~, sChar)
             bReturn = ismember(sChar(1), {',','+','-','*','/','(',')','<','>','=','&','|','!','^'});
-        end
-
-        function bReturn = isLower(~, sChar)
-            bReturn = ismember(sChar(1), {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'});
-        end
-        
-        function bReturn = isUpper(~, sChar)
-            bReturn = ismember(sChar(1), {'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'});
-        end
-
-        function bReturn = isDigit(~, sChar)
-            bReturn = ismember(sChar(1), {'0','1','2','3','4','5','6','7','8','9'});
-        end
-
-        function bReturn = isChar(~, sChar)
-            bReturn = isLower(sChar) || isUpper(sChar);
         end
 
     end % methods
