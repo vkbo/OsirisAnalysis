@@ -138,7 +138,6 @@ classdef MathFunc
                             sFnF    = strrep(sFnF,sFind,sprintf('mF(:,:,:,%d)',iFC));
                             aF(iFC) = 0;
                         end % for
-                        sFnC
                         fFnC = str2func(sprintf('@(x1,x2,x3,mF)%s',sFnC));
                         fFnT = str2func(sprintf('@(x1,x2,x3,mF)%s',sFnT));
                         fFnF = str2func(sprintf('@(x1,x2,x3,mF)%s',sFnF));
