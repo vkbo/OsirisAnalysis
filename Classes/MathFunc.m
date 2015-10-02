@@ -62,6 +62,33 @@ classdef MathFunc
         
         function mReturn = Eval(obj, aX1, aX2, aX3)
             
+            % Osiris Functions Lookup
+            stEval.abs     = struct('In',1,'BuiltIn',1,'Call','abs');
+            stEval.sin     = struct('In',1,'BuiltIn',1,'Call','sin');
+            stEval.cos     = struct('In',1,'BuiltIn',1,'Call','cos');
+            stEval.tan     = struct('In',1,'BuiltIn',1,'Call','tan');
+            stEval.exp     = struct('In',1,'BuiltIn',1,'Call','exp');
+            stEval.log10   = struct('In',1,'BuiltIn',1,'Call','log10');
+            stEval.log     = struct('In',1,'BuiltIn',1,'Call','log');
+            stEval.asin    = struct('In',1,'BuiltIn',1,'Call','asin');
+            stEval.acos    = struct('In',1,'BuiltIn',1,'Call','acos');
+            stEval.atan2   = struct('In',2,'BuiltIn',1,'Call','atan2');
+            stEval.atan    = struct('In',1,'BuiltIn',1,'Call','atan');
+            stEval.sqrt    = struct('In',1,'BuiltIn',1,'Call','sqrt');
+            stEval.not     = struct('In',1,'BuiltIn',1,'Call','not');
+            stEval.pow     = struct('In',2,'BuiltIn',0,'Call','');
+            stEval.int     = struct('In',1,'BuiltIn',1,'Call','fix');
+            stEval.nint    = struct('In',1,'BuiltIn',0,'Call','');
+            stEval.ceiling = struct('In',1,'BuiltIn',1,'Call','ceil');
+            stEval.floor   = struct('In',1,'BuiltIn',1,'Call','floor');
+            stEval.modulo  = struct('In',2,'BuiltIn',1,'Call','mod');
+            stEval.rect    = struct('In',1,'BuiltIn',0,'Call','');
+            stEval.step    = struct('In',1,'BuiltIn',0,'Call','');
+            stEval.min3    = struct('In',3,'BuiltIn',0,'Call','');
+            stEval.min     = struct('In',2,'BuiltIn',0,'Call','');
+            stEval.max3    = struct('In',3,'BuiltIn',0,'Call','');
+            stEval.max     = struct('In',2,'BuiltIn',0,'Call','');
+
             nX1 = length(aX1);
             nX2 = length(aX2);
             nX3 = length(aX3);
@@ -341,6 +368,49 @@ classdef MathFunc
                     return;
                 end % if
             end % for
+        end % function
+        
+        function mReturn = fSpecial(~, sFunction, vX, vY, vZ)
+            
+            if nargin < 4
+                vY = [];
+            end % if
+
+            if nargin < 5
+                vZ = [];
+            end % if
+            
+            switch(sFunction)
+
+                case 'pow'
+                    mReturn = vX^vY;
+
+                case 'nint'
+                    mReturn = fix(round(vX,0));
+
+                case 'rect'
+                    mReturn = (abs(vX) <= 0.5);
+
+                case 'step'
+                    mReturn = (vX >= 0.0);
+
+                case 'min3'
+                    mReturn = min([vX, vY, vZ]);
+
+                case 'min'
+                    mReturn = min([vX, vY]);
+
+                case 'max3'
+                    mReturn = max([vX, vY, vZ]);
+
+                case 'max'
+                    mReturn = max([vX, vY]);
+
+                otherwise:
+                    mReturn = [];
+
+            end % switch
+        
         end % function
         
         function bReturn = isOperator(~, sChar)
