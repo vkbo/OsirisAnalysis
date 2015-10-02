@@ -631,12 +631,15 @@ classdef OsirisConfig
                 
                 % Extracting plasma profile
                 
-                sProfile = obj.fExtractRaw(sPlasma,'profile','profile_type',0,'uniform');
+                sValue   = obj.fExtractRaw(sPlasma,'profile','profile_type',0,'uniform');
+                sProfile = strrep(sValue, '"', '');
                 iNumX    = obj.fExtractSingle(sPlasma,'profile','num_x',-1);
                 
                 if iNumX > 0 && strcmpi(sProfile,'uniform')
                     sProfile = 'piecewise-linear';
                 end % if
+                
+                obj.Variables.Plasma.(sPlasma).ProfileType = sProfile;
                 
                 switch(sProfile)
                     
@@ -731,11 +734,13 @@ classdef OsirisConfig
                         obj.Variables.Plasma.(sPlasma).PlasmaMaxFX2 = dMaxFX2;
                         obj.Variables.Plasma.(sPlasma).PlasmaMaxFX3 = dMaxFX3;
 
-                    case 'math func'
+                    case 'mathfunc'
                         
                         % Math Plasma Function
 
-                        sFunc = obj.fExtractRaw(sPlasma,'profile','math_func_expr');
+                        sValue = obj.fExtractRaw(sPlasma,'profile','math_func_expr');
+                        sFunc  = strrep(sValue, '"', '');
+                        obj.Variables.Plasma.(sPlasma).ProfileFunction = sFunc;
                         
                 end % if
 
