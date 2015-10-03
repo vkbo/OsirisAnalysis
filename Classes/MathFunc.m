@@ -62,33 +62,6 @@ classdef MathFunc
         
         function mReturn = Eval(obj, aX1, aX2, aX3)
             
-            % Osiris Functions Lookup
-            stEval.abs     = struct('In',1,'BuiltIn',1,'Call','abs');
-            stEval.sin     = struct('In',1,'BuiltIn',1,'Call','sin');
-            stEval.cos     = struct('In',1,'BuiltIn',1,'Call','cos');
-            stEval.tan     = struct('In',1,'BuiltIn',1,'Call','tan');
-            stEval.exp     = struct('In',1,'BuiltIn',1,'Call','exp');
-            stEval.log10   = struct('In',1,'BuiltIn',1,'Call','log10');
-            stEval.log     = struct('In',1,'BuiltIn',1,'Call','log');
-            stEval.asin    = struct('In',1,'BuiltIn',1,'Call','asin');
-            stEval.acos    = struct('In',1,'BuiltIn',1,'Call','acos');
-            stEval.atan2   = struct('In',2,'BuiltIn',1,'Call','atan2');
-            stEval.atan    = struct('In',1,'BuiltIn',1,'Call','atan');
-            stEval.sqrt    = struct('In',1,'BuiltIn',1,'Call','sqrt');
-            stEval.not     = struct('In',1,'BuiltIn',1,'Call','not');
-            stEval.pow     = struct('In',2,'BuiltIn',0,'Call','');
-            stEval.int     = struct('In',1,'BuiltIn',1,'Call','fix');
-            stEval.nint    = struct('In',1,'BuiltIn',0,'Call','');
-            stEval.ceiling = struct('In',1,'BuiltIn',1,'Call','ceil');
-            stEval.floor   = struct('In',1,'BuiltIn',1,'Call','floor');
-            stEval.modulo  = struct('In',2,'BuiltIn',1,'Call','mod');
-            stEval.rect    = struct('In',1,'BuiltIn',0,'Call','');
-            stEval.step    = struct('In',1,'BuiltIn',0,'Call','');
-            stEval.min3    = struct('In',3,'BuiltIn',0,'Call','');
-            stEval.min     = struct('In',2,'BuiltIn',0,'Call','');
-            stEval.max3    = struct('In',3,'BuiltIn',0,'Call','');
-            stEval.max     = struct('In',2,'BuiltIn',0,'Call','');
-
             nX1 = length(aX1);
             nX2 = length(aX2);
             nX3 = length(aX3);
@@ -111,132 +84,38 @@ classdef MathFunc
             mF = zeros(nX2,nX1,nX3,nC);
             aF = zeros(1,nC);
 
-            for f=nF:-1:2
-                aCh = stFunc(f).Children;
-                sFn = stFunc(f).Clean;
-                nCh = length(aCh);
+            for f=nF:-1:1
+                aCh = stFunc(f).Children; % Array of children functions
+                sFn = stFunc(f).Clean;    % Parsed function to evaluate
+                sMa = stFunc(f).Func;     % Math function for curren5 paranthesis
+                nCh = length(aCh);        % Number of children
                 
-                if ~strcmpi(stFunc(f).Func,'if')
-                    if isempty(aCh)
-                        fFn = str2func(sprintf('@(x1,x2,x3)%s',sFn));
-                        iF  = obj.fFreeIndex(aF);
-                        mF(:,:,:,iF) = fFn(mX1,mX2,mX3);
-                        aF(iF) = f;
-                    else
-                        for c=1:nCh
-                            sFind   = sprintf('%s(#%d)',stFunc(aCh(c)).Func,aCh(c));
-                            iFC     = obj.fFindIndex(aF,aCh(c));
-                            sFn     = strrep(sFn,sFind,sprintf('mF(:,:,:,%d)',iFC));
-                            aF(iFC) = 0;
-                        end % for
-                        fFn = str2func(sprintf('@(x1,x2,x3,mF)%s',sFn));
-                        iF  = obj.fFreeIndex(aF);
-                        mF(:,:,:,iF) = fFn(mX1,mX2,mX3,mF);
-                        aF(iF) = f;
-                    end % if
-                else
-                    stFn = strsplit(sFn,',');
-                    if length(stFn) ~= 3
-                        fprintf(2,'Error: If statement is not formatted correctly.\n');
-                        return;
-                    end % if
-                    sFnC = stFn{1};
-                    sFnT = stFn{2};
-                    sFnF = stFn{3};
-                    sFnC = strrep(sFnC,'||','|');
-                    sFnC = strrep(sFnC,'&&','&');
-                    if isempty(aCh)
-                        fFnC = str2func(sprintf('@(x1,x2,x3)%s',sFnC));
-                        fFnT = str2func(sprintf('@(x1,x2,x3)%s',sFnT));
-                        fFnF = str2func(sprintf('@(x1,x2,x3)%s',sFnF));
-                        iF   = obj.fFreeIndex(aF);
-                        mFnC = fFnC(mX1,mX2,mX3);
-                        mFnT = fFnT(mX1,mX2,mX3);
-                        mFnF = fFnF(mX1,mX2,mX3);
-                        mF(:,:,:,iF) = mFnC.*mFnT + not(mFnC).*mFnF;
-                        aF(iF) = f;
-                    else
-                        for c=1:nCh
-                            sFind   = sprintf('%s(#%d)',stFunc(aCh(c)).Func,aCh(c));
-                            iFC     = obj.fFindIndex(aF,aCh(c));
-                            sFnC    = strrep(sFnC,sFind,sprintf('mF(:,:,:,%d)',iFC));
-                            sFnT    = strrep(sFnT,sFind,sprintf('mF(:,:,:,%d)',iFC));
-                            sFnF    = strrep(sFnF,sFind,sprintf('mF(:,:,:,%d)',iFC));
-                            aF(iFC) = 0;
-                        end % for
-                        fFnC = str2func(sprintf('@(x1,x2,x3,mF)%s',sFnC));
-                        fFnT = str2func(sprintf('@(x1,x2,x3,mF)%s',sFnT));
-                        fFnF = str2func(sprintf('@(x1,x2,x3,mF)%s',sFnF));
-                        iF   = obj.fFreeIndex(aF);
-                        mFnC = fFnC(mX1,mX2,mX3,mF);
-                        mFnT = fFnT(mX1,mX2,mX3,mF);
-                        mFnF = fFnF(mX1,mX2,mX3,mF);
-                        mF(:,:,:,iF) = mFnC.*mFnT + not(mFnC).*mFnF;
-                        aF(iF) = f;
-                    end % if
+                if ~isempty(aCh)
+                    for c=1:nCh
+                        sFi = sprintf('%s(#%d)',stFunc(aCh(c)).Func,aCh(c));
+                        iFC = obj.fFindIndex(aF,aCh(c));
+                        sFn = strrep(sFn,sFi,sprintf('mF(%d)',iFC));
+                        aF(iFC) = 0;
+                    end % for
                 end % if
+
+                stFn = strsplit(sFn,','); % Struct of function variables
+                nFn  = length(stFn);      % Number of function variables
+                stRS(3).X = [];           % Storage struct for function variables
                 
-                %
-                % Osiris Math Func operators:
-                %
-                % M = Matlab already supports
-                % T = Matlab already supports, but with different function call
-                %
-                % M :: abs(x)      - Absolute value of x.
-                % M :: sin(x)      - Sine of x.
-                % M :: cos(x)      - Cosine of x.
-                % M :: tan(x)      - Tangent of x.
-                % M :: exp(x)      - Exponential function i.e. e^x.
-                % M :: log10(x)    - Base 10 logarithm of x.
-                % M :: log(x)      - Natural (Base e) logarithm of x.
-                % M :: asin(x)     - Arc Sine of x.
-                % M :: acos(x)     - Arc Cosine of x.
-                % M :: atan2(x,y)  - Arc Tangent of y/x, taking into account which quadrant the point (x,y) is in.
-                % M :: atan(x)     - Arc Tangent of x.
-                % M :: sqrt(x)     - Square root of x.
-                % M :: not(x)      - Logical not. x is evaluated as a logical expression and the complement is returned.
-                %   :: pow(x,y)    - Power, returns x^y.
-                % T :: int(x)      - Integer, converts x to integer truncating towards 0.
-                %   :: nint(x)     - Nearest integer, converts x to the nearest integer.
-                % T :: ceiling(x)  - Ceiling, converts x to the least integer that is >= x.
-                % M :: floor(x)    - Floor, converts x to the greatest integer that is <= x.
-                %   :: modulo(x,y) - Modulo, returns the remainder of the integer division, i.e., x - floor(x/y)*y%   :: 
-                %   :: rect(x)     - Rect function, returns 1.0 for 0.5<= x <= 0.5 and 0.0 otherwise.
-                %   :: step(x)     - Step function, returns 1.0 for x >= 0 and 0.0 otherwise
-                %   :: min3(x,y,z) - Minimum function, returns the minimum value between x, y and z
-                %   :: min(x,y)    - Minimum function, returns the minimum value between x and y
-                %   :: max3(x,y,z) - Maximum function, returns the minimum value between x, y and z
-                %   :: max(x,y)    - Maximum function, returns the minimum value between x and y
-                %
-                switch(stFunc(f).Func)
-                    case 'abs'
-                        mF(:,:,:,iF) = abs(mF(:,:,:,iF));
-                    case 'sin'
-                        mF(:,:,:,iF) = sin(mF(:,:,:,iF));
-                    case 'cos'
-                        mF(:,:,:,iF) = cos(mF(:,:,:,iF));
-                    case 'tan'
-                        mF(:,:,:,iF) = tan(mF(:,:,:,iF));
-                    case 'exp'
-                        mF(:,:,:,iF) = exp(mF(:,:,:,iF));
-                    case 'log10'
-                        mF(:,:,:,iF) = log10(mF(:,:,:,iF));
-                    case 'log'
-                        mF(:,:,:,iF) = log(mF(:,:,:,iF));
-                    case 'asin'
-                        mF(:,:,:,iF) = asin(mF(:,:,:,iF));
-                    case 'acos'
-                        mF(:,:,:,iF) = acos(mF(:,:,:,iF));
-                    case 'atan2'
-                        mF(:,:,:,iF) = atan2(mF(:,:,:,iF));
-                    case 'atan'
-                        mF(:,:,:,iF) = atan(mF(:,:,:,iF));
-                    case 'pow'
-                        mF(:,:,:,iF) = atan(mF(:,:,:,iF));
-                end % switch
+                for n=1:nFn
+                    sFn = strrep(stFn{n},'mF(','mF(:,:,:,');
+                    fFn = str2func(sprintf('@(x1,x2,x3,mF)%s',sFn));
+                    stRS(n).X = fFn(mX1,mX2,mX3,mF);
+                end % for
+
+                iFi           = obj.fFreeIndex(aF);
+                mF(:,:,:,iFi) = obj.fFunc(sMa,stRS(1).X,stRS(2).X,stRS(3).X);
+                aF(iFi)       = f;
             end % for
             
-            mReturn = mF(:,:,:,1);
+            iFC     = obj.fFindIndex(aF,1);
+            mReturn = mF(:,:,:,iFC);
             
         end % function
         
@@ -324,7 +203,7 @@ classdef MathFunc
                         sClean = [sClean sTemp(s)];
                     end % if
                 end % for
-                stFunc(i).Clean = obj.fVectorForm(sClean);
+                stFunc(i).Clean = obj.fFormat(sClean);
 
                 % Extract function
                 for c=stFunc(i).Start-2:-1:1
@@ -344,8 +223,10 @@ classdef MathFunc
             
         end % function
         
-        function sReturn = fVectorForm(~, sReturn)
+        function sReturn = fFormat(~, sReturn)
             
+            sReturn = strrep(sReturn,'&&', '&');
+            sReturn = strrep(sReturn,'||', '|');
             sReturn = strrep(sReturn,'*', '.*');
             sReturn = strrep(sReturn,'/', './');
             sReturn = strrep(sReturn,'^', '.^');
@@ -353,24 +234,32 @@ classdef MathFunc
         end % function
         
         function iReturn = fFreeIndex(~, aSearch)
+
+            iReturn = 0;
             for i=1:length(aSearch)
                 if aSearch(i) == 0
                     iReturn = i;
                     return;
                 end % if
             end % for
+
         end % function
         
         function iReturn = fFindIndex(~, aSearch, iFind)
+
+            iReturn = 0;
             for i=1:length(aSearch)
                 if aSearch(i) == iFind
                     iReturn = i;
                     return;
                 end % if
             end % for
+
         end % function
         
-        function mReturn = fSpecial(~, sFunction, vX, vY, vZ)
+        function mReturn = fFunc(~, sFunc, vX, vY, vZ)
+            
+            mReturn = [];
             
             if nargin < 4
                 vY = [];
@@ -380,34 +269,147 @@ classdef MathFunc
                 vZ = [];
             end % if
             
-            switch(sFunction)
-
+            if isempty(sFunc)
+                mReturn = vX;
+                return;
+            end % if
+            
+            switch(sFunc)
+                
+                % if(x,y,z) - If statement with condition, true, false
+                case 'if'
+                    mReturn = vX.*vY + not(vX).*vZ;
+                    return;
+                    
+                % abs(x) - Absolute value of x.
+                case 'abs'
+                    mReturn = abs(vX);
+                    return;
+                    
+                % sin(x) - Sine of x.
+                case 'sin'
+                    mReturn = sin(vX);
+                    return;
+                    
+                % cos(x) - Cosine of x.
+                case 'cos'
+                    mReturn = cos(vX);
+                    return;
+                    
+                % tan(x) - Tangent of x.
+                case 'tan'
+                    mReturn = tan(vX);
+                    return;
+                    
+                % exp(x) - Exponential function i.e. e^x.
+                case 'exp'
+                    mReturn = exp(vX);
+                    return;
+                    
+                % log10(x) - Base 10 logarithm of x.
+                case 'log10'
+                    mReturn = log10(vX);
+                    return;
+                    
+                % log(x) - Natural (Base e) logarithm of x.
+                case 'log'
+                    mReturn = log(vX);
+                    return;
+                    
+                % asin(x) - Arc Sine of x.
+                case 'asin'
+                    mReturn = asin(vX);
+                    return;
+                    
+                % acos(x) - Arc Cosine of x.
+                case 'acos'
+                    mReturn = acos(vX);
+                    return;
+                    
+                % atan2(x,y) - Arc Tangent of y/x, taking into account which quadrant the point (x,y) is in.
+                case 'atan2'
+                    mReturn = atan2(vX,vY);
+                    return;
+                    
+                % atan(x) - Arc Tangent of x.
+                case 'atan'
+                    mReturn = atan(vX);
+                    return;
+                    
+                % sqrt(x) - Square root of x.
+                case 'sqrt'
+                    mReturn = sqrt(vX);
+                    return;
+                    
+                % not(x) - Logical not. x is evaluated as a logical expression and the complement is returned.
+                case 'not'
+                    mReturn = not(vX);
+                    return;
+                    
+                % pow(x,y) - Power, returns x^y.
                 case 'pow'
-                    mReturn = vX^vY;
-
+                    mReturn = vX.^fix(vY);
+                    return;
+                    
+                % int(x) - Integer, converts x to integer truncating towards 0.
+                case 'int'
+                    mReturn = fix(vX);
+                    return;
+                    
+                % nint(x) - Nearest integer, converts x to the nearest integer.
                 case 'nint'
                     mReturn = fix(round(vX,0));
-
+                    return;
+                    
+                % ceiling(x) - Ceiling, converts x to the least integer that is >= x.
+                case 'ceiling'
+                    mReturn = ceil(vX);
+                    return;
+                    
+                % floor(x) - Floor, converts x to the greatest integer that is <= x.
+                case 'floor'
+                    mReturn = floor(vX);
+                    return;
+                    
+                % modulo(x,y) - Modulo, returns the remainder of the integer division, i.e., x - floor(x/y)*y%
+                case 'modulo'
+                    mReturn = mod(vX,vY);
+                    return;
+                    
+                % rect(x) - Rect function, returns 1.0 for -0.5 <= x <= 0.5 and 0.0 otherwise.
                 case 'rect'
                     mReturn = (abs(vX) <= 0.5);
+                    return;
 
+                % step(x) - Step function, returns 1.0 for x >= 0 and 0.0 otherwise
                 case 'step'
                     mReturn = (vX >= 0.0);
+                    return;
 
+                % min3(x,y,z) - Minimum function, returns the minimum value between x, y and z
                 case 'min3'
                     mReturn = min([vX, vY, vZ]);
+                    return;
 
+                % min(x,y) - Minimum function, returns the minimum value between x and y
                 case 'min'
                     mReturn = min([vX, vY]);
+                    return;
 
+                % max3(x,y,z) - Maximum function, returns the minimum value between x, y and z
                 case 'max3'
                     mReturn = max([vX, vY, vZ]);
+                    return;
 
+                % max(x,y) - Maximum function, returns the minimum value between x and y
                 case 'max'
                     mReturn = max([vX, vY]);
+                    return;
 
-                otherwise:
-                    mReturn = [];
+                % This should not be reached
+                otherwise
+                    fprintf(2,'Error: Unknown math function "%s" in equation.\n',sFunc);
+                    return;
 
             end % switch
         
