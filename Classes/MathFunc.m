@@ -61,61 +61,54 @@ classdef MathFunc
     methods (Access = 'public')
         
         function mReturn = Eval(obj, aX1, aX2, aX3)
-            
-            nX1 = length(aX1);
-            nX2 = length(aX2);
-            nX3 = length(aX3);
-            
-            mReturn = zeros(nX1,nX2,nX3);
-            
+
             [mX1,mX2,mX3] = meshgrid(aX1,aX2,aX3);
-            
+
             stFunc = obj.FuncStruct;
             [~,nF] = size(stFunc);
-            
-            nC = 0;
-            for f=2:nF
-                nCC = length(stFunc(f).Children);
-                if nCC > nC
-                    nC = nCC;
-                end % if
-            end % for
-            
-            mF = zeros(nX2,nX1,nX3,nC);
-            aF = zeros(1,nC);
+
+            stF(nF).X = [];
 
             for f=nF:-1:1
+
                 aCh = stFunc(f).Children; % Array of children functions
                 sFn = stFunc(f).Clean;    % Parsed function to evaluate
                 sMa = stFunc(f).Func;     % Math function for curren5 paranthesis
                 nCh = length(aCh);        % Number of children
-                
+
+                % Insert variables for children functions
                 if ~isempty(aCh)
                     for c=1:nCh
                         sFi = sprintf('%s(#%d)',stFunc(aCh(c)).Func,aCh(c));
-                        iFC = obj.fFindIndex(aF,aCh(c));
-                        sFn = strrep(sFn,sFi,sprintf('mF(%d)',iFC));
-                        aF(iFC) = 0;
+                        sFn = strrep(sFn,sFi,sprintf('stF(%d).X',aCh(c)));
                     end % for
                 end % if
 
-                stFn = strsplit(sFn,','); % Struct of function variables
-                nFn  = length(stFn);      % Number of function variables
-                stRS(3).X = [];           % Storage struct for function variables
-                
+                stFn     = strsplit(sFn,','); % Struct of function variables
+                nFn      = length(stFn);      % Number of function variables
+                stR(3).X = [];                % Storage struct for function variables
+
+                % Parse all variable functions
                 for n=1:nFn
-                    sFn = strrep(stFn{n},'mF(','mF(:,:,:,');
-                    fFn = str2func(sprintf('@(x1,x2,x3,mF)%s',sFn));
-                    stRS(n).X = fFn(mX1,mX2,mX3,mF);
+                    if n > 3; continue; end;
+                    fFn      = str2func(sprintf('@(x1,x2,x3,stF)%s',stFn{n}));
+                    stR(n).X = fFn(mX1,mX2,mX3,stF);
                 end % for
 
-                iFi           = obj.fFreeIndex(aF);
-                mF(:,:,:,iFi) = obj.fFunc(sMa,stRS(1).X,stRS(2).X,stRS(3).X);
-                aF(iFi)       = f;
+                % Clear daTa for inserted function results to save memory
+                if ~isempty(aCh)
+                    for c=1:nCh
+                        stF(aCh(c)).X = [];
+                    end % for
+                end % if
+
+                % Apply math function call
+                stF(f).X = obj.fFunc(sMa,stR(1).X,stR(2).X,stR(3).X);
+
             end % for
             
-            iFC     = obj.fFindIndex(aF,1);
-            mReturn = mF(:,:,:,iFC);
+            % Return matrix for root function result
+            mReturn = stF(1).X;
             
         end % function
         
@@ -138,14 +131,10 @@ classdef MathFunc
             end % if
             iC = iC+1;
         
-            iLevel  = 0;
-            iMaxInd = 1;
-            iParInd = 1;
-            aTree   = [1];
-            iIfs    = 0;
+            iInd  = 1;
+            aTree = [1];
             
             % Set up struct
-            stFunc(iC).Level    = [];
             stFunc(iC).Children = [];
             stFunc(iC).Start    = [];
             stFunc(iC).End      = [];
@@ -154,29 +143,23 @@ classdef MathFunc
             stFunc(iC).Func     = [];
             
             % Root values
-            stFunc(1).Level  = 0;
             stFunc(1).Start  = 1;
             stFunc(1).End    = length(obj.Func);
-            stFunc(1).String = obj.Func(stFunc(1).Start:stFunc(1).End);
+            stFunc(1).String = obj.Func;
 
             % Build paranteses tree
             for c=1:stFunc(1).End
                 sC = obj.Func(c);
-                
                 if sC == '('
-                    iLevel       = iLevel + 1;
-                    iMaxInd      = iMaxInd + 1;
-                    aTree(end+1) = iMaxInd;
-                    stFunc(iMaxInd).Level = iLevel;
-                    stFunc(iMaxInd).Start = c+1;
-                    stFunc(aTree(end-1)).Children(end+1) = iMaxInd;
+                    iInd = iInd + 1;
+                    aTree(end+1) = iInd;
+                    stFunc(iInd).Start = c+1;
+                    stFunc(aTree(end-1)).Children(end+1) = iInd;
                 end % if
-                
                 if sC == ')'
-                    stFunc(aTree(end)).End    = c-1;
+                    stFunc(aTree(end)).End = c-1;
                     stFunc(aTree(end)).String = obj.Func(stFunc(aTree(end)).Start:stFunc(aTree(end)).End);
                     aTree(end) = [];
-                    iLevel     = iLevel - 1;
                 end % if
             end % for
 
@@ -212,7 +195,7 @@ classdef MathFunc
                         stFunc(i).Func = obj.Func(c:stFunc(i).Start-2);
                         break;
                     end % if
-                    if obj.isOperator(sC)
+                    if ismember(sC, {',','+','-','*','/','(',')','<','>','=','&','|','!','^'})
                         stFunc(i).Func = obj.Func(c+1:stFunc(i).Start-2);
                         break;
                     end % if
@@ -231,30 +214,6 @@ classdef MathFunc
             sReturn = strrep(sReturn,'/', './');
             sReturn = strrep(sReturn,'^', '.^');
             
-        end % function
-        
-        function iReturn = fFreeIndex(~, aSearch)
-
-            iReturn = 0;
-            for i=1:length(aSearch)
-                if aSearch(i) == 0
-                    iReturn = i;
-                    return;
-                end % if
-            end % for
-
-        end % function
-        
-        function iReturn = fFindIndex(~, aSearch, iFind)
-
-            iReturn = 0;
-            for i=1:length(aSearch)
-                if aSearch(i) == iFind
-                    iReturn = i;
-                    return;
-                end % if
-            end % for
-
         end % function
         
         function mReturn = fFunc(~, sFunc, vX, vY, vZ)
@@ -415,10 +374,6 @@ classdef MathFunc
         
         end % function
         
-        function bReturn = isOperator(~, sChar)
-            bReturn = ismember(sChar(1), {',','+','-','*','/','(',')','<','>','=','&','|','!','^'});
-        end
-
     end % methods
 
 end % classdef
