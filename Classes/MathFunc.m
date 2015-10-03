@@ -5,39 +5,31 @@
 %
 
 classdef MathFunc
-    
+
     %
     % Public Properties
     %
 
     properties (GetAccess = 'public', SetAccess = 'public')
-        
+
         Func       = '';
         FuncStruct = {};
 
     end % properites
 
     %
-    % Private Properties
-    %
-    
-    properties (GetAccess = 'private', SetAccess = 'private')
-
-    end % properties
-
-    %
     % Constructor
     %
 
     methods
-        
+
         function obj = MathFunc(sFunction)
-            
+
             obj.Func = sFunction;
             obj = obj.fParse();
-            
+
         end % function
-    
+
     end % methods
 
     %
@@ -45,21 +37,21 @@ classdef MathFunc
     %
 
     methods
-        
+
         function stReturn = get.FuncStruct(obj)
-            
+
             stReturn = obj.FuncStruct;
-            
+
         end % function
 
     end % methods
-    
+
     %
     % Public Methods
     %
-    
+
     methods (Access = 'public')
-        
+
         function mReturn = Eval(obj, aX1, aX2, aX3)
 
             [mX1,mX2,mX3] = meshgrid(aX1,aX2,aX3);
@@ -95,7 +87,7 @@ classdef MathFunc
                     stR(n).X = fFn(mX1,mX2,mX3,stF);
                 end % for
 
-                % Clear daTa for inserted function results to save memory
+                % Clear data for inserted function results to save memory
                 if ~isempty(aCh)
                     for c=1:nCh
                         stF(aCh(c)).X = [];
@@ -106,34 +98,33 @@ classdef MathFunc
                 stF(f).X = obj.fFunc(sMa,stR(1).X,stR(2).X,stR(3).X);
 
             end % for
-            
+
             % Return matrix for root function result
             mReturn = stF(1).X;
-            
+
         end % function
         
     end % methods
-    
+
     %
     % Private Methods
     %
-    
+
     methods (Access = 'private')
-        
+
         function obj = fParse(obj)
-            
+
             % Detect parantheses
-            
+
             iC = length(strfind(obj.Func,'('));
             if iC ~= length(strfind(obj.Func,')'))
                 fprintf(2,'Error: Parentheses mismatch.\n');
                 return;
             end % if
-            iC = iC+1;
-        
+            iC    = iC+1;
             iInd  = 1;
             aTree = [1];
-            
+
             % Set up struct
             stFunc(iC).Children = [];
             stFunc(iC).Start    = [];
@@ -141,7 +132,7 @@ classdef MathFunc
             stFunc(iC).String   = [];
             stFunc(iC).Clean    = [];
             stFunc(iC).Func     = [];
-            
+
             % Root values
             stFunc(1).Start  = 1;
             stFunc(1).End    = length(obj.Func);
@@ -201,25 +192,25 @@ classdef MathFunc
                     end % if
                 end % for
             end % for
-            
+
             obj.FuncStruct = stFunc;
-            
+
         end % function
-        
+
         function sReturn = fFormat(~, sReturn)
-            
+
             sReturn = strrep(sReturn,'&&', '&');
             sReturn = strrep(sReturn,'||', '|');
             sReturn = strrep(sReturn,'*', '.*');
             sReturn = strrep(sReturn,'/', './');
             sReturn = strrep(sReturn,'^', '.^');
-            
+
         end % function
-        
+
         function mReturn = fFunc(~, sFunc, vX, vY, vZ)
-            
+
             mReturn = [];
-            
+
             if nargin < 4
                 vY = [];
             end % if
@@ -227,114 +218,114 @@ classdef MathFunc
             if nargin < 5
                 vZ = [];
             end % if
-            
+
             if isempty(sFunc)
                 mReturn = vX;
                 return;
             end % if
-            
+
             switch(sFunc)
-                
+
                 % if(x,y,z) - If statement with condition, true, false
                 case 'if'
                     mReturn = vX.*vY + not(vX).*vZ;
                     return;
-                    
+
                 % abs(x) - Absolute value of x.
                 case 'abs'
                     mReturn = abs(vX);
                     return;
-                    
+
                 % sin(x) - Sine of x.
                 case 'sin'
                     mReturn = sin(vX);
                     return;
-                    
+
                 % cos(x) - Cosine of x.
                 case 'cos'
                     mReturn = cos(vX);
                     return;
-                    
+
                 % tan(x) - Tangent of x.
                 case 'tan'
                     mReturn = tan(vX);
                     return;
-                    
+
                 % exp(x) - Exponential function i.e. e^x.
                 case 'exp'
                     mReturn = exp(vX);
                     return;
-                    
+
                 % log10(x) - Base 10 logarithm of x.
                 case 'log10'
                     mReturn = log10(vX);
                     return;
-                    
+
                 % log(x) - Natural (Base e) logarithm of x.
                 case 'log'
                     mReturn = log(vX);
                     return;
-                    
+
                 % asin(x) - Arc Sine of x.
                 case 'asin'
                     mReturn = asin(vX);
                     return;
-                    
+
                 % acos(x) - Arc Cosine of x.
                 case 'acos'
                     mReturn = acos(vX);
                     return;
-                    
+
                 % atan2(x,y) - Arc Tangent of y/x, taking into account which quadrant the point (x,y) is in.
                 case 'atan2'
                     mReturn = atan2(vX,vY);
                     return;
-                    
+
                 % atan(x) - Arc Tangent of x.
                 case 'atan'
                     mReturn = atan(vX);
                     return;
-                    
+
                 % sqrt(x) - Square root of x.
                 case 'sqrt'
                     mReturn = sqrt(vX);
                     return;
-                    
+
                 % not(x) - Logical not. x is evaluated as a logical expression and the complement is returned.
                 case 'not'
                     mReturn = not(vX);
                     return;
-                    
+
                 % pow(x,y) - Power, returns x^y.
                 case 'pow'
                     mReturn = vX.^fix(vY);
                     return;
-                    
+
                 % int(x) - Integer, converts x to integer truncating towards 0.
                 case 'int'
                     mReturn = fix(vX);
                     return;
-                    
+
                 % nint(x) - Nearest integer, converts x to the nearest integer.
                 case 'nint'
                     mReturn = fix(round(vX,0));
                     return;
-                    
+
                 % ceiling(x) - Ceiling, converts x to the least integer that is >= x.
                 case 'ceiling'
                     mReturn = ceil(vX);
                     return;
-                    
+
                 % floor(x) - Floor, converts x to the greatest integer that is <= x.
                 case 'floor'
                     mReturn = floor(vX);
                     return;
-                    
+
                 % modulo(x,y) - Modulo, returns the remainder of the integer division, i.e., x - floor(x/y)*y%
                 case 'modulo'
                     mReturn = mod(vX,vY);
                     return;
-                    
+
                 % rect(x) - Rect function, returns 1.0 for -0.5 <= x <= 0.5 and 0.0 otherwise.
                 case 'rect'
                     mReturn = (abs(vX) <= 0.5);
@@ -371,10 +362,9 @@ classdef MathFunc
                     return;
 
             end % switch
-        
+
         end % function
-        
+
     end % methods
 
 end % classdef
-
