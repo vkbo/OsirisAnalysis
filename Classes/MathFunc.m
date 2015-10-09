@@ -96,6 +96,11 @@ classdef MathFunc
 
                 % Apply math function call
                 stF(f).X = obj.fFunc(sMa,stR(1).X,stR(2).X,stR(3).X);
+                if isempty(stF(f).X)
+                    fprintf(2,'MathFunc Error: Cannot parse math function.\n');
+                    mReturn = [];
+                    return;
+                end % if
 
             end % for
 
@@ -358,7 +363,7 @@ classdef MathFunc
 
                 % This should not be reached
                 otherwise
-                    fprintf(2,'Error: Unknown math function "%s" in equation.\n',sFunc);
+                    fprintf(2,'MathFunc Error: Unknown math function "%s" in equation.\n',sFunc);
                     return;
 
             end % switch
