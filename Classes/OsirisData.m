@@ -13,14 +13,15 @@ classdef OsirisData
     
     properties (GetAccess = 'public', SetAccess = 'public')
 
-        Path      = '';     % Path to dataset
-        PathID    = '';     % Path as ID instead of free text input
-        Elements  = {};     % Struct of all datafiles in dataset ('MS/' subfolder)
-        MSData    = {};     % Struct of all MS data
-        Config    = [];     % Content of the config files and extraction of all runtime variables
-        DataSets  = {};     % Available datasets in folders indicated by LocalConfig.m
-        Silent    = 0;      % Set to 1 to disable command window output
-        Temp      = '/tmp'; % Temp folder (set in LocalConfig.m)
+        Path        = '';     % Path to dataset
+        PathID      = '';     % Path as ID instead of free text input
+        Elements    = {};     % Struct of all datafiles in dataset ('MS/' subfolder)
+        MSData      = {};     % Struct of all MS data
+        Config      = [];     % Content of the config files and extraction of all runtime variables
+        DataSets    = {};     % Available datasets in folders indicated by LocalConfig.m
+        DefaultPath = {};     % Default data folder
+        Silent      = 0;      % Set to 1 to disable command window output
+        Temp        = '/tmp'; % Temp folder (set in LocalConfig.m)
 
     end % properties
 
@@ -30,7 +31,6 @@ classdef OsirisData
     
     properties (GetAccess = 'private', SetAccess = 'private')
 
-        DefaultPath = {}; % Default data folder
         DefaultData = {}; % Data in default folder
 
     end % properties
@@ -57,7 +57,6 @@ classdef OsirisData
             LocalConfig;
             
             obj.Temp   = sLocalTemp;
-    
             obj.Config = OsirisConfig;
             obj.Config.Silent = obj.Silent;
             
@@ -73,12 +72,15 @@ classdef OsirisData
                 sName  = stFields{f};
                 sPath  = obj.DefaultPath.(stFields{f}).Path;
                 iDepth = obj.DefaultPath.(stFields{f}).Depth;
+                
+                obj.DefaultPath.(stFields{f}).Available = 0;
 
                 if isdir(sPath)
-
+                    
                     if ~obj.Silent
                         fprintf('Scanning %s\n', sPath);
                     end % if
+                    obj.DefaultPath.(stFields{f}).Available = 1;
                     
                     stScan.(sName)(1) = struct('Path', sPath, 'Name', sName, 'Level', 0);
                     for r=0:iDepth-1
