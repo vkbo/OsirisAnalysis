@@ -28,28 +28,28 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
     stReturn = {};
 
     if nargin == 0
-       fprintf('\n');
-       fprintf('  Function: fPlotField2D\n');
-       fprintf(' ************************\n');
-       fprintf('  Plots a field from OsirisData in 2D\n');
-       fprintf('\n');
-       fprintf('  Inputs:\n');
-       fprintf(' =========\n');
-       fprintf('  oData  :: OsirisData object\n');
-       fprintf('  sTime  :: Time dump\n');
-       fprintf('  sField :: Which field to look at\n');
-       fprintf('\n');
-       fprintf('  Options:\n');
-       fprintf(' ==========\n');
-       fprintf('  Limits      :: Axis limits\n');
-       fprintf('  FigureSize  :: Default [900 500]\n');
-       fprintf('  HideDump    :: Default No\n');
-       fprintf('  IsSubplot   :: Default No\n');
-       fprintf('  AutoResize  :: Default On\n');
-       fprintf('  CAxis       :: Color axis limits\n');
-       fprintf('  ShowOverlay :: Default Yes\n');
-       fprintf('\n');
-       return;
+        fprintf('\n');
+        fprintf('  Function: fPlotField2D\n');
+        fprintf(' ************************\n');
+        fprintf('  Plots a field from OsirisData in 2D\n');
+        fprintf('\n');
+        fprintf('  Inputs:\n');
+        fprintf(' =========\n');
+        fprintf('  oData  :: OsirisData object\n');
+        fprintf('  sTime  :: Time dump\n');
+        fprintf('  sField :: Which field to look at\n');
+        fprintf('\n');
+        fprintf('  Options:\n');
+        fprintf(' ==========\n');
+        fprintf('  Limits      :: Axis limits\n');
+        fprintf('  FigureSize  :: Default [900 500]\n');
+        fprintf('  HideDump    :: Default No\n');
+        fprintf('  IsSubplot   :: Default No\n');
+        fprintf('  AutoResize  :: Default On\n');
+        fprintf('  CAxis       :: Color axis limits\n');
+        fprintf('  ShowOverlay :: Default Yes\n');
+        fprintf('\n');
+        return;
     end % if
 
     sField = fTranslateField(sField);

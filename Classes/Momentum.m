@@ -1,3 +1,4 @@
+
 %
 % Class Momentum
 %   A class to analyse and handle Osiris data related to the momentum and
@@ -37,6 +38,7 @@ classdef Momentum
         Data      = [];                        % OsirisData dataset
         Species   = '';                        % What species to analyse
         Time      = 0;                         % Current time (dumb number)
+        Offset    = 0.0;                       % Coordinates for start of box
         X1Lim     = [];                        % Axes limits x1
         X2Lim     = [];                        % Axes limits x2
         X3Lim     = [];                        % Axes limits x3
@@ -46,6 +48,7 @@ classdef Momentum
         AxisRange = [0.0 0.0 0.0 0.0 0.0 0.0]; % Max and min of axes
         AxisFac   = [1.0, 1.0, 1.0];           % Axes scale factors
         Coords    = '';                        % Coordinates
+        Dim       = 0;                         % Dimensions
         
     end % properties
 
@@ -99,11 +102,13 @@ classdef Momentum
             dBoxX3Min = obj.Data.Config.Variables.Simulation.BoxX3Min;
             dBoxX3Max = obj.Data.Config.Variables.Simulation.BoxX3Max;
             sCoords   = obj.Data.Config.Variables.Simulation.Coordinates;
+            iDim      = obj.Data.Config.Variables.Simulation.Dimensions;
             dLFactor  = obj.Data.Config.Variables.Convert.SI.LengthFac;
 
             % Set Scale and Units
             obj.AxisScale = {stOpt.X1Scale, stOpt.X2Scale, stOpt.X3Scale};
             obj.Coords    = sCoords;
+            obj.Dim       = iDim;
 
             % Evaluate units (does not support CGS at the moment)
             switch(lower(stOpt.Units))
@@ -153,6 +158,11 @@ classdef Momentum
 
         function obj = set.Time(obj, sTime)
             
+            % Variables
+            dTimeStep = obj.Data.Config.Variables.Simulation.TimeStep;
+            iNDump    = obj.Data.Config.Variables.Simulation.NDump;
+            dDeltaZ   = dTimeStep*iNDump;
+
             sTime = num2str(sTime);
             iEnd  = fStringToDump(obj.Data, 'end');
             
@@ -175,6 +185,8 @@ classdef Momentum
                 obj.Time = fStringToDump(obj.Data, sTime);
 
             end % if
+            
+            obj.Offset = dDeltaZ*obj.Time;
             
         end % function
 
@@ -418,21 +430,21 @@ classdef Momentum
                 
                 k = i-iStart+1;
 
-                aRAW = obj.Data.Data(i, 'RAW', '', obj.Species);
+                aRaw = obj.Data.Data(i, 'RAW', '', obj.Species);
 
-                stReturn.Slip.Average(k)           = (dDeltaZ - dDeltaZ*sqrt(1-1/wmean(aRAW(:,4),aRAW(:,8))^2))*dLFac;
-                stReturn.Slip.Median(k)            = (dDeltaZ - dDeltaZ*sqrt(1-1/wprctile(aRAW(:,4),50,abs(aRAW(:,8)))^2))*dLFac;
-                stReturn.Slip.Percentile10(k)      = (dDeltaZ - dDeltaZ*sqrt(1-1/wprctile(aRAW(:,4),10,abs(aRAW(:,8)))^2))*dLFac;
-                stReturn.Slip.Percentile90(k)      = (dDeltaZ - dDeltaZ*sqrt(1-1/wprctile(aRAW(:,4),90,abs(aRAW(:,8)))^2))*dLFac;
-                stReturn.Slip.FirstQuartile(k)     = (dDeltaZ - dDeltaZ*sqrt(1-1/wprctile(aRAW(:,4),25,abs(aRAW(:,8)))^2))*dLFac;
-                stReturn.Slip.ThirdQuartile(k)     = (dDeltaZ - dDeltaZ*sqrt(1-1/wprctile(aRAW(:,4),75,abs(aRAW(:,8)))^2))*dLFac;
+                stReturn.Slip.Average(k)           = (dDeltaZ - dDeltaZ*sqrt(1-1/wmean(aRaw(:,4),aRaw(:,8))^2))*dLFac;
+                stReturn.Slip.Median(k)            = (dDeltaZ - dDeltaZ*sqrt(1-1/wprctile(aRaw(:,4),50,abs(aRaw(:,8)))^2))*dLFac;
+                stReturn.Slip.Percentile10(k)      = (dDeltaZ - dDeltaZ*sqrt(1-1/wprctile(aRaw(:,4),10,abs(aRaw(:,8)))^2))*dLFac;
+                stReturn.Slip.Percentile90(k)      = (dDeltaZ - dDeltaZ*sqrt(1-1/wprctile(aRaw(:,4),90,abs(aRaw(:,8)))^2))*dLFac;
+                stReturn.Slip.FirstQuartile(k)     = (dDeltaZ - dDeltaZ*sqrt(1-1/wprctile(aRaw(:,4),25,abs(aRaw(:,8)))^2))*dLFac;
+                stReturn.Slip.ThirdQuartile(k)     = (dDeltaZ - dDeltaZ*sqrt(1-1/wprctile(aRaw(:,4),75,abs(aRaw(:,8)))^2))*dLFac;
 
-                stReturn.Position.Average(k)       = (wmean(aRAW(:,1),aRAW(:,8))-(i*dDeltaZ))*dLFac;
-                stReturn.Position.Median(k)        = (wprctile(aRAW(:,1),50,abs(aRAW(:,8)))-(i*dDeltaZ))*dLFac;
-                stReturn.Position.Percentile10(k)  = (wprctile(aRAW(:,1),10,abs(aRAW(:,8)))-(i*dDeltaZ))*dLFac;
-                stReturn.Position.Percentile90(k)  = (wprctile(aRAW(:,1),90,abs(aRAW(:,8)))-(i*dDeltaZ))*dLFac;
-                stReturn.Position.FirstQuartile(k) = (wprctile(aRAW(:,1),25,abs(aRAW(:,8)))-(i*dDeltaZ))*dLFac;
-                stReturn.Position.ThirdQuartile(k) = (wprctile(aRAW(:,1),75,abs(aRAW(:,8)))-(i*dDeltaZ))*dLFac;
+                stReturn.Position.Average(k)       = (wmean(aRaw(:,1),aRaw(:,8))-(i*dDeltaZ))*dLFac;
+                stReturn.Position.Median(k)        = (wprctile(aRaw(:,1),50,abs(aRaw(:,8)))-(i*dDeltaZ))*dLFac;
+                stReturn.Position.Percentile10(k)  = (wprctile(aRaw(:,1),10,abs(aRaw(:,8)))-(i*dDeltaZ))*dLFac;
+                stReturn.Position.Percentile90(k)  = (wprctile(aRaw(:,1),90,abs(aRaw(:,8)))-(i*dDeltaZ))*dLFac;
+                stReturn.Position.FirstQuartile(k) = (wprctile(aRaw(:,1),25,abs(aRaw(:,8)))-(i*dDeltaZ))*dLFac;
+                stReturn.Position.ThirdQuartile(k) = (wprctile(aRaw(:,1),75,abs(aRaw(:,8)))-(i*dDeltaZ))*dLFac;
                 
                 if k > 1
                     stReturn.ExpectedPos.Average(k)       = stReturn.Position.Average(1)       - sum(stReturn.Slip.Average(1:k-1));
@@ -451,8 +463,8 @@ classdef Momentum
                 end % if
                 
                 % Slip if added energy
-                stReturn.Slip.AverageAdd(k) = (dDeltaZ - dDeltaZ*sqrt(1-1/(dAdd + wmean(aRAW(:,4),aRAW(:,8)))^2))*dLFac;
-                stReturn.Slip.MedianAdd(k)  = (dDeltaZ - dDeltaZ*sqrt(1-1/(dAdd + wprctile(aRAW(:,4),50,abs(aRAW(:,8))))^2))*dLFac;
+                stReturn.Slip.AverageAdd(k) = (dDeltaZ - dDeltaZ*sqrt(1-1/(dAdd + wmean(aRaw(:,4),aRaw(:,8)))^2))*dLFac;
+                stReturn.Slip.MedianAdd(k)  = (dDeltaZ - dDeltaZ*sqrt(1-1/(dAdd + wprctile(aRaw(:,4),50,abs(aRaw(:,8))))^2))*dLFac;
                 if k > 1
                     stReturn.ExpectedAdd.Average(k) = stReturn.Position.Average(1) - sum(stReturn.Slip.AverageAdd(1:k-1));
                     stReturn.ExpectedAdd.Median(k)  = stReturn.Position.Median(1)  - sum(stReturn.Slip.MedianAdd(1:k-1));
@@ -468,6 +480,91 @@ classdef Momentum
             stReturn.DeltaZ = dDeltaZ;
             stReturn.TAxis  = aTAxis(iStart+1:iStop+1);
     
+        end % function
+
+        function stReturn = Emittance(obj, varargin)
+            
+            stReturn = {};
+
+            oOpt = inputParser;
+            addParameter(oOpt, 'Samples',   1);
+            addParameter(oOpt, 'Histogram', 'No');
+            addParameter(oOpt, 'Grid',      [1000 1000]);
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
+
+            aRaw = obj.Data.Data(obj.Time, 'RAW', '', obj.Species);
+            aP   = sqrt(aRaw(:,4).^2 + aRaw(:,5).^2 + aRaw(:,6).^2);
+
+            aXth  = aRaw(:,3);
+            aEmit = zeros(stOpt.Samples, 1);
+            
+            for s=1:stOpt.Samples
+
+                if obj.Dim == 2
+                    aXth = rand(size(aRaw,1),1)*2*pi;
+                end % if
+
+                if strcmpi(obj.Coords, 'cylindrical')
+                    aPr  = aRaw(:,5);
+                    aPth = aRaw(:,6);
+                    aPx  = aPr.*cos(aXth) - aPth.*sin(aXth);
+                    aX   = aRaw(:,2).*cos(aXth)*obj.AxisFac(2);
+                else
+                    aPx  = aRaw(:,5);
+                    aX   = aRaw(:,2)*obj.AxisFac(2);
+                end % if
+
+                aXPrime  = sin(aPx./aP)*1e3;
+                aCharge  = aRaw(:,8)*obj.Data.Config.Variables.Convert.SI.ChargeFac;
+                aCov     = wcov([aX, aXPrime], abs(aCharge));
+                aEmit(s) = sqrt(det(aCov));
+            
+            end % for
+            
+            iNE = length(aEmit) - 1;
+            iNE = iNE + (iNE == 0);
+            
+            stReturn.Raw        = aRaw;
+            stReturn.X          = aX;
+            stReturn.XUnit      = obj.AxisUnits{1};
+            stReturn.XPrime     = aXPrime;
+            stReturn.XPrimeUnit = 'mrad';
+            stReturn.Charge     = aCharge;
+            stReturn.Weight     = abs(aCharge)/max(abs(aCharge));
+            stReturn.Covariance = aCov;
+            stReturn.Emittance  = mean(aEmit);
+            stReturn.EmitError  = 1.96*std(aEmit)/sqrt(iNE);
+            
+            if strcmpi(stOpt.Histogram, 'No')
+                return;
+            end % if
+            
+            aHist = zeros(stOpt.Grid(1),stOpt.Grid(2));
+            
+            if obj.Dim == 2
+                aX      = [-aX;aX];
+                aXPrime = [-aXPrime;aXPrime];
+                aCharge = [aCharge;aCharge];
+            end % if
+            
+            dXMax   = max(abs(aX));
+            dXPMax  = max(abs(aXPrime));
+            dXMin   = -dXMax;
+            dXPMin  = -dXPMax;
+            dDX     = dXMax/((stOpt.Grid(1)-2)/2);
+            dDXP    = dXPMax/((stOpt.Grid(2)-2)/2);
+            aM      = floor(aX/dDX)+(stOpt.Grid(1)/2)+1;
+            aN      = floor(aXPrime/dDXP)+(stOpt.Grid(2)/2)+1;
+            
+            for i=1:length(aM)
+                aHist(aM(i),aN(i)) = aHist(aM(i),aN(i)) + aCharge(i);
+            end % for
+            
+            stReturn.Hist = abs(transpose(aHist))*1e9;
+            stReturn.X1Axis = linspace(dXMin,dXMax,stOpt.Grid(1));
+            stReturn.X2Axis = linspace(dXPMin,dXPMax,stOpt.Grid(2));
+            
         end % function
     
         function aReturn = MomentumToEnergy(obj, aMomentum)
