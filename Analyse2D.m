@@ -54,6 +54,7 @@ function Analyse2D
     X.Plots{2} = 'Plasma Density';
     X.Plots{3} = 'Field Density';
     X.Plots{4} = 'Phase 2D';
+    X.Plots{5} = 'XX'' Phase Space';
     
     X.Opt.Sample = {'Random','WRandom','W2Random','Top','Bottom'};
 
@@ -381,6 +382,21 @@ function Analyse2D
         
     end % function
 
+    function fCtrlPhaseSpace(t)
+        
+        % Clear panel
+        delete(bgTab(t));
+        bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 514 120],'BackgroundColor',cBackGround);
+        
+        % Create Controls
+        iY = 115;
+        
+        iY = iY - 25;
+        uicontrol(bgTab(t),'Style','Text','String','Species','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Species,'Value',1,'Position',[115 iY 150 20],'Callback',{@fPlotSetSpecies,t});
+
+    end % function
+
 
     %
     %  Functions
@@ -701,6 +717,11 @@ function Analyse2D
                     X.Plot(f).Settings = [0 0 0];
                     fCtrlPhase2D(f);
                     aFigSize = [700 500];
+                    
+                case 'XX'' Phase Space'
+                    X.Plot(f).Data = X.Data.Species{1};
+                    fCtrlPhaseSpace(f);
+                    aFigSize = [700 500];
 
             end % switch
 
@@ -891,6 +912,11 @@ function Analyse2D
                             return;
                         end % if
                         X.Plot(f).Scale = X.Plot(f).Return.AxisScale(1:2);
+    
+                    case 'XX'' Phase Space'
+                        figure(X.Plot(f).Figure); clf;
+                        X.Plot(f).Return = fPlotEmitPhase(oData,X.Time.Dump,X.Plot(f).Data, ...
+                            'IsSubPlot','No','AutoResize','Off','HideDump','Yes');
 
                     otherwise
                         return;
