@@ -6,8 +6,9 @@
 %
 %  Inputs:
 % =========
-%  oData  :: OsirisData object
-%  sTime  :: Time dump
+%  oData    :: OsirisData object
+%  sTime    :: Time dump
+%  sSpecies :: Which species to look at
 %
 %  Options:
 % ==========
@@ -18,11 +19,11 @@
 %  AutoResize  :: Default On
 %  Axis        :: Lin or log
 %  CAxis       :: Color axis limits
-%  Sample      :: Samples per macro particle. Default is 20
+%  Sample      :: Samples per macro particle. Default is 1
 %  Grid        :: Histogram grid size. Defailt is 400x400
 %
 
-function stReturn = fPlotEmitPhase(oData, sTime, varargin)
+function stReturn = fPlotEmitPhase(oData, sTime, sSpecies, varargin)
 
     % Input/Output
 
@@ -36,8 +37,9 @@ function stReturn = fPlotEmitPhase(oData, sTime, varargin)
         fprintf('\n');
         fprintf('  Inputs:\n');
         fprintf(' =========\n');
-        fprintf('  oData  :: OsirisData object\n');
-        fprintf('  sTime  :: Time dump\n');
+        fprintf('  oData    :: OsirisData object\n');
+        fprintf('  sTime    :: Time dump\n');
+        fprintf('  sSpecies :: Which species to look at\n');
         fprintf('\n');
         fprintf('  Options:\n');
         fprintf(' ==========\n');
@@ -48,13 +50,14 @@ function stReturn = fPlotEmitPhase(oData, sTime, varargin)
         fprintf('  AutoResize  :: Default On\n');
         fprintf('  Axis        :: Lin or log\n');
         fprintf('  CAxis       :: Color axis limits\n');
-        fprintf('  Sample      :: Samples per macro particle. Default is 20\n');
+        fprintf('  Sample      :: Samples per macro particle. Default is 1\n');
         fprintf('  Grid        :: Histogram grid size. Defailt is 400x400\n');
         fprintf('\n');
         return;
     end % if
 
-    iTime = fStringToDump(oData, num2str(sTime));
+    sSpecies = fTranslateSpecies(sSpecies);
+    iTime    = fStringToDump(oData, num2str(sTime));
 
     oOpt = inputParser;
     addParameter(oOpt, 'Limits',      []);
@@ -64,7 +67,7 @@ function stReturn = fPlotEmitPhase(oData, sTime, varargin)
     addParameter(oOpt, 'AutoResize',  'On');
     addParameter(oOpt, 'Axis',        'Log');
     addParameter(oOpt, 'CAxis',       []);
-    addParameter(oOpt, 'Sample',      20);
+    addParameter(oOpt, 'Sample',      1);
     addParameter(oOpt, 'Grid',        [400 400]);
     parse(oOpt, varargin{:});
     stOpt = oOpt.Results;
@@ -76,7 +79,7 @@ function stReturn = fPlotEmitPhase(oData, sTime, varargin)
     
     % Prepare Data
     
-    oM = Momentum(oData,'EB','Units','SI','X1Scale','mm','X2Scale','mm');
+    oM = Momentum(oData,sSpecies,'Units','SI','X1Scale','mm','X2Scale','mm');
     oM.Time = iTime;
     stData = oM.Emittance('Sample',stOpt.Sample,'Histogram','Yes','Grid',stOpt.Grid);
     
@@ -91,8 +94,8 @@ function stReturn = fPlotEmitPhase(oData, sTime, varargin)
     stReturn.X1Axis    = stData.X1Axis;
     stReturn.X2Axis    = stData.X2Axis;
     %stReturn.ZPos      = stData.ZPos;
-    %stReturn.AxisFac   = oFLD.AxisFac;
-    %stReturn.AxisRange = oFLD.AxisRange;
+    stReturn.AxisFac   = oM.AxisFac;
+    stReturn.AxisRange = oM.AxisRange;
     
     % Plot
     

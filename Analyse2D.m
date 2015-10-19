@@ -953,6 +953,8 @@ function Analyse2D
             set(chkX1(f), 'Value', X.X1Link(f));
             set(chkX2(f), 'Value', X.X2Link(f));
             set(chkS2(f), 'Value', X.X2Sym(f));
+            
+            figure(1);
 
         end % for
         
