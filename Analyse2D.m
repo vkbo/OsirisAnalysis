@@ -94,7 +94,26 @@ function Analyse2D
     
     % Set background color to default
     cBackGround = get(fMain, 'Color');
+    
+    
+    %
+    %  Menu Bar
+    % **********
+    %
 
+    mData = uimenu(fMain,'Label','Data');
+    mD(1) = uimenu(mData,'Label','Load DataSet 1','Accelerator','1','Callback',{@fLoadSet,1});
+    mD(2) = uimenu(mData,'Label','Load DataSet 2','Accelerator','2','Callback',{@fLoadSet,2});
+    mD(3) = uimenu(mData,'Label','Load DataSet 3','Accelerator','3','Callback',{@fLoadSet,3});
+            uimenu(mData,'Label','Rescan Data Folders','Accelerator','r','Separator','On','Callback',{@fScanData});
+
+    mSims = uimenu(fMain,'Label','Simulation');
+            uimenu(mSims,'Label','Show Sim Info','Accelerator','i','Callback',{@fShowSimInfo});
+
+    mFigs = uimenu(fMain,'Label','Figure');
+            uimenu(mFigs,'Label','Focus Figures','Accelerator','f','Callback',{@fFocus});
+
+    
     %
     %  Create Controls
     % *****************
@@ -267,6 +286,8 @@ function Analyse2D
 
     set(hTabGroup,'SelectedTab',hTabX(2));
     
+    fScanData(0,0);
+    
     
     %
     %  Tab Controls
@@ -407,13 +428,28 @@ function Analyse2D
     
     % Load Data Callback
     
+    function fScanData(~,~)
+        
+        oData = OsirisData('Silent','Yes');
+        stFields = fieldnames(oData.DefaultPath);
+        for f=1:length(stFields)
+            if oData.DefaultPath.(stFields{f}).Available
+                fOut(sprintf('Scanning %s',oData.DefaultPath.(stFields{f}).Path),1);
+                fOut(sprintf('... found %d sets',length(fieldnames(oData.DataSets.ByPath.(stFields{f})))),1);
+            end % if
+        end % for
+        
+    end % function
+    
     function fLoadSet(~,~,iSet)
         
         for i=1:3
             set(btnSet(i), 'BackgroundColor', cButtonOff);
             stSettings.LoadData{i} = get(edtSet(i), 'String');
+            mD(i).Checked = 'Off';
         end % for
         set(btnSet(iSet), 'BackgroundColor', cButtonOn);
+        mD(iSet).Checked = 'On';
 
         oData      = OsirisData('Silent','Yes');
         oData.Path = stSettings.LoadData{iSet};
@@ -1100,20 +1136,6 @@ function Analyse2D
                 fFocus(0,0);
             case 'i'
                 fShowSimInfo(0,0);
-                
-            % Load DataSet
-            case '1'
-                if strcmpi(uiEvt.Modifier, 'control')
-                    fLoadSet(0,0,1);
-                end % if
-            case '2'
-                if strcmpi(uiEvt.Modifier, 'control')
-                    fLoadSet(0,0,2);
-                end % if
-            case '3'
-                if strcmpi(uiEvt.Modifier, 'control')
-                    fLoadSet(0,0,3);
-                end % if
             
         end % switch
         
