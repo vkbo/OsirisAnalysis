@@ -482,27 +482,40 @@ classdef Momentum
     
         end % function
 
-        function stReturn = Emittance(obj, varargin)
+        function stReturn = PhaseSpace(obj, varargin)
             
             stReturn = {};
 
             oOpt = inputParser;
-            addParameter(oOpt, 'Samples',   1);
-            addParameter(oOpt, 'Histogram', 'No');
-            addParameter(oOpt, 'Grid',      [1000 1000]);
+            addParameter(oOpt, 'Samples',      1);
+            addParameter(oOpt, 'MinParticles', 100000);
+            addParameter(oOpt, 'Histogram',    'No');
+            addParameter(oOpt, 'Grid',         [1000 1000]);
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
 
-            aRaw = obj.Data.Data(obj.Time, 'RAW', '', obj.Species);
-            aP   = sqrt(aRaw(:,4).^2 + aRaw(:,5).^2 + aRaw(:,6).^2);
-
-            aXth  = aRaw(:,3);
-            aEmit = zeros(stOpt.Samples, 1);
+            aRaw  = obj.Data.Data(obj.Time, 'RAW', '', obj.Species);
+            aP    = sqrt(aRaw(:,4).^2 + aRaw(:,5).^2 + aRaw(:,6).^2);
+            iLen  = length(aP);
+            aERMS = zeros(stOpt.Samples, 1);
             
-            for s=1:stOpt.Samples
+            aRX   = [];
+            aRXP  = [];
+            aRQ   = [];
+            
+            iMin  = ceil(stOpt.MinParticles/iLen);
+            if stOpt.Samples < iMin
+                iS = iMin;
+            else
+                iS = stOpt.Samples;
+            end % if
+
+            for s=1:iS
 
                 if obj.Dim == 2
                     aXth = rand(size(aRaw,1),1)*2*pi;
+                else
+                    aXth = aRaw(:,3);
                 end % if
 
                 if strcmpi(obj.Coords, 'cylindrical')
@@ -518,52 +531,60 @@ classdef Momentum
                 aXPrime  = sin(aPx./aP)*1e3;
                 aCharge  = aRaw(:,8)*obj.Data.Config.Variables.Convert.SI.ChargeFac;
                 aCov     = wcov([aX, aXPrime], abs(aCharge));
-                aEmit(s) = sqrt(det(aCov));
+                aERMS(s) = sqrt(det(aCov));
             
+                if strcmpi(obj.Coords, 'cylindrical')
+                    aX      = [-aX;aX];
+                    aXPrime = [-aXPrime;aXPrime];
+                    aCharge = [aCharge;aCharge];
+                end % if
+                
+                if length(aRX) < stOpt.MinParticles
+                    aRX  = [aRX;aX];
+                    aRXP = [aRXP;aXPrime];
+                    aRQ  = [aRQ;aCharge];
+                end % if
+
             end % for
             
-            iNE = length(aEmit) - 1;
+            iNE = length(aERMS) - 1;
             iNE = iNE + (iNE == 0);
             
             stReturn.Raw        = aRaw;
-            stReturn.X          = aX;
+            stReturn.X          = aRX;
             stReturn.XUnit      = obj.AxisUnits{1};
-            stReturn.XPrime     = aXPrime;
+            stReturn.XPrime     = aRXP;
             stReturn.XPrimeUnit = 'mrad';
-            stReturn.Charge     = aCharge;
-            stReturn.Weight     = abs(aCharge)/max(abs(aCharge));
+            stReturn.Charge     = aRQ;
+            stReturn.Weight     = abs(aRQ)/max(abs(aRQ));
             stReturn.Covariance = aCov;
-            stReturn.Emittance  = mean(aEmit);
-            stReturn.EmitError  = 1.96*std(aEmit)/sqrt(iNE);
+            stReturn.ERMS       = mean(aERMS);
+            stReturn.ERMSError  = 1.96*std(aERMS)/sqrt(iNE);
             
             if strcmpi(stOpt.Histogram, 'No')
                 return;
             end % if
             
-            aHist = zeros(stOpt.Grid(1),stOpt.Grid(2));
+            aHist   = zeros(stOpt.Grid(1),stOpt.Grid(2));
             
-            if obj.Dim == 2
-                aX      = [-aX;aX];
-                aXPrime = [-aXPrime;aXPrime];
-                aCharge = [aCharge;aCharge];
-            end % if
-            
-            dXMax   = max(abs(aX));
-            dXPMax  = max(abs(aXPrime));
+            dXMax   = max(abs(aRX));
+            dXPMax  = max(abs(aRXP));
             dXMin   = -dXMax;
             dXPMin  = -dXPMax;
+
             dDX     = dXMax/((stOpt.Grid(1)-2)/2);
             dDXP    = dXPMax/((stOpt.Grid(2)-2)/2);
-            aM      = floor(aX/dDX)+(stOpt.Grid(1)/2)+1;
-            aN      = floor(aXPrime/dDXP)+(stOpt.Grid(2)/2)+1;
+            aM      = floor(aRX/dDX)+(stOpt.Grid(1)/2)+1;
+            aN      = floor(aRXP/dDXP)+(stOpt.Grid(2)/2)+1;
             
             for i=1:length(aM)
-                aHist(aM(i),aN(i)) = aHist(aM(i),aN(i)) + aCharge(i);
+                aHist(aM(i),aN(i)) = aHist(aM(i),aN(i)) + aRQ(i);
             end % for
             
-            stReturn.Hist = abs(transpose(aHist))*1e9;
+            stReturn.Hist   = abs(transpose(aHist))*1e9;
             stReturn.X1Axis = linspace(dXMin,dXMax,stOpt.Grid(1));
             stReturn.X2Axis = linspace(dXPMin,dXPMax,stOpt.Grid(2));
+            stReturn.Count  = iLen*iMin;
             
         end % function
     

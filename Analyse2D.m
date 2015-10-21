@@ -178,7 +178,7 @@ function Analyse2D
     uicontrol(bgFigs,'Style','Text','String','Y-Max',    'Position',[454 160  55 15],'HorizontalAlignment','Center');
 
     aY = [135 110 85 60 35 10];
-    aP = [1 2 3 4 1 1];
+    aP = [1 2 3 4 5 1];
     for f=1:6
         uicontrol(bgFigs,'Style','Text','String',sprintf('#%d',f+1),'Position',[9 aY(f)+1 25 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         
@@ -392,8 +392,10 @@ function Analyse2D
         iY = 115;
         
         iY = iY - 25;
-        uicontrol(bgTab(t),'Style','Text','String','Species','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Species,'Value',1,'Position',[115 iY 150 20],'Callback',{@fPlotSetSpecies,t});
+        uicontrol(bgTab(t),'Style','Text','String','Species','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Species,'Value',1,'Position',[85 iY 150 20],'Callback',{@fPlotSetSpecies,t});
+        uicontrol(bgTab(t),'Style','Text','String','Min. Part.','Position',[240 iY+1 65 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','Edit','String',sprintf('%d',X.Plot(t).Count),'Position',[310 iY 80 20],'Callback',{@fPlotSetCount,t});
 
     end % function
 
@@ -719,7 +721,8 @@ function Analyse2D
                     aFigSize = [700 500];
                     
                 case 'XX'' Phase Space'
-                    X.Plot(f).Data = X.Data.Species{1};
+                    X.Plot(f).Data  = X.Data.Species{1};
+                    X.Plot(f).Count = 500000;
                     fCtrlPhaseSpace(f);
                     aFigSize = [700 500];
 
@@ -887,7 +890,7 @@ function Analyse2D
                             'Overlay1',X.Plot(f).Scatter{1},'Overlay2',X.Plot(f).Scatter{2}, ...
                             'Filter1',X.Opt.Sample{X.Plot(f).Sample(1)},'Filter2',X.Opt.Sample{X.Plot(f).Sample(2)}, ...
                             'E1',stEF(1).Range,'E2',stEF(2).Range, ...
-                            'Limits',[aHLim aVLim],'CAxis',[0 5]);
+                            'Limits',[aHLim aVLim],'CAxis',[]);
                         
                     case 'Field Density'
                         iMakeSym = 1;
@@ -914,9 +917,16 @@ function Analyse2D
                         X.Plot(f).Scale = X.Plot(f).Return.AxisScale(1:2);
     
                     case 'XX'' Phase Space'
+                        if X.Plot(f).Count < 1
+                            iMinPart = 1;
+                        else
+                            iMinPart = X.Plot(f).Count;
+                        end % if
                         figure(X.Plot(f).Figure); clf;
-                        X.Plot(f).Return = fPlotEmitPhase(oData,X.Time.Dump,X.Plot(f).Data, ...
+                        X.Plot(f).Return = fPlotPhaseSpace(oData,X.Time.Dump,X.Plot(f).Data, ...
+                            'MinParticles',iMinPart, ...
                             'IsSubPlot','No','AutoResize','Off','HideDump','Yes');
+                        fOut(sprintf('Sampled %d particles, Erms: %.3f mm·mrad',X.Plot(f).Return.Count,X.Plot(f).Return.ERMS),1);
 
                     otherwise
                         return;
@@ -1173,8 +1183,7 @@ function Analyse2D
 
     function fPlotSetScatterNum(uiSrc,~,f,s)
 
-        iValue = str2num(get(uiSrc,'String'));
-        iValue = floor(iValue);
+        iValue = floor(str2double(get(uiSrc,'String')));
         
         if isempty(iValue)
             iValue = 2000;
@@ -1234,6 +1243,21 @@ function Analyse2D
     function fPlotSetting(uiSrc,~,f,s)
     
         X.Plot(f).Settings(s) = get(uiSrc,'Value');
+        fRefresh(f);
+
+    end % function
+
+    function fPlotSetCount(uiSrc,~,f)
+    
+        iValue = floor(str2double(get(uiSrc,'String')));
+
+        if isempty(iValue)
+            iValue = 500000;
+        end % if
+        
+        set(uiSrc, 'String', sprintf('%d', iValue));
+        X.Plot(f).Count = iValue;
+
         fRefresh(f);
 
     end % function

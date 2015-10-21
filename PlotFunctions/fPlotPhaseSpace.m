@@ -1,8 +1,8 @@
 
 %
-%  Function: fPlotEmitPhase
-% **************************
-%  Plots a X X' phasespace from OsirisData
+%  Function: fPlotPhaseSpace
+% ***************************
+%  Plots a X X' phase space from OsirisData
 %
 %  Inputs:
 % =========
@@ -12,18 +12,20 @@
 %
 %  Options:
 % ==========
-%  Limits      :: Axis limits
-%  FigureSize  :: Default [900 500]
-%  HideDump    :: Default No
-%  IsSubplot   :: Default No
-%  AutoResize  :: Default On
-%  Axis        :: Lin or log
-%  CAxis       :: Color axis limits
-%  Sample      :: Samples per macro particle. Default is 1
-%  Grid        :: Histogram grid size. Defailt is 400x400
+%  Limits       :: Axis limits
+%  FigureSize   :: Default [900 500]
+%  HideDump     :: Default No
+%  IsSubplot    :: Default No
+%  AutoResize   :: Default On
+%  Axis         :: Lin or log
+%  CAxis        :: Color axis limits
+%  Sample       :: Samples per macro particle. Default is 1
+%  MinParticles :: Minimum number of particles to sample
+%                  (This option may modify "Sample")
+%  Grid         :: Histogram grid size. Defailt is 400x400
 %
 
-function stReturn = fPlotEmitPhase(oData, sTime, sSpecies, varargin)
+function stReturn = fPlotPhaseSpace(oData, sTime, sSpecies, varargin)
 
     % Input/Output
 
@@ -43,15 +45,17 @@ function stReturn = fPlotEmitPhase(oData, sTime, sSpecies, varargin)
         fprintf('\n');
         fprintf('  Options:\n');
         fprintf(' ==========\n');
-        fprintf('  Limits      :: Axis limits\n');
-        fprintf('  FigureSize  :: Default [900 500]\n');
-        fprintf('  HideDump    :: Default No\n');
-        fprintf('  IsSubplot   :: Default No\n');
-        fprintf('  AutoResize  :: Default On\n');
-        fprintf('  Axis        :: Lin or log\n');
-        fprintf('  CAxis       :: Color axis limits\n');
-        fprintf('  Sample      :: Samples per macro particle. Default is 1\n');
-        fprintf('  Grid        :: Histogram grid size. Defailt is 400x400\n');
+        fprintf('  Limits       :: Axis limits\n');
+        fprintf('  FigureSize   :: Default [900 500]\n');
+        fprintf('  HideDump     :: Default No\n');
+        fprintf('  IsSubplot    :: Default No\n');
+        fprintf('  AutoResize   :: Default On\n');
+        fprintf('  Axis         :: Lin or log\n');
+        fprintf('  CAxis        :: Color axis limits\n');
+        fprintf('  Sample       :: Samples per macro particle. Default is 1\n');
+        fprintf('  MinParticles :: Minimum number of particles to sample\n');
+        fprintf('                  (This option may modify "Sample")\n');
+        fprintf('  Grid         :: Histogram grid size. Defailt is 400x400\n');
         fprintf('\n');
         return;
     end % if
@@ -60,15 +64,16 @@ function stReturn = fPlotEmitPhase(oData, sTime, sSpecies, varargin)
     iTime    = fStringToDump(oData, num2str(sTime));
 
     oOpt = inputParser;
-    addParameter(oOpt, 'Limits',      []);
-    addParameter(oOpt, 'FigureSize',  [900 500]);
-    addParameter(oOpt, 'HideDump',    'No');
-    addParameter(oOpt, 'IsSubPlot',   'No');
-    addParameter(oOpt, 'AutoResize',  'On');
-    addParameter(oOpt, 'Axis',        'Log');
-    addParameter(oOpt, 'CAxis',       []);
-    addParameter(oOpt, 'Sample',      1);
-    addParameter(oOpt, 'Grid',        [400 400]);
+    addParameter(oOpt, 'Limits',       []);
+    addParameter(oOpt, 'FigureSize',   [900 500]);
+    addParameter(oOpt, 'HideDump',     'No');
+    addParameter(oOpt, 'IsSubPlot',    'No');
+    addParameter(oOpt, 'AutoResize',   'On');
+    addParameter(oOpt, 'Axis',         'Log');
+    addParameter(oOpt, 'CAxis',        []);
+    addParameter(oOpt, 'Sample',       1);
+    addParameter(oOpt, 'MinParticles', 100000);
+    addParameter(oOpt, 'Grid',         [400 400]);
     parse(oOpt, varargin{:});
     stOpt = oOpt.Results;
 
@@ -78,10 +83,11 @@ function stReturn = fPlotEmitPhase(oData, sTime, sSpecies, varargin)
     end % if
     
     % Prepare Data
-    
     oM = Momentum(oData,sSpecies,'Units','SI','X1Scale','mm','X2Scale','mm');
     oM.Time = iTime;
-    stData = oM.Emittance('Sample',stOpt.Sample,'Histogram','Yes','Grid',stOpt.Grid);
+    stData = oM.PhaseSpace('Sample',stOpt.Sample, ...
+                           'MinParticles',stOpt.MinParticles, ...
+                           'Histogram','Yes','Grid',stOpt.Grid);
     
     if strcmpi(stOpt.Axis, 'Log')
         aData = log10(stData.Hist);
@@ -90,12 +96,17 @@ function stReturn = fPlotEmitPhase(oData, sTime, sSpecies, varargin)
         aData = stData.Hist;
         sUnit = 'Q [nC]';
     end % if
+    
+    aX1Axis = stData.X1Axis;
+    aX2Axis = stData.X2Axis;
 
-    stReturn.X1Axis    = stData.X1Axis;
-    stReturn.X2Axis    = stData.X2Axis;
+    stReturn.X1Axis    = aX1Axis;
+    stReturn.X2Axis    = aX2Axis;
     %stReturn.ZPos      = stData.ZPos;
     stReturn.AxisFac   = oM.AxisFac;
-    stReturn.AxisRange = oM.AxisRange;
+    stReturn.AxisRange = [aX1Axis(1) aX1Axis(end) aX2Axis(1) aX2Axis(end) 0.0 0.0];
+    stReturn.Count     = stData.Count;
+    stReturn.ERMS      = stData.ERMS;
     
     % Plot
     
