@@ -153,6 +153,7 @@ classdef OsirisConfig
                 obj = obj.fGetPlasmaVariables();
                 obj = obj.fGetBeamVariables();
                 obj = obj.fGetFields();
+                obj = obj.fGetDensity();
                 
             end % if
 
@@ -456,8 +457,9 @@ classdef OsirisConfig
         
         function obj = fGetSpecies(obj)
             
-            stSpecies.Beam   = {};
-            stSpecies.Plasma = {};
+            stSpecies.Beam    = {};
+            stSpecies.Plasma  = {};
+            stSpecies.Species = {};
 
             [iRows,~] = size(obj.Raw);
             sPrev     = '';
@@ -471,6 +473,7 @@ classdef OsirisConfig
                     else
                         stSpecies.Beam{end+1,1} = sBeam;
                     end % if
+                    stSpecies.Species{end+1,1} = sBeam;
                     sPrev = obj.Raw{i,7};
                 end % if
             end % for
@@ -926,6 +929,10 @@ classdef OsirisConfig
         function obj = fGetFields(obj)
             
             sFields = fExtractRaw(obj, '', 'diag_emf', 'reports', 0);
+
+            if isempty(sFields)
+                return;
+            end % if
             
             sFields = strrep(sFields, '"', '');
             aFields = strsplit(sFields, ',');
@@ -944,6 +951,41 @@ classdef OsirisConfig
                     obj.Variables.Fields.BField{iB} = aFields{i};
                     iB = iB + 1;
                 end % if
+            end % for
+            
+        end % function
+
+        function obj = fGetDensity(obj)
+            
+            stSpecies = obj.Variables.Species.Species;
+            
+            for s=1:length(stSpecies)
+
+                sDensity = fExtractRaw(obj, stSpecies{s}, 'diag_species', 'reports', 0, '');
+
+                if isempty(sDensity)
+                    return;
+                end % if
+
+                sDensity = strrep(sDensity, '"', '');
+                aDensity = strsplit(sDensity, ',');
+                obj.Variables.Density.(stSpecies{s}).Density = aDensity;
+                obj.Variables.Density.(stSpecies{s}).Charge  = {};
+                obj.Variables.Density.(stSpecies{s}).Current = {};
+
+                iQ = 1;
+                iC = 1;
+                for i=1:length(aDensity)
+                    if strcmpi(aDensity{i}(1), 'c')
+                        obj.Variables.Density.(stSpecies{s}).Charge{iQ} = aDensity{i};
+                        iQ = iQ + 1;
+                    end % if
+                    if strcmpi(aDensity{i}(1), 'j')
+                        obj.Variables.Density.(stSpecies{s}).Current{iC} = aDensity{i};
+                        iC = iC + 1;
+                    end % if
+                end % for
+
             end % for
             
         end % function

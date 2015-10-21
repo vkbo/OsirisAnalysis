@@ -336,20 +336,27 @@ function Analyse2D
         end % if
         
         iY = iY - 25;
+        [~,iVal] = incellarray(X.Plot(t).Data, X.Data.Plasma);
+        if iVal == 0
+            X.Plot(t).Data = X.Data.Plasma{1};
+            iVal = 1;
+        end % if
         uicontrol(bgTab(t),'Style','Text','String','Plasma','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Plasma,'Value',1,'Position',[85 iY 150 20],'Callback',{@fPlotSetPlasma,t});
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Plasma,'Value',iVal,'Position',[85 iY 150 20],'Callback',{@fPlotSetPlasma,t});
 
         iY = iY - 25;
+        [~,iVal] = incellarray(X.Plot(f).Scatter(1),X.Plot(t).ScatterOpt);
         uicontrol(bgTab(t),'Style','Text','String','Scatter 1','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Plot(t).ScatterOpt,'Position',[85 iY 150 20],'Callback',{@fPlotSetScatter,t,1});
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Plot(t).ScatterOpt,'Value',iVal,'Position',[85 iY 150 20],'Callback',{@fPlotSetScatter,t,1});
         uicontrol(bgTab(t),'Style','Text','String','Count','Position',[240 iY+1 45 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','Edit','String',sprintf('%d',X.Plot(t).ScatterNum(1)),'Position',[285 iY 60 20],'Callback',{@fPlotSetScatterNum,t,1});
         uicontrol(bgTab(t),'Style','Text','String','Sample','Position',[355 iY+1 55 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','PopupMenu','String',X.Opt.Sample,'Value',X.Plot(t).Sample(1),'Position',[415 iY 90 20],'Callback',{@fPlotSetSample,t,1});
 
         iY = iY - 25;
+        [~,iVal] = incellarray(X.Plot(f).Scatter(2),X.Plot(t).ScatterOpt);
         uicontrol(bgTab(t),'Style','Text','String','Scatter 2','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Plot(t).ScatterOpt,'Position',[85 iY 150 20],'Callback',{@fPlotSetScatter,t,2});
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Plot(t).ScatterOpt,'Value',iVal,'Position',[85 iY 150 20],'Callback',{@fPlotSetScatter,t,2});
         uicontrol(bgTab(t),'Style','Text','String','Count','Position',[240 iY+1 45 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','Edit','String',sprintf('%d',X.Plot(t).ScatterNum(2)),'Position',[285 iY 60 20],'Callback',{@fPlotSetScatterNum,t,2});
         uicontrol(bgTab(t),'Style','Text','String','Sample','Position',[355 iY+1 55 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
@@ -461,6 +468,7 @@ function Analyse2D
         X.Data.Plasma     = oData.Config.Variables.Species.Plasma;
         X.Data.Species    = [X.Data.Beam; X.Data.Plasma];
         X.Data.Field      = oData.Config.Variables.Fields.Field;
+        X.Data.SpDensity  = oData.Config.Variables.Density;
         X.Data.Completed  = oData.Config.Completed;
         X.Data.HasData    = oData.Config.HasData;
         X.Data.HasTracks  = oData.Config.HasTracks;
@@ -497,6 +505,7 @@ function Analyse2D
         end % for
 
         % Translate Densities
+        %X.Data.Density = {'charge','j1','j2','j3'};
         X.Data.Density = {'charge','j1','j2','j3'};
         for i=1:length(X.Data.Density)
             X.Data.Density{i} = fTranslateField(X.Data.Density{i},['Long',X.Data.CoordsPF]);
@@ -577,6 +586,7 @@ function Analyse2D
         X.Plot(9).Data = X.Data.Beam{X.Data.WitnessIdx};
 
         % Refresh
+        fReloadOptions;
         fRefresh;
         fRefreshX;
         
@@ -857,6 +867,52 @@ function Analyse2D
     end % function
 
     % Common Functions
+    
+    function fReloadOptions(p)
+
+        % If plot not specified, refresh all plots
+        if nargin < 1
+            a = 1;
+            b = 6;
+        else
+            a = p;
+            b = p;
+        end % if
+        
+        % Refresh all tabs and options
+        for f=a:b
+
+            if X.Figure(f) == 0
+                continue;
+            end % if
+            
+            switch(X.Plots{X.Figure(f)})
+
+                %case 'Beam Density'
+                %    fResetTab(f);
+                %    fCtrlBeamDensity(f);
+
+                case 'Plasma Density'
+                    fResetTab(f);
+                    fCtrlPlasmaDensity(f);
+
+                %case 'Field Density'
+                %    fResetTab(f);
+                %    fCtrlFieldDensity(f);
+
+                %case 'Phase 2D'
+                %    fResetTab(f);
+                %    fCtrlPhase2D(f);
+
+                %case 'XX'' Phase Space'
+                %    fResetTab(f);
+                %    fCtrlPhaseSpace(f);
+
+            end % switch
+            
+        end % for
+
+    end % function
     
     function fRefresh(p)
         
