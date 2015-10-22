@@ -110,7 +110,7 @@ classdef OsirisConfig
                             && sFileExt(end) ~= '~'           ...
                             && aDir(i).bytes >= aSizes(1)     ...
                             && aDir(i).bytes <= aSizes(2)
-                        aFiles(end+1) = {aDir(i).name};
+                        aFiles{end+1} = aDir(i).name;
                     end % if
 
                 end % if
