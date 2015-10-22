@@ -32,7 +32,7 @@ classdef OsirisConfig
     
     properties (GetAccess = 'private', SetAccess = 'private')
 
-        Files = struct; % Holds possible config files
+        Files = {}; % Holds possible config files
         
     end % properties
 
@@ -120,13 +120,13 @@ classdef OsirisConfig
             switch (length(aFiles))
 
                 case 0
-                    fprintf(2, 'Config file not found.\n');
+                    fprintf(2, 'OsirisConfig Error: Input deck not found.\n');
                 
                 case 1
                     obj.File = 1;
                 
                 otherwise
-                    fprintf('Multiple possible config files found\n');
+                    fprintf('Multiple possible config files found.\n');
                     for i=1:length(aFiles)
                         fprintf('(%d) %s\n', i, aFiles{i});
                     end % for
@@ -478,7 +478,8 @@ classdef OsirisConfig
                 end % if
             end % for
 
-            iBeams = length(stSpecies.Beam);
+            iBeams   = length(stSpecies.Beam);
+            iPlasmas = length(stSpecies.Plasma);
             
             % Assume first beam in input deck is the drive beam
             if iBeams > 0
@@ -494,8 +495,15 @@ classdef OsirisConfig
                 stSpecies.WitnessBeam = {};
             end % if
             
+            % Assume first plasma in input deck is the primary plasma
+            if iPlasmas > 0
+                stSpecies.PrimaryPlasma = stSpecies.Plasma(1);
+            else
+                stSpecies.PrimaryPlasma = {};
+            end % if
+
             stSpecies.BeamCount        = iBeams;
-            stSpecies.PlasmaCount      = length(stSpecies.Plasma);
+            stSpecies.PlasmaCount      = iPlasmas;
             stSpecies.DriveBeamCount   = length(stSpecies.DriveBeam);
             stSpecies.WitnessBeamCount = length(stSpecies.WitnessBeam);
             
@@ -674,18 +682,18 @@ classdef OsirisConfig
                         aZ    = linspace(iTMin,iTMax,iNT);
                         iPR   = 0;
                         aReg  = zeros(1,2);
-                        for i=1:length(aFX1)-1
-                            iSMin = floor(aX1(i))+iTMin;
-                            iSMax = floor(aX1(i+1))+iTMin;
+                        for j=1:length(aFX1)-1
+                            iSMin = floor(aX1(j))+iTMin;
+                            iSMax = floor(aX1(j+1))+iTMin;
                             iNS   = iSMax-iSMin+1;
-                            aSPD  = linspace(aFX1(i),aFX1(i+1),iNS);
+                            aSPD  = linspace(aFX1(j),aFX1(j+1),iNS);
                             aPD(iSMin+1:iSMax+1) = aSPD;
-                            if aFX1(i+1) > 0 && aFX1(i) == 0
+                            if aFX1(j+1) > 0 && aFX1(j) == 0
                                 iPR = iPR + 1;
-                                aReg(iPR,1) = aX1(i);
+                                aReg(iPR,1) = aX1(j);
                             end % if
-                            if aFX1(i+1) == 0 && aFX1(i) > 0
-                                aReg(iPR,2) = aX1(i);
+                            if aFX1(j+1) == 0 && aFX1(j) > 0
+                                aReg(iPR,2) = aX1(j);
                             end % if
                         end % for
 
@@ -697,16 +705,18 @@ classdef OsirisConfig
                         obj.Variables.Plasma.(sPlasma).DensityAxis    = aZ;
                         obj.Variables.Plasma.(sPlasma).PlasmaRegions  = aReg;
 
-                        for i=1:length(aFX1)
+                        for j=1:length(aFX1)
                             if dPStart < 0.0
-                                if aFX1(i) > 0.9*dMaxFX1
-                                    dPStart = aX1(i);
+                                if aFX1(j) > 0.9*dMaxFX1
+                                    dPStart = aX1(j);
                                 end % if
-                            else
-                                if dPEnd < 0.0
-                                    if aFX1(i) < 0.1
-                                        dPEnd = aX1(i);
-                                    end % if
+                            end % if
+                        end % for
+
+                        for j=length(aFX1):-1:1
+                            if dPEnd < 0.0
+                                if aFX1(j) > 0.1*dMaxFX1
+                                    dPEnd = aX1(j);
                                 end % if
                             end % if
                         end % for
@@ -745,15 +755,64 @@ classdef OsirisConfig
                         sFunc  = strrep(sValue, '"', '');
                         obj.Variables.Plasma.(sPlasma).ProfileFunction = sFunc;
                         
+                        iTMin = floor(dTMin);
+                        iTMax = floor(dTMax);
+                        iNT   = iTMax-iTMin+1;
+                        aZ    = linspace(iTMin,iTMax,iNT);
+
+                        oMF = MathFunc(sFunc);
+                        aPD = oMF.Eval(aZ,0,0);
+
+                        if isempty(aPD)
+                        
+                            fprintf(2,'OsirisConfig Error: Cannot parse math function from input deck.\n');
+
+                        else
+                        
+                            obj.Variables.Plasma.(sPlasma).DensityProfile = aPD;
+                            obj.Variables.Plasma.(sPlasma).DensityAxis    = aZ;
+
+                            dPlasmaMax = max(aPD);
+
+                            for j=1:length(aPD)
+                                if dPStart < 0.0
+                                    if aPD(j) > 0.95*dPlasmaMax
+                                        dPStart = aZ(j);
+                                    end % if
+                                end % if
+                            end % for
+
+                            for j=length(aPD):-1:1
+                                if dPEnd < 0.0
+                                    if aPD(j) > 0.05*dPlasmaMax
+                                        dPEnd = aZ(j);
+                                    end % if
+                                end % if
+                            end % for
+
+                            if dPEnd < 0.0
+                                dPEnd = obj.Variables.Simulation.TMax;
+                            end % if
+
+                            if dPEnd > aZ(end)
+                                dPEnd = aZ(end);
+                            end % if
+                        end % if
+                        
+                    otherwise
+                        
+                        fprintf('OsirisConfig Warning: Unsupported species profile encountered.\n');
+
                 end % if
 
+                if strcmpi(obj.Variables.Species.PrimaryPlasma,sPlasma)
+                    obj.Variables.Plasma.PlasmaStart  = dPStart;
+                    obj.Variables.Plasma.PlasmaEnd    = dPEnd;
 
-                obj.Variables.Plasma.PlasmaStart  = dPStart;
-                obj.Variables.Plasma.PlasmaEnd    = dPEnd;
-
-                obj.Variables.Plasma.MaxPlasmaFac = dPlasmaMax;
-                obj.Variables.Plasma.MaxOmegaP    = dOmegaP  * sqrt(dPlasmaMax);
-                obj.Variables.Plasma.MaxLambdaP   = dLambdaP / sqrt(dPlasmaMax);
+                    obj.Variables.Plasma.MaxPlasmaFac = dPlasmaMax;
+                    obj.Variables.Plasma.MaxOmegaP    = dOmegaP  * sqrt(dPlasmaMax);
+                    obj.Variables.Plasma.MaxLambdaP   = dLambdaP / sqrt(dPlasmaMax);
+                end % if
 
                 % Species
 
