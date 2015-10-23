@@ -536,8 +536,8 @@ classdef OsirisConfig
             
             % Calculating conversion variables
             
-            dSIE0    = 1e-7 * dEMass * dC^3 * dOmegaP * 4*pi*dEpsilon0 / dECharge;
-            dSIB0    = 1e-7 * dEMass * dC^2 * dOmegaP * 4*pi*dEpsilon0 / dECharge;
+            dSIE0    = dEMass * dC^3 * dOmegaP * dMu0*dEpsilon0 / dECharge;
+            dSIB0    = dEMass * dC^2 * dOmegaP * dMu0*dEpsilon0 / dECharge;
             dLFactor = dC / dOmegaP;
 
             % Setting conversion variables
