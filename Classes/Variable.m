@@ -128,7 +128,7 @@ classdef Variable
             stMap.Allowed.BFieldPart   = {'part_b1','part_b2','part_b3'};
             stMap.Allowed.EFieldEnergy = {'ene_e1','ene_e2','ene_e3','ene_e'};
             stMap.Allowed.BFieldEnergy = {'ene_b1','ene_b2','ene_b3','ene_b'};
-            stMap.Allowed.Field        = [stMap.Allowed.EField,      stMap.Allowed.BField,      {'ene_emf'}];
+            stMap.Allowed.Field        = [stMap.Allowed.EField,stMap.Allowed.BField];
             stMap.Allowed.FieldEnergy  = [stMap.Allowed.EFieldEnergy,stMap.Allowed.BFieldEnergy,{'ene_emf'}];
             stMap.Allowed.FieldDiv     = {'div_e','div_b'};
             stMap.Allowed.Quantity     = {'charge','|charge|','chargecons','m','ene','g','gl','psi','t'};
