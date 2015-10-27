@@ -152,9 +152,9 @@ classdef Variable
             stMap.Deck.Species.PositronBeam    = {'positron_beam'};
             stMap.Deck.Species.ProtonBeam      = {'proton_beam'};
             stMap.Deck.Species.IonBeam         = {'ion_beam'};
-            stMap.Deck.Species.PlasmaElectrons = {'plasma_electrons'};
-            stMap.Deck.Species.PlasmaProtons   = {'plasma_protons'};
-            stMap.Deck.Species.PlasmaIons      = {'plasma_ions'};
+            stMap.Deck.Species.PlasmaElectrons = {'electrons','plasma_electrons'};
+            stMap.Deck.Species.PlasmaProtons   = {'protons','plasma_protons'};
+            stMap.Deck.Species.PlasmaIons      = {'ions','plasma_ions'};
 
             %
             % Translations

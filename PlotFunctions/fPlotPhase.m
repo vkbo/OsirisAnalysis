@@ -62,6 +62,7 @@ function stReturn = fPlotPhase(oData, sTime, sSpecies, sPhase, varargin)
         return;
     end % if
     
+    oSpecies = Variable(sSpecies,1,'Beam');
     sSpecies = fTranslateSpecies(sSpecies);
     iTime    = fStringToDump(oData, num2str(sTime));
 
