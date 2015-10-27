@@ -35,6 +35,7 @@ function Analyse2D
     oData = OsirisData('Silent','Yes');
 
     X.DataSet     = 0;
+    X.LoadTo      = 1;
     X.Time.Dump   = 0;
     X.Time.Limits = [0 0 0 0];
     X.Data.Beam   = {' '};
@@ -42,6 +43,7 @@ function Analyse2D
     % Settings
     
     stSettings.LoadData = {'','',''};
+    stSettings.LoadPath = {'','',''};
     for i=1:iXFig
         stSettings.Position(i).Pos  = [0 0];
         stSettings.Position(i).Size = [0 0];
@@ -112,6 +114,14 @@ function Analyse2D
 
     mFigs = uimenu(fMain,'Label','Figure');
             uimenu(mFigs,'Label','Focus Figures','Accelerator','f','Callback',{@fFocus});
+            
+    mLoad = uimenu(fMain,'Label','Load');
+    mL(1) = uimenu(mLoad,'Label','Load as #1','Callback',{@fSetLoadTo,1});
+    mL(2) = uimenu(mLoad,'Label','Load as #2','Callback',{@fSetLoadTo,2});
+    mL(3) = uimenu(mLoad,'Label','Load as #3','Callback',{@fSetLoadTo,3});
+            uimenu(mLoad,'Label','Select Dataset:','Separator','On');
+    
+    mL(X.LoadTo).Checked = 'On';
 
     
     %
@@ -312,12 +322,22 @@ function Analyse2D
         iY = 115;
         
         iY = iY - 25;
+        [~,iVal] = incellarray(X.Plot(t).Data, X.Data.Beam);
+        if iVal == 0
+            X.Plot(t).Data = X.Data.Beam{1};
+            iVal = 1;
+        end % if
         uicontrol(bgTab(t),'Style','Text','String','Beam','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Beam,'Value',1,'Position',[85 iY 150 20],'Callback',{@fPlotSetBeam,t});
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Beam,'Value',iVal,'Position',[85 iY 150 20],'Callback',{@fPlotSetBeam,t});
 
         iY = iY - 25;
+        [~,iVal] = incellarray(X.Plot(t).Density, X.Data.Density);
+        if iVal == 0
+            X.Plot(t).Data = X.Data.Density{1};
+            iVal = 1;
+        end % if
         uicontrol(bgTab(t),'Style','Text','String','Density','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Density,'Value',1,'Position',[85 iY 150 20],'Callback',{@fPlotSetDensity,t});
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Density,'Value',iVal,'Position',[85 iY 150 20],'Callback',{@fPlotSetDensity,t});
         
     end % function
 
@@ -345,7 +365,8 @@ function Analyse2D
         uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Plasma,'Value',iVal,'Position',[85 iY 150 20],'Callback',{@fPlotSetPlasma,t});
 
         iY = iY - 25;
-        [~,iVal] = incellarray(X.Plot(f).Scatter(1),X.Plot(t).ScatterOpt);
+        [~,iVal] = incellarray(X.Plot(t).Scatter(1),X.Plot(t).ScatterOpt);
+        iVal     = iVal+(iVal==0);
         uicontrol(bgTab(t),'Style','Text','String','Scatter 1','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','PopupMenu','String',X.Plot(t).ScatterOpt,'Value',iVal,'Position',[85 iY 150 20],'Callback',{@fPlotSetScatter,t,1});
         uicontrol(bgTab(t),'Style','Text','String','Count','Position',[240 iY+1 45 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
@@ -354,7 +375,8 @@ function Analyse2D
         uicontrol(bgTab(t),'Style','PopupMenu','String',X.Opt.Sample,'Value',X.Plot(t).Sample(1),'Position',[415 iY 90 20],'Callback',{@fPlotSetSample,t,1});
 
         iY = iY - 25;
-        [~,iVal] = incellarray(X.Plot(f).Scatter(2),X.Plot(t).ScatterOpt);
+        [~,iVal] = incellarray(X.Plot(t).Scatter(2),X.Plot(t).ScatterOpt);
+        iVal     = iVal+(iVal==0);
         uicontrol(bgTab(t),'Style','Text','String','Scatter 2','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','PopupMenu','String',X.Plot(t).ScatterOpt,'Value',iVal,'Position',[85 iY 150 20],'Callback',{@fPlotSetScatter,t,2});
         uicontrol(bgTab(t),'Style','Text','String','Count','Position',[240 iY+1 45 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
@@ -437,12 +459,19 @@ function Analyse2D
     
     function fScanData(~,~)
         
-        oData = OsirisData('Silent','Yes');
+        oData    = OsirisData('Silent','Yes');
         stFields = fieldnames(oData.DefaultPath);
         for f=1:length(stFields)
             if oData.DefaultPath.(stFields{f}).Available
                 fOut(sprintf('Scanning %s',oData.DefaultPath.(stFields{f}).Path),1);
                 fOut(sprintf('... found %d sets',length(fieldnames(oData.DataSets.ByPath.(stFields{f})))),1);
+                mLd(f) = uimenu(mLoad,'Label',stFields{f});
+                stSets = fieldnames(oData.DataSets.ByPath.(stFields{f}));
+                for s=1:length(stSets)
+                    sSetPath  = oData.DataSets.ByPath.(stFields{f}).(stSets{s}).Path;
+                    stSetPath = strsplit(sSetPath,'/');
+                    uimenu(mLd(f),'Label',stSetPath{end},'Callback',{@fSelectDataSet,stSetPath{end}});
+                end % for
             end % if
         end % for
         
@@ -455,12 +484,17 @@ function Analyse2D
             stSettings.LoadData{i} = get(edtSet(i), 'String');
             mD(i).Checked = 'Off';
         end % for
+
         set(btnSet(iSet), 'BackgroundColor', cButtonOn);
         mD(iSet).Checked = 'On';
-
+        
         oData      = OsirisData('Silent','Yes');
-        oData.Path = stSettings.LoadData{iSet};
+        oData.Path = [stSettings.LoadPath{iSet} stSettings.LoadData{iSet}];
         X.DataSet  = iSet;
+        if isempty(oData.Path)
+            fOut('Dataset not found',3);
+            return;
+        end % if
 
         X.Data.Name       = oData.Config.Name;
         X.Data.Path       = oData.Config.Path;
@@ -468,7 +502,6 @@ function Analyse2D
         X.Data.Plasma     = oData.Config.Variables.Species.Plasma;
         X.Data.Species    = [X.Data.Beam; X.Data.Plasma];
         X.Data.Field      = oData.Config.Variables.Fields.Field;
-        X.Data.SpDensity  = oData.Config.Variables.Density;
         X.Data.Completed  = oData.Config.Completed;
         X.Data.HasData    = oData.Config.HasData;
         X.Data.HasTracks  = oData.Config.HasTracks;
@@ -476,7 +509,7 @@ function Analyse2D
         X.Data.Coords     = oData.Config.Variables.Simulation.Coordinates;
 
         % Output
-        fOut(sprintf('Loading %s',X.Data.Path),1);
+        fOut(sprintf('Loaded %s',X.Data.Path),1);
         
         % Geometry
         if strcmpi(X.Data.Coords, 'cylindrical')
@@ -505,8 +538,7 @@ function Analyse2D
         end % for
 
         % Translate Densities
-        %X.Data.Density = {'charge','j1','j2','j3'};
-        X.Data.Density = {'charge','j1','j2','j3'};
+        X.Data.Density = oData.Config.Variables.Density.(X.Data.Species{1}).Density;
         for i=1:length(X.Data.Density)
             X.Data.Density{i} = fTranslateField(X.Data.Density{i},['Long',X.Data.CoordsPF]);
         end % for
@@ -592,6 +624,27 @@ function Analyse2D
         
         % Save settings to file
         fSaveVariables;
+        
+    end % function
+
+    function fBrowseSet(~,~,iSet)
+        
+        sDir   = uigetdir(stSettings.LoadPath{iSet});
+        stPath = strsplit(sDir,'/');
+        sData  = stPath{end};
+        sPath  = [strjoin(stPath(1:end-1),'/') '/'];
+        
+        stSettings.LoadPath{iSet} = sPath;
+        edtSet(iSet).String = sData;
+        fLoadSet(0,0,iSet);
+        
+    end % function
+
+    function fSelectDataSet(~,~,sSet)
+        
+        edtSet(X.LoadTo).String = sSet;
+        stSettings.LoadPath{X.LoadTo} = '';
+        fLoadSet(0,0,X.LoadTo);
         
     end % function
 
@@ -888,9 +941,9 @@ function Analyse2D
             
             switch(X.Plots{X.Figure(f)})
 
-                %case 'Beam Density'
-                %    fResetTab(f);
-                %    fCtrlBeamDensity(f);
+                case 'Beam Density'
+                    fResetTab(f);
+                    fCtrlBeamDensity(f);
 
                 case 'Plasma Density'
                     fResetTab(f);
@@ -1122,10 +1175,14 @@ function Analyse2D
     function fOut(sText, iType)
         
         stCol = {'#00ff00;','#ffdd66;','#ff6666;'};
-        stPrefix = {'','','Error: '};
-        aTime = clock;
+        if rand >= 0.99
+            stPrefix = {'','OOPS: ','WTF: '};
+        else
+            stPrefix = {'','Warning: ','Error: '};
+        end % if
+        aTime  = clock;
         sStamp = sprintf('%02d:%02d:%02.0f> ',aTime(4),aTime(5),floor(aTime(6)));
-        sText = sprintf('<html><font style="color: %s">%s%s%s</font></html>',stCol{iType},sStamp,stPrefix{iType},sText);
+        sText  = sprintf('<html><font style="color: %s">%s%s%s</font></html>',stCol{iType},sStamp,stPrefix{iType},sText);
         
         stCurr = get(lstOut, 'String');
         stCurr = [stCurr;{sText}];
@@ -1197,6 +1254,17 @@ function Analyse2D
         
     end % function
 
+    function fSetLoadTo(~,~,iSet)
+        
+        X.LoadTo = iSet;
+
+        for i=1:3
+            mL(i).Checked = 'Off';
+        end % for
+        mL(iSet).Checked = 'On';
+        
+    end % function
+
 
     %
     %  Update Plots
@@ -1238,7 +1306,12 @@ function Analyse2D
                 X.Plot(f).MaxLim = [0.0 0.0 0.0 0.0];
                 X.Plot(f).Limits = [0.0 0.0 0.0 0.0];
                 X.Plot(f).Scale  = [1.0 1.0];
-        end % switch        
+        end % switch
+        
+        X.Data.Density = oData.Config.Variables.Density.(sSpecies).Density;
+        for i=1:length(X.Data.Density)
+            X.Data.Density{i} = fTranslateField(X.Data.Density{i},['Long',X.Data.CoordsPF]);
+        end % for
         
         fRefresh(f);
         
