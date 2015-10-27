@@ -487,10 +487,14 @@ function Analyse2D
 
         set(btnSet(iSet), 'BackgroundColor', cButtonOn);
         mD(iSet).Checked = 'On';
-
+        
         oData      = OsirisData('Silent','Yes');
         oData.Path = [stSettings.LoadPath{iSet} stSettings.LoadData{iSet}];
         X.DataSet  = iSet;
+        if isempty(oData.Path)
+            fOut('Dataset not found',3);
+            return;
+        end % if
 
         X.Data.Name       = oData.Config.Name;
         X.Data.Path       = oData.Config.Path;
@@ -505,7 +509,7 @@ function Analyse2D
         X.Data.Coords     = oData.Config.Variables.Simulation.Coordinates;
 
         % Output
-        fOut(sprintf('Loading %s',X.Data.Path),1);
+        fOut(sprintf('Loaded %s',X.Data.Path),1);
         
         % Geometry
         if strcmpi(X.Data.Coords, 'cylindrical')
@@ -639,6 +643,7 @@ function Analyse2D
     function fSelectDataSet(~,~,sSet)
         
         edtSet(X.LoadTo).String = sSet;
+        stSettings.LoadPath{X.LoadTo} = '';
         fLoadSet(0,0,X.LoadTo);
         
     end % function
@@ -1170,7 +1175,7 @@ function Analyse2D
     function fOut(sText, iType)
         
         stCol = {'#00ff00;','#ffdd66;','#ff6666;'};
-        if rand >= 0.95
+        if rand >= 0.99
             stPrefix = {'','OOPS: ','WTF: '};
         else
             stPrefix = {'','Warning: ','Error: '};
