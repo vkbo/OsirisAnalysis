@@ -494,14 +494,16 @@ classdef Momentum
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
 
-            aRaw  = obj.Data.Data(obj.Time, 'RAW', '', obj.Species);
-            aP    = sqrt(aRaw(:,4).^2 + aRaw(:,5).^2 + aRaw(:,6).^2);
-            iLen  = length(aP);
-            aERMS = zeros(stOpt.Samples, 1);
+            aRaw   = obj.Data.Data(obj.Time, 'RAW', '', obj.Species);
+            aP     = sqrt(aRaw(:,4).^2 + aRaw(:,5).^2 + aRaw(:,6).^2);
+            iLen   = length(aP);
+            aERMS  = zeros(stOpt.Samples, 1);
+            aENorm = zeros(stOpt.Samples, 1);
             
             aRX   = [];
             aRXP  = [];
             aRQ   = [];
+            aGam  = [];
             
             iMin  = ceil(stOpt.MinParticles/iLen);
             if stOpt.Samples < iMin
@@ -519,19 +521,25 @@ classdef Momentum
                 end % if
 
                 if strcmpi(obj.Coords, 'cylindrical')
+                    aPz  = aRaw(:,4);
                     aPr  = aRaw(:,5);
                     aPth = aRaw(:,6);
                     aPx  = aPr.*cos(aXth) - aPth.*sin(aXth);
                     aX   = aRaw(:,2).*cos(aXth)*obj.AxisFac(2);
                 else
+                    aPz  = aRaw(:,4);
                     aPx  = aRaw(:,5);
                     aX   = aRaw(:,2)*obj.AxisFac(2);
                 end % if
-
-                aXPrime  = sin(aPx./aP)*1e3;
-                aCharge  = aRaw(:,8)*obj.Data.Config.Variables.Convert.SI.ChargeFac;
-                aCov     = wcov([aX, aXPrime], abs(aCharge));
-                aERMS(s) = sqrt(det(aCov));
+ 
+                aGamma    = obj.MomentumToEnergy(aPz);
+                aXPrime   = sin(aPx./aP)*1e3;
+                aCharge   = aRaw(:,8)*obj.Data.Config.Variables.Convert.SI.ChargeFac;
+                aCov      = wcov([aX, aXPrime], abs(aCharge));
+                dGamma    = wmean(aGamma, abs(aCharge));
+                dBeta     = sqrt(1 - 1/dGamma^2);
+                aERMS(s)  = sqrt(det(aCov));
+                aENorm(s) = sqrt(det(aCov))*dGamma*dBeta;
             
                 if strcmpi(obj.Coords, 'cylindrical')
                     aX      = [-aX;aX];
@@ -560,6 +568,8 @@ classdef Momentum
             stReturn.Covariance = aCov;
             stReturn.ERMS       = mean(aERMS);
             stReturn.ERMSError  = 1.96*std(aERMS)/sqrt(iNE);
+            stReturn.ENorm      = mean(aENorm);
+            stReturn.ENormError = 1.96*std(aENorm)/sqrt(iNE);
             
             if strcmpi(stOpt.Histogram, 'No')
                 return;
