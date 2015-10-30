@@ -38,12 +38,15 @@ function uiTrackDensity(oData)
     X.Track.Tracking = 0;
     
     % Tracking Settings
-    X.Values.Point   = {'Zero','Minimum','Maximum'};
-    X.Values.PolyFit = {'PolyFit 1','PolyFit 2','PolyFit 3','PolyFit 4','PolyFit 5'};
-    X.Values.Source  = {'EField 1','EField 2','Witness Beam','Drive Beam'};
+    X.Values.Point     = {'Zero','Minimum','Maximum'};
+    X.Values.FitName   = {'Gaussian','Plynomial','Exponential'};
+    X.Values.FitType   = {'gauss','poly','exp'};
+    X.Values.FitDegree = [9, 8, 2];
+    X.Values.Source    = {'EField 1','EField 2','Witness Beam','Drive Beam'};
 
     X.Track.Point   = 3; % Default to maximum
-    X.Track.PolyFit = 3; % Default to PolyFit3
+    X.Track.Fit     = 1; % Default to Gaussian
+    X.Track.Degree  = 1; % Default to Gaussian 1
     X.Track.Source  = 1; % Default to EField 1
 
     % Get Time Axis
@@ -107,8 +110,9 @@ function uiTrackDensity(oData)
     uicontrol(bgCtrl,'Style','Text','String','Track Stop', 'Position',[10 230 100 20],'HorizontalAlignment','Left');
     uicontrol(bgCtrl,'Style','Text','String','Source Data','Position',[10 205 100 20],'HorizontalAlignment','Left');
     uicontrol(bgCtrl,'Style','Text','String','Fit Method', 'Position',[10 180 100 20],'HorizontalAlignment','Left');
-    uicontrol(bgCtrl,'Style','Text','String','Track Point','Position',[10 155 100 20],'HorizontalAlignment','Left');
-    uicontrol(bgCtrl,'Style','Text','String','Track Width','Position',[10 130 100 20],'HorizontalAlignment','Left');
+    uicontrol(bgCtrl,'Style','Text','String','Fit Degree', 'Position',[10 155 100 20],'HorizontalAlignment','Left');
+    uicontrol(bgCtrl,'Style','Text','String','Track Point','Position',[10 130 100 20],'HorizontalAlignment','Left');
+    uicontrol(bgCtrl,'Style','Text','String','Track Width','Position',[10 105 100 20],'HorizontalAlignment','Left');
 
     uicontrol(bgCtrl,'Style','PushButton','String','<S','Position',[175 260 30 20],'Callback',{@fJump, 1});
     uicontrol(bgCtrl,'Style','PushButton','String','<P','Position',[205 260 30 20],'Callback',{@fJump, 2});
@@ -116,16 +120,24 @@ function uiTrackDensity(oData)
     uicontrol(bgCtrl,'Style','PushButton','String','S>','Position',[205 235 30 20],'Callback',{@fJump, 4});
     uicontrol(bgCtrl,'Style','Text',      'String','mm','Position',[175 130 50 20],'HorizontalAlignment','Left');
 
-    edtStart   = uicontrol(bgCtrl,'Style','Edit',     'String',X.Track.Time(1), 'Position',[115 260  55 20],'Callback',{@fSetStart});
-    edtStop    = uicontrol(bgCtrl,'Style','Edit',     'String',X.Track.Time(2), 'Position',[115 235  55 20],'Callback',{@fSetStop});
-    pumSource  = uicontrol(bgCtrl,'Style','PopupMenu','String',X.Values.Source, 'Position',[115 210 120 20],'Callback',{@fSetSource});
-    pumPolyFit = uicontrol(bgCtrl,'Style','PopupMenu','String',X.Values.PolyFit,'Position',[115 185 120 20],'Callback',{@fTrackPolyFit});
-    pumPoint   = uicontrol(bgCtrl,'Style','PopupMenu','String',X.Values.Point,  'Position',[115 160 120 20],'Callback',{@fTrackPoint});
-    edtWidth   = uicontrol(bgCtrl,'Style','Edit',     'String',X.Track.Width,   'Position',[115 135  55 20],'Callback',{@fSetWidth});
+    iN = X.Values.FitDegree(X.Track.Degree);
+    cTemp{1} = '1 degree';
+    for i=2:iN
+        cTemp{i} = sprintf('%d degrees',i);
+    end % for
+
+    edtStart   = uicontrol(bgCtrl,'Style','Edit',     'String',X.Track.Time(1),   'Position',[115 260  55 20],'Callback',{@fSetStart});
+    edtStop    = uicontrol(bgCtrl,'Style','Edit',     'String',X.Track.Time(2),   'Position',[115 235  55 20],'Callback',{@fSetStop});
+    pumSource  = uicontrol(bgCtrl,'Style','PopupMenu','String',X.Values.Source,   'Position',[115 210 120 20],'Callback',{@fSetSource});
+    pumFit     = uicontrol(bgCtrl,'Style','PopupMenu','String',X.Values.FitName,  'Position',[115 185 120 20],'Callback',{@fTrackFit});
+    pumDegree  = uicontrol(bgCtrl,'Style','PopupMenu','String',cTemp,             'Position',[115 160 120 20],'Callback',{@fTrackDegree});
+    pumPoint   = uicontrol(bgCtrl,'Style','PopupMenu','String',X.Values.Point,    'Position',[115 135 120 20],'Callback',{@fTrackPoint});
+    edtWidth   = uicontrol(bgCtrl,'Style','Edit',     'String',X.Track.Width,     'Position',[115 110  55 20],'Callback',{@fSetWidth});
     
     % Default Values
     pumSource.Value  = X.Track.Source;
-    pumPolyFit.Value = X.Track.PolyFit;
+    pumFit.Value     = X.Track.Fit;
+    pumDegree.Value  = X.Track.Degree;
     pumPoint.Value   = X.Track.Point;
 
     % Control Buttons
@@ -288,9 +300,26 @@ function uiTrackDensity(oData)
     
     end % function
 
-    function fTrackPolyFit(uiSrc,~)
+    function fTrackFit(uiSrc,~)
 
-        X.Track.PolyFit = uiSrc.Value;
+        X.Track.Fit = uiSrc.Value;
+        iN = X.Values.FitDegree(X.Track.Fit);
+        pumDegree.Value  = 1;
+        %pumDegree.String = '';
+        cValues = {};
+        cValues{1}  = '1 degree';
+        for i=2:iN
+            cValues{i} = sprintf('%d degrees',i);
+        end % for
+        pumDegree.String = cValues;
+        fRefreshMain();
+        fRefreshTrack();
+
+    end % function
+
+    function fTrackDegree(uiSrc,~)
+
+        X.Track.Degree = uiSrc.Value;
         fRefreshMain();
         fRefreshTrack();
 
@@ -506,11 +535,12 @@ function uiTrackDensity(oData)
         dFMax = X.Track.Pos + X.Track.Width/2;
         iFMin = fGetIndex(aAxis, dFMin);
         iFMax = fGetIndex(aAxis, dFMax);
+
+        sFitType = [X.Values.FitType{pumFit.Value} num2str(X.Track.Degree)];
         
-        [dP,~,dMu] = polyfit(aAxis(iFMin:iFMax),aLine(iFMin:iFMax),X.Track.PolyFit);
-        
-        aFit = polyval(dP,(aAxis(iXMin:iXMax)-dMu(1))/dMu(2));
-        aFitT = polyval(dP,(aAxis(iFMin:iFMax)-dMu(1))/dMu(2));
+        oFit  = fit(aAxis(iFMin:iFMax)',double(aLine(iFMin:iFMax))',sFitType);
+        aFit  = feval(oFit,aAxis(iXMin:iXMax));
+        aFitT = feval(oFit,aAxis(iFMin:iFMax));
         
         switch(X.Track.Point)
             case 1
