@@ -22,9 +22,9 @@ function Analyse2D
     cInfoBack    = [0.80 0.80 0.80];
     cInfoBtn     = [0.00 0.55 0.88];
     cFocusBtn    = [0.00 0.55 0.00];
-    cInfoR       = [1.00 0.50 0.50];
-    cInfoY       = [1.00 1.00 0.50];
-    cInfoG       = [0.50 1.00 0.50];
+    cInfoRed     = [1.00 0.50 0.50];
+    cInfoYellow  = [1.00 1.00 0.50];
+    cInfoGreen   = [0.50 1.00 0.50];
     cWarningBack = [1.00 0.50 0.50];
     cButtonOff   = [0.80 0.80 0.80];
     cButtonOn    = [0.85 0.40 0.85];
@@ -517,11 +517,11 @@ function Analyse2D
         % Geometry
         if strcmpi(X.Data.Coords, 'cylindrical')
             lblInfo(1).String          = 'Cylindrical';
-            lblInfo(1).BackgroundColor = cInfoG;
+            lblInfo(1).BackgroundColor = cInfoGreen;
             X.Data.CoordsPF            = 'Cyl';
         else
             lblInfo(1).String          = 'Cartesian';
-            lblInfo(1).BackgroundColor = cInfoG;
+            lblInfo(1).BackgroundColor = cInfoGreen;
             X.Data.CoordsPF            = '';
         end % if
         
@@ -558,15 +558,15 @@ function Analyse2D
         if X.Data.HasData
             if X.Data.Completed
                 lblInfo(2).String          = 'Completed';
-                lblInfo(2).BackgroundColor = cInfoG;
+                lblInfo(2).BackgroundColor = cInfoGreen;
             else
                 lblInfo(2).String          = 'Incomplete';
-                lblInfo(2).BackgroundColor = cInfoY;
+                lblInfo(2).BackgroundColor = cInfoYellow;
             end % if
 
             if ~X.Data.Consistent
                 lblInfo(2).String          = 'Inconsistent';
-                lblInfo(2).BackgroundColor = cInfoY;
+                lblInfo(2).BackgroundColor = cInfoYellow;
             end % if
 
             X.Time.Limits(1) = fStringToDump(oData, 'Start');
@@ -575,17 +575,17 @@ function Analyse2D
             X.Time.Limits(4) = fStringToDump(oData, 'End');
         else
             lblInfo(2).String          = 'No Data';
-            lblInfo(2).BackgroundColor = cInfoR;
+            lblInfo(2).BackgroundColor = cInfoRed;
             X.Time.Limits = [0 0 0 0];
         end % if
         
         % Tracking Data
         if X.Data.HasTracks
             lblInfo(3).String          = 'Has Tracks';
-            lblInfo(3).BackgroundColor = cInfoG;
+            lblInfo(3).BackgroundColor = cInfoGreen;
         else
             lblInfo(3).String          = 'No Tracks';
-            lblInfo(3).BackgroundColor = cInfoY;
+            lblInfo(3).BackgroundColor = cInfoYellow;
         end % if
                 
         % Reset dump boxes
