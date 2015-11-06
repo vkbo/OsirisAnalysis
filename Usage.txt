@@ -3,16 +3,19 @@
  *************************************
   By Veronica Berglyd Olsen
   
-  Depratment of Physics
+  Department of Physics
   University of Oslo, Norway
-  
-  
+
+  Simple user manual also available on:
+  https://github.com/Jadzia626/OsirisAnalysis/wiki
+
+
   Basic Usage
  =============
  
  1. Configuration:
  
- The LocalConfig.m file contains paths to folders used to store Osiris analysis files. Ass paths to scan here, or use
+ The LocalConfig.m file contains paths to folders used to store Osiris analysis files. Add paths to scan here, or use
  full path when accessing files from the main class object. See below.
  
  
