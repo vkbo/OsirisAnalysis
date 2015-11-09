@@ -33,6 +33,7 @@ function Analyse2D
     
     iXFig = 10;
     oData = OsirisData('Silent','Yes');
+    oVar  = Variables();
 
     X.DataSet     = 0;
     X.LoadTo      = 1;
@@ -510,6 +511,9 @@ function Analyse2D
         X.Data.HasTracks  = oData.Config.HasTracks;
         X.Data.Consistent = oData.Config.Consistent;
         X.Data.Coords     = oData.Config.Variables.Simulation.Coordinates;
+        
+        % Reload Variables class
+        oVar = Variables(X.Data.Coords);
 
         % Output
         fOut(sprintf('Loaded %s',X.Data.Path),1);
@@ -539,22 +543,19 @@ function Analyse2D
         
         % Translate Fields
         for i=1:length(X.Data.Field)
-            vData = Variable(oData,X.Data.Field{i});
-            X.Data.Field{i} = vData.Full;
+            X.Data.Field{i} = oVar.Lookup(X.Data.Field{i}).Full;
         end % for
 
         % Translate Densities
         X.Data.Density = oData.Config.Variables.Density.(X.Data.Species{1}).Density;
         for i=1:length(X.Data.Density)
-            vData = Variable(oData,X.Data.Density{i});
-            X.Data.Density{i} = vData.Full;
+            X.Data.Density{i} = oVar.Lookup(X.Data.Density{i}).Full;
         end % for
 
         % Translate Axes
         X.Data.Axis = {'x1','x2','p1','p2'};
         for i=1:length(X.Data.Axis)
-            vData = Variable(oData,X.Data.Axis{i});
-            X.Data.Axis{i} = vData.Full;
+            X.Data.Axis{i} = oVar.Lookup(X.Data.Axis{i}).Full;
         end % for
         
         % Simulation Status

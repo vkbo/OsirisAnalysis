@@ -23,7 +23,6 @@ classdef OsirisConfig
         Completed  = false; % True if folder 'TIMINGS' exists
         Consistent = false; % True if all data folders have the same number of files
         Silent     = false; % Set to true to disable command window output
-        InputNames = {};    % Alternative names for species and other input deck object
 
     end % properties
 
@@ -33,7 +32,8 @@ classdef OsirisConfig
     
     properties (GetAccess = 'private', SetAccess = 'private')
 
-        Files = {}; % Holds possible config files
+        Files     = {}; % Holds possible config files
+        Translate = {}; % Container for Variables class
         
     end % properties
 
@@ -75,6 +75,9 @@ classdef OsirisConfig
 
             % CGS
             obj.Variables.Constants.ElementaryChargeCGS = stConstants.Nature.ElementaryChargeCGS;
+            
+            % Translae Class for Variables
+            obj.Translate = Variables();
             
         end % function
         
@@ -296,7 +299,7 @@ classdef OsirisConfig
 
                     if strcmpi(aConfig{k,1},'species') && strcmpi(aConfig{k,2},'name')
                         sSpecies = strrep(aConfig{k,6},'"','');
-                        sSpecies = obj.fTranslateInput(sSpecies);
+                        sSpecies = obj.Translate.Lookup(sSpecies).Name;
                     end % if
                 
                     aConfig{k,7} = sSpecies;
@@ -408,26 +411,6 @@ classdef OsirisConfig
 
     methods (Access = 'private')
 
-        function sReturn = fTranslateInput(obj, sName)
-            
-            %
-            % Only for internal use in OsirisConfig.
-            % For public, use the TranslateInput function in OsirisData
-            %
-            
-            sReturn = sName; % Default behaviour
-            
-            cNames = fieldnames(obj.InputNames);
-            
-            for n=1:length(cNames)
-                if sum(ismember(lower(sName), obj.InputNames.(cNames{n}))) > 0
-                    sReturn = cNames{n};
-                    return;
-                end % if
-            end % for
-            
-        end % function
-
         function obj = fGetSimulationVariables(obj)
             
             % Store variables
@@ -489,7 +472,7 @@ classdef OsirisConfig
             for i=1:iRows
                 sBeam = obj.Raw{i,7};
                 if ~strcmp(sBeam,sPrev)
-                    if strcmpi(sBeam(1:6), 'Plasma')
+                    if obj.Translate.Lookup(sBeam).isPlasma
                         stSpecies.Plasma{end+1,1} = sBeam;
                     else
                         stSpecies.Beam{end+1,1} = sBeam;

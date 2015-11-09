@@ -32,6 +32,7 @@ classdef OsirisData
     properties (GetAccess = 'private', SetAccess = 'private')
 
         DefaultData = {}; % Data in default folder
+        Translate   = {}; % Tool for translating Osiris variables
 
     end % properties
     
@@ -56,10 +57,9 @@ classdef OsirisData
             % Initiate OsirisData
             LocalConfig;
             
-            obj.Temp              = sLocalTemp;
-            obj.Config            = OsirisConfig;
-            obj.Config.Silent     = obj.Silent;
-            obj.Config.InputNames = stInput;
+            obj.Temp          = sLocalTemp;
+            obj.Config        = OsirisConfig;
+            obj.Config.Silent = obj.Silent;
             
             obj.DefaultPath = stFolders;
             if ~obj.Silent
@@ -185,6 +185,8 @@ classdef OsirisData
             else
                obj.Config.Consistent = false;
             end % if
+            
+            obj.Translate = Variables(obj.Config.Variables.Simulation.Coordinates);
 
         end % function
         
@@ -208,32 +210,23 @@ classdef OsirisData
             
         end % function
         
-        function sReturn = TranslateInput(obj, sName)
+        function stReturn = LookupVar(obj, sName, vType)
             %
-            %  OsirisData.TranslateInput
-            % ***************************
+            %  OsirisData.LookupVar
+            % **********************
+            %  Just a wrapper for obj.Translate.Lookup()
             %
             %  Input
             % =======
             %  sName :: Text to translate
-            %
-            %  Description
-            % =============
-            %  - Translates an object name from the input deck into a valid name for OsirisAnalysis.
-            %  - The translation matrix is set in LocalConfig.m
-            %  - Returns first match found, so ignores multiple matches.
+            %  vType :: Suggestion for data type
             %
             
-            sReturn = sName; % Default behaviour
+            if nargin < 3
+                vType = '';
+            end % if
             
-            cNames = fieldnames(obj.Config.InputNames);
-            
-            for n=1:length(cNames)
-                if sum(ismember(lower(sName), obj.Config.InputNames.(cNames{n}))) > 0
-                    sReturn = cNames{n};
-                    return;
-                end % if
-            end % for
+            stReturn = obj.Translate.Lookup(sName, vType);
             
         end % function
 
@@ -333,7 +326,7 @@ classdef OsirisData
             %
             
             stReturn  = {};
-            sSpecies  = obj.TranslateInput(sSpecies);
+            sSpecies  = obj.Translate.Lookup(sSpecies,'Beam').Name;
             
             dC        = obj.Config.Variables.Constants.SpeedOfLight;
             dE        = obj.Config.Variables.Constants.ElementaryCharge;
@@ -484,9 +477,10 @@ classdef OsirisData
             end % if
             
             % Convert and check input values
-            sType     = upper(sType);                 % Type is always upper case
-            sSet      = lower(sSet);                  % Set is always lower case
-            sSpecies  = obj.TranslateInput(sSpecies); % Species translated to standard format
+            sType     = upper(sType);                        % Type is always upper case
+            sSet      = lower(sSet);                         % Set is always lower case
+            sSpecies  = obj.Translate.Lookup(sSpecies).Name; % Species translated to standard format
+            % This needs to be extended so it will accept files stored with non-standard names for species
 
             if isempty(sType)
                 fprintf(2, 'Error: Data type needs to be specified.\n');

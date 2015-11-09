@@ -39,6 +39,10 @@ classdef Variables
             % Check Inputs
             %
 
+            if nargin < 1
+                vCoords = 'cylindrical';
+            end % if
+
             % Coordinates
             switch vCoords
                 case 'cylindrical'
@@ -653,6 +657,9 @@ classdef Variables
             stReturn.isValidSpeciesDiag    = (sum(ismember(obj.Map.Diag.Species,stReturn.Name)) == 1);
             stReturn.isValidPhaseSpaceDiag = (sum(ismember(obj.Map.Diag.PhaseSpace,stReturn.Name)) == 1);
             
+        end % function
+
+        function stReturn = Reverse(obj, sVar)
         end % function
 
     end % methods
