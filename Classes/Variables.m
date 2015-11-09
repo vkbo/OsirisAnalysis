@@ -659,7 +659,35 @@ classdef Variables
             
         end % function
 
-        function stReturn = Reverse(obj, sVar)
+        function sReturn = Reverse(obj, sVar, sFrom)
+            
+            sReturn = '';
+            
+            if nargin < 3
+                sFrom = 'Full';
+            end % if
+            
+            %
+            % Lookup
+            %
+
+            bFound   = 0;
+            stSearch = obj.Types;
+            for s=1:length(stSearch)
+                sType = stSearch{s};
+                for i=1:size(obj.Map.Translate.(sType),2)
+                    stItem = obj.Map.Translate.(sType)(i);
+                    if strcmpi(stItem.(sFrom)(obj.Coords),sVar)
+                        sReturn = stItem.Name;
+                        bFound  = 1;
+                        break;
+                    end % if
+                end % for
+                if bFound
+                    break;
+                end % if
+            end % for
+
         end % function
 
     end % methods
