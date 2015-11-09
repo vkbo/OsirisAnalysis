@@ -22,9 +22,9 @@ function Analyse2D
     cInfoBack    = [0.80 0.80 0.80];
     cInfoBtn     = [0.00 0.55 0.88];
     cFocusBtn    = [0.00 0.55 0.00];
-    cInfoR       = [1.00 0.50 0.50];
-    cInfoY       = [1.00 1.00 0.50];
-    cInfoG       = [0.50 1.00 0.50];
+    cInfoRed     = [1.00 0.50 0.50];
+    cInfoYellow  = [1.00 1.00 0.50];
+    cInfoGreen   = [0.50 1.00 0.50];
     cWarningBack = [1.00 0.50 0.50];
     cButtonOff   = [0.80 0.80 0.80];
     cButtonOn    = [0.85 0.40 0.85];
@@ -66,14 +66,14 @@ function Analyse2D
     X.X2Sym  = [0 0 0 0 0 0];
     
     for f=1:6
-        X.Plot(f).Figure  = f+1;
+        X.Plot(f).Figure  = f;
         X.Plot(f).Enabled = 0;
         X.Plot(f).MaxLim  = [0.0 0.0 0.0 0.0];
         X.Plot(f).Limits  = [0.0 0.0 0.0 0.0];
         X.Plot(f).Scale   = [1.0 1.0];
     end % for
     for f=7:iXFig
-        X.Plot(f).Figure  = f+1;
+        X.Plot(f).Figure  = f;
         X.Plot(f).Enabled = 0;
     end % for
 
@@ -84,18 +84,21 @@ function Analyse2D
     %
     
     % Figure Controls
-    fMain = figure(1); clf;
-    aFPos = get(fMain, 'Position');
+    fMain = figure('IntegerHandle', 'Off'); clf;
+    aFPos = fMain.Position;
     
     % Set figure properties
-    set(fMain, 'Units', 'Pixels');
-    set(fMain, 'MenuBar', 'None');
-    set(fMain, 'Position', [aFPos(1:2) 560 640]);
-    set(fMain, 'Name', 'Osiris 2D Analysis');
-    set(fMain, 'KeyPressFcn', @fKeyPress);
+    fMain.Units        = 'Pixels';
+    fMain.MenuBar      = 'None';
+    fMain.Position     = [aFPos(1:2) 560 640];
+    fMain.Name         = 'OsirisAnalysis Version 1.1 - GUI';
+    fMain.NumberTitle  = 'Off';
+    fMain.DockControls = 'Off';
+    fMain.Tag          = 'uiOA-Main';
+    fMain.KeyPressFcn  = @fKeyPress;
     
     % Set background color to default
-    cBackGround = get(fMain, 'Color');
+    cBackGround = fMain.Color;
     
     
     %
@@ -209,7 +212,7 @@ function Analyse2D
     aY = [135 110 85 60 35 10];
     aP = [1 2 3 4 5 1];
     for f=1:6
-        uicontrol(bgFigs,'Style','Text','String',sprintf('#%d',f+1),'Position',[9 aY(f)+1 25 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgFigs,'Style','Text','String',sprintf('#%d',f),'Position',[9 aY(f)+1 25 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         
         pumFig(f)  = uicontrol(bgFigs,'Style','PopupMenu','String',X.Plots,'Value',aP(f),'Position',[34 aY(f) 150 20]);
         btnFig(f)  = uicontrol(bgFigs,'Style','PushButton','String','','Position',[189 aY(f) 20 20],'BackgroundColor',cButtonOff,'Callback',{@fToggleFig,f});
@@ -231,7 +234,7 @@ function Analyse2D
     hTabGroup = uitabgroup('Units','Pixels','Position',[20 120 520 150]);
     
     for t=1:6
-        hTabs(t) = uitab(hTabGroup,'Title',sprintf('Plot %d', t+1));
+        hTabs(t) = uitab(hTabGroup,'Title',sprintf('Plot %d', t));
         bgTab(t) = uibuttongroup(hTabs(t),'Title','','BorderType','None','Units','Pixels','Position',[3 3 514 120],'BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','Text','String','No settings','FontSize',15,'Position',[10 85 140 25],'HorizontalAlignment','Left','BackgroundColor',cBackGround,'ForegroundColor',cGreyText);
     end % for
@@ -480,12 +483,12 @@ function Analyse2D
     function fLoadSet(~,~,iSet)
         
         for i=1:3
-            set(btnSet(i), 'BackgroundColor', cButtonOff);
-            stSettings.LoadData{i} = get(edtSet(i), 'String');
+            btnSet(i).BackgroundColor = cButtonOff;
+            stSettings.LoadData{i}    = edtSet(i).String;
             mD(i).Checked = 'Off';
         end % for
 
-        set(btnSet(iSet), 'BackgroundColor', cButtonOn);
+        btnSet(iSet).BackgroundColor = cButtonOn;
         mD(iSet).Checked = 'On';
         
         oData      = OsirisData('Silent','Yes');
@@ -513,11 +516,13 @@ function Analyse2D
         
         % Geometry
         if strcmpi(X.Data.Coords, 'cylindrical')
-            set(lblInfo(1),'String','Cylindrical','BackgroundColor',cInfoG);
-            X.Data.CoordsPF = 'Cyl';
+            lblInfo(1).String          = 'Cylindrical';
+            lblInfo(1).BackgroundColor = cInfoGreen;
+            X.Data.CoordsPF            = 'Cyl';
         else
-            set(lblInfo(1),'String','Cartesian','BackgroundColor',cInfoG);
-            X.Data.CoordsPF = '';
+            lblInfo(1).String          = 'Cartesian';
+            lblInfo(1).BackgroundColor = cInfoGreen;
+            X.Data.CoordsPF            = '';
         end % if
         
         % Beams
@@ -552,13 +557,16 @@ function Analyse2D
         % Simulation Status
         if X.Data.HasData
             if X.Data.Completed
-                set(lblInfo(2),'String','Completed','BackgroundColor',cInfoG);
+                lblInfo(2).String          = 'Completed';
+                lblInfo(2).BackgroundColor = cInfoGreen;
             else
-                set(lblInfo(2),'String','Incomplete','BackgroundColor',cInfoY);
+                lblInfo(2).String          = 'Incomplete';
+                lblInfo(2).BackgroundColor = cInfoYellow;
             end % if
 
             if ~X.Data.Consistent
-                set(lblInfo(2),'String','Inconsistent','BackgroundColor',cInfoY);
+                lblInfo(2).String          = 'Inconsistent';
+                lblInfo(2).BackgroundColor = cInfoYellow;
             end % if
 
             X.Time.Limits(1) = fStringToDump(oData, 'Start');
@@ -566,56 +574,59 @@ function Analyse2D
             X.Time.Limits(3) = fStringToDump(oData, 'PEnd');
             X.Time.Limits(4) = fStringToDump(oData, 'End');
         else
-            set(lblInfo(2),'String','No Data','BackgroundColor',cInfoR);
+            lblInfo(2).String          = 'No Data';
+            lblInfo(2).BackgroundColor = cInfoRed;
             X.Time.Limits = [0 0 0 0];
         end % if
         
         % Tracking Data
         if X.Data.HasTracks
-            set(lblInfo(3),'String','Has Tracks','BackgroundColor',cInfoG);
+            lblInfo(3).String          = 'Has Tracks';
+            lblInfo(3).BackgroundColor = cInfoGreen;
         else
-            set(lblInfo(3),'String','No Tracks','BackgroundColor',cInfoY);
+            lblInfo(3).String          = 'No Tracks';
+            lblInfo(3).BackgroundColor = cInfoYellow;
         end % if
                 
         % Reset dump boxes
         for i=1:4
-            set(lblDump(i), 'BackgroundColor', cInfoBack);
+            lblDump(i).BackgroundColor = cInfoBack;
         end % for
 
         % Check that plasma start/end does not extend past the end of the simulation
         if X.Time.Limits(2) > X.Time.Limits(4)
             X.Time.Limits(2) = X.Time.Limits(4);
-            set(lblDump(2), 'BackgroundColor', cWarningBack);
+            lblDump(2).BackgroundColor = cWarningBack;
         end % if
         if X.Time.Limits(3) > X.Time.Limits(4)
             X.Time.Limits(3) = X.Time.Limits(4);
-            set(lblDump(3), 'BackgroundColor', cWarningBack);
+            lblDump(3).BackgroundColor = cWarningBack;
         end % if
         
         % Update Time Dump labels
         for i=1:4
-            set(lblDump(i), 'String', X.Time.Limits(i));
+            lblDump(i).String = X.Time.Limits(i);
         end % for
         
         % Set 'Time Plots' values
-        set(edtT8(1),  'String', X.Time.Limits(2));
-        set(edtT8(2),  'String', X.Time.Limits(4));
-        set(edtT9(1),  'String', X.Time.Limits(2));
-        set(edtT9(2),  'String', X.Time.Limits(4));
-        set(edtT10(1), 'String', X.Time.Limits(1));
-        set(edtT10(2), 'String', X.Time.Limits(4));
+        edtT8(1).String  = X.Time.Limits(2);
+        edtT8(2).String  = X.Time.Limits(4);
+        edtT9(1).String  = X.Time.Limits(2);
+        edtT9(2).String  = X.Time.Limits(4);
+        edtT10(1).String = X.Time.Limits(1);
+        edtT10(2).String = X.Time.Limits(4);
         
-        set(pumT8(1),  'String', X.Data.Beam);
-        set(pumT9(1),  'String', X.Data.Beam);
-        set(pumT10(1), 'String', X.Data.Beam);
+        pumT8(1).String  = X.Data.Beam;
+        pumT9(1).String  = X.Data.Beam;
+        pumT10(1).String = X.Data.Beam;
 
-        set(pumT8(1),  'Value',  X.Data.WitnessIdx);
-        set(pumT9(1),  'Value',  X.Data.WitnessIdx);
-        set(pumT10(1), 'Value',  X.Data.WitnessIdx);
+        pumT8(1).Value   = X.Data.WitnessIdx;
+        pumT9(1).Value   = X.Data.WitnessIdx;
+        pumT10(1).Value  = X.Data.WitnessIdx;
         
-        X.Plot(7).Data = X.Data.Beam{X.Data.WitnessIdx};
-        X.Plot(8).Data = X.Data.Beam{X.Data.WitnessIdx};
-        X.Plot(9).Data = X.Data.Beam{X.Data.WitnessIdx};
+        X.Plot(7).Data   = X.Data.Beam{X.Data.WitnessIdx};
+        X.Plot(8).Data   = X.Data.Beam{X.Data.WitnessIdx};
+        X.Plot(9).Data   = X.Data.Beam{X.Data.WitnessIdx};
 
         % Refresh
         fReloadOptions;
@@ -635,14 +646,14 @@ function Analyse2D
         sPath  = [strjoin(stPath(1:end-1),'/') '/'];
         
         stSettings.LoadPath{iSet} = sPath;
-        edtSet(iSet).String = sData;
+        edtSet(iSet).String       = sData;
         fLoadSet(0,0,iSet);
         
     end % function
 
     function fSelectDataSet(~,~,sSet)
         
-        edtSet(X.LoadTo).String = sSet;
+        edtSet(X.LoadTo).String       = sSet;
         stSettings.LoadPath{X.LoadTo} = '';
         fLoadSet(0,0,X.LoadTo);
         
@@ -681,7 +692,7 @@ function Analyse2D
     function fZoom(uiSrc,~,d,f)
         
         % Collect values
-        dValue = str2num(get(uiSrc,'String'));
+        dValue = str2double(uiSrc.String);
         
         if ~isempty(dValue)
             if d <= 2
@@ -782,11 +793,11 @@ function Analyse2D
         
         if X.Figure(f) == 0
 
-            iOpt = get(pumFig(f), 'Value');
+            iOpt = pumFig(f).Value;
 
-            set(btnFig(f), 'BackgroundColor', cButtonOn);
+            btnFig(f).BackgroundColor = cButtonOn;
             X.Figure(f) = iOpt;
-            figure(f+1); clf;
+            figure(f); clf;
             aFigSize = [200 200];
 
             switch(X.Plots{iOpt})
@@ -828,17 +839,17 @@ function Analyse2D
             end % switch
 
             if sum(stSettings.Position(f).Pos) == 0
-                fFigureSize(figure(f+1), aFigSize);
+                fFigureSize(figure(f), aFigSize);
             else
-                set(figure(f+1), 'Position', [stSettings.Position(f).Pos aFigSize]);
+                set(figure(f), 'Position', [stSettings.Position(f).Pos aFigSize]);
             end % if
 
-            set(hTabGroup,'SelectedTab',hTabs(f));
+            hTabGroup.SelectedTab = hTabs(f);
             fRefresh(f);
 
         else
             
-            set(btnFig(f), 'BackgroundColor', cButtonOff);
+            btnFig(f).BackgroundColor = cButtonOff;
             
             X.Figure(f) = 0;
             X.X1Link(f) = 0;
@@ -847,12 +858,12 @@ function Analyse2D
             X.Plot(f).Limits  = [0.0 0.0 0.0 0.0];
             X.Plot(f).LimPres = [2   2   2   2];
             
-            aFigPos = get(figure(f+1), 'Position');
+            aFigPos = get(figure(f), 'Position');
             stSettings.Position(f).Pos  = aFigPos(1:2);
             stSettings.Position(f).Size = aFigPos(3:4);
             fSaveVariables;
 
-            close(figure(f+1));
+            close(figure(f));
             fResetTab(f);
             fRefresh(f);
 
@@ -867,19 +878,19 @@ function Analyse2D
         end % if
         
         if X.Plot(f).Enabled == 0
-            set(btnFig(f), 'BackgroundColor', cButtonOn);
+            btnFig(f).BackgroundColor = cButtonOn;
             X.Plot(f).Enabled = 1;
             fRefreshX
         else
-            set(btnFig(f), 'BackgroundColor', cButtonOff);
+            btnFig(f).BackgroundColor = cButtonOff;
             X.Plot(f).Enabled = 0;
             
-            aFigPos = get(figure(f+1), 'Position');
+            aFigPos = get(figure(f), 'Position');
             stSettings.Position(f).Pos  = aFigPos(1:2);
             stSettings.Position(f).Size = aFigPos(3:4);
             fSaveVariables;
 
-            close(figure(f+1));
+            close(figure(f));
         end % if
         
     end % function
@@ -898,7 +909,7 @@ function Analyse2D
     function fLinkX1(~,~)
         
         for f=1:6
-            X.X1Link(f) = get(chkX1(f), 'Value');
+            X.X1Link(f) = chkX1(f).Value;
         end % for
         
     end % function
@@ -906,7 +917,7 @@ function Analyse2D
     function fLinkX2(~,~)
         
         for f=1:6
-            X.X2Link(f) = get(chkX2(f), 'Value');
+            X.X2Link(f) = chkX2(f).Value;
         end % for
         
     end % function
@@ -914,7 +925,7 @@ function Analyse2D
     function fSymX2(~,~)
         
         for f=1:6
-            X.X2Sym(f) = get(chkS2(f), 'Value');
+            X.X2Sym(f) = chkS2(f).Value;
         end % for
         
     end % function
@@ -1100,16 +1111,17 @@ function Analyse2D
                 
             end % if
             
-            set(edtXMin(f), 'String', sprintf('%.2f', X.Plot(f).Limits(1)*X.Plot(f).Scale(1)));
-            set(edtXMax(f), 'String', sprintf('%.2f', X.Plot(f).Limits(2)*X.Plot(f).Scale(1)));
-            set(edtYMin(f), 'String', sprintf('%.2f', X.Plot(f).Limits(3)*X.Plot(f).Scale(2)));
-            set(edtYMax(f), 'String', sprintf('%.2f', X.Plot(f).Limits(4)*X.Plot(f).Scale(2)));
+            edtXMin(f).String = sprintf('%.2f', X.Plot(f).Limits(1)*X.Plot(f).Scale(1));
+            edtXMax(f).String = sprintf('%.2f', X.Plot(f).Limits(2)*X.Plot(f).Scale(1));
+            edtYMin(f).String = sprintf('%.2f', X.Plot(f).Limits(3)*X.Plot(f).Scale(2));
+            edtYMax(f).String = sprintf('%.2f', X.Plot(f).Limits(4)*X.Plot(f).Scale(2));
 
-            set(chkX1(f), 'Value', X.X1Link(f));
-            set(chkX2(f), 'Value', X.X2Link(f));
-            set(chkS2(f), 'Value', X.X2Sym(f));
+            chkX1(f).Value = X.X1Link(f);
+            chkX2(f).Value = X.X2Link(f);
+            chkS2(f).Value = X.X2Sym(f);
             
-            figure(1);
+            % Set focus to main figure
+            figure(fMain);
 
         end % for
         
@@ -1155,8 +1167,8 @@ function Analyse2D
                 end % switch
                 
                 if sum(stSettings.Position(f).Pos) > 0
-                    aFigSize = get(figure(f+1), 'Position');
-                    set(figure(f+1), 'Position', [stSettings.Position(f).Pos aFigSize(3:4)]);
+                    aFigSize = get(figure(f), 'Position');
+                    figure(f).Position = [stSettings.Position(f).Pos aFigSize(3:4)];
                 end % if
 
             end % if
@@ -1184,7 +1196,7 @@ function Analyse2D
         sStamp = sprintf('%02d:%02d:%02.0f> ',aTime(4),aTime(5),floor(aTime(6)));
         sText  = sprintf('<html><font style="color: %s">%s%s%s</font></html>',stCol{iType},sStamp,stPrefix{iType},sText);
         
-        stCurr = get(lstOut, 'String');
+        stCurr = lstOut.String;
         stCurr = [stCurr;{sText}];
         [iN, ~] = size(stCurr);
         
@@ -1193,8 +1205,8 @@ function Analyse2D
             iN = 100;
         end % if
 
-        set(lstOut, 'String', stCurr);
-        set(lstOut, 'Value', iN);
+        lstOut.String = stCurr;
+        lstOut.Value  = iN;
         
     end % function
     
@@ -1202,10 +1214,10 @@ function Analyse2D
         
         for f=1:iXFig
             if X.Plot(f).Enabled
-                figure(f+1);
+                figure(f);
             end % if
         end % for
-        figure(1);
+        figure(fMain);
         
     end % function
 
@@ -1273,7 +1285,7 @@ function Analyse2D
     
     function fPlotSetBeam(uiSrc,~,f)
         
-        iBeam = get(uiSrc,'Value');
+        iBeam = uiSrc.Value;
         sBeam = X.Data.Beam{iBeam};
         
         X.Plot(f).Data = sBeam;
@@ -1287,7 +1299,7 @@ function Analyse2D
 
     function fPlotSetPlasma(uiSrc,~,f)
         
-        iPlasma = get(uiSrc,'Value');
+        iPlasma = uiSrc.Value;
         sPlasma = X.Data.Plasma{iPlasma};
         
         X.Plot(f).Data = sPlasma;
@@ -1297,7 +1309,7 @@ function Analyse2D
 
     function fPlotSetSpecies(uiSrc,~,f)
         
-        iSpecies = get(uiSrc,'Value');
+        iSpecies = uiSrc.Value;
         sSpecies = X.Data.Species{iSpecies};
         
         X.Plot(f).Data = sSpecies;
@@ -1319,7 +1331,7 @@ function Analyse2D
 
     function fPlotSetScatter(uiSrc,~,f,s)
         
-        iScatter = get(uiSrc,'Value');
+        iScatter = uiSrc.Value;
         sScatter = X.Plot(f).ScatterOpt{iScatter};
         
         if strcmpi(sScatter,'Off')
@@ -1334,13 +1346,13 @@ function Analyse2D
 
     function fPlotSetScatterNum(uiSrc,~,f,s)
 
-        iValue = floor(str2double(get(uiSrc,'String')));
+        iValue = floor(str2double(uiSrc.String));
         
         if isempty(iValue)
             iValue = 2000;
         end % if
         
-        set(uiSrc, 'String', sprintf('%d', iValue));
+        uiSrc.String = sprintf('%d', iValue);
         X.Plot(f).ScatterNum(s) = iValue;
         
         fRefresh(f);
@@ -1349,7 +1361,7 @@ function Analyse2D
 
     function fPlotSetSample(uiSrc,~,f,s)
         
-        iValue = get(uiSrc,'Value');
+        iValue = uiSrc.Value;
         X.Plot(f).Sample(s) = iValue;
         fRefresh(f);
         
@@ -1357,7 +1369,7 @@ function Analyse2D
 
     function fPlotSetField(uiSrc,~,f)
         
-        iField = get(uiSrc,'Value');
+        iField = uiSrc.Value;
         sField = X.Data.Field{iField};
         
         X.Plot(f).Data = sField;
@@ -1367,7 +1379,7 @@ function Analyse2D
 
     function fPlotSetPhase(uiSrc,~,a,f)
         
-        iAxis = get(uiSrc,'Value');
+        iAxis = uiSrc.Value;
         sAxis = X.Data.Axis{iAxis};
         
         X.Plot(f).Axis{a} = sAxis;
@@ -1383,7 +1395,7 @@ function Analyse2D
 
     function fPlotSetDensity(uiSrc,~,f)
         
-        iDensity = get(uiSrc,'Value');
+        iDensity = uiSrc.Value;
         sDensity = X.Data.Density{iDensity};
         
         X.Plot(f).Density = sDensity;
@@ -1393,20 +1405,20 @@ function Analyse2D
 
     function fPlotSetting(uiSrc,~,f,s)
     
-        X.Plot(f).Settings(s) = get(uiSrc,'Value');
+        X.Plot(f).Settings(s) = uiSrc.Value;
         fRefresh(f);
 
     end % function
 
     function fPlotSetCount(uiSrc,~,f)
     
-        iValue = floor(str2double(get(uiSrc,'String')));
+        iValue = floor(str2double(uiSrc.String));
 
         if isempty(iValue)
             iValue = 500000;
         end % if
         
-        set(uiSrc, 'String', sprintf('%d', iValue));
+        uiSrc.String = sprintf('%d', iValue);
         X.Plot(f).Count = iValue;
 
         fRefresh(f);
