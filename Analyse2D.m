@@ -353,11 +353,6 @@ function Analyse2D
         
         % Create Controls
         iY = 115;
-        if strcmpi(X.Data.Coords, 'cylindrical')
-            sField = 'NoTexCyl';
-        else
-            sField = 'NoTex';
-        end % if
         
         iY = iY - 25;
         [~,iVal] = incellarray(X.Plot(t).Data, X.Data.Plasma);
@@ -390,8 +385,8 @@ function Analyse2D
         
         iY = iY - 25;
         uicontrol(bgTab(t),'Style','Text','String','Fields','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','Checkbox','String',fTranslateField('e1',sField),'Value',X.Plot(t).Settings(1),'Position',[ 85 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,1});
-        uicontrol(bgTab(t),'Style','Checkbox','String',fTranslateField('e2',sField),'Value',X.Plot(t).Settings(2),'Position',[135 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,2});
+        uicontrol(bgTab(t),'Style','Checkbox','String',oVar.Lookup('e1').Short,'Value',X.Plot(t).Settings(1),'Position',[ 85 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,1});
+        uicontrol(bgTab(t),'Style','Checkbox','String',oVar.Lookup('e2').Short,'Value',X.Plot(t).Settings(2),'Position',[135 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,2});
 
     end % function
     
@@ -1025,7 +1020,7 @@ function Analyse2D
                         if strcmpi(X.Plot(f).Density,'charge')
                             sCurrent = '';
                         else
-                            sCurrent = fTranslateField(X.Plot(f).Density,'FromLong');
+                            sCurrent = oVar.Reverse(X.Plot(f).Density,'Full');
                         end % if
                         iMakeSym = 1;
 
@@ -1055,7 +1050,7 @@ function Analyse2D
                     case 'Field Density'
                         iMakeSym = 1;
                         figure(X.Plot(f).Figure); clf;
-                        X.Plot(f).Return = fPlotField2D(oData,X.Time.Dump,fTranslateField(X.Plot(f).Data,'FromLong'), ...
+                        X.Plot(f).Return = fPlotField2D(oData,X.Time.Dump,oVar.Reverse(X.Plot(f).Data,'Full'), ...
                             'IsSubPlot','No','AutoResize','Off','HideDump','Yes','Limits',[aHLim aVLim]);
 
                     case 'Phase 2D'
@@ -1067,8 +1062,8 @@ function Analyse2D
                         end % if
                         figure(X.Plot(f).Figure); clf;
                         X.Plot(f).Return = fPlotPhase2D(oData,X.Time.Dump,X.Plot(f).Data, ...
-                            fTranslateAxis(X.Plot(f).Axis{1},'FromLong'), ...
-                            fTranslateAxis(X.Plot(f).Axis{2},'FromLong'), ...
+                            oVar.Reverse(X.Plot(f).Axis{1},'Full'), ...
+                            oVar.Reverse(X.Plot(f).Axis{2},'Full'), ...
                             'HLim',aHLim,'VLim',aVLim,'UseRaw',sUseRaw, ...
                             'IsSubPlot','No','AutoResize','Off','HideDump','Yes');
                         if isempty(X.Plot(f).Return)
@@ -1326,7 +1321,7 @@ function Analyse2D
         
         X.Data.Density = oData.Config.Variables.Density.(sSpecies).Density;
         for i=1:length(X.Data.Density)
-            X.Data.Density{i} = fTranslateField(X.Data.Density{i},['Long',X.Data.CoordsPF]);
+            X.Data.Density{i} = oVar.Lookup(X.Data.Density{i}).Full;
         end % for
         
         fRefresh(f);
