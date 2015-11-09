@@ -2,7 +2,7 @@
   Osiris Analysis Toolbox
  ******************************************
   MATLAB package for analysing Osiris data
-  Current version: 0.7
+  Current version: 1.1
  
 
   Developed by:
@@ -14,6 +14,11 @@
 
   Development History
  =====================
+
+  Version 1.1
+  - Significant updates to GUI
+  - Added plot functions and new classes including a math func interpreter.
+  - Updates and bug fixes for OsirisData and OsirisConfig
 
   Version 1.0
   - Added GUI and updated all plot functions accordingly
