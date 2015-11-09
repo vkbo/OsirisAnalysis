@@ -32,7 +32,7 @@ classdef OsirisConfig
     
     properties (GetAccess = 'private', SetAccess = 'private')
 
-        Files = struct; % Holds possible config files
+        Files = {}; % Holds possible config files
         
     end % properties
 
@@ -110,7 +110,7 @@ classdef OsirisConfig
                             && sFileExt(end) ~= '~'           ...
                             && aDir(i).bytes >= aSizes(1)     ...
                             && aDir(i).bytes <= aSizes(2)
-                        aFiles(end+1) = {aDir(i).name};
+                        aFiles{end+1} = aDir(i).name;
                     end % if
 
                 end % if
@@ -120,13 +120,13 @@ classdef OsirisConfig
             switch (length(aFiles))
 
                 case 0
-                    fprintf(2, 'Config file not found.\n');
+                    fprintf(2, 'OsirisConfig Error: Input deck not found.\n');
                 
                 case 1
                     obj.File = 1;
                 
                 otherwise
-                    fprintf('Multiple possible config files found\n');
+                    fprintf('Multiple possible config files found.\n');
                     for i=1:length(aFiles)
                         fprintf('(%d) %s\n', i, aFiles{i});
                     end % for
@@ -149,9 +149,11 @@ classdef OsirisConfig
 
                 obj = obj.fGetSimulationVariables();
                 obj = obj.fGetSpecies();
+                obj = obj.fGetFieldVariables();
                 obj = obj.fGetPlasmaVariables();
                 obj = obj.fGetBeamVariables();
                 obj = obj.fGetFields();
+                obj = obj.fGetDensity();
                 
             end % if
 
@@ -184,18 +186,29 @@ classdef OsirisConfig
                 sLine   = aLines{i};
                 iName   = 0;         % 0 for dataset name, 1 between { and }
                 sName   = '';        % The dataset name
+                aBreaks = [];        % Array for variable breaks
                 iComma  = 1;         % Default first comma (actually start of string)
-                iPar    = 0;         % 0 for outside of paranteses, 1 inside 
+                iPar    = 0;         % 0 for outside of paranteses, 1 inside
+                iString = 0;         % 0 for outside of string, 1 inside
 
                 for c=1:length(sLine)
                     
+                    % Inside/outside string
+                    if sLine(c) == '"'
+                        if iString
+                            iString = 0;
+                        else
+                            iString = 1;
+                        end % if
+                    end % if
+
                     % Inside paranteses 
-                    if sLine(c) == '(' 
+                    if sLine(c) == '(' && iString == 0
                         iPar = 1;
                     end % if
 
                     % Outside paranteses
-                    if sLine(c) == ')'
+                    if sLine(c) == ')' && iString == 0
                         iPar = 0;
                     end % if
 
@@ -213,10 +226,10 @@ classdef OsirisConfig
                     % Figure out which commas separate variables.
                     % That is, the last one before an '='
                     if iName == 1
-                        if sLine(c) == ',' && iPar == 0
+                        if sLine(c) == ',' && iPar == 0 && iString == 0
                             iComma = c;
                         end % if
-                        if sLine(c) == '='
+                        if sLine(c) == '=' && iString == 0
                             if iComma > 1
                                 aBreaks(end+1) = iComma;
                             end % if
@@ -225,51 +238,55 @@ classdef OsirisConfig
 
                 end % for
                 
-
                 % Separate labels for data, and store everything
                 aBreaks(end+1) = c;
                 for k=2:length(aBreaks)
   
                     sString = sLine(aBreaks(k-1)+1:aBreaks(k));
-                    aString = strsplit(sString,'=');
+                    aSplit  = strfind(sString,'=');
+                    sLabel  = 'None';
+                    sValue  = '';
                     
-                    aConfig(end+1,1) = {sName};
-                    
-                    if ~isempty(aString)
-                        sLabel = aString{1};
-                        aLabel = strsplit(sLabel,'(');
-
-                        aConfig(end,2) = aLabel(1);
-                        aConfig{end,3} = 0;
-                        aConfig{end,4} = 0;
-                        aConfig{end,5} = 0;
-                        if length(aLabel) > 1
-                            sNum1 = strrep(aLabel{2},')','');
-                            aNum1 = strsplit(sNum1,':');
-
-                            aConfig{end,3} = str2num(aNum1{1});
-                            if length(aNum1) > 1
-                                sNum2 = aNum1{2};
-                                aNum2 = strsplit(sNum2,',');
-
-                                aConfig{end,4} = str2num(aNum2{1});
-                                if length(aNum2) > 1
-                                    aConfig{end,5} = str2num(aNum2{2});
-                                end % if
-                            end % if
-                        end % if
-                            
-                        if length(aString) > 1
-                            sValue = aString{2};
-                            if sValue(end) == ','
-                                sValue = sValue(1:end-1);
-                            end % if
-                            aConfig{end,6} = sValue;
+                    if ~isempty(aSplit)
+                        if aSplit(1) > 1
+                            sLabel = sString(1:aSplit(1)-1);
+                            sValue = sString(aSplit(1)+1:end);
                         end % if
                     end % if
+                    
+                    aLabel = strsplit(sLabel,'(');
+
+                    aConfig{end+1,1} = sName;
+                    aConfig(end,  2) = aLabel(1);
+                    aConfig{end,  3} = 0;
+                    aConfig{end,  4} = 0;
+                    aConfig{end,  5} = 0;
+                    
+                    if length(aLabel) > 1
+                        sNum1 = strrep(aLabel{2},')','');
+                        aNum1 = strsplit(sNum1,':');
+
+                        aConfig{end,3} = str2num(aNum1{1});
+                        if length(aNum1) > 1
+                            sNum2 = aNum1{2};
+                            aNum2 = strsplit(sNum2,',');
+
+                            aConfig{end,4} = str2num(aNum2{1});
+                            if length(aNum2) > 1
+                                aConfig{end,5} = str2num(aNum2{2});
+                            end % if
+                        end % if
+                    end % if
+
+                    if ~isempty(sValue)
+                        if sValue(end) == ','
+                            sValue = sValue(1:end-1);
+                        end % if
+                    end % if
+                    aConfig{end,6} = sValue;
+
                 end % for
     
-                
                 % Find species
                 [iRows,~] = size(aConfig);
                 sSpecies = '';
@@ -284,22 +301,26 @@ classdef OsirisConfig
                     aConfig{k,7} = sSpecies;
 
                 end % for
-
+                
             end % for
             
             obj.Raw = aConfig;
             
         end % function
 
-        function sReturn = fExtractRaw(obj, sSpecies, sName, sLabel, iIndex)
+        function sReturn = fExtractRaw(obj, sSpecies, sName, sLabel, iIndex, sDefault)
             
             if nargin < 5
                 iIndex = 0;
             end % if
+
+            if nargin < 6
+                sDefault = 0;
+            end % if
             
             [iRows,~] = size(obj.Raw);
             
-            sReturn = '';
+            sReturn = sDefault;
             
             for i=1:iRows
                 if   strcmpi(obj.Raw{i,1},sName)    ...
@@ -345,6 +366,20 @@ classdef OsirisConfig
                 for i=1:length(aValue)
                     aReturn(i) = str2num(aValue{i});
                 end % for
+            end % if
+            
+        end % function
+
+        function dReturn = fExtractSingle(obj, sSpecies, sName, sLabel, dReturn, iIndex)
+            
+            if nargin < 6
+                iIndex = 0;
+            end % if
+            
+            aValue = obj.fExtractVariables(sSpecies, sName, sLabel, iIndex);
+            
+            if ~isempty(aValue)
+                dReturn = str2num(aValue{1});
             end % if
             
         end % function
@@ -422,8 +457,9 @@ classdef OsirisConfig
         
         function obj = fGetSpecies(obj)
             
-            stSpecies.Beam   = {};
-            stSpecies.Plasma = {};
+            stSpecies.Beam    = {};
+            stSpecies.Plasma  = {};
+            stSpecies.Species = {};
 
             [iRows,~] = size(obj.Raw);
             sPrev     = '';
@@ -437,11 +473,13 @@ classdef OsirisConfig
                     else
                         stSpecies.Beam{end+1,1} = sBeam;
                     end % if
+                    stSpecies.Species{end+1,1} = sBeam;
                     sPrev = obj.Raw{i,7};
                 end % if
             end % for
 
-            iBeams = length(stSpecies.Beam);
+            iBeams   = length(stSpecies.Beam);
+            iPlasmas = length(stSpecies.Plasma);
             
             % Assume first beam in input deck is the drive beam
             if iBeams > 0
@@ -457,8 +495,15 @@ classdef OsirisConfig
                 stSpecies.WitnessBeam = {};
             end % if
             
+            % Assume first plasma in input deck is the primary plasma
+            if iPlasmas > 0
+                stSpecies.PrimaryPlasma = stSpecies.Plasma(1);
+            else
+                stSpecies.PrimaryPlasma = {};
+            end % if
+
             stSpecies.BeamCount        = iBeams;
-            stSpecies.PlasmaCount      = length(stSpecies.Plasma);
+            stSpecies.PlasmaCount      = iPlasmas;
             stSpecies.DriveBeamCount   = length(stSpecies.DriveBeam);
             stSpecies.WitnessBeamCount = length(stSpecies.WitnessBeam);
             
@@ -466,7 +511,7 @@ classdef OsirisConfig
 
         end % function
 
-        function obj = fGetPlasmaVariables(obj)
+        function obj = fGetFieldVariables(obj)
             
             % Retrieving constants
 
@@ -478,13 +523,11 @@ classdef OsirisConfig
             dMu0        = obj.Variables.Constants.VacuumPermeability;
             
 
-            % Calculating plasma variables
+            % Calculating normalised plasma variables derived from N0
 
             dN0       = obj.N0;
             dOmegaP   = sqrt((dN0 * dECharge^2) / (dEMass * dEpsilon0));
             dLambdaP  = 2*pi * dC / dOmegaP;
-
-            % Setting plasma variables
             
             obj.Variables.Plasma.N0          = dN0;
             obj.Variables.Plasma.NormOmegaP  = dOmegaP;
@@ -493,8 +536,8 @@ classdef OsirisConfig
             
             % Calculating conversion variables
             
-            dSIE0    = 1e-7 * dEMass * dC^3 * dOmegaP * 4*pi*dEpsilon0 / dECharge;
-            dSIB0    = 1e-7 * dEMass * dC^2 * dOmegaP * 4*pi*dEpsilon0 / dECharge;
+            dSIE0    = dEMass * dC^3 * dOmegaP * dMu0*dEpsilon0 / dECharge;
+            dSIB0    = dEMass * dC^2 * dOmegaP * dMu0*dEpsilon0 / dECharge;
             dLFactor = dC / dOmegaP;
 
             % Setting conversion variables
@@ -573,112 +616,204 @@ classdef OsirisConfig
             obj.Variables.Convert.CGS.J2Fac  = aJFacCGS(2);
             obj.Variables.Convert.CGS.J3Fac  = aJFacCGS(3);
 
-            % Setting plasma profile
+        end % function
 
-            aFX1 = obj.fExtractVarNum('PlasmaElectrons','profile','fx',1);
-            aX1  = obj.fExtractVarNum('PlasmaElectrons','profile','x' ,1);
-            aFX2 = obj.fExtractVarNum('PlasmaElectrons','profile','fx',2);
-            aX2  = obj.fExtractVarNum('PlasmaElectrons','profile','x' ,2);
-            aFX3 = obj.fExtractVarNum('PlasmaElectrons','profile','fx',3);
-            aX3  = obj.fExtractVarNum('PlasmaElectrons','profile','x' ,3);
+        function obj = fGetPlasmaVariables(obj)
+            
+            % Get variables
+            
+            dTMin      = obj.Variables.Simulation.TMin;
+            dTMax      = obj.Variables.Simulation.TMax;
+            dOmegaP    = obj.Variables.Plasma.NormOmegaP;
+            dLambdaP   = obj.Variables.Plasma.NormLambdaP;
 
-            dMaxFX1 = max(aFX1);
-            dMaxFX2 = max(aFX2);
-            dMaxFX3 = max(aFX3);
-
-            if isempty(aFX3)
-                dMaxFX3 = 0;
-                aFX3    = 0;
-                aX3     = 0;
-            end % if
-
-            iTMin = floor(dTMin);
-            iTMax = floor(dTMax);
-            iNT   = iTMax-iTMin+1;
-            aPD   = zeros(1,iNT);
-            aZ    = linspace(iTMin,iTMax,iNT);
-            iPR   = 0;
-            aReg  = zeros(1,2);
-            for i=1:length(aFX1)-1
-                iSMin = floor(aX1(i))+iTMin;
-                iSMax = floor(aX1(i+1))+iTMin;
-                iNS   = iSMax-iSMin+1;
-                aSPD  = linspace(aFX1(i),aFX1(i+1),iNS);
-                aPD(iSMin+1:iSMax+1) = aSPD;
-                if aFX1(i+1) > 0 && aFX1(i) == 0
-                    iPR = iPR + 1;
-                    aReg(iPR,1) = aX1(i);
-                end % if
-                if aFX1(i+1) == 0 && aFX1(i) > 0
-                    aReg(iPR,2) = aX1(i);
-                end % if
-            end % for
-            
-            if aReg(iPR,2) == 0
-                aReg(iPR,2) = aX1(end);
-            end % if
-            
-            obj.Variables.Plasma.DensityProfile = aPD;
-            obj.Variables.Plasma.DensityAxis    = aZ;
-            obj.Variables.Plasma.PlasmaRegions  = aReg;
-            
-            dPStart = -1.0;
-            dPEnd   = -1.0;
-
-            for i=1:length(aFX1)
-                if dPStart < 0.0
-                    if aFX1(i) > 0.9*dMaxFX1
-                        dPStart = aX1(i);
-                    end % if
-                else
-                    if dPEnd < 0.0
-                        if aFX1(i) < 0.1
-                            dPEnd = aX1(i);
-                        end % if
-                    end % if
-                end % if
-            end % for
-            
-            if dPEnd < 0.0
-                dPEnd = obj.Variables.Simulation.TMax;
-            end % if
-            
-            if dPEnd > aX1(end)
-                dPEnd = aX1(end);
-            end % if
-            
-            obj.Variables.Plasma.ProfileFX1   = aFX1;
-            obj.Variables.Plasma.ProfileX1    = aX1;
-            obj.Variables.Plasma.ProfileFX2   = aFX2;
-            obj.Variables.Plasma.ProfileX2    = aX2;
-            obj.Variables.Plasma.ProfileFX3   = aFX3;
-            obj.Variables.Plasma.ProfileX3    = aX3;
-
-            obj.Variables.Plasma.PlasmaMaxFX1 = dMaxFX1;
-            obj.Variables.Plasma.PlasmaMaxFX2 = dMaxFX2;
-            obj.Variables.Plasma.PlasmaMaxFX3 = dMaxFX3;
-            
-            obj.Variables.Plasma.PlasmaStart  = dPStart;
-            obj.Variables.Plasma.PlasmaEnd    = dPEnd;
-
-            dPlasmaMax = dMaxFX1 * dMaxFX2;
-            if dMaxFX3 > 0
-                dPlasmaMax = dPlasmaMax * dMaxFX3;
-            end % if
-            
-            obj.Variables.Plasma.MaxPlasmaFac = dPlasmaMax;
-            obj.Variables.Plasma.MaxOmegaP    = dOmegaP  * sqrt(dPlasmaMax);
-            obj.Variables.Plasma.MaxLambdaP   = dLambdaP / sqrt(dPlasmaMax);
-            
             % Extract plasma species variables
             [iRows,~] = size(obj.Variables.Species.Plasma);
             
             for i=1:iRows
                 
-                sPlasma = obj.Variables.Species.Plasma{i,1};
+                sPlasma    = obj.Variables.Species.Plasma{i,1};
                 
+                dPStart    = -1.0;
+                dPEnd      = -1.0;
+                dPlasmaMax =  1.0;
+
                 obj.Variables.Plasma.(sPlasma) = {};
                 
+                % Extracting plasma profile
+                
+                sValue   = obj.fExtractRaw(sPlasma,'profile','profile_type',0,'uniform');
+                sProfile = strrep(sValue, '"', '');
+                iNumX    = obj.fExtractSingle(sPlasma,'profile','num_x',-1);
+                
+                if iNumX > 0 && strcmpi(sProfile,'uniform')
+                    sProfile = 'piecewise-linear';
+                end % if
+                
+                obj.Variables.Plasma.(sPlasma).ProfileType = sProfile;
+                
+                switch(sProfile)
+                    
+                    case 'piecewise-linear'
+                        
+                        % Piecewise Linear Plasma Function
+
+                        aFX1 = obj.fExtractVarNum(sPlasma,'profile','fx',1);
+                        aX1  = obj.fExtractVarNum(sPlasma,'profile','x' ,1);
+                        aFX2 = obj.fExtractVarNum(sPlasma,'profile','fx',2);
+                        aX2  = obj.fExtractVarNum(sPlasma,'profile','x' ,2);
+                        aFX3 = obj.fExtractVarNum(sPlasma,'profile','fx',3);
+                        aX3  = obj.fExtractVarNum(sPlasma,'profile','x' ,3);
+
+                        dMaxFX1 = max(aFX1);
+                        dMaxFX2 = max(aFX2);
+                        dMaxFX3 = max(aFX3);
+
+                        if isempty(aFX3)
+                            dMaxFX3 = 0;
+                            aFX3    = 0;
+                            aX3     = 0;
+                        end % if
+
+                        iTMin = floor(dTMin);
+                        iTMax = floor(dTMax);
+                        iNT   = iTMax-iTMin+1;
+                        aPD   = zeros(1,iNT);
+                        aZ    = linspace(iTMin,iTMax,iNT);
+                        iPR   = 0;
+                        aReg  = zeros(1,2);
+                        for j=1:length(aFX1)-1
+                            iSMin = floor(aX1(j))+iTMin;
+                            iSMax = floor(aX1(j+1))+iTMin;
+                            iNS   = iSMax-iSMin+1;
+                            aSPD  = linspace(aFX1(j),aFX1(j+1),iNS);
+                            aPD(iSMin+1:iSMax+1) = aSPD;
+                            if aFX1(j+1) > 0 && aFX1(j) == 0
+                                iPR = iPR + 1;
+                                aReg(iPR,1) = aX1(j);
+                            end % if
+                            if aFX1(j+1) == 0 && aFX1(j) > 0
+                                aReg(iPR,2) = aX1(j);
+                            end % if
+                        end % for
+
+                        if aReg(iPR,2) == 0
+                            aReg(iPR,2) = aX1(end);
+                        end % if
+
+                        obj.Variables.Plasma.(sPlasma).DensityProfile = aPD;
+                        obj.Variables.Plasma.(sPlasma).DensityAxis    = aZ;
+                        obj.Variables.Plasma.(sPlasma).PlasmaRegions  = aReg;
+
+                        for j=1:length(aFX1)
+                            if dPStart < 0.0
+                                if aFX1(j) > 0.9*dMaxFX1
+                                    dPStart = aX1(j);
+                                end % if
+                            end % if
+                        end % for
+
+                        for j=length(aFX1):-1:1
+                            if dPEnd < 0.0
+                                if aFX1(j) > 0.1*dMaxFX1
+                                    dPEnd = aX1(j);
+                                end % if
+                            end % if
+                        end % for
+
+                        if dPEnd < 0.0
+                            dPEnd = obj.Variables.Simulation.TMax;
+                        end % if
+
+                        if dPEnd > aX1(end)
+                            dPEnd = aX1(end);
+                        end % if
+
+                        dPlasmaMax = dMaxFX1 * dMaxFX2;
+                        if dMaxFX3 > 0
+                            dPlasmaMax = dPlasmaMax * dMaxFX3;
+                        end % if
+
+                        % Save Variables
+
+                        obj.Variables.Plasma.(sPlasma).ProfileFX1   = aFX1;
+                        obj.Variables.Plasma.(sPlasma).ProfileX1    = aX1;
+                        obj.Variables.Plasma.(sPlasma).ProfileFX2   = aFX2;
+                        obj.Variables.Plasma.(sPlasma).ProfileX2    = aX2;
+                        obj.Variables.Plasma.(sPlasma).ProfileFX3   = aFX3;
+                        obj.Variables.Plasma.(sPlasma).ProfileX3    = aX3;
+
+                        obj.Variables.Plasma.(sPlasma).PlasmaMaxFX1 = dMaxFX1;
+                        obj.Variables.Plasma.(sPlasma).PlasmaMaxFX2 = dMaxFX2;
+                        obj.Variables.Plasma.(sPlasma).PlasmaMaxFX3 = dMaxFX3;
+
+                    case 'mathfunc'
+                        
+                        % Math Plasma Function
+
+                        sValue = obj.fExtractRaw(sPlasma,'profile','math_func_expr');
+                        sFunc  = strrep(sValue, '"', '');
+                        obj.Variables.Plasma.(sPlasma).ProfileFunction = sFunc;
+                        
+                        iTMin = floor(dTMin);
+                        iTMax = floor(dTMax);
+                        iNT   = iTMax-iTMin+1;
+                        aZ    = linspace(iTMin,iTMax,iNT);
+
+                        oMF = MathFunc(sFunc);
+                        aPD = oMF.Eval(aZ,0,0);
+
+                        if isempty(aPD)
+                        
+                            fprintf(2,'OsirisConfig Error: Cannot parse math function from input deck.\n');
+
+                        else
+                        
+                            obj.Variables.Plasma.(sPlasma).DensityProfile = aPD;
+                            obj.Variables.Plasma.(sPlasma).DensityAxis    = aZ;
+
+                            dPlasmaMax = max(aPD);
+
+                            for j=1:length(aPD)
+                                if dPStart < 0.0
+                                    if aPD(j) > 0.95*dPlasmaMax
+                                        dPStart = aZ(j);
+                                    end % if
+                                end % if
+                            end % for
+
+                            for j=length(aPD):-1:1
+                                if dPEnd < 0.0
+                                    if aPD(j) > 0.05*dPlasmaMax
+                                        dPEnd = aZ(j);
+                                    end % if
+                                end % if
+                            end % for
+
+                            if dPEnd < 0.0
+                                dPEnd = obj.Variables.Simulation.TMax;
+                            end % if
+
+                            if dPEnd > aZ(end)
+                                dPEnd = aZ(end);
+                            end % if
+                        end % if
+                        
+                    otherwise
+                        
+                        fprintf('OsirisConfig Warning: Unsupported species profile encountered.\n');
+
+                end % if
+
+                if strcmpi(obj.Variables.Species.PrimaryPlasma,sPlasma)
+                    obj.Variables.Plasma.PlasmaStart  = dPStart;
+                    obj.Variables.Plasma.PlasmaEnd    = dPEnd;
+
+                    obj.Variables.Plasma.MaxPlasmaFac = dPlasmaMax;
+                    obj.Variables.Plasma.MaxOmegaP    = dOmegaP  * sqrt(dPlasmaMax);
+                    obj.Variables.Plasma.MaxLambdaP   = dLambdaP / sqrt(dPlasmaMax);
+                end % if
+
                 % Species
 
                 aValue = obj.fExtractFixedNum(sPlasma,'species','rqm',[0]);
@@ -853,6 +988,10 @@ classdef OsirisConfig
         function obj = fGetFields(obj)
             
             sFields = fExtractRaw(obj, '', 'diag_emf', 'reports', 0);
+
+            if isempty(sFields)
+                return;
+            end % if
             
             sFields = strrep(sFields, '"', '');
             aFields = strsplit(sFields, ',');
@@ -871,6 +1010,41 @@ classdef OsirisConfig
                     obj.Variables.Fields.BField{iB} = aFields{i};
                     iB = iB + 1;
                 end % if
+            end % for
+            
+        end % function
+
+        function obj = fGetDensity(obj)
+            
+            stSpecies = obj.Variables.Species.Species;
+            
+            for s=1:length(stSpecies)
+
+                sDensity = fExtractRaw(obj, stSpecies{s}, 'diag_species', 'reports', 0, '');
+
+                if isempty(sDensity)
+                    return;
+                end % if
+
+                sDensity = strrep(sDensity, '"', '');
+                aDensity = strsplit(sDensity, ',');
+                obj.Variables.Density.(stSpecies{s}).Density = aDensity;
+                obj.Variables.Density.(stSpecies{s}).Charge  = {};
+                obj.Variables.Density.(stSpecies{s}).Current = {};
+
+                iQ = 1;
+                iC = 1;
+                for i=1:length(aDensity)
+                    if strcmpi(aDensity{i}(1), 'c')
+                        obj.Variables.Density.(stSpecies{s}).Charge{iQ} = aDensity{i};
+                        iQ = iQ + 1;
+                    end % if
+                    if strcmpi(aDensity{i}(1), 'j')
+                        obj.Variables.Density.(stSpecies{s}).Current{iC} = aDensity{i};
+                        iC = iC + 1;
+                    end % if
+                end % for
+
             end % for
             
         end % function

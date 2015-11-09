@@ -1,3 +1,4 @@
+
 %
 %  Class Object to analyse E-fields
 % **********************************
@@ -319,6 +320,7 @@ classdef EField
             % Return data
             stReturn.Data    = aData;
             stReturn.X1Axis  = aX1Axis;
+            stReturn.X1Range = obj.AxisRange(1:2);
             stReturn.X2Range = [aX2Axis(iStart) aX2Axis(iEnd+1)];
             stReturn.ZPos    = obj.fGetZPos();        
         
@@ -433,7 +435,7 @@ classdef EField
             stReturn.AxisRange = [iStart iStop aVRange];
         
         end % function
-    
+        
     end % methods
     
     %

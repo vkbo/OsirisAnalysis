@@ -2,7 +2,7 @@
   Osiris Analysis Toolbox
  ******************************************
   MATLAB package for analysing Osiris data
-  Current version: 1.0
+  Current version: 1.1
  
 
   Developed by:
@@ -15,12 +15,18 @@
   Development History
  =====================
  
+  Version 1.1
+  - Significant updates to GUI
+  - Added plot functions and new classes including a MathFunc interpreter.
+  - Updates and bug fixes for OsirisData and OsirisConfig
+
   Version 1.0
   - Classes now handle units as normalised by default. Changing units is done when the object is created by using
     standard matlab input pairs. For instance: CH = Charge(<Data object>, 'EB', 'Units', 'SI', 'X1Scale', 'mm');
     This sets class units to SI and the x1-axis (xi-axis) to millimetres.
   - Added plasma density anim and plot.
   - Added Charge class function to return particle selection for scatter plot.
+  - Added GUI and updated all plot functions accordingly
 
   Version 0.7
   - Added charge conversion calculations to OsirisConfig

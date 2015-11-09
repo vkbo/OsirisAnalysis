@@ -2,7 +2,7 @@
 %
 %  Class Object to hold Osiris data
 % **********************************
-%  Version 1.0
+%  Version 1.1
 %
 
 classdef OsirisData
@@ -13,14 +13,15 @@ classdef OsirisData
     
     properties (GetAccess = 'public', SetAccess = 'public')
 
-        Path      = '';     % Path to dataset
-        PathID    = '';     % Path as ID instead of free text input
-        Elements  = {};     % Struct of all datafiles in dataset ('MS/' subfolder)
-        MSData    = {};     % Struct of all MS data
-        Config    = [];     % Content of the config files and extraction of all runtime variables
-        DataSets  = {};     % Available datasets in folders indicated by LocalConfig.m
-        Silent    = 0;      % Set to 1 to disable command window output
-        Temp      = '/tmp'; % Temp folder (set in LocalConfig.m)
+        Path        = '';     % Path to dataset
+        PathID      = '';     % Path as ID instead of free text input
+        Elements    = {};     % Struct of all datafiles in dataset ('MS/' subfolder)
+        MSData      = {};     % Struct of all MS data
+        Config      = [];     % Content of the config files and extraction of all runtime variables
+        DataSets    = {};     % Available datasets in folders indicated by LocalConfig.m
+        DefaultPath = {};     % Default data folder
+        Silent      = 0;      % Set to 1 to disable command window output
+        Temp        = '/tmp'; % Temp folder (set in LocalConfig.m)
 
     end % properties
 
@@ -30,7 +31,6 @@ classdef OsirisData
     
     properties (GetAccess = 'private', SetAccess = 'private')
 
-        DefaultPath = {}; % Default data folder
         DefaultData = {}; % Data in default folder
 
     end % properties
@@ -57,7 +57,6 @@ classdef OsirisData
             LocalConfig;
             
             obj.Temp   = sLocalTemp;
-    
             obj.Config = OsirisConfig;
             obj.Config.Silent = obj.Silent;
             
@@ -73,12 +72,15 @@ classdef OsirisData
                 sName  = stFields{f};
                 sPath  = obj.DefaultPath.(stFields{f}).Path;
                 iDepth = obj.DefaultPath.(stFields{f}).Depth;
+                
+                obj.DefaultPath.(stFields{f}).Available = 0;
 
                 if isdir(sPath)
-
+                    
                     if ~obj.Silent
                         fprintf('Scanning %s\n', sPath);
                     end % if
+                    obj.DefaultPath.(stFields{f}).Available = 1;
                     
                     stScan.(sName)(1) = struct('Path', sPath, 'Name', sName, 'Level', 0);
                     for r=0:iDepth-1
@@ -201,29 +203,37 @@ classdef OsirisData
         
         function Version(obj)
             
-            fprintf('OsirisAnalysis Version 1.0\n');
+            fprintf('OsirisAnalysis Version 1.1\n');
             
         end % function
 
-        function Info(obj)
+        function stReturn = Info(obj)
             
             %
             %  Prints basic simulation info extracted from Config object
             % ***********************************************************
             %
 
+            stReturn  = {};
+
             dTMax     = obj.Config.Variables.Simulation.TMax;
             dTimeStep = obj.Config.Variables.Simulation.TimeStep;
             dNDump    = obj.Config.Variables.Simulation.NDump;
 
-            fprintf('\n');
-            fprintf(' Dataset Info\n');
-            fprintf('**************\n');
-            fprintf('\n');
-            fprintf('Name:      %s\n', obj.Config.Name);
-            fprintf('Path:      %s\n', obj.Config.Path);
-            fprintf('Last Dump: %d\n', floor(dTMax/dTimeStep/dNDump));
-            fprintf('\n');
+            if ~obj.Silent
+                fprintf('\n');
+                fprintf(' Dataset Info\n');
+                fprintf('**************\n');
+                fprintf('\n');
+                fprintf('Name:      %s\n', obj.Config.Name);
+                fprintf('Path:      %s\n', obj.Config.Path);
+                fprintf('Last Dump: %d\n', floor(dTMax/dTimeStep/dNDump));
+                fprintf('\n');
+            end % if
+
+            stReturn.Name     = obj.Config.Name;
+            stReturn.Path     = obj.Config.Path;
+            stReturn.LastDump = floor(dTMax/dTimeStep/dNDump);
 
         end % function
         
@@ -270,6 +280,19 @@ classdef OsirisData
                 fprintf('\n');
             end % if
             
+            stReturn.Start.ZPos     = dPStart*dLFac;
+            stReturn.Start.Dump     = dPStart;
+            stReturn.Start.Between  = [floor(dPStart/dTFac) ceil(dPStart/dTFac)];
+            stReturn.End.ZPos       = dPEnd*dLFac;
+            stReturn.End.Dump       = dPEnd;
+            stReturn.End.Between    = [floor(dPEnd/dTFac) ceil(dPEnd/dTFac)];
+            stReturn.Density.Norm   = dN0;
+            stReturn.Density.Peak   = dN0*dPMax;
+            stReturn.Frequency.Norm = dNOmegaP;
+            stReturn.Frequency.Peak = dMOmegaP;
+            stReturn.SkinDepth.Norm = dNLambdaP;
+            stReturn.SkinDepth.Peak = dMLambdaP;
+
         end % function
         
         function stReturn = BeamInfo(obj, sSpecies)
@@ -610,6 +633,74 @@ classdef OsirisData
                     break;
                 end % if
             end % for
+            
+        end % function
+        
+        function stReturn = Timings(obj, bPrint)
+            
+            stReturn = {};
+
+            if nargin < 2
+                bPrint = 0;
+            end % if
+            
+            sPath = [obj.Config.Path '/TIMINGS/'];
+            if ~isdir(sPath)
+                fprintf(2, 'Error: No timing data for simulation %s\n', obj.Config.Name);
+                return;
+            end % if
+            
+            sFile   = strtrim(fileread([sPath  '/timings-final']));
+            stLines = strsplit(sFile,'\n');
+            iLines  = numel(stLines);
+            
+            if iLines < 5
+                fprintf(2, 'Error: Unknown timing format for simulation %s\n', obj.Config.Name);
+                return;
+            end % if
+            
+            stReturn.Iterations = fix(str2double(stLines{1}(15:end)));
+            
+            stReturn.Timings(iLines-5).Event = [];
+            stReturn.Timings(iLines-5).Avg   = [];
+            stReturn.Timings(iLines-5).Min   = [];
+            stReturn.Timings(iLines-5).Max   = [];
+            for l=5:iLines
+                sLine = stLines{l};
+                
+                if length(sLine) < 99
+                    continue;
+                end % if
+
+                stReturn.Timings(l-4).Event = strtrim(sLine(1:42));
+                stReturn.Timings(l-4).Avg   = str2double(sLine(43:62));
+                stReturn.Timings(l-4).Min   = str2double(sLine(62:82));
+                stReturn.Timings(l-4).Max   = str2double(sLine(82:end));
+            end % for
+            
+            % Print Report if Requested
+ 
+            if ~bPrint
+                return;
+            end % if
+            
+            fprintf('+--------------------------------------+-------------+-------------+-------------+\n');
+            fprintf('|                                Event |   Average   |   Minimum   |   Maximum   |\n');
+            fprintf('+--------------------------------------+-------------+-------------+-------------+\n');
+            for r=2:iLines-5
+                fprintf('| %36s | %s | %s | %s |\n', ...
+                    stReturn.Timings(r).Event, ...
+                    fTimeToString(stReturn.Timings(r).Avg,2), ...
+                    fTimeToString(stReturn.Timings(r).Min,2), ...
+                    fTimeToString(stReturn.Timings(r).Max,2));
+            end % for
+            fprintf('+--------------------------------------+-------------+-------------+-------------+\n');
+            fprintf('| %36s | %s | %s | %s |\n', ...
+                'Total Run Time', ...
+                fTimeToString(stReturn.Timings(1).Avg,2), ...
+                fTimeToString(stReturn.Timings(1).Min,2), ...
+                fTimeToString(stReturn.Timings(1).Max,2));
+            fprintf('+--------------------------------------+-------------+-------------+-------------+\n');
             
         end % function
 
