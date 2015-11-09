@@ -58,7 +58,7 @@ function stReturn = fPlotParticleTrack(oData, sSpecies, sTrack, varargin)
         return;
     end % if
 
-    sSpecies = fTranslateSpecies(sSpecies);
+    sSpecies = oData.TranslateInput(sSpecies);
     iTrack   = fRawAxisToIndex(sTrack);
     if iTrack > 6
         iTrack = 4;

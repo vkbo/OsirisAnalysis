@@ -60,7 +60,7 @@ function stReturn = fPlotPhaseSpace(oData, sTime, sSpecies, varargin)
         return;
     end % if
 
-    sSpecies = fTranslateSpecies(sSpecies);
+    sSpecies = oData.TranslateInput(sSpecies);
     iTime    = fStringToDump(oData, num2str(sTime));
 
     oOpt = inputParser;

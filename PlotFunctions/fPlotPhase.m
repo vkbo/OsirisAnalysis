@@ -63,7 +63,7 @@ function stReturn = fPlotPhase(oData, sTime, sSpecies, sPhase, varargin)
     end % if
     
     oSpecies = Variable(sSpecies,1,'Beam');
-    sSpecies = fTranslateSpecies(sSpecies);
+    sSpecies = oData.TranslateInput(sSpecies);
     iTime    = fStringToDump(oData, num2str(sTime));
 
     oOpt = inputParser;

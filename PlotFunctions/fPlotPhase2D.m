@@ -58,7 +58,7 @@ function stReturn = fPlotPhase2D(oData, sTime, sSpecies, sAxis1, sAxis2, varargi
         return;
     end % if
     
-    sSpecies = fTranslateSpecies(sSpecies);
+    sSpecies = oData.TranslateInput(sSpecies);
     iTime    = fStringToDump(oData, num2str(sTime));
 
     oOpt = inputParser;

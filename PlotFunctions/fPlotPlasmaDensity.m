@@ -62,7 +62,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         return;
     end % if
     
-    sPlasma = fTranslateSpecies(sPlasma);
+    sPlasma = oData.TranslateInput(sPlasma);
     iTime   = fStringToDump(oData, num2str(sTime));
 
     oOpt = inputParser;

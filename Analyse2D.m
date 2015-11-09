@@ -539,19 +539,22 @@ function Analyse2D
         
         % Translate Fields
         for i=1:length(X.Data.Field)
-            X.Data.Field{i} = fTranslateField(X.Data.Field{i},['Long',X.Data.CoordsPF]);
+            vData = Variable(oData,X.Data.Field{i});
+            X.Data.Field{i} = vData.Full;
         end % for
 
         % Translate Densities
         X.Data.Density = oData.Config.Variables.Density.(X.Data.Species{1}).Density;
         for i=1:length(X.Data.Density)
-            X.Data.Density{i} = fTranslateField(X.Data.Density{i},['Long',X.Data.CoordsPF]);
+            vData = Variable(oData,X.Data.Density{i});
+            X.Data.Density{i} = vData.Full;
         end % for
 
         % Translate Axes
         X.Data.Axis = {'x1','x2','p1','p2'};
         for i=1:length(X.Data.Axis)
-            X.Data.Axis{i} = fTranslateAxis(X.Data.Axis{i},['Long',X.Data.CoordsPF]);
+            vData = Variable(oData,X.Data.Axis{i});
+            X.Data.Axis{i} = vData.Full;
         end % for
         
         % Simulation Status

@@ -48,7 +48,7 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
         return;
     end % if
 
-    sSpecies = fTranslateSpecies(sSpecies);
+    sSpecies = oData.TranslateInput(sSpecies);
 
     oOpt = inputParser;
     addParameter(oOpt, 'FigureSize', [750 450]);

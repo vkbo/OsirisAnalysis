@@ -45,7 +45,7 @@ classdef Phase
             
             % Set data and species
             obj.Data    = oData;
-            obj.Species = fTranslateSpecies(sSpecies);
+            obj.Species = oData.TranslateInput(sSpecies);
 
             % Read input parameters
             oOpt = inputParser;

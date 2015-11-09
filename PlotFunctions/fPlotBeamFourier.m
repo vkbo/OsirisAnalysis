@@ -57,7 +57,7 @@ function stReturn = fPlotBeamFourier(oData, sTime, sBeam, varargin)
        return;
     end % if
 
-    sBeam    = fTranslateSpecies(sBeam);
+    sBeam    = oData.TranslateInput(sBeam);
     iTime    = fStringToDump(oData, num2str(sTime));
     stRefFFT = {};
 
@@ -83,7 +83,7 @@ function stReturn = fPlotBeamFourier(oData, sTime, sBeam, varargin)
     clear oCH;
 
     if ~isempty(stOpt.RefData)
-        sRefBeam = fTranslateSpecies(stOpt.RefBeam);
+        sRefBeam = oData.TranslateInput(stOpt.RefBeam);
         iRefTime = fStringToDump(stOpt.RefData, num2str(stOpt.RefTime));
         oCH      = Charge(stOpt.RefData, sRefBeam);
         oCH.Time = iRefTime;

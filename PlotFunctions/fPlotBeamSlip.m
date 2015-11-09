@@ -50,7 +50,7 @@ function stReturn = fPlotBeamSlip(oData, sBeam, varargin)
         return;
     end % if
 
-    sBeam = fTranslateSpecies(sBeam);
+    sBeam = oData.TranslateInput(sBeam);
 
     oOpt = inputParser;
     addParameter(oOpt, 'FigureSize', [750 450]);
