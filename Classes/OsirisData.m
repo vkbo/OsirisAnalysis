@@ -56,9 +56,10 @@ classdef OsirisData
             % Initiate OsirisData
             LocalConfig;
             
-            obj.Temp   = sLocalTemp;
-            obj.Config = OsirisConfig;
-            obj.Config.Silent = obj.Silent;
+            obj.Temp              = sLocalTemp;
+            obj.Config            = OsirisConfig;
+            obj.Config.Silent     = obj.Silent;
+            obj.Config.InputNames = stInput;
             
             obj.DefaultPath = stFolders;
             if ~obj.Silent
@@ -206,6 +207,35 @@ classdef OsirisData
             fprintf('OsirisAnalysis Version dev1.2\n');
             
         end % function
+        
+        function sReturn = TranslateInput(obj, sName)
+            %
+            %  OsirisData.TranslateInput
+            % ***************************
+            %
+            %  Input
+            % =======
+            %  sName :: Text to translate
+            %
+            %  Description
+            % =============
+            %  - Translates an object name from the input deck into a valid name for OsirisAnalysis.
+            %  - The translation matrix is set in LocalConfig.m
+            %  - Returns first match found, so ignores multiple matches.
+            %
+            
+            sReturn = sName; % Default behaviour
+            
+            cNames = fieldnames(obj.Config.InputNames);
+            
+            for n=1:length(cNames)
+                if sum(ismember(lower(sName), obj.Config.InputNames.(cNames{n}))) > 0
+                    sReturn = cNames{n};
+                    return;
+                end % if
+            end % for
+            
+        end % function
 
         function stReturn = Info(obj)
             
@@ -303,7 +333,7 @@ classdef OsirisData
             %
             
             stReturn  = {};
-            sSpecies  = fTranslateSpecies(sSpecies);
+            sSpecies  = obj.TranslateInput(sSpecies);
             
             dC        = obj.Config.Variables.Constants.SpeedOfLight;
             dE        = obj.Config.Variables.Constants.ElementaryCharge;
@@ -454,9 +484,9 @@ classdef OsirisData
             end % if
             
             % Convert and check input values
-            sType     = upper(sType);                % Type is always upper case
-            sSet      = lower(sSet);                 % Set is always lower case
-            sSpecies  = fTranslateSpecies(sSpecies); % Species translated to standard format
+            sType     = upper(sType);                 % Type is always upper case
+            sSet      = lower(sSet);                  % Set is always lower case
+            sSpecies  = obj.TranslateInput(sSpecies); % Species translated to standard format
 
             if isempty(sType)
                 fprintf(2, 'Error: Data type needs to be specified.\n');
@@ -552,7 +582,7 @@ classdef OsirisData
             
             stReturn = {};
 
-            sSpecies = fTranslateSpecies(sSpecies);
+            sSpecies = obj.TranslateInput(sSpecies);
             iTime    = fStringToDump(obj, num2str(sTime));
 
             dBoxX1Min = obj.Config.Variables.Simulation.BoxX1Min;

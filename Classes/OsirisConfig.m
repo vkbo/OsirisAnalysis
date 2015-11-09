@@ -23,6 +23,7 @@ classdef OsirisConfig
         Completed  = false; % True if folder 'TIMINGS' exists
         Consistent = false; % True if all data folders have the same number of files
         Silent     = false; % Set to true to disable command window output
+        InputNames = {};    % Alternative names for species and other input deck object
 
     end % properties
 
@@ -295,7 +296,7 @@ classdef OsirisConfig
 
                     if strcmpi(aConfig{k,1},'species') && strcmpi(aConfig{k,2},'name')
                         sSpecies = strrep(aConfig{k,6},'"','');
-                        sSpecies = fTranslateSpecies(sSpecies);
+                        sSpecies = obj.fTranslateInput(sSpecies);
                     end % if
                 
                     aConfig{k,7} = sSpecies;
@@ -406,6 +407,26 @@ classdef OsirisConfig
     %
 
     methods (Access = 'private')
+
+        function sReturn = fTranslateInput(obj, sName)
+            
+            %
+            % Only for internal use in OsirisConfig.
+            % For public, use the TranslateInput function in OsirisData
+            %
+            
+            sReturn = sName; % Default behaviour
+            
+            cNames = fieldnames(obj.InputNames);
+            
+            for n=1:length(cNames)
+                if sum(ismember(lower(sName), obj.InputNames.(cNames{n}))) > 0
+                    sReturn = cNames{n};
+                    return;
+                end % if
+            end % for
+            
+        end % function
 
         function obj = fGetSimulationVariables(obj)
             
