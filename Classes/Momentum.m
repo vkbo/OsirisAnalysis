@@ -36,13 +36,13 @@
 classdef Momentum < OsirisType
 
     %
-    % Public Properties
+    % Properties
     %
 
-    properties (GetAccess = 'public', SetAccess = 'public')
+    properties(GetAccess = 'public', SetAccess = 'public')
         
-        Species = ''; % What species to analyse
-        
+        Species = ''; % Species to analyse
+
     end % properties
 
     %
@@ -59,10 +59,11 @@ classdef Momentum < OsirisType
             % Set species
             stSpecies = obj.Translate.Lookup(sSpecies);
             if stSpecies.isSpecies
-                obj.Species = stSpecies.Name;
+                obj.Species = stSpecies;
             else
                 sDefault = obj.Data.Config.Variables.Species.WitnessBeam{1};
-                fprintf(2, 'Error: "%s" is not a recognised species name. Using %s instead.\n', sSpecies, sDefault);
+                fprintf(2, 'Error: ''%s'' is not a recognised species name. Using ''%s'' instead.\n', sSpecies, sDefault);
+                obj.Species = obj.Translate.Lookup(sDefault);
             end % if
 
         end % function
@@ -88,8 +89,8 @@ classdef Momentum < OsirisType
             end % if
             
             % Calculate range
-            iStart = fStringToDump(obj.Data, sStart);
-            iStop  = fStringToDump(obj.Data, sStop);
+            iStart = obj.Data.StringToDump(sStart);
+            iStop  = obj.Data.StringToDump(sStop);
 
             % Calculate axes
             aTAxis = obj.fGetTimeAxis;
@@ -103,7 +104,7 @@ classdef Momentum < OsirisType
                 
                 k = i-iStart+1;
                 
-                h5Data = obj.Data.Data(i, 'RAW', '', obj.Species);
+                h5Data = obj.Data.Data(i, 'RAW', '', obj.Species.Name);
                 
                 if length(h5Data(:,8)) == 1 && h5Data(1,8) == 0
                     aMean(k)  = 0.0;
@@ -137,8 +138,8 @@ classdef Momentum < OsirisType
                 sStop = 'End';
             end % if
             
-            iStart = fStringToDump(obj.Data, sStart);
-            iStop  = fStringToDump(obj.Data, sStop);
+            iStart = obj.Data.StringToDump(sStart);
+            iStop  = obj.Data.StringToDump(sStop);
 
             oOpt = inputParser;
             addParameter(oOpt, 'Percentile', []);
@@ -167,7 +168,7 @@ classdef Momentum < OsirisType
                 
                 k = i-iStart+1;
 
-                aRAW = obj.Data.Data(i, 'RAW', '', obj.Species)*dEMass;
+                aRAW = obj.Data.Data(i, 'RAW', '', obj.Species.Name)*dEMass;
 
                 stReturn.Average(k) = double(wmean(aRAW(:,iAxis),aRAW(:,8)));
                 stReturn.Median(k)  = wprctile(aRAW(:,iAxis),50,abs(aRAW(:,8)));
@@ -203,8 +204,8 @@ classdef Momentum < OsirisType
                 dAdd = 0.0;
             end % if
             
-            iStart = fStringToDump(obj.Data, sStart);
-            iStop  = fStringToDump(obj.Data, sStop);
+            iStart = obj.Data.StringToDump(sStart);
+            iStop  = obj.Data.StringToDump(sStop);
             
             % Variables
             dLFac     = obj.AxisFac(1);
@@ -216,7 +217,7 @@ classdef Momentum < OsirisType
                 
                 k = i-iStart+1;
 
-                aRaw = obj.Data.Data(i, 'RAW', '', obj.Species);
+                aRaw = obj.Data.Data(i, 'RAW', '', obj.Species.Name);
 
                 stReturn.Slip.Average(k)           = (dDeltaZ - dDeltaZ*sqrt(1-1/wmean(aRaw(:,4),aRaw(:,8))^2))*dLFac;
                 stReturn.Slip.Median(k)            = (dDeltaZ - dDeltaZ*sqrt(1-1/wprctile(aRaw(:,4),50,abs(aRaw(:,8)))^2))*dLFac;
@@ -280,7 +281,7 @@ classdef Momentum < OsirisType
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
 
-            aRaw   = obj.Data.Data(obj.Time, 'RAW', '', obj.Species);
+            aRaw   = obj.Data.Data(obj.Time, 'RAW', '', obj.Species.Name);
             aP     = sqrt(aRaw(:,4).^2 + aRaw(:,5).^2 + aRaw(:,6).^2);
             iLen   = length(aP);
             aERMS  = zeros(stOpt.Samples, 1);
@@ -386,10 +387,16 @@ classdef Momentum < OsirisType
     
         function aReturn = MomentumToEnergy(obj, aMomentum)
             
-            sType   = fSpeciesType(obj.Species);
-            dRQM    = obj.Data.Config.Variables.(sType).(obj.Species).RQM;
-            dEMass  = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
+            if obj.Species.isBeam
+                dRQM = obj.Data.Config.Variables.Beam.(obj.Species.Name).RQM;
+            elseif obj.Species.isPlasma
+                dRQM = obj.Data.Config.Variables.Plasma.(obj.Species.Name).RQM;
+            else
+                fprintf(2,'Error: Unknown species type.\n');
+                return;
+            end % if
 
+            dEMass  = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
             dPFac   = abs(dRQM)*dEMass;
             aReturn = sqrt(aMomentum.^2 + 1)*dPFac;
             

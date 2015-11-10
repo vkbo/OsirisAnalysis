@@ -1,16 +1,16 @@
 
 %
-%  Class Object to hold the Osiris Config file
-% *********************************************
+%  Class Object :: Holds the Osiris Config file
+% **********************************************
 %
 
 classdef OsirisConfig
     
     %
-    % Public Properties
+    % Properties
     %
     
-    properties (GetAccess = 'public', SetAccess = 'public')
+    properties(GetAccess = 'public', SetAccess = 'public')
 
         Path       = '';    % Path to data directory
         File       = '';    % Config file within data directory
@@ -26,11 +26,7 @@ classdef OsirisConfig
 
     end % properties
 
-    %
-    % Private Properties
-    %
-    
-    properties (GetAccess = 'private', SetAccess = 'private')
+    properties(GetAccess = 'private', SetAccess = 'private')
 
         Files     = {}; % Holds possible config files
         Translate = {}; % Container for Variables class
@@ -169,7 +165,7 @@ classdef OsirisConfig
     %  Config File Methods
     %
     
-    methods (Access = 'private')
+    methods(Access = 'private')
         
         function obj = fReadFile(obj)
             
@@ -409,7 +405,7 @@ classdef OsirisConfig
     %  Variable Methods
     %
 
-    methods (Access = 'private')
+    methods(Access = 'private')
 
         function obj = fGetSimulationVariables(obj)
             

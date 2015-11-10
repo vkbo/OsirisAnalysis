@@ -58,8 +58,8 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
         return;
     end % if
     
-    vBeam = Variable(oData,sBeam,'Species');
-    iTime = fStringToDump(oData, num2str(sTime));
+    vBeam = oData.Translate.Lookup(sBeam,'Species');
+    iTime = oData.StringToDump(num2str(sTime));
 
     oOpt = inputParser;
     addParameter(oOpt, 'Current',     '');
@@ -99,10 +99,10 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     
     if isempty(stOpt.Current)
         stData = oCH.Density;
-        vData  = Variable(oData,'charge','Quantity');
+        vData  = oData.Translate.Lookup('charge','Quantity');
     else
         stData = oCH.Current(stOpt.Current);
-        vData  = Variable(oData,stOpt.Current,'Current');
+        vData  = oData.Translate.Lookup(stOpt.Current,'Current');
     end % if
     
     
@@ -189,9 +189,9 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     end % if
 
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s %s Density %s (%s #%d)',vBeam.Full,vData.Full,fPlasmaPosition(oData, iTime),oData.Config.Name,iTime);
+        sTitle = sprintf('%s %s Density %s (%s #%d)',vBeam.Full,vData.Full,oCH.PlasmaPosition,oData.Config.Name,iTime);
     else
-        sTitle = sprintf('%s %s Density %s',vBeam.Full,vData.Full,fPlasmaPosition(oData, iTime));
+        sTitle = sprintf('%s %s Density %s',vBeam.Full,vData.Full,oCH.PlasmaPosition);
     end % if
 
     title(sTitle);

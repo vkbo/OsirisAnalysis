@@ -1,10 +1,11 @@
+
 %
-%  Function: isInteger
-% *********************
+%  Function: isintegerstring
+% ***************************
 %  Checks if a string represents an integer
 %
 
-function iBool = isInteger(sString)
+function iBool = isintegerstring(sString)
 
     aNum = isstrprop(sString, 'digit');
 

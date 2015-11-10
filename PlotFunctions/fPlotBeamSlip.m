@@ -50,7 +50,7 @@ function stReturn = fPlotBeamSlip(oData, sBeam, varargin)
         return;
     end % if
 
-    sBeam = oData.TranslateInput(sBeam);
+    vBeam = oData.Translate.Lookup(sBeam,'Beam');
 
     oOpt = inputParser;
     addParameter(oOpt, 'FigureSize', [750 450]);
@@ -67,7 +67,7 @@ function stReturn = fPlotBeamSlip(oData, sBeam, varargin)
 
     % Data
 
-    oMom      = Momentum(oData,sBeam,'Units','SI','X1Scale','mm');
+    oMom      = Momentum(oData,vBeam.Name,'Units','SI','X1Scale','mm');
     stData    = oMom.BeamSlip(stOpt.Start,stOpt.End,stOpt.AddEnergy);
     
     aTAxis    = stData.TAxis;
@@ -106,7 +106,7 @@ function stReturn = fPlotBeamSlip(oData, sBeam, varargin)
         if strcmpi(stOpt.AutoResize, 'On')
             fFigureSize(gcf, stOpt.FigureSize);
         end % if
-        set(gcf,'Name',sprintf('%s Beam Slip (%s)',sBeam,oData.Config.Name))
+        set(gcf,'Name',sprintf('%s Beam Slip (%s)',vBeam.Name,oData.Config.Name))
     else
         cla;
     end % if
@@ -125,16 +125,10 @@ function stReturn = fPlotBeamSlip(oData, sBeam, varargin)
     
     xlim([aTAxis(1), aTAxis(end)]);
     
-    if strcmpi(oMom.Coords, 'cylindrical')
-        sRType = 'ReadableCyl';
-    else
-        sRType = 'Readable';
-    end % if
-
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s Slipping (%s #%d)',fTranslateSpecies(sBeam,sRType),oData.Config.Name,iTime);
+        sTitle = sprintf('%s Slipping (%s #%d)',vBeam.Full,oData.Config.Name,iTime);
     else
-        sTitle = sprintf('%s Slipping',fTranslateSpecies(sBeam,sRType));
+        sTitle = sprintf('%s Slipping',vBeam.Full);
     end % if
 
     title(sTitle);
@@ -144,7 +138,7 @@ function stReturn = fPlotBeamSlip(oData, sBeam, varargin)
     hold off;
     
     % Returns
-    stReturn.Beam  = sBeam;
+    stReturn.Beam  = vBeam.Name;
     stReturn.TAxis = aTAxis;
     stReturn.XLim  = get(gca, 'XLim');
     stReturn.YLim  = get(gca, 'YLim');

@@ -15,6 +15,13 @@
   Development History
  =====================
 
+  Version 1.2
+  - Introduced OsirisType as superclass for Charge, BField, EField, Momentum and Phase
+  - Introduced Variables as a class to handle Osiris variable checks and conversions to readable and internal
+    formats. This class replaces all the fTranslate... functions from previous version. It also replaces
+    the isBeam, isPlasma, isField and isAxis functions.
+  - The Variables class can be run independently, but is also accessbile from OsirisData.Translate
+
   Version 1.1
   - Significant updates to GUI
   - Added plot functions and new classes including a math func interpreter.

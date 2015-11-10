@@ -52,8 +52,8 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
         return;
     end % if
 
-    sField = fTranslateField(sField);
-    iTime = fStringToDump(oData, num2str(sTime));
+    vField = oData.Translate.Lookup(sField,'Field');
+    iTime  = oData.StringToDump(sTime);
 
     oOpt = inputParser;
     addParameter(oOpt, 'Limits',      []);
@@ -71,23 +71,23 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
         return;
     end % if
     
-    if ~isField(sField)
+    if ~vField.isField
         fprintf(2, 'Error: Non-existent field specified.\n');
         return;
     end % if
     
-    sFType = upper(sField(1));
-
     % Prepare Data
 
-    switch(sFType)
-        case 'E'
-            oFLD = EField(oData, sField, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
-            sBaseUnit = 'eV';
-        case 'B'
-            oFLD = BField(oData, sField, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
-            sBaseUnit = 'T';
-    end % switch
+    if vField.isEField
+        oFLD = EField(oData, vField.Name, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
+        sBaseUnit = 'eV';
+    elseif vField.isBField
+        oFLD = BField(oData, vField.Name, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
+        sBaseUnit = 'T';
+    else
+        fprintf(2, 'Error: Non-existent field specified.\n');
+        return;
+    end % if
     oFLD.Time = iTime;
 
     if length(stOpt.Limits) == 4
@@ -143,16 +143,10 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
     %    set(findobj(h, 'type', 'line'), 'visible', 'off')
     %end % if
 
-    if strcmpi(oFLD.Coords, 'cylindrical')
-        sRType = 'LongCyl';
-    else
-        sRType = 'Long';
-    end % of
-
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s %s (%s #%d)', fTranslateField(sField,sRType), fPlasmaPosition(oData, iTime), oData.Config.Name, iTime);
+        sTitle = sprintf('%s %s (%s #%d)', vField.Full, oFLD.PlasmaPosition, oData.Config.Name, iTime);
     else
-        sTitle = sprintf('%s %s', fTranslateField(sField,sRType), fPlasmaPosition(oData, iTime));
+        sTitle = sprintf('%s %s', vField.Full, oFLD.PlasmaPosition);
     end % if
 
     title(sTitle);
@@ -165,7 +159,7 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
     
     % Return
 
-    stReturn.Field = sField;
+    stReturn.Field = vField.Name;
     stReturn.XLim  = xlim;
     stReturn.YLim  = ylim;
     stReturn.CLim  = caxis;

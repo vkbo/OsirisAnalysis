@@ -57,8 +57,8 @@ function stReturn = fPlotBeamFourier(oData, sTime, sBeam, varargin)
        return;
     end % if
 
-    sBeam    = oData.TranslateInput(sBeam);
-    iTime    = fStringToDump(oData, num2str(sTime));
+    vBeam    = oData.Translate.Lookup(sBeam,'Beam');
+    iTime    = oData.StringToDump(num2str(sTime));
     stRefFFT = {};
 
     oOpt = inputParser;
@@ -77,15 +77,15 @@ function stReturn = fPlotBeamFourier(oData, sTime, sBeam, varargin)
 
 
     % Data
-    oCH      = Charge(oData, sBeam);
+    oCH      = Charge(oData, vBeam.Name);
     oCH.Time = iTime;
     stFFT    = oCH.Fourier(stOpt.RRange);
     clear oCH;
 
     if ~isempty(stOpt.RefData)
-        sRefBeam = oData.TranslateInput(stOpt.RefBeam);
-        iRefTime = fStringToDump(stOpt.RefData, num2str(stOpt.RefTime));
-        oCH      = Charge(stOpt.RefData, sRefBeam);
+        vRefBeam = oData.Translate.Lookup(stOpt.RefBeam,'Beam');
+        iRefTime = stOpt.RefData.StringToDump(num2str(stOpt.RefTime));
+        oCH      = Charge(stOpt.RefData, vRefBeam.Name);
         oCH.Time = iRefTime;
         stRefFFT = oCH.Fourier(stOpt.RRange);
         clear oCH;
@@ -120,9 +120,9 @@ function stReturn = fPlotBeamFourier(oData, sTime, sBeam, varargin)
     end % if
 
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s Fourier Transform %s (%s #%d)', fTranslateSpecies(sBeam,'Readable'), fPlasmaPosition(oData, iTime), oData.Config.Name, iTime);
+        sTitle = sprintf('%s Fourier Transform %s (%s #%d)', vBeam.Full, oCH.PlasmaPosition, oData.Config.Name, iTime);
     else
-        sTitle = sprintf('%s Fourier Transform %s', fTranslateSpecies(sBeam,'Readable'), fPlasmaPosition(oData, iTime));
+        sTitle = sprintf('%s Fourier Transform %s', vBeam.Full, oCH.PlasmaPosition);
     end % if
 
     legend(stLegend, 'Location', 'NE');

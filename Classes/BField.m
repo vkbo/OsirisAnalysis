@@ -29,7 +29,7 @@
 classdef BField < OsirisType
 
     %
-    % Public Properties
+    % Properties
     %
 
     properties(GetAccess = 'public', SetAccess = 'public')
@@ -50,12 +50,12 @@ classdef BField < OsirisType
             obj@OsirisType(oData, varargin{:});
 
             % Set field
-            stField = obj.Translate.Lookup(sSpecies);
+            stField = obj.Translate.Lookup(sField);
             if stField.isBField
-                obj.Field = stField.Name;
+                obj.Field = stField;
             else
                 fprintf(2, 'Error: ''%s'' is not a recognised magnetic field. Using ''b1'' instead.\n', sField);
-                obj.Field = 'b1';
+                obj.Field = obj.Translate.Lookup('b1');
             end % if
             
         end % function
@@ -78,7 +78,7 @@ classdef BField < OsirisType
             dB0     = obj.Data.Config.Variables.Convert.SI.B0;
             
             % Get data and axes
-            aData   = obj.Data.Data(obj.Time, 'FLD', obj.Field, '');
+            aData   = obj.Data.Data(obj.Time, 'FLD', obj.Field.Name, '');
             aX1Axis = obj.fGetBoxAxis('x1');
             aX2Axis = obj.fGetBoxAxis('x2');
 

@@ -60,8 +60,8 @@ function stReturn = fPlotPhaseSpace(oData, sTime, sSpecies, varargin)
         return;
     end % if
 
-    sSpecies = oData.TranslateInput(sSpecies);
-    iTime    = fStringToDump(oData, num2str(sTime));
+    vSpecies = oData.Translate.Lookup(sSpecies,'Species');
+    iTime    = oData.StringToDump(num2str(sTime));
 
     oOpt = inputParser;
     addParameter(oOpt, 'Limits',       []);
@@ -83,7 +83,7 @@ function stReturn = fPlotPhaseSpace(oData, sTime, sSpecies, varargin)
     end % if
     
     % Prepare Data
-    oM = Momentum(oData,sSpecies,'Units','SI','X1Scale','mm','X2Scale','mm');
+    oM = Momentum(oData,vSpecies.Name,'Units','SI','X1Scale','mm','X2Scale','mm');
     oM.Time = iTime;
     stData = oM.PhaseSpace('Sample',stOpt.Sample, ...
                            'MinParticles',stOpt.MinParticles, ...
@@ -129,9 +129,9 @@ function stReturn = fPlotPhaseSpace(oData, sTime, sSpecies, varargin)
     end % if
 
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('XX'' Phase Space %s (%s #%d)', fPlasmaPosition(oData, iTime), oData.Config.Name, iTime);
+        sTitle = sprintf('XX'' Phase Space %s (%s #%d)', oM.PlasmaPosition, oData.Config.Name, iTime);
     else
-        sTitle = sprintf('XX'' Phase Space %s', fPlasmaPosition(oData, iTime));
+        sTitle = sprintf('XX'' Phase Space %s', oM.PlasmaPosition);
     end % if
 
     title(sTitle);

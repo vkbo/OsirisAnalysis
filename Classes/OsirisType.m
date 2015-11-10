@@ -152,7 +152,7 @@ classdef OsirisType
         function obj = set.Time(obj, sTime)
             
             sTime = num2str(sTime);
-            iEnd  = fStringToDump(obj.Data, 'end');
+            iEnd  = obj.Data.StringToDump('end');
             
             if strcmpi(sTime, 'next') || strcmpi(sTime, 'n')
 
@@ -170,7 +170,7 @@ classdef OsirisType
 
             else
                 
-                obj.Time = fStringToDump(obj.Data, sTime);
+                obj.Time = obj.Data.StringToDump(sTime);
 
             end % if
             
@@ -264,6 +264,37 @@ classdef OsirisType
             end % if
 
             obj.X3Lim = aX3Lim/obj.AxisFac(3);
+
+        end % function
+
+    end % methods
+
+    %
+    % Public Methods
+    %
+    
+    methods(Access = 'public')
+
+        function sReturn = PlasmaPosition(obj)
+
+            sReturn = 'Unknown Position';
+
+            dLFactor = obj.Data.Config.Variables.Convert.SI.LengthFac;
+            dTFactor = obj.Data.Config.Variables.Convert.SI.TimeFac;
+            iPStart  = obj.Data.StringToDump('PStart');
+            iPEnd    = obj.Data.StringToDump('PEnd');
+
+            if obj.Time < iPStart
+                sReturn = sprintf('at %0.2f m Before Plasma', (iPStart-obj.Time)*dTFactor*dLFactor);
+            end % if
+
+            if obj.Time >= iPStart && obj.Time <= iPEnd
+                sReturn = sprintf('at %0.2f m Into Plasma', (obj.Time-iPStart)*dTFactor*dLFactor);
+            end % if
+
+            if obj.Time > iPEnd
+                sReturn = sprintf('at %0.2f m After Plasma', (obj.Time-iPEnd)*dTFactor*dLFactor);
+            end % if
 
         end % function
 

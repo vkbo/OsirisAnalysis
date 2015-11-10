@@ -92,7 +92,7 @@ function Analyse2D
     fMain.Units        = 'Pixels';
     fMain.MenuBar      = 'None';
     fMain.Position     = [aFPos(1:2) 560 640];
-    fMain.Name         = 'OsirisAnalysis Version 1.1 - GUI';
+    fMain.Name         = 'OsirisAnalysis Version Dev1.2 - GUI';
     fMain.NumberTitle  = 'Off';
     fMain.DockControls = 'Off';
     fMain.Tag          = 'uiOA-Main';
@@ -568,10 +568,10 @@ function Analyse2D
                 lblInfo(2).BackgroundColor = cInfoYellow;
             end % if
 
-            X.Time.Limits(1) = fStringToDump(oData, 'Start');
-            X.Time.Limits(2) = fStringToDump(oData, 'PStart');
-            X.Time.Limits(3) = fStringToDump(oData, 'PEnd');
-            X.Time.Limits(4) = fStringToDump(oData, 'End');
+            X.Time.Limits(1) = oData.StringToDump('Start');
+            X.Time.Limits(2) = oData.StringToDump('PStart');
+            X.Time.Limits(3) = oData.StringToDump('PEnd');
+            X.Time.Limits(4) = oData.StringToDump('End');
         else
             lblInfo(2).String          = 'No Data';
             lblInfo(2).BackgroundColor = cInfoRed;

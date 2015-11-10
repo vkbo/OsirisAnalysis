@@ -48,7 +48,7 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
         return;
     end % if
 
-    sSpecies = oData.TranslateInput(sSpecies);
+    vSpecies = oData.Translate.Lookup(sSpecies,'Species');
 
     oOpt = inputParser;
     addParameter(oOpt, 'FigureSize', [750 450]);
@@ -62,7 +62,7 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
 
 
     % Data
-    oMom   = Momentum(oData, sSpecies);
+    oMom   = Momentum(oData, vSpecies.Name);
     stData = oMom.SigmaEToEMean(stOpt.Start,stOpt.End);
     
     if isempty(stData)
@@ -88,16 +88,10 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
     
     xlim([stData.TimeAxis(1),stData.TimeAxis(end)]);
 
-    if strcmpi(oMom.Coords, 'cylindrical')
-        sRType = 'ReadableCyl';
-    else
-        sRType = 'Readable';
-    end % if
-
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s Energy Sigma to Mean Ratio (%s #%d)',fTranslateSpecies(sSpecies,sRType),oData.Config.Name,iTime);
+        sTitle = sprintf('%s Energy Sigma to Mean Ratio (%s #%d)',vSpecies.Full,oData.Config.Name,iTime);
     else
-        sTitle = sprintf('%s Energy Sigma to Mean Ratio',fTranslateSpecies(sSpecies,sRType));
+        sTitle = sprintf('%s Energy Sigma to Mean Ratio',vSpecies.Full);
     end % if
 
     title(sTitle);
@@ -108,7 +102,7 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
 
 
     % Returns
-    stReturn.Beam1 = sSpecies;
+    stReturn.Beam1 = vSpecies.Name;
     stReturn.XLim  = get(gca, 'XLim');
     stReturn.YLim  = get(gca, 'YLim');
     

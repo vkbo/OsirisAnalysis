@@ -1,13 +1,13 @@
 
 %
-%  Class Object :: Translate Variable Name
-% *****************************************
+%  Class Object :: Translates Variable Name
+% ******************************************
 %
 
 classdef Variables
 
     %
-    % Public Properties
+    % Properties
     %
 
     properties(GetAccess = 'public', SetAccess = 'private')

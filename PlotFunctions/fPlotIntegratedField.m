@@ -54,7 +54,7 @@ function stReturn = fPlotIntegratedField(oData, sField, varargin)
         return;
     end % if
 
-    sField = fTranslateField(sField);
+    vField = oData.Translate.Lookup(sField,'Field');
 
     oOpt = inputParser;
     addParameter(oOpt, 'VLim',        []);
@@ -74,24 +74,21 @@ function stReturn = fPlotIntegratedField(oData, sField, varargin)
         return;
     end % if
     
-    if ~isField(sField)
+    if ~vField.isField
         fprintf(2, 'Error: Non-existent field specified.\n');
         return;
     end % if
     
-    sFType = sField(1);
-
     % Prepare Data
 
-    switch(sFType)
-        case 'e'
-            oFLD = EField(oData, sField, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
-        case 'b'
-            fprintf(2, 'Error: Only E-fields are supported.\n');
-            return;
-    end % switch
+    if vField.isEField
+        oFLD = EField(oData, vField.Name, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
+    else
+        fprintf(2, 'Error: Only E-fields are supported.\n');
+        return;
+    end % if
 
-    switch(sField)
+    switch(vField.Name)
         case 'e1'
             if ~isempty(stOpt.VLim)
                 oFLD.X1Lim = stOpt.VLim;
@@ -140,16 +137,10 @@ function stReturn = fPlotIntegratedField(oData, sField, varargin)
         caxis(stOpt.CAxis);
     end % if
 
-    if strcmpi(oFLD.Coords, 'cylindrical')
-        sCType = 'Cyl';
-    else
-        sCType = '';
-    end % of
-
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('Integrated %s (%s)', fTranslateField(sField,['Long' sCType]),oData.Config.Name);
+        sTitle = sprintf('Integrated %s (%s)',vField.Full,oData.Config.Name);
     else
-        sTitle = sprintf('Integrated %s', fTranslateField(sField,['Long' sCType]));
+        sTitle = sprintf('Integrated %s',vField.Full);
     end % if
 
     title(sTitle);
@@ -160,10 +151,9 @@ function stReturn = fPlotIntegratedField(oData, sField, varargin)
     
     % Return
 
-    stReturn.Field = sField;
+    stReturn.Field = vField,Name;
     stReturn.XLim  = xlim;
     stReturn.YLim  = ylim;
     stReturn.CLim  = caxis;
 
-end
-
+end % function

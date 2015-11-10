@@ -35,15 +35,15 @@
 classdef Phase < OsirisType
 
     %
-    % Public Properties
+    % Properties
     %
 
-    properties (GetAccess = 'public', SetAccess = 'public')
+    properties(GetAccess = 'public', SetAccess = 'public')
         
-        Species = ''; % What species to analyse
-        
-    end % properties
+        Species = ''; % Species to analyse
 
+    end % properties
+    
     %
     % Constructor
     %
@@ -58,10 +58,11 @@ classdef Phase < OsirisType
             % Set species
             stSpecies = obj.Translate.Lookup(sSpecies);
             if stSpecies.isSpecies
-                obj.Species = stSpecies.Name;
+                obj.Species = stSpecies;
             else
                 sDefault = obj.Data.Config.Variables.Species.WitnessBeam{1};
-                fprintf(2, 'Error: "%s" is not a recognised species name. Using %s instead.\n', sSpecies, sDefault);
+                fprintf(2, 'Error: ''%s'' is not a recognised species name. Using ''%s'' instead.\n', sSpecies, sDefault);
+                obj.Species = obj.Translate.Lookup(sDefault);
             end % if
             
         end % function
@@ -86,23 +87,26 @@ classdef Phase < OsirisType
             % Input/Output
             stReturn = {};
             
-            if ~isAxis(sAxis1)
+            vAxis1 = obj.Data.Translate.Lookup(sAxis1);
+            vAxis2 = obj.Data.Translate.Lookup(sAxis2);
+            
+            if ~vAxis1.isValidPhaseSpaceDiag
                 fprintf(2, '%s is not a valid axis.\n',sAxis1);
                 return;
             end % if
 
-            if ~isAxis(sAxis2)
+            if ~vAxis2.isValidPhaseSpaceDiag
                 fprintf(2, '%s is not a valid axis.\n',sAxis2);
                 return;
             end % if
             
             sAxis = '';
-            if obj.Data.DataSetExists('PHA',sprintf('%s%s',sAxis1,sAxis2),obj.Species)
-                sAxis   = sprintf('%s%s',sAxis1,sAxis2);
+            if obj.Data.DataSetExists('PHA',sprintf('%s%s',vAxis1.Name,vAxis2.Name),obj.Species.Name)
+                sAxis   = sprintf('%s%s',vAxis1.Name,vAxis2.Name);
                 bRotate = false;
             end % if
-            if obj.Data.DataSetExists('PHA',sprintf('%s%s',sAxis2,sAxis1),obj.Species)
-                sAxis   = sprintf('%s%s',sAxis2,sAxis1);
+            if obj.Data.DataSetExists('PHA',sprintf('%s%s',vAxis2.Name,vAxis1.Name),obj.Species.Name)
+                sAxis   = sprintf('%s%s',vAxis2.Name,vAxis1.Name);
                 bRotate = true;
             end % if
             if isempty(sAxis)
@@ -123,7 +127,7 @@ classdef Phase < OsirisType
             dEMass = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
             
             % Retrieve data
-            aData = obj.Data.Data(obj.Time,'PHA',sAxis,obj.Species);
+            aData = obj.Data.Data(obj.Time,'PHA',sAxis,obj.Species.Name);
             dSum  = sum(aData(:));
             aData = aData/dSum;
             
@@ -265,22 +269,27 @@ classdef Phase < OsirisType
             % Input/Output
             stReturn = {};
             
-            if ~isAxis(sAxis1)
+            vAxis1 = obj.Data.Translate.Lookup(sAxis1);
+            vAxis2 = obj.Data.Translate.Lookup(sAxis2);
+            
+            if ~vAxis1.isValidPhaseSpaceDiag
                 fprintf(2, '%s is not a valid axis.\n',sAxis1);
                 return;
             end % if
 
-            if ~isAxis(sAxis2)
+            if ~vAxis2.isValidPhaseSpaceDiag
                 fprintf(2, '%s is not a valid axis.\n',sAxis2);
                 return;
             end % if
             
             sAxis = '';
-            if obj.Data.DataSetExists('PHA',sprintf('%s%s',sAxis1,sAxis2),obj.Species)
-                sAxis = sprintf('%s%s',sAxis1,sAxis2);
+            if obj.Data.DataSetExists('PHA',sprintf('%s%s',vAxis1.Name,vAxis2.Name),obj.Species.Name)
+                sAxis   = sprintf('%s%s',vAxis1.Name,vAxis2.Name);
+                bRotate = false;
             end % if
-            if obj.Data.DataSetExists('PHA',sprintf('%s%s',sAxis2,sAxis1),obj.Species)
-                sAxis = sprintf('%s%s',sAxis2,sAxis1);
+            if obj.Data.DataSetExists('PHA',sprintf('%s%s',vAxis2.Name,vAxis1.Name),obj.Species.Name)
+                sAxis   = sprintf('%s%s',vAxis2.Name,vAxis1.Name);
+                bRotate = true;
             end % if
             if isempty(sAxis)
                 fprintf(2, 'There is no combined phase data for %s and %s.\n',sAxis1,sAxis2);
@@ -303,7 +312,7 @@ classdef Phase < OsirisType
             dQFac  = obj.Data.Config.Variables.Convert.SI.ChargeFac;
             
             % Retrieve data
-            aRaw = obj.Data.Data(obj.Time,'RAW','',obj.Species);
+            aRaw = obj.Data.Data(obj.Time,'RAW','',obj.Species.Name);
             
             % Move x1 to box start
             aRaw(:,1) = aRaw(:,1) - dTFac*obj.Time;
@@ -427,38 +436,45 @@ classdef Phase < OsirisType
         
         function aReturn = fGetDiagAxis(obj, sAxis)
             
-            sSPType = fSpeciesType(obj.Species);
+            if obj.Species.isBeam
+                sSPType = 'Beam';
+            elseif obj.Species.isPlasma
+                sSPType = 'Plasma';
+            else
+                fprintf(2,'Error: Unknown species type.\n');
+                return;
+            end % if
             
             switch sAxis
                 case 'x1'
-                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagX1Min;
-                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagX1Max;
-                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagNX1;
+                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagX1Min;
+                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagX1Max;
+                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNX1;
                     dFac = obj.AxisFac(1);
                 case 'x2'
-                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagX2Min;
-                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagX2Max;
-                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagNX2;
+                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagX2Min;
+                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagX2Max;
+                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNX2;
                     dFac = obj.AxisFac(2);
                 case 'x3'
-                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagX3Min;
-                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagX3Max;
-                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagNX3;
+                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagX3Min;
+                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagX3Max;
+                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNX3;
                     dFac = obj.AxisFac(3);
                 case 'p1'
-                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagP1Min;
-                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagP1Max;
-                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagNP1;
+                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagP1Min;
+                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagP1Max;
+                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNP1;
                     dFac = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
                 case 'p2'
-                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagP2Min;
-                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagP2Max;
-                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagNP2;
+                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagP2Min;
+                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagP2Max;
+                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNP2;
                     dFac = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
                 case 'p3'
-                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagP3Min;
-                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagP3Max;
-                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species).DiagNP3;
+                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagP3Min;
+                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagP3Max;
+                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNP3;
                     dFac = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
             end % switch
             

@@ -62,9 +62,8 @@ function stReturn = fPlotPhase(oData, sTime, sSpecies, sPhase, varargin)
         return;
     end % if
     
-    oSpecies = Variable(sSpecies,1,'Beam');
-    sSpecies = oData.TranslateInput(sSpecies);
-    iTime    = fStringToDump(oData, num2str(sTime));
+    vSpecies = oData.Translate.Lookup(sSpecies,'Species');
+    iTime    = oData.StringToDump(sTime);
 
     oOpt = inputParser;
     addParameter(oOpt, 'HLim',        []);
@@ -91,14 +90,15 @@ function stReturn = fPlotPhase(oData, sTime, sSpecies, sPhase, varargin)
         return;
     end % if
 
-    aAllowed = {'p1','p2','p3','x1','x2','x3'};
-    if ~ismember(sAxis1, aAllowed) || ~ismember(sAxis2, aAllowed)
+    vAxis1 = oData.Translate.Lookup(sAxis1);
+    vAxis2 = oData.Translate.Lookup(sAxis2);
+    if vAxis1.isValidPhaseSpaceDiag && vAxis2.isValidPhaseSpaceDiag
         fprintf(2, 'Error: Unknown axes\n');
         return;
     end % if
 
     % Data
-    oPha      = Phase(oData,sSpecies,'Units','SI');
+    oPha      = Phase(oData,vSpecies.Name,'Units','SI');
     oPha.Time = iTime;
     if stOpt.Scatter == 0 && strcmpi(stOpt.UseRaw, 'No')
         stData = oPha.Phase2D(sAxis1,sAxis2,'HLim',stOpt.HLim,'VLim',stOpt.VLim,'HAuto',stOpt.HAuto,'VAuto',stOpt.VAuto);
