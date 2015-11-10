@@ -55,7 +55,7 @@ classdef EField < OsirisType
             % Set field
             stField = obj.Translate.Lookup(sField);
             if stField.isEField
-                obj.Field = stField.Name;
+                obj.Field = stField;
             else
                 fprintf(2, 'Error: ''%s'' is not a recognised electric field. Using ''e1'' instead.\n', sField);
                 obj.Field = obj.Translate.Lookup('e1');

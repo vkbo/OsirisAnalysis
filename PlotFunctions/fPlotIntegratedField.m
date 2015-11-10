@@ -151,7 +151,7 @@ function stReturn = fPlotIntegratedField(oData, sField, varargin)
     
     % Return
 
-    stReturn.Field = vField,Name;
+    stReturn.Field = vField.Name;
     stReturn.XLim  = xlim;
     stReturn.YLim  = ylim;
     stReturn.CLim  = caxis;
