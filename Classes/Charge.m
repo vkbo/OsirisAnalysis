@@ -32,7 +32,7 @@ classdef Charge < OsirisType
     % Public Properties
     %
 
-    properties (GetAccess = 'public', SetAccess = 'public')
+    properties(GetAccess = 'public', SetAccess = 'public')
         
         Species = ''; % Species to analyse
 
@@ -60,7 +60,7 @@ classdef Charge < OsirisType
     % Public Methods
     %
     
-    methods (Access = 'public')
+    methods(Access = 'public')
         
         function stReturn = Density(obj)
             

@@ -23,6 +23,10 @@
 %    X3Lim : 2D array of limits for x3 axis. Default is full box.
 %
 %  Public Methods:
+%    Density  : Returns a dataset with a 2D matrix of the density of the field.
+%    Lineout  : Returns a dataset with a 1D lineout of the density of the field.
+%    Integral : Returns a dataset with the integrated field over an interval
+%               of time dumps.
 %
 
 classdef EField < OsirisType
@@ -31,7 +35,7 @@ classdef EField < OsirisType
     % Public Properties
     %
 
-    properties (GetAccess = 'public', SetAccess = 'public')
+    properties(GetAccess = 'public', SetAccess = 'public')
         
         Field = ''; % Field to analyse
         
@@ -65,7 +69,7 @@ classdef EField < OsirisType
     % Public Methods
     %
     
-    methods (Access = 'public')
+    methods(Access = 'public')
         
         function stReturn = Density(obj)
 

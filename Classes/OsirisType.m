@@ -10,7 +10,7 @@ classdef OsirisType
     % Public Properties
     %
     
-    properties (GetAccess = 'public', SetAccess = 'public')
+    properties(GetAccess = 'public', SetAccess = 'public')
         
         Data        = [];                        % OsirisData dataset
         Time        = 0;                         % Current time (dumb number)
@@ -261,53 +261,7 @@ classdef OsirisType
     % Private Methods
     %
     
-    methods (Access = 'private')
-        
-        function aReturn = fGetTimeAxis(obj)
-            
-            iDumps  = obj.Data.MSData.MaxFiles-1;
-            
-            dPStart = obj.Data.Config.Variables.Plasma.PlasmaStart;
-            dTFac   = obj.Data.Config.Variables.Convert.SI.TimeFac;
-            dLFac   = obj.Data.Config.Variables.Convert.SI.LengthFac;
-            
-            aReturn = (linspace(0.0, dTFac*iDumps, iDumps+1)-dPStart)*dLFac;
-            
-        end % function
-
-        function aReturn = fGetBoxAxis(obj, sAxis)
-            
-            switch sAxis
-                case 'x1'
-                    dXMin = obj.Data.Config.Variables.Simulation.BoxX1Min;
-                    dXMax = obj.Data.Config.Variables.Simulation.BoxX1Max;
-                    iNX   = obj.Data.Config.Variables.Simulation.BoxNX1;
-                    dLFac = obj.AxisFac(1);
-                case 'x2'
-                    dXMin = obj.Data.Config.Variables.Simulation.BoxX2Min;
-                    dXMax = obj.Data.Config.Variables.Simulation.BoxX2Max;
-                    iNX   = obj.Data.Config.Variables.Simulation.BoxNX2;
-                    dLFac = obj.AxisFac(2);
-                case 'x3'
-                    dXMin = obj.Data.Config.Variables.Simulation.BoxX3Min;
-                    dXMax = obj.Data.Config.Variables.Simulation.BoxX3Max;
-                    iNX   = obj.Data.Config.Variables.Simulation.BoxNX3;
-                    dLFac = obj.AxisFac(3);
-            end % switch
-
-            aReturn = linspace(dXMin, dXMax, iNX)*dLFac;
-            
-        end % function
-        
-        function dReturn = fGetZPos(obj)
-            
-            dLFactor = obj.Data.Config.Variables.Convert.SI.LengthFac;
-            dTFactor = obj.Data.Config.Variables.Convert.SI.TimeFac;
-            dPStart  = obj.Data.Config.Variables.Plasma.PlasmaStart;
-            
-            dReturn  = (obj.Time*dTFactor - dPStart)*dLFactor;
-            
-        end % function
+    methods(Access = 'private')
         
         function [dScale, sUnit] = fLengthScale(~, sToUnit, sFromUnit)
 
@@ -369,6 +323,60 @@ classdef OsirisType
                     sUnit  = 'km';
             end % switch
 
+        end % function
+
+    end % methods
+
+    %
+    % Protected Methods
+    %
+    
+    methods(Access = 'protected')
+        
+        function aReturn = fGetTimeAxis(obj)
+            
+            iDumps  = obj.Data.MSData.MaxFiles-1;
+            
+            dPStart = obj.Data.Config.Variables.Plasma.PlasmaStart;
+            dTFac   = obj.Data.Config.Variables.Convert.SI.TimeFac;
+            dLFac   = obj.Data.Config.Variables.Convert.SI.LengthFac;
+            
+            aReturn = (linspace(0.0, dTFac*iDumps, iDumps+1)-dPStart)*dLFac;
+            
+        end % function
+
+        function aReturn = fGetBoxAxis(obj, sAxis)
+            
+            switch sAxis
+                case 'x1'
+                    dXMin = obj.Data.Config.Variables.Simulation.BoxX1Min;
+                    dXMax = obj.Data.Config.Variables.Simulation.BoxX1Max;
+                    iNX   = obj.Data.Config.Variables.Simulation.BoxNX1;
+                    dLFac = obj.AxisFac(1);
+                case 'x2'
+                    dXMin = obj.Data.Config.Variables.Simulation.BoxX2Min;
+                    dXMax = obj.Data.Config.Variables.Simulation.BoxX2Max;
+                    iNX   = obj.Data.Config.Variables.Simulation.BoxNX2;
+                    dLFac = obj.AxisFac(2);
+                case 'x3'
+                    dXMin = obj.Data.Config.Variables.Simulation.BoxX3Min;
+                    dXMax = obj.Data.Config.Variables.Simulation.BoxX3Max;
+                    iNX   = obj.Data.Config.Variables.Simulation.BoxNX3;
+                    dLFac = obj.AxisFac(3);
+            end % switch
+
+            aReturn = linspace(dXMin, dXMax, iNX)*dLFac;
+            
+        end % function
+        
+        function dReturn = fGetZPos(obj)
+            
+            dLFactor = obj.Data.Config.Variables.Convert.SI.LengthFac;
+            dTFactor = obj.Data.Config.Variables.Convert.SI.TimeFac;
+            dPStart  = obj.Data.Config.Variables.Plasma.PlasmaStart;
+            
+            dReturn  = (obj.Time*dTFactor - dPStart)*dLFactor;
+            
         end % function
 
     end % methods

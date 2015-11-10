@@ -24,6 +24,12 @@
 %    X3Lim : 2D array of limits for x3 axis. Default is full box.
 %
 %  Public Methods:
+%    Phase1D   : Returns a dataset with the distribution of a phase-type
+%                variable in one dimension
+%    Phase2D   : Returns a dataset with the density of two phase type
+%                variables in two dimensions.
+%    Scatter2D : Same as Phase2D, but creates the plot from macroparticles
+%                instead.
 %
 
 classdef Phase < OsirisType
@@ -60,7 +66,7 @@ classdef Phase < OsirisType
     % Public Methods
     %
     
-    methods (Access = 'public')
+    methods(Access = 'public')
 
         function stReturn = Phase1D(obj, sAxis, varargin)
             
@@ -265,12 +271,10 @@ classdef Phase < OsirisType
             
             sAxis = '';
             if obj.Data.DataSetExists('PHA',sprintf('%s%s',sAxis1,sAxis2),obj.Species)
-                sAxis   = sprintf('%s%s',sAxis1,sAxis2);
-                bRotate = false;
+                sAxis = sprintf('%s%s',sAxis1,sAxis2);
             end % if
             if obj.Data.DataSetExists('PHA',sprintf('%s%s',sAxis2,sAxis1),obj.Species)
-                sAxis   = sprintf('%s%s',sAxis2,sAxis1);
-                bRotate = true;
+                sAxis = sprintf('%s%s',sAxis2,sAxis1);
             end % if
             if isempty(sAxis)
                 fprintf(2, 'There is no combined phase data for %s and %s.\n',sAxis1,sAxis2);
@@ -413,7 +417,7 @@ classdef Phase < OsirisType
     % Private Methods
     %
     
-    methods (Access = 'private')
+    methods(Access = 'private')
         
         function aReturn = fGetDiagAxis(obj, sAxis)
             

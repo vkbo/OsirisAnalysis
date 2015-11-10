@@ -28,6 +28,8 @@
 %    Evolution        : Returns a dataset of momentum along an axis as a
 %                       function of time (plasma length).
 %    BeamSlip         : Returns a dataset of information on beam slipping.
+%    PhaseSpace       : Returns a dataset with information on beam emittance
+%                       or emittance-like properties.
 %    MomentumToEnergy : Converts a vector of momenta to energy.
 %
 
@@ -65,7 +67,7 @@ classdef Momentum < OsirisType
     % Public Methods
     %
     
-    methods (Access = 'public')
+    methods(Access = 'public')
         
         function stReturn = SigmaEToEMean(obj, sStart, sStop)
 
