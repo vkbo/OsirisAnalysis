@@ -26,6 +26,7 @@ classdef OsirisType
         ChargeFac   = 1.0;                       % Q-to-charge factor
         Coords      = '';                        % Coordinates
         Cylindrical = 0;                         % Is cylindrical, true/false
+        Dim         = 0;                         % Dimensions
 
     end % properties
     
@@ -37,7 +38,7 @@ classdef OsirisType
         
         function obj = OsirisType(oData, varargin)
             
-            % Set data and species
+            % Set data
             obj.Data = oData;
 
             % Read input parameters
@@ -58,9 +59,11 @@ classdef OsirisType
             dBoxX3Max = obj.Data.Config.Variables.Simulation.BoxX3Max;
             sCoords   = obj.Data.Config.Variables.Simulation.Coordinates;
             dLFactor  = obj.Data.Config.Variables.Convert.SI.LengthFac;
+            iDim      = obj.Data.Config.Variables.Simulation.Dimensions;
 
             % Set Scale and Units
             obj.AxisScale = {stOpt.X1Scale, stOpt.X2Scale, stOpt.X3Scale};
+            obj.Dim       = iDim;
             obj.Coords    = sCoords;
             if strcmpi(sCoords, 'cylindrical')
                 obj.Cylindrical = 1; % true
@@ -72,9 +75,9 @@ classdef OsirisType
                 case 'si'
                     obj.Units = 'SI';
                     
-                    [dX1Fac, sX1Unit]  = fLengthScale(obj.AxisScale{1}, 'm');
-                    [dX2Fac, sX2Unit]  = fLengthScale(obj.AxisScale{2}, 'm');
-                    [dX3Fac, sX3Unit]  = fLengthScale(obj.AxisScale{3}, 'm');
+                    [dX1Fac, sX1Unit]  = obj.fLengthScale(obj.AxisScale{1}, 'm');
+                    [dX2Fac, sX2Unit]  = obj.fLengthScale(obj.AxisScale{2}, 'm');
+                    [dX3Fac, sX3Unit]  = obj.fLengthScale(obj.AxisScale{3}, 'm');
                     obj.AxisFac        = [dLFactor*dX1Fac, dLFactor*dX2Fac, dLFactor*dX3Fac];
                     obj.AxisUnits      = {sX1Unit, sX2Unit, sX3Unit};
                     obj.AxisRange(1:2) = [dBoxX1Min dBoxX1Max]*obj.AxisFac(1);
@@ -83,6 +86,21 @@ classdef OsirisType
                     
                     obj.ParticleFac    = obj.Data.Config.Variables.Convert.SI.ParticleFac;
                     obj.ChargeFac      = obj.Data.Config.Variables.Convert.SI.ChargeFac;
+
+                case 'cgs'
+                    obj.Units = 'CGS';
+                    
+                    [dX1Fac, sX1Unit]  = obj.fLengthScale(obj.AxisScale{1}, 'cm');
+                    [dX2Fac, sX2Unit]  = obj.fLengthScale(obj.AxisScale{2}, 'cm');
+                    [dX3Fac, sX3Unit]  = obj.fLengthScale(obj.AxisScale{3}, 'cm');
+                    obj.AxisFac        = [dLFactor*dX1Fac, dLFactor*dX2Fac, dLFactor*dX3Fac];
+                    obj.AxisUnits      = {sX1Unit, sX2Unit, sX3Unit};
+                    obj.AxisRange(1:2) = [dBoxX1Min dBoxX1Max]*obj.AxisFac(1);
+                    obj.AxisRange(3:4) = [dBoxX2Min dBoxX2Max]*obj.AxisFac(2);
+                    obj.AxisRange(5:6) = [dBoxX3Min dBoxX3Max]*obj.AxisFac(3);
+                    
+                    obj.ParticleFac    = obj.Data.Config.Variables.Convert.CGS.ParticleFac;
+                    obj.ChargeFac      = obj.Data.Config.Variables.Convert.CGS.ChargeFac;
 
                 otherwise
                     obj.Units = 'N';
@@ -289,6 +307,68 @@ classdef OsirisType
             
             dReturn  = (obj.Time*dTFactor - dPStart)*dLFactor;
             
+        end % function
+        
+        function [dScale, sUnit] = fLengthScale(~, sToUnit, sFromUnit)
+
+            dScale = 1.0;
+            sUnit  = 'm';
+
+            if nargin < 2
+                sFromUnit = 'm';
+            end % if
+
+            switch(lower(sFromUnit))
+                case 'pm'
+                    dScale = dScale * 1.0e-12;
+                case 'å'
+                    dScale = dScale * 1.0e-10;
+                case 'nm'
+                    dScale = dScale * 1.0e-9;
+                case 'um'
+                    dScale = dScale * 1.0e-6;
+                case 'µm'
+                    dScale = dScale * 1.0e-6;
+                case 'mm'
+                    dScale = dScale * 1.0e-3;
+                case 'cm'
+                    dScale = dScale * 1.0e-2;
+                case 'm'
+                    dScale = dScale * 1.0;
+                case 'km'
+                    dScale = dScale * 1.0e3;
+            end % switch
+
+            switch(lower(sToUnit))
+                case 'pm'
+                    dScale = dScale * 1.0e12;
+                    sUnit  = 'pm';
+                case 'å'
+                    dScale = dScale * 1.0e10;
+                    sUnit  = 'Å';
+                case 'nm'
+                    dScale = dScale * 1.0e9;
+                    sUnit  = 'nm';
+                case 'um'
+                    dScale = dScale * 1.0e6;
+                    sUnit  = 'µm';
+                case 'µm'
+                    dScale = dScale * 1.0e6;
+                    sUnit  = 'µm';
+                case 'mm'
+                    dScale = dScale * 1.0e3;
+                    sUnit  = 'mm';
+                case 'cm'
+                    dScale = dScale * 1.0e2;
+                    sUnit  = 'cm';
+                case 'm'
+                    dScale = dScale * 1.0;
+                    sUnit  = 'm';
+                case 'km'
+                    dScale = dScale * 1.0e-3;
+                    sUnit  = 'km';
+            end % switch
+
         end % function
 
     end % methods
