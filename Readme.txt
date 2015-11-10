@@ -2,7 +2,7 @@
   Osiris Analysis Toolbox
  ******************************************
   MATLAB package for analysing Osiris data
-  Current version: dev1.2
+  Current version: 1.2
  
 
   Developed by:
@@ -16,11 +16,15 @@
  =====================
 
   Version 1.2
-  - Introduced OsirisType as superclass for Charge, BField, EField, Momentum and Phase
+  - Introduced OsirisType as superclass for Charge, BField, EField, Momentum and Phase.
   - Introduced Variables as a class to handle Osiris variable checks and conversions to readable and internal
     formats. This class replaces all the fTranslate... functions from previous version. It also replaces
     the isBeam, isPlasma, isField and isAxis functions.
   - The Variables class can be run independently, but is also accessbile from OsirisData.Translate
+  - Removed fStringToDump and merged it into OsirisData. This function needs an OsirisData object anyway, so
+    no point having an independant function.
+  - Merged function fPlasmaPosition into OsirisType. It too needs an OsirisData object, but fits better with
+    OsirisType because ut also depends on the current time dump.
 
   Version 1.1
   - Significant updates to GUI
