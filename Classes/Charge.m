@@ -50,7 +50,13 @@ classdef Charge < OsirisType
             obj@OsirisType(oData, varargin{:});
             
             % Set species
-            obj.Species = fTranslateSpecies(sSpecies);
+            stSpecies = obj.Translate.Lookup(sSpecies);
+            if stSpecies.isSpecies
+                obj.Species = stSpecies.Name;
+            else
+                sDefault = obj.Data.Config.Variables.Species.WitnessBeam{1};
+                fprintf(2, 'Error: ''%s'' is not a recognised species name. Using ''%s'' instead.\n', sSpecies, sDefault);
+            end % if
 
         end % function
 
@@ -72,7 +78,7 @@ classdef Charge < OsirisType
             dNMax   = obj.Data.Config.Variables.Plasma.MaxPlasmaFac;
             
             % Get data and axes
-            aData   = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species.Name);
+            aData   = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
             aX1Axis = obj.fGetBoxAxis('x1');
             aX2Axis = obj.fGetBoxAxis('x2');
 
@@ -119,7 +125,7 @@ classdef Charge < OsirisType
             dE0     = obj.Data.Config.Variables.Convert.SI.E0;
             
             % Get data and axes
-            aData   = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species.Name);
+            aData   = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
             aX1Axis = obj.fGetBoxAxis('x1');
             aX2Axis = obj.fGetBoxAxis('x2');
             
@@ -146,7 +152,7 @@ classdef Charge < OsirisType
             stReturn = {};
             
             sAxis = lower(sAxis);
-            if ~ismember(sAxis, {'j1','j2','j3'}) || ~obj.Data.DataSetExists('DENSITY',sAxis,obj.Species.Name)
+            if ~ismember(sAxis, {'j1','j2','j3'}) || ~obj.Data.DataSetExists('DENSITY',sAxis,obj.Species)
                 fprintf(2, 'Error: Current %s does not exist in dataset.\n', sAxis);
                 return;
             end % if
@@ -168,7 +174,7 @@ classdef Charge < OsirisType
             end % if
             
             % Get data and axes
-            aData   = obj.Data.Data(obj.Time, 'DENSITY', sAxis, obj.Species.Name);
+            aData   = obj.Data.Data(obj.Time, 'DENSITY', sAxis, obj.Species);
             aX1Axis = obj.fGetBoxAxis('x1');
             aX2Axis = obj.fGetBoxAxis('x2');
 
@@ -211,7 +217,7 @@ classdef Charge < OsirisType
             dXMax      = obj.Data.Config.Variables.Simulation.BoxX1Max;
             dBoxSize   = dXMax-dXMin;
             
-            h5Data = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species.Name);
+            h5Data = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
             if isempty(aRange)
                 aProj = abs(sum(transpose(h5Data),1));
             else
@@ -256,7 +262,7 @@ classdef Charge < OsirisType
             dBoxSize   = dXMax-dXMin;
 
             % Get dataset
-            aData = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species.Name);
+            aData = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
 
             if isempty(aRange)
                 aProj = abs(sum(transpose(aData),1));
@@ -309,17 +315,17 @@ classdef Charge < OsirisType
             
             % Species must be a beam
             if ~obj.Species.IsBeam
-                fprintf(2, 'Error: Species %s is not a beam.\n', obj.Species.Name);
+                fprintf(2, 'Error: Species %s is not a beam.\n', obj.Species);
                 return;
             end % if
             
             
-            dRAWFrac  = obj.Data.Config.Variables.Beam.(obj.Species.Name).RAWFraction;
+            dRAWFrac  = obj.Data.Config.Variables.Beam.(obj.Species).RAWFraction;
             dTFactor  = obj.Data.Config.Variables.Convert.SI.TimeFac;
-            dRQM      = obj.Data.Config.Variables.Beam.(obj.Species.Name).RQM;
+            dRQM      = obj.Data.Config.Variables.Beam.(obj.Species).RQM;
             dSign     = dRQM/abs(dRQM);
             
-            aRaw      = obj.Data.Data(obj.Time, 'RAW', '', obj.Species.Name);
+            aRaw      = obj.Data.Data(obj.Time, 'RAW', '', obj.Species);
             iCount    = length(aRaw(:,1));
             aRaw(:,1) = aRaw(:,1) - dTFactor*obj.Time;
             
@@ -375,9 +381,9 @@ classdef Charge < OsirisType
             % Values
             dMaxPlasma = obj.Data.Config.Variables.Plasma.MaxPlasmaFac;
             sCoords    = obj.Data.Config.Variables.Simulation.Coordinates;
-            dRAWFrac   = obj.Data.Config.Variables.Beam.(obj.Species.Name).RAWFraction;
+            dRAWFrac   = obj.Data.Config.Variables.Beam.(obj.Species).RAWFraction;
             dTFactor   = obj.Data.Config.Variables.Convert.SI.TimeFac;
-            dRQM       = obj.Data.Config.Variables.Beam.(obj.Species.Name).RQM;
+            dRQM       = obj.Data.Config.Variables.Beam.(obj.Species).RQM;
 
             % Read input parameters
             oOpt = inputParser;
@@ -391,12 +397,12 @@ classdef Charge < OsirisType
 
             % Species must be a beam
             if ~obj.Species.IsBeam
-                fprintf(2, 'Error: Species %s is not a beam.\n', obj.Species.Name);
+                fprintf(2, 'Error: Species %s is not a beam.\n', obj.Species);
                 return;
             end % if
 
             % Load charge density data
-            h5Data  = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species.Name);
+            h5Data  = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
             h5Data  = double(abs(h5Data));
             [nX1,~] = size(h5Data);
 
@@ -455,7 +461,7 @@ classdef Charge < OsirisType
             %hold off;
             
             % Get RAW data
-            aRaw      = obj.Data.Data(obj.Time, 'RAW', '', obj.Species.Name);
+            aRaw      = obj.Data.Data(obj.Time, 'RAW', '', obj.Species);
             aRaw(:,1) = (aRaw(:,1) - dTFactor*obj.Time)*obj.AxisFac(1);
             
             % Create return matrix
@@ -574,10 +580,10 @@ classdef Charge < OsirisType
             sCoords   = obj.Data.Config.Variables.Simulation.Coordinates;
             dTFactor  = obj.Data.Config.Variables.Convert.SI.TimeFac;
             dEMass    = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
-            dRQM      = obj.Data.Config.Variables.Beam.(obj.Species.Name).RQM;
+            dRQM      = obj.Data.Config.Variables.Beam.(obj.Species).RQM;
             dSign     = dRQM/abs(dRQM);
             
-            aRaw      = obj.Data.Data(stOpt.Time, 'RAW', '', obj.Species.Name);
+            aRaw      = obj.Data.Data(stOpt.Time, 'RAW', '', obj.Species);
             aRaw(:,1) = aRaw(:,1) - dTFactor*stOpt.Time;
             if strcmpi(sCoords, 'cylindrical')
                 aRaw(:,8) = aRaw(:,8)./aRaw(:,2);

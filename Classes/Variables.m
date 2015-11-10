@@ -10,20 +10,16 @@ classdef Variables
     % Public Properties
     %
 
-    properties (GetAccess = 'public', SetAccess = 'public')
+    properties(GetAccess = 'public', SetAccess = 'private')
         
         Coords = 1;  % 0 = cylindrical, 1 = cartesian
-        Types = {};
-
-        Map   = {};
 
     end % properties
 
-    %
-    % Private Properties
-    %
-
     properties (GetAccess = 'private', SetAccess = 'private')
+
+        Types = {};
+        Map   = {};
 
     end % properties
 
@@ -44,7 +40,7 @@ classdef Variables
             end % if
 
             % Coordinates
-            switch vCoords
+            switch lower(vCoords)
                 case 'cylindrical'
                     iCoords = 1;
                 case 'cartesian'
@@ -559,7 +555,7 @@ classdef Variables
     % Public Methods
     %
 
-    methods (Access = 'public')
+    methods(Access = 'public')
         
         function stReturn = Lookup(obj, sVar, vType)
             

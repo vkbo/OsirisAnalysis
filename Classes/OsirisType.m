@@ -7,16 +7,21 @@
 classdef OsirisType
 
     %
-    % Public Properties
+    % Properties
     %
     
     properties(GetAccess = 'public', SetAccess = 'public')
         
-        Data        = [];                        % OsirisData dataset
         Time        = 0;                         % Current time (dumb number)
         X1Lim       = [];                        % Axes limits x1
         X2Lim       = [];                        % Axes limits x2
         X3Lim       = [];                        % Axes limits x3
+
+    end % properties
+
+    properties(GetAccess = 'public', SetAccess = 'private')
+        
+        Data        = [];                        % OsirisData dataset
         Units       = 'N';                       % Units of axes
         AxisUnits   = {'N' 'N' 'N'};             % Units of axes
         AxisScale   = {'Auto' 'Auto' 'Auto'};    % Scale of axes
@@ -30,6 +35,12 @@ classdef OsirisType
 
     end % properties
     
+    properties(GetAccess = 'protected', SetAccess = 'protected')
+        
+        Translate   = {};                        % Lookup class for variables
+        
+    end % properties
+
     %
     % Constructor
     %
@@ -65,6 +76,7 @@ classdef OsirisType
             obj.AxisScale = {stOpt.X1Scale, stOpt.X2Scale, stOpt.X3Scale};
             obj.Dim       = iDim;
             obj.Coords    = sCoords;
+            obj.Translate = Variables(sCoords);
             if strcmpi(sCoords, 'cylindrical')
                 obj.Cylindrical = 1; % true
             end % if

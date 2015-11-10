@@ -57,7 +57,13 @@ classdef Momentum < OsirisType
             obj@OsirisType(oData, varargin{:});
             
             % Set species
-            obj.Species = fTranslateSpecies(sSpecies);
+            stSpecies = obj.Translate.Lookup(sSpecies);
+            if stSpecies.isSpecies
+                obj.Species = stSpecies.Name;
+            else
+                sDefault = obj.Data.Config.Variables.Species.WitnessBeam{1};
+                fprintf(2, 'Error: "%s" is not a recognised species name. Using %s instead.\n', sSpecies, sDefault);
+            end % if
 
         end % function
         

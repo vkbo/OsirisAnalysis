@@ -50,12 +50,12 @@ classdef BField < OsirisType
             obj@OsirisType(oData, varargin{:});
 
             % Set field
-            sField = fTranslateField(sField);
-            if ismember(sField, {'b1','b2','b3'})
-                obj.Field = sField;
+            stField = obj.Translate.Lookup(sSpecies);
+            if stField.isBField
+                obj.Field = stField.Name;
             else
+                fprintf(2, 'Error: ''%s'' is not a recognised magnetic field. Using ''b1'' instead.\n', sField);
                 obj.Field = 'b1';
-                fprintf('Unknown field %s specified, using b1\n', sField);
             end % if
             
         end % function

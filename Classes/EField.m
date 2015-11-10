@@ -53,12 +53,12 @@ classdef EField < OsirisType
             obj@OsirisType(oData, varargin{:});
 
             % Set field
-            sField = fTranslateField(sField);
-            if ismember(sField, {'e1','e2','e3'})
-                obj.Field = sField;
+            stField = obj.Translate.Lookup(sSpecies);
+            if stField.isEField
+                obj.Field = stField.Name;
             else
+                fprintf(2, 'Error: ''%s'' is not a recognised electric field. Using ''e1'' instead.\n', sField);
                 obj.Field = 'e1';
-                fprintf('Unknown field %s specified, using e1\n', sField);
             end % if
             
         end % function
