@@ -1,3 +1,4 @@
+
 %
 %  Function: fAnimBeamDensity
 % ****************************
@@ -55,8 +56,8 @@ function stReturn = fAnimPlasmaDensity(oData, sDrive, sWitness, varargin)
     parse(oOpt, varargin{:});
     stOpt = oOpt.Results;
 
-    iStart  = fStringToDump(oData, stOpt.Start);
-    iEnd    = fStringToDump(oData, stOpt.End);
+    iStart  = oData.StringToDump(stOpt.Start);
+    iEnd    = oData.StringToDump(stOpt.End);
     aDim    = stOpt.FigureSize;
     aLimits = stOpt.Limits;
 

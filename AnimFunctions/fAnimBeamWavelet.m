@@ -1,3 +1,4 @@
+
 %
 %  Function: fAnimBeamWavelet
 % ****************************
@@ -40,7 +41,7 @@ function stReturn = fAnimBeamWavelet(oData, sBeam, varargin)
     end % if
     
     stReturn   = {};
-    sBeam      = fTranslateSpecies(sBeam);
+    sBeam      = oData.Translate.Lookup(sBeam).Name;
     sMovieFile = 'AnimPBWavelet';
 
     oOpt = inputParser;
@@ -52,8 +53,8 @@ function stReturn = fAnimBeamWavelet(oData, sBeam, varargin)
     parse(oOpt, varargin{:});
     stOpt = oOpt.Results;
 
-    iStart = fStringToDump(oData, stOpt.Start);
-    iEnd   = fStringToDump(oData, stOpt.End);
+    iStart = oData.StringToDump(stOpt.Start);
+    iEnd   = odata.StringToDump(stOpt.End);
     aDim   = stOpt.FigureSize;
 
 
@@ -85,7 +86,7 @@ function stReturn = fAnimBeamWavelet(oData, sBeam, varargin)
     
     
     % Return values
-    stReturn.Movie      = M;
-    stReturn.BeamInfo   = stBeamInfo;
+    stReturn.Movie    = M;
+    stReturn.BeamInfo = stBeamInfo;
 
 end % function
