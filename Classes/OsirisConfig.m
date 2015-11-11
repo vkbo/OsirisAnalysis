@@ -1,16 +1,16 @@
 
 %
-%  Class Object to hold the Osiris Config file
-% *********************************************
+%  Class Object :: Holds the Osiris Config file
+% **********************************************
 %
 
 classdef OsirisConfig
     
     %
-    % Public Properties
+    % Properties
     %
     
-    properties (GetAccess = 'public', SetAccess = 'public')
+    properties(GetAccess = 'public', SetAccess = 'public')
 
         Path       = '';    % Path to data directory
         File       = '';    % Config file within data directory
@@ -26,13 +26,10 @@ classdef OsirisConfig
 
     end % properties
 
-    %
-    % Private Properties
-    %
-    
-    properties (GetAccess = 'private', SetAccess = 'private')
+    properties(GetAccess = 'private', SetAccess = 'private')
 
-        Files = {}; % Holds possible config files
+        Files     = {}; % Holds possible config files
+        Translate = {}; % Container for Variables class
         
     end % properties
 
@@ -50,14 +47,14 @@ classdef OsirisConfig
             
             % Initialising variable structs
             
-            obj.Variables.Constants   = struct;
-            obj.Variables.Simulation  = struct;
-            obj.Variables.Fields      = struct;
-            obj.Variables.Species     = struct;
-            obj.Variables.Plasma      = struct;
-            obj.Variables.Beam        = struct;
-            obj.Variables.Convert.SI  = struct;
-            obj.Variables.Convert.CGS = struct;
+            obj.Variables.Constants   = {};
+            obj.Variables.Simulation  = {};
+            obj.Variables.Fields      = {};
+            obj.Variables.Species     = {};
+            obj.Variables.Plasma      = {};
+            obj.Variables.Beam        = {};
+            obj.Variables.Convert.SI  = {};
+            obj.Variables.Convert.CGS = {};
             
             % Setting constants
             
@@ -74,6 +71,9 @@ classdef OsirisConfig
 
             % CGS
             obj.Variables.Constants.ElementaryChargeCGS = stConstants.Nature.ElementaryChargeCGS;
+            
+            % Translae Class for Variables
+            obj.Translate = Variables();
             
         end % function
         
@@ -165,7 +165,7 @@ classdef OsirisConfig
     %  Config File Methods
     %
     
-    methods (Access = 'private')
+    methods(Access = 'private')
         
         function obj = fReadFile(obj)
             
@@ -294,8 +294,9 @@ classdef OsirisConfig
                 for k=1:iRows
 
                     if strcmpi(aConfig{k,1},'species') && strcmpi(aConfig{k,2},'name')
-                        sSpecies = strrep(aConfig{k,6},'"','');
-                        sSpecies = fTranslateSpecies(sSpecies);
+                        sInName  = strrep(aConfig{k,6},'"','');
+                        sSpecies = obj.Translate.Lookup(sInName).Name;
+                        obj.Variables.Simulation.FileNames.(sSpecies) = strrep(sInName,' ','_');
                     end % if
                 
                     aConfig{k,7} = sSpecies;
@@ -405,7 +406,7 @@ classdef OsirisConfig
     %  Variable Methods
     %
 
-    methods (Access = 'private')
+    methods(Access = 'private')
 
         function obj = fGetSimulationVariables(obj)
             
@@ -468,7 +469,7 @@ classdef OsirisConfig
             for i=1:iRows
                 sBeam = obj.Raw{i,7};
                 if ~strcmp(sBeam,sPrev)
-                    if strcmpi(sBeam(1:6), 'Plasma')
+                    if obj.Translate.Lookup(sBeam).isPlasma
                         stSpecies.Plasma{end+1,1} = sBeam;
                     else
                         stSpecies.Beam{end+1,1} = sBeam;

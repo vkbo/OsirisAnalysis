@@ -1,3 +1,4 @@
+
 %
 %  Function: fAnimBeamDensity
 % ****************************
@@ -46,8 +47,8 @@ function stReturn = fAnimBeamDensity(oData, sDrive, sWitness, varargin)
     end % if
     
     stReturn   = {};
-    sDrive     = fTranslateSpecies(sDrive);
-    sWitness   = fTranslateSpecies(sWitness);
+    sDrive     = oData.Translate.Lookup(sDrive,'Species').Name;
+    sWitness   = oData.Translate.Lookup(sWitness,'Species').Name;
     sMovieFile = 'AnimPBDensity';
 
     oOpt = inputParser;
@@ -63,8 +64,8 @@ function stReturn = fAnimBeamDensity(oData, sDrive, sWitness, varargin)
     parse(oOpt, varargin{:});
     stOpt = oOpt.Results;
 
-    iStart = fStringToDump(oData, stOpt.Start);
-    iEnd   = fStringToDump(oData, stOpt.End);
+    iStart = oData.StringToDump(stOpt.Start);
+    iEnd   = oData.StringToDump(stOpt.End);
     aDim   = stOpt.FigureSize;
     aB1Cut = stOpt.DriveCut;
     aB2Cut = stOpt.WitnessCut;
@@ -91,7 +92,7 @@ function stReturn = fAnimBeamDensity(oData, sDrive, sWitness, varargin)
         if ~strcmpi(sWitness, '')
             subplot(1,3,3);
             stB2Info = fPlotBeamDensity(oData, k, sWitness, 'Limits', aB2Cut, 'IsSubPlot', 'Yes', 'Absolute', 'Yes');
-            title(sprintf('%s Density', fTranslateSpeciesReadable(sWitness)), 'FontSize', 14);
+            title(sprintf('%s Density', oData.Translate.Lookup(sWitness).Full, 'FontSize', 14);
             colorbar('off');
             sMovieFile = 'AnimPBEBDensity';
         end % if

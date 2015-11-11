@@ -58,7 +58,7 @@ function stReturn = fPlotParticleTrack(oData, sSpecies, sTrack, varargin)
         return;
     end % if
 
-    sSpecies = fTranslateSpecies(sSpecies);
+    vSpecies = oData.Translate.Lookup(sSpecies);
     iTrack   = fRawAxisToIndex(sTrack);
     if iTrack > 6
         iTrack = 4;
@@ -81,7 +81,7 @@ function stReturn = fPlotParticleTrack(oData, sSpecies, sTrack, varargin)
 
     
     % Data
-    oCH = Charge(oData,sSpecies,'Units','SI','X1Scale','mm','X2Scale','mm');
+    oCH = Charge(oData,vSpecies.Name,'Units','SI','X1Scale','mm','X2Scale','mm');
     if length(stOpt.Limits) == 4
         oCH.X1Lim = stOpt.Limits(1:2);
         oCH.X2Lim = stOpt.Limits(3:4);
@@ -148,30 +148,25 @@ function stReturn = fPlotParticleTrack(oData, sSpecies, sTrack, varargin)
     end % if
     xlim([stData.TAxis(1) stData.TAxis(end)]);
     
-    if strcmpi(oCH.Coords, 'cylindrical')
-        sCType = 'Cyl';
-    else
-        sCType = '';
-    end % if
-
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('Tracking %s (%s)',fTranslateSpecies(sSpecies,'Readable'),oData.Config.Name);
+        sTitle = sprintf('Tracking %s (%s)',vSpecies.Full,oData.Config.Name);
     else
-        sTitle = sprintf('Tracking %s',fTranslateSpecies(sSpecies,'Readable'));
+        sTitle = sprintf('Tracking %s',vSpecies.Full);
     end % if
 
     title(sTitle);
     xlabel('z [m]');
-    ylabel(sprintf('%s [%s]',fTranslateAxis(sTrack,['Readable',sCType]),sUnit));
+    ylabel(sprintf('%s [%s]',oData.Translate.Lookup(sTrack).Tex,sUnit));
     
     hold off;
 
 
     % Returns
-    stReturn.XLim = get(gca, 'XLim');
-    stReturn.YLim = get(gca, 'YLim');
-    stReturn.Data = stData;
-    stReturn.Plot = stPlot;
+    stReturn.Species = vSpecies.Name;
+    stReturn.XLim    = get(gca, 'XLim');
+    stReturn.YLim    = get(gca, 'YLim');
+    stReturn.Data    = stData;
+    stReturn.Plot    = stPlot;
     
 end
 

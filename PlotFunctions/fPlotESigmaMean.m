@@ -48,7 +48,7 @@ function stReturn = fPlotESigmaMean(oData, sSpecies, varargin)
         return;
     end % if
 
-    sSpecies = fTranslateSpecies(sSpecies); 
+    vSpecies = oData.Translate.Lookup(sSpecies,'Species');
 
     oOpt = inputParser;
     addParameter(oOpt, 'FigureSize', [750 450]);
@@ -62,7 +62,7 @@ function stReturn = fPlotESigmaMean(oData, sSpecies, varargin)
 
 
     % Data
-    oMom   = Momentum(oData, sSpecies);
+    oMom   = Momentum(oData, vSpecies.Name);
     stData = oMom.SigmaEToEMean(stOpt.Start, stOpt.End);
 
     if isempty(stData)
@@ -93,16 +93,10 @@ function stReturn = fPlotESigmaMean(oData, sSpecies, varargin)
     legend([H(1).mainLine, H.patch], '<E>', '\sigma_E', 'Location', 'SouthEast');
     xlim([stData.TimeAxis(1), stData.TimeAxis(end)]);
 
-    if strcmpi(oMom.Coords, 'cylindrical')
-        sRType = 'ReadableCyl';
-    else
-        sRType = 'Readable';
-    end % if
-
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s Mean Energy (%s #%d)',fTranslateSpecies(sSpecies,sRType),oData.Config.Name,iTime);
+        sTitle = sprintf('%s Mean Energy (%s #%d)',vSpecies.Full,oData.Config.Name,iTime);
     else
-        sTitle = sprintf('%s Mean Energy',fTranslateSpecies(sSpecies,sRType));
+        sTitle = sprintf('%s Mean Energy',vSpecies.Full);
     end % if
 
     title(sTitle);
@@ -113,7 +107,7 @@ function stReturn = fPlotESigmaMean(oData, sSpecies, varargin)
 
 
     % Returns
-    stReturn.Beam1 = sSpecies;
+    stReturn.Beam1 = vSpecies.Name;
     stReturn.XLim  = get(gca, 'XLim');
     stReturn.YLim  = get(gca, 'YLim');
     

@@ -1,17 +1,17 @@
 
 %
-%  Class Object to hold Osiris data
-% **********************************
-%  Version 1.1
+%  Class Object :: Wrapper for Osiris data sets
+% **********************************************
+%  Version 1.2
 %
 
 classdef OsirisData
     
     %
-    % Public Properties
+    % Properties
     %
     
-    properties (GetAccess = 'public', SetAccess = 'public')
+    properties(GetAccess = 'public', SetAccess = 'public')
 
         Path        = '';     % Path to dataset
         PathID      = '';     % Path as ID instead of free text input
@@ -22,16 +22,13 @@ classdef OsirisData
         DefaultPath = {};     % Default data folder
         Silent      = 0;      % Set to 1 to disable command window output
         Temp        = '/tmp'; % Temp folder (set in LocalConfig.m)
+        Translate   = {};     % Tool for translating Osiris variables
 
     end % properties
 
-    %
-    % Private Properties
-    %
-    
-    properties (GetAccess = 'private', SetAccess = 'private')
+    properties(GetAccess = 'private', SetAccess = 'private')
 
-        DefaultData = {}; % Data in default folder
+        DefaultData = {};     % Data in default folder
 
     end % properties
     
@@ -56,8 +53,8 @@ classdef OsirisData
             % Initiate OsirisData
             LocalConfig;
             
-            obj.Temp   = sLocalTemp;
-            obj.Config = OsirisConfig;
+            obj.Temp          = sLocalTemp;
+            obj.Config        = OsirisConfig;
             obj.Config.Silent = obj.Silent;
             
             obj.DefaultPath = stFolders;
@@ -184,6 +181,8 @@ classdef OsirisData
             else
                obj.Config.Consistent = false;
             end % if
+            
+            obj.Translate = Variables(obj.Config.Variables.Simulation.Coordinates);
 
         end % function
         
@@ -199,11 +198,31 @@ classdef OsirisData
     % Public Methods
     %
     
-    methods (Access = 'public')
+    methods(Access = 'public')
         
-        function Version(obj)
+        function Version(~)
             
-            fprintf('OsirisAnalysis Version 1.1\n');
+            fprintf('OsirisAnalysis Version 1.2\n');
+            
+        end % function
+        
+        function stReturn = LookupVar(obj, sName, vType)
+            %
+            %  OsirisData.LookupVar
+            % **********************
+            %  Just a wrapper for obj.Translate.Lookup()
+            %
+            %  Input
+            % =======
+            %  sName :: Text to translate
+            %  vType :: Suggestion for data type
+            %
+            
+            if nargin < 3
+                vType = '';
+            end % if
+            
+            stReturn = obj.Translate.Lookup(sName, vType);
             
         end % function
 
@@ -303,7 +322,7 @@ classdef OsirisData
             %
             
             stReturn  = {};
-            sSpecies  = fTranslateSpecies(sSpecies);
+            sSpecies  = obj.Translate.Lookup(sSpecies,'Beam').Name;
             
             dC        = obj.Config.Variables.Constants.SpeedOfLight;
             dE        = obj.Config.Variables.Constants.ElementaryCharge;
@@ -435,8 +454,8 @@ classdef OsirisData
 
             if nargin == 1
                 fprintf('\n');
-                fprintf(' object.Data(iTime, *)\n');
-                fprintf('***********************\n');
+                fprintf(' Data-extraction function\n');
+                fprintf('**************************\n');
                 fprintf('\n');
                 fprintf(' Input:\n');
                 fprintf('========\n');
@@ -454,9 +473,14 @@ classdef OsirisData
             end % if
             
             % Convert and check input values
-            sType     = upper(sType);                % Type is always upper case
-            sSet      = lower(sSet);                 % Set is always lower case
-            sSpecies  = fTranslateSpecies(sSpecies); % Species translated to standard format
+            sType     = upper(sType); % Type is always upper case
+            sSet      = lower(sSet);  % Set is always lower case
+            
+            % Species translated to standard format, and then to actual file name used
+            sSpecies  = obj.Translate.Lookup(sSpecies).Name;
+            if ~isempty(sSpecies)
+                sSpecies  = obj.Config.Variables.Simulation.FileNames.(sSpecies);
+            end % if
 
             if isempty(sType)
                 fprintf(2, 'Error: Data type needs to be specified.\n');
@@ -552,8 +576,8 @@ classdef OsirisData
             
             stReturn = {};
 
-            sSpecies = fTranslateSpecies(sSpecies);
-            iTime    = fStringToDump(obj, num2str(sTime));
+            sSpecies = obj.TranslateInput(sSpecies);
+            iTime    = obj.StringToDump(num2str(sTime));
 
             dBoxX1Min = obj.Config.Variables.Simulation.BoxX1Min;
             dBoxX1Max = obj.Config.Variables.Simulation.BoxX1Max;
@@ -704,13 +728,77 @@ classdef OsirisData
             
         end % function
 
+        function iReturn = StringToDump(obj, vValue)
+
+            iReturn = 0;
+            sString = num2str(vValue);
+
+            if isempty(sString)
+                return;
+            end % if
+
+            if strcmp(sString(end), 'm')
+                % Function will translate from metres to closest dump
+                % Not yet implemented
+                iReturn = 0;
+                return;
+            end % if
+
+            if isintegerstring(sString)
+                iReturn = floor(str2double(sString));
+                return;
+            end % if
+
+            if strcmpi(sString, 'Start')
+                iReturn = 0;
+                return;
+            end % if
+
+            if strcmpi(sString, 'End')
+                iReturn = obj.MSData.MinFiles - 1;
+                if iReturn < 0
+                    iReturn = 0;
+                end % if
+                return;
+            end % if
+
+            if strcmpi(sString, 'PStart')
+                dPStart   = obj.Config.Variables.Plasma.PlasmaStart;
+                dTimeStep = obj.Config.Variables.Simulation.TimeStep;
+                iNDump    = obj.Config.Variables.Simulation.NDump;
+                iReturn   = round(dPStart/(dTimeStep*iNDump));
+                if iReturn > obj.MSData.MinFiles - 1
+                    iReturn = obj.MSData.MinFiles - 1;
+                end % if
+                if iReturn < 0
+                    iReturn = 0;
+                end % if
+                return;
+            end % if
+
+            if strcmpi(sString, 'PEnd')
+                dPEnd     = obj.Config.Variables.Plasma.PlasmaEnd;
+                dTimeStep = obj.Config.Variables.Simulation.TimeStep;
+                iNDump    = obj.Config.Variables.Simulation.NDump;
+                iReturn   = round(dPEnd/(dTimeStep*iNDump));
+                if iReturn > obj.MSData.MinFiles - 1
+                    iReturn = obj.MSData.MinFiles - 1;
+                end % if
+                if iReturn < 0
+                    iReturn = 0;
+                end % if
+                return;
+            end % if
+
+        end % function
+        
     end % methods
     
     %
     % Private Methods
     %
     
-    methods (Access = 'private')
+    methods(Access = 'private')
         
         function stReturn = fScanFolder(obj, sScanRoot, sScanPath)
             

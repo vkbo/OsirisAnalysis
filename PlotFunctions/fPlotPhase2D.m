@@ -58,8 +58,8 @@ function stReturn = fPlotPhase2D(oData, sTime, sSpecies, sAxis1, sAxis2, varargi
         return;
     end % if
     
-    sSpecies = fTranslateSpecies(sSpecies);
-    iTime    = fStringToDump(oData, num2str(sTime));
+    vSpecies = oData.Translate.Lookup(sSpecies,'Species');
+    iTime    = oData.StringToDump(num2str(sTime));
 
     oOpt = inputParser;
     addParameter(oOpt, 'HLim',        []);
@@ -86,22 +86,23 @@ function stReturn = fPlotPhase2D(oData, sTime, sSpecies, sAxis1, sAxis2, varargi
         return;
     end % if
 
-    aAllowed = {'p1','p2','p3','x1','x2','x3'};
-    if ~ismember(sAxis1, aAllowed) || ~ismember(sAxis2, aAllowed)
-        fprintf(2, 'Error: Unknown axes\n');
+    vAxis1 = oData.Translate.Lookup(sAxis1);
+    vAxis2 = oData.Translate.Lookup(sAxis2);
+    if ~vAxis1.isValidPhaseSpaceDiag || ~vAxis2.isValidPhaseSpaceDiag
+        fprintf(2, 'Error: Unknown axes.\n');
         return;
     end % if
 
     % Data
-    oPha      = Phase(oData,sSpecies,'Units','SI');
+    oPha      = Phase(oData,vSpecies.Name,'Units','SI');
     oPha.Time = iTime;
     if stOpt.Scatter == 0 && strcmpi(stOpt.UseRaw, 'No')
-        stData = oPha.Phase2D(sAxis1,sAxis2,'HLim',stOpt.HLim,'VLim',stOpt.VLim,'HAuto',stOpt.HAuto,'VAuto',stOpt.VAuto);
+        stData = oPha.Phase2D(vAxis1.Name,vAxis2.Name,'HLim',stOpt.HLim,'VLim',stOpt.VLim,'HAuto',stOpt.HAuto,'VAuto',stOpt.VAuto);
     else
         if stOpt.Scatter == 0
-            stData = oPha.Scatter2D(sAxis1,sAxis2,'HLim',stOpt.HLim,'VLim',stOpt.VLim,'Sample',100000);
+            stData = oPha.Scatter2D(vAxis1.Name,vAxis2.Name,'HLim',stOpt.HLim,'VLim',stOpt.VLim,'Sample',100000);
         else
-            stData = oPha.Scatter2D(sAxis1,sAxis2,'HLim',stOpt.HLim,'VLim',stOpt.VLim,'Sample',stOpt.Scatter);
+            stData = oPha.Scatter2D(vAxis1.Name,vAxis2.Name,'HLim',stOpt.HLim,'VLim',stOpt.VLim,'Sample',stOpt.Scatter);
         end % if
     end % if
     
@@ -182,21 +183,15 @@ function stReturn = fPlotPhase2D(oData, sTime, sSpecies, sAxis1, sAxis2, varargi
         hold off;
     end % if
 
-    if strcmpi(oPha.Coords, 'cylindrical')
-        sRType = 'ReadableCyl';
-    else
-        sRType = 'Readable';
-    end % of
-
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s Phase %s (%s #%d)',fTranslateSpecies(sSpecies,'Readable'),fPlasmaPosition(oData, iTime),oData.Config.Name,iTime);
+        sTitle = sprintf('%s Phase %s (%s #%d)',vSpecies.Full,oPha.PlasmaPosition,oData.Config.Name,iTime);
     else
-        sTitle = sprintf('%s Phase %s',fTranslateSpecies(sSpecies,'Readable'),fPlasmaPosition(oData, iTime));
+        sTitle = sprintf('%s Phase %s',vSpecies.Full,oPha.PlasmaPosition);
     end % if
 
     title(sTitle);
-    xlabel(sprintf('%s [%s]',fTranslateAxis(sAxis1,sRType),sHUnit));
-    ylabel(sprintf('%s [%s]',fTranslateAxis(sAxis2,sRType),sVUnit));
+    xlabel(sprintf('%s [%s]',vAxis1.Tex,sHUnit));
+    ylabel(sprintf('%s [%s]',vAxis2.Tex,sVUnit));
 
     if stOpt.Scatter == 0
         if strcmpi(stOpt.UseRaw, 'No')
@@ -208,8 +203,11 @@ function stReturn = fPlotPhase2D(oData, sTime, sSpecies, sAxis1, sAxis2, varargi
     
     % Return
 
-    stReturn.XLim  = xlim;
-    stReturn.YLim  = ylim;
-    stReturn.CLim  = caxis;
+    stReturn.Species = vSpecies.Name;
+    stReturn.Axis1   = vAxis1.Name;
+    stReturn.Axis2   = vAxis2.Name;
+    stReturn.XLim    = xlim;
+    stReturn.YLim    = ylim;
+    stReturn.CLim    = caxis;
 
-end
+end % function

@@ -33,6 +33,7 @@ function Analyse2D
     
     iXFig = 10;
     oData = OsirisData('Silent','Yes');
+    oVar  = Variables();
 
     X.DataSet     = 0;
     X.LoadTo      = 1;
@@ -91,7 +92,7 @@ function Analyse2D
     fMain.Units        = 'Pixels';
     fMain.MenuBar      = 'None';
     fMain.Position     = [aFPos(1:2) 560 640];
-    fMain.Name         = 'OsirisAnalysis Version 1.1 - GUI';
+    fMain.Name         = 'OsirisAnalysis Version 1.2 - GUI';
     fMain.NumberTitle  = 'Off';
     fMain.DockControls = 'Off';
     fMain.Tag          = 'uiOA-Main';
@@ -154,7 +155,7 @@ function Analyse2D
     
     aY = [60 35 10];
     for i=1:3
-        uicontrol(bgData,'Style','Text','String',sprintf('#%d',i),'Position',[9 aY(i)+2 25 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgData,'Style','Text','String',sprintf('D%d',i),'Position',[9 aY(i)+2 25 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgData,'Style','PushButton','String','...','Position',[159 aY(i) 25 20],'BackgroundColor',cButtonOff,'Callback',{@fBrowseSet,i});
         
         edtSet(i) = uicontrol(bgData,'Style','Edit','String',stSettings.LoadData{i},'Position',[34 aY(i) 120 20],'BackgroundColor',cWhite);
@@ -352,11 +353,6 @@ function Analyse2D
         
         % Create Controls
         iY = 115;
-        if strcmpi(X.Data.Coords, 'cylindrical')
-            sField = 'NoTexCyl';
-        else
-            sField = 'NoTex';
-        end % if
         
         iY = iY - 25;
         [~,iVal] = incellarray(X.Plot(t).Data, X.Data.Plasma);
@@ -389,8 +385,8 @@ function Analyse2D
         
         iY = iY - 25;
         uicontrol(bgTab(t),'Style','Text','String','Fields','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','Checkbox','String',fTranslateField('e1',sField),'Value',X.Plot(t).Settings(1),'Position',[ 85 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,1});
-        uicontrol(bgTab(t),'Style','Checkbox','String',fTranslateField('e2',sField),'Value',X.Plot(t).Settings(2),'Position',[135 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,2});
+        uicontrol(bgTab(t),'Style','Checkbox','String',oVar.Lookup('e1').Short,'Value',X.Plot(t).Settings(1),'Position',[ 85 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,1});
+        uicontrol(bgTab(t),'Style','Checkbox','String',oVar.Lookup('e2').Short,'Value',X.Plot(t).Settings(2),'Position',[135 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,2});
 
     end % function
     
@@ -446,7 +442,7 @@ function Analyse2D
         
         iY = iY - 25;
         uicontrol(bgTab(t),'Style','Text','String','Species','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Species,'Value',1,'Position',[85 iY 150 20],'Callback',{@fPlotSetSpecies,t});
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Beam,'Value',1,'Position',[85 iY 150 20],'Callback',{@fPlotSetSpecies,t});
         uicontrol(bgTab(t),'Style','Text','String','Min. Part.','Position',[240 iY+1 65 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','Edit','String',sprintf('%d',X.Plot(t).Count),'Position',[310 iY 80 20],'Callback',{@fPlotSetCount,t});
 
@@ -510,6 +506,9 @@ function Analyse2D
         X.Data.HasTracks  = oData.Config.HasTracks;
         X.Data.Consistent = oData.Config.Consistent;
         X.Data.Coords     = oData.Config.Variables.Simulation.Coordinates;
+        
+        % Reload Variables class
+        oVar = Variables(X.Data.Coords);
 
         % Output
         fOut(sprintf('Loaded %s',X.Data.Path),1);
@@ -539,19 +538,19 @@ function Analyse2D
         
         % Translate Fields
         for i=1:length(X.Data.Field)
-            X.Data.Field{i} = fTranslateField(X.Data.Field{i},['Long',X.Data.CoordsPF]);
+            X.Data.Field{i} = oVar.Lookup(X.Data.Field{i}).Full;
         end % for
 
         % Translate Densities
         X.Data.Density = oData.Config.Variables.Density.(X.Data.Species{1}).Density;
         for i=1:length(X.Data.Density)
-            X.Data.Density{i} = fTranslateField(X.Data.Density{i},['Long',X.Data.CoordsPF]);
+            X.Data.Density{i} = oVar.Lookup(X.Data.Density{i}).Full;
         end % for
 
         % Translate Axes
         X.Data.Axis = {'x1','x2','p1','p2'};
         for i=1:length(X.Data.Axis)
-            X.Data.Axis{i} = fTranslateAxis(X.Data.Axis{i},['Long',X.Data.CoordsPF]);
+            X.Data.Axis{i} = oVar.Lookup(X.Data.Axis{i}).Full;
         end % for
         
         % Simulation Status
@@ -569,10 +568,10 @@ function Analyse2D
                 lblInfo(2).BackgroundColor = cInfoYellow;
             end % if
 
-            X.Time.Limits(1) = fStringToDump(oData, 'Start');
-            X.Time.Limits(2) = fStringToDump(oData, 'PStart');
-            X.Time.Limits(3) = fStringToDump(oData, 'PEnd');
-            X.Time.Limits(4) = fStringToDump(oData, 'End');
+            X.Time.Limits(1) = oData.StringToDump('Start');
+            X.Time.Limits(2) = oData.StringToDump('PStart');
+            X.Time.Limits(3) = oData.StringToDump('PEnd');
+            X.Time.Limits(4) = oData.StringToDump('End');
         else
             lblInfo(2).String          = 'No Data';
             lblInfo(2).BackgroundColor = cInfoRed;
@@ -1021,7 +1020,7 @@ function Analyse2D
                         if strcmpi(X.Plot(f).Density,'charge')
                             sCurrent = '';
                         else
-                            sCurrent = fTranslateField(X.Plot(f).Density,'FromLong');
+                            sCurrent = oVar.Reverse(X.Plot(f).Density,'Full');
                         end % if
                         iMakeSym = 1;
 
@@ -1051,7 +1050,7 @@ function Analyse2D
                     case 'Field Density'
                         iMakeSym = 1;
                         figure(X.Plot(f).Figure); clf;
-                        X.Plot(f).Return = fPlotField2D(oData,X.Time.Dump,fTranslateField(X.Plot(f).Data,'FromLong'), ...
+                        X.Plot(f).Return = fPlotField2D(oData,X.Time.Dump,oVar.Reverse(X.Plot(f).Data,'Full'), ...
                             'IsSubPlot','No','AutoResize','Off','HideDump','Yes','Limits',[aHLim aVLim]);
 
                     case 'Phase 2D'
@@ -1063,8 +1062,8 @@ function Analyse2D
                         end % if
                         figure(X.Plot(f).Figure); clf;
                         X.Plot(f).Return = fPlotPhase2D(oData,X.Time.Dump,X.Plot(f).Data, ...
-                            fTranslateAxis(X.Plot(f).Axis{1},'FromLong'), ...
-                            fTranslateAxis(X.Plot(f).Axis{2},'FromLong'), ...
+                            oVar.Reverse(X.Plot(f).Axis{1},'Full'), ...
+                            oVar.Reverse(X.Plot(f).Axis{2},'Full'), ...
                             'HLim',aHLim,'VLim',aVLim,'UseRaw',sUseRaw, ...
                             'IsSubPlot','No','AutoResize','Off','HideDump','Yes');
                         if isempty(X.Plot(f).Return)
@@ -1322,7 +1321,7 @@ function Analyse2D
         
         X.Data.Density = oData.Config.Variables.Density.(sSpecies).Density;
         for i=1:length(X.Data.Density)
-            X.Data.Density{i} = fTranslateField(X.Data.Density{i},['Long',X.Data.CoordsPF]);
+            X.Data.Density{i} = oVar.Lookup(X.Data.Density{i}).Full;
         end % for
         
         fRefresh(f);

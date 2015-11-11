@@ -1,1 +1,1 @@
-OsirisAnalysis ~ Version 1.1
+OsirisAnalysis ~ Version 1.2
