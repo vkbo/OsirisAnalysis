@@ -442,7 +442,7 @@ function Analyse2D
         
         iY = iY - 25;
         uicontrol(bgTab(t),'Style','Text','String','Species','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Species,'Value',1,'Position',[85 iY 150 20],'Callback',{@fPlotSetSpecies,t});
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Beam,'Value',1,'Position',[85 iY 150 20],'Callback',{@fPlotSetSpecies,t});
         uicontrol(bgTab(t),'Style','Text','String','Min. Part.','Position',[240 iY+1 65 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','Edit','String',sprintf('%d',X.Plot(t).Count),'Position',[310 iY 80 20],'Callback',{@fPlotSetCount,t});
 

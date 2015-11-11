@@ -47,14 +47,14 @@ classdef OsirisConfig
             
             % Initialising variable structs
             
-            obj.Variables.Constants   = struct;
-            obj.Variables.Simulation  = struct;
-            obj.Variables.Fields      = struct;
-            obj.Variables.Species     = struct;
-            obj.Variables.Plasma      = struct;
-            obj.Variables.Beam        = struct;
-            obj.Variables.Convert.SI  = struct;
-            obj.Variables.Convert.CGS = struct;
+            obj.Variables.Constants   = {};
+            obj.Variables.Simulation  = {};
+            obj.Variables.Fields      = {};
+            obj.Variables.Species     = {};
+            obj.Variables.Plasma      = {};
+            obj.Variables.Beam        = {};
+            obj.Variables.Convert.SI  = {};
+            obj.Variables.Convert.CGS = {};
             
             % Setting constants
             
@@ -294,8 +294,9 @@ classdef OsirisConfig
                 for k=1:iRows
 
                     if strcmpi(aConfig{k,1},'species') && strcmpi(aConfig{k,2},'name')
-                        sSpecies = strrep(aConfig{k,6},'"','');
-                        sSpecies = obj.Translate.Lookup(sSpecies).Name;
+                        sInName  = strrep(aConfig{k,6},'"','');
+                        sSpecies = obj.Translate.Lookup(sInName).Name;
+                        obj.Variables.Simulation.FileNames.(sSpecies) = strrep(sInName,' ','_');
                     end % if
                 
                     aConfig{k,7} = sSpecies;

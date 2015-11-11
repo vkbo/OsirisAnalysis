@@ -473,10 +473,14 @@ classdef OsirisData
             end % if
             
             % Convert and check input values
-            sType     = upper(sType);                        % Type is always upper case
-            sSet      = lower(sSet);                         % Set is always lower case
-            sSpecies  = obj.Translate.Lookup(sSpecies).Name; % Species translated to standard format
-            % This needs to be extended so it will accept files stored with non-standard names for species
+            sType     = upper(sType); % Type is always upper case
+            sSet      = lower(sSet);  % Set is always lower case
+            
+            % Species translated to standard format, and then to actual file name used
+            sSpecies  = obj.Translate.Lookup(sSpecies).Name;
+            if ~isempty(sSpecies)
+                sSpecies  = obj.Config.Variables.Simulation.FileNames.(sSpecies);
+            end % if
 
             if isempty(sType)
                 fprintf(2, 'Error: Data type needs to be specified.\n');

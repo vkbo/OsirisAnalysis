@@ -84,7 +84,11 @@ classdef BField < OsirisType
 
             % Check if cylindrical
             if strcmpi(sCoords, 'cylindrical')
-                aData   = transpose([fliplr(aData),aData]);
+                if strcmpi(obj.Field.Name,'b3')
+                    aData = transpose([-fliplr(aData),aData]);
+                else
+                    aData = transpose([fliplr(aData),aData]);
+                end % if
                 aX2Axis = [-fliplr(aX2Axis), aX2Axis];
             else
                 aData   = transpose(aData);
