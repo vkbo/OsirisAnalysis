@@ -25,6 +25,7 @@
     no point having an independant function.
   - Merged function fPlasmaPosition into OsirisType. It too needs an OsirisData object, but fits better with
     OsirisType because ut also depends on the current time dump.
+  - OsirisData now accepts data files with non-standard species names. In theory. Not tested.
 
   Version 1.1
   - Significant updates to GUI
