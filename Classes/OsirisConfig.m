@@ -865,15 +865,6 @@ classdef OsirisConfig
         
         function obj = fGetBeamVariables(obj)
             
-            % Extract variables
-            iDim   = obj.Variables.Simulation.Dimensions;
-            dX1Min = obj.Variables.Simulation.BoxX1Min;
-            dX1Max = obj.Variables.Simulation.BoxX1Max;
-            dX2Min = obj.Variables.Simulation.BoxX2Min;
-            dX2Max = obj.Variables.Simulation.BoxX2Max;
-            dX3Min = obj.Variables.Simulation.BoxX3Min;
-            dX3Max = obj.Variables.Simulation.BoxX3Max;
-
             % Loop through beam species
             [iRows,~] = size(obj.Variables.Species.Beam);
             
