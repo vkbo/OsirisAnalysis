@@ -619,7 +619,7 @@ classdef Charge < OsirisType
                 end % if
 
                 aRaw(:,11) = aRaw(:,8)*dSign;
-                aRaw(:,12) = abs(aRaw(:,fRawAxisToIndex(lower(stOpt.Weights))));
+                aRaw(:,12) = abs(aRaw(:,obj.Data.RawToIndex(lower(stOpt.Weights))));
                 switch(lower(stOpt.Filter))
                     case 'random'
                         [~,aI]     = datasample(aRaw(:,1),iCount,'Replace',false);

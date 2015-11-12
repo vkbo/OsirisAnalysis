@@ -322,8 +322,8 @@ classdef Phase < OsirisType
             sHUnit = 'm';
             switch(sAxis1(1))
                 case 'x'
-                    stOpt.HLim = stOpt.HLim/obj.AxisFac(fRawAxisToIndex(sAxis1));
-                    dHFac      = obj.AxisFac(fRawAxisToIndex(sAxis1));
+                    stOpt.HLim = stOpt.HLim/obj.AxisFac(obj.Data.RawToIndex(sAxis1));
+                    dHFac      = obj.AxisFac(obj.Data.RawToIndex(sAxis1));
                 case 'p'
                     stOpt.HLim = stOpt.HLim/dEMass;
                     dHFac      = dEMass;
@@ -338,8 +338,8 @@ classdef Phase < OsirisType
             sVUnit = 'm';
             switch(sAxis2(1))
                 case 'x'
-                    stOpt.VLim = stOpt.VLim/obj.AxisFac(fRawAxisToIndex(sAxis2));
-                    dVFac      = obj.AxisFac(fRawAxisToIndex(sAxis2));
+                    stOpt.VLim = stOpt.VLim/obj.AxisFac(obj.Data.RawToIndex(sAxis2));
+                    dVFac      = obj.AxisFac(obj.Data.RawToIndex(sAxis2));
                 case 'p'
                     stOpt.VLim = stOpt.VLim/dEMass;
                     dVFac      = dEMass;
@@ -374,8 +374,8 @@ classdef Phase < OsirisType
             
             % Select wanted axes
             [aQ,aI] = sort(abs(aRaw(:,8)));
-            aHData  = aRaw(aI,fRawAxisToIndex(sAxis1));
-            aVData  = aRaw(aI,fRawAxisToIndex(sAxis2));
+            aHData  = aRaw(aI,obj.Data.RawToIndex(sAxis1));
+            aVData  = aRaw(aI,obj.Data.RawToIndex(sAxis2));
             
             stReturn.Raw   = aRaw;
             stReturn.HData = aHData;

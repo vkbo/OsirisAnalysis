@@ -965,6 +965,47 @@ classdef OsirisData
         end % function
         
     end % methods
+
+    %
+    % Static Methods
+    %
+    
+    methods(Static)
+
+        function iReturn = RawToIndex(sAxis)
+
+            switch(sAxis)
+                case 'x1'
+                    iReturn = 1;
+                case 'x2'
+                    iReturn = 2;
+                case 'x3'
+                    iReturn = 3;
+                case 'p1'
+                    iReturn = 4;
+                case 'p2'
+                    iReturn = 5;
+                case 'p3'
+                    iReturn = 6;
+                case 'ene'
+                    iReturn = 7;
+                case 'energy'
+                    iReturn = 7;
+                case 'q'
+                    iReturn = 8;
+                case 'charge'
+                    iReturn = 8;
+                case 'tag1'
+                    iReturn = 9;
+                case 'tag2'
+                    iReturn = 10;
+                otherwise
+                    iReturn = 0;
+            end % switch
+
+        end % function
+
+    end % methods
     
 end % classdef
 
