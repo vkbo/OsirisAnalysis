@@ -936,51 +936,6 @@ classdef OsirisConfig
                 
                 aValue = obj.fExtractFixedNum(sBeam,'diag_species','raw_fraction',[0]);
                 obj.Variables.Beam.(sBeam).RAWFraction = double(aValue(1));
-
-                % Beam profile
-                
-                sValue = obj.fExtractRaw(sBeam, 'profile', 'profile_type');
-                obj.Variables.Beam.(sBeam).ProfileType     = strrep(sValue, '"', '');
-                
-                sValue = obj.fExtractRaw(sBeam, 'profile', 'math_func_expr');
-                obj.Variables.Beam.(sBeam).ProfileFunction = strrep(sValue, '"', '');
-                sMathFunc = strrep(sValue, '"', '');
-                
-                aValue = obj.fExtractFixedNum(sBeam,'profile','density',[0]);
-                obj.Variables.Beam.(sBeam).Density         = double(aValue(1));
-                
-                % Analyse beam profile
-                
-                stFunc    = fExtractEq(sMathFunc, iDim, [dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max]);
-                sFunction = stFunc.ForEval;
-                fProfile  = @(x1,x2) eval(sFunction);
-
-                aSpan   = linspace(stFunc.Lims(1), stFunc.Lims(2), 20000);
-                aReturn = fProfile(aSpan,0);
-                aReturn = aReturn.*(aReturn > 0);
-                if sum(aReturn) > 0 && max(aReturn) >= 0
-                    dMeanX1  = dround(wmean(aSpan, aReturn),3);
-                    dSigmaX1 = dround(sqrt(var(aSpan,aReturn)),5);
-                else
-                    dMeanX1  = 0.0;
-                    dSigmaX1 = 0.0;
-                end % if
-
-                aSpan   = linspace(-stFunc.Lims(4), stFunc.Lims(4), 10000); % Assumes cylindrical
-                aReturn = fProfile(dMeanX1,aSpan);
-                aReturn = aReturn.*(aReturn > 0);
-                if sum(aReturn) > 0 && max(aReturn) >= 0
-                    dMeanX2  = dround(wmean(aSpan, aReturn),3);
-                    dSigmaX2 = dround(sqrt(var(aSpan,aReturn)),5);
-                else
-                    dMeanX2  = 0.0;
-                    dSigmaX2 = 0.0;
-                end % if
-
-                obj.Variables.Beam.(sBeam).MeanX1  = dMeanX1;
-                obj.Variables.Beam.(sBeam).MeanX2  = dMeanX2;
-                obj.Variables.Beam.(sBeam).SigmaX1 = dSigmaX1;
-                obj.Variables.Beam.(sBeam).SigmaX2 = dSigmaX2;
                 
             end % for
             

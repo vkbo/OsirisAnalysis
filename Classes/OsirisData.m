@@ -317,7 +317,7 @@ classdef OsirisData
         function stReturn = BeamInfo(obj, sSpecies)
             
             %
-            %  Attempts to calculate beam data
+            %  Attempts to Calculate Beam Info
             % *********************************
             %
             
@@ -327,7 +327,7 @@ classdef OsirisData
             dC        = obj.Config.Variables.Constants.SpeedOfLight;
             dE        = obj.Config.Variables.Constants.ElementaryCharge;
             dLFac     = obj.Config.Variables.Convert.SI.LengthFac;
-            dT        = obj.Config.Variables.Simulation.TimeStep;
+            dT        = obj.Config.Variables.Simulation.TimeStep*2;
             
             dN0       = obj.Config.Variables.Plasma.N0;
             dNOmegaP  = obj.Config.Variables.Plasma.NormOmegaP;
@@ -338,6 +338,11 @@ classdef OsirisData
             sMathFunc = obj.Config.Variables.Beam.(sSpecies).ProfileFunction;
             iDim      = obj.Config.Variables.Simulation.Dimensions;
             sCoords   = obj.Config.Variables.Simulation.Coordinates;
+
+            iNX1      = obj.Config.Variables.Simulation.BoxNX1;
+            iNX2      = obj.Config.Variables.Simulation.BoxNX2;
+            iNX3      = obj.Config.Variables.Simulation.BoxNX3;
+
             dX1Min    = obj.Config.Variables.Simulation.BoxX1Min;
             dX1Max    = obj.Config.Variables.Simulation.BoxX1Max;
             dX2Min    = obj.Config.Variables.Simulation.BoxX2Min;
@@ -357,76 +362,86 @@ classdef OsirisData
                 fprintf('\n');
             end % if
 
-            stFunc   = fExtractEq(sMathFunc, iDim, [dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max]);
-            fProfile = @(x1,x2) eval(stFunc.ForEval);
+            % Beam Integral
+            
+            oMF  = MathFunc(sMathFunc);
+            aX1  = dX1Min:dT:dX1Max;
+            aX2  = dX2Min:dT:dX2Max;
+            aX3  = dX3Min:dT:dX3Max;
+            mMat = oMF.Eval(aX1,aX2,aX3);
             
             if strcmpi(sCoords, 'cylindrical')
-
-                dSIMeanX1  = dMeanX1*dLFac;
-                dSIMeanX2  = dMeanX2*dLFac;
-                dSISigmaX1 = dSigmaX1*dLFac;
-                dSISigmaX2 = dSigmaX2*dLFac;
-                
-                stReturn.Equation = stFunc.Equation;
-                stReturn.X1Mean   = dSIMeanX1;
-                stReturn.X2Mean   = dSIMeanX2;
-                stReturn.X1Sigma  = dSISigmaX1;
-                stReturn.X2Sigma  = dSISigmaX2;
-
-                [dSIMeanX1,  sUnitM1] = fAutoScale(dSIMeanX1, 'm');
-                [dSIMeanX2,  sUnitM2] = fAutoScale(dSIMeanX2, 'm');
-                [dSISigmaX1, sUnitS1] = fAutoScale(dSISigmaX1, 'm');
-                [dSISigmaX2, sUnitS2] = fAutoScale(dSISigmaX2, 'm');
-
-                sFunction = sprintf('%s.*x2', stFunc.ForEval);
-                if ~obj.Silent
-                    fprintf(' Density Function:       %s\n', stFunc.Equation);
-                    fprintf(' X1 Mean, Sigma:         %7.2f, %9.4f [%7.2f %s, %7.2f %s]\n', dMeanX1, dSigmaX1, dSIMeanX1, sUnitM1, dSISigmaX1, sUnitS1);
-                    fprintf(' X2 Mean, Sigma:         %7.2f, %9.4f [%7.2f %s, %7.2f %s]\n', dMeanX2, dSigmaX2, dSIMeanX2, sUnitM2, dSISigmaX2, sUnitS2);
-                    fprintf('\n');
-                end % if
-                
-                % Beam integral
-                aSpanX1 = stFunc.Lims(1):dT:stFunc.Lims(2);
-                aSpanX2 = stFunc.Lims(3):dT:stFunc.Lims(4);
-                for i=1:length(aSpanX2)
-                    aReturn(:,i) = fProfile(aSpanX1,aSpanX2(i))*aSpanX2(i);
+                for r=1:length(aX2)
+                    mMat(r,:) = aX2(r)*mMat(r,:);
                 end % for
-                aReturn  = aReturn.*(aReturn > 0);
-                dBeamInt = 2*pi*sum(aReturn(:))*dT^2;
-                
-                dBeamVol     = dBeamInt * dC^3/dNOmegaP^3;
-                dBeamNum     = dBeamVol * dDensity * dN0;
-                dBeamCharge  = dBeamNum * dE;
-                dBeamDensity = dBeamNum/dBeamVol;
-                dBeamPlasma  = dBeamDensity/(dN0*dPMax);
-                dPeakCurrent = dBeamCharge*dC / sqrt(2*pi*(dSigmaX1*dLFac)^2);
-                
-                stReturn.Volume    = dBeamVol;
-                stReturn.Particles = dBeamNum;
-                stReturn.Charge    = dBeamCharge;
-                stReturn.Density   = dBeamDensity;
-                stReturn.Ratio     = dBeamPlasma;
-                stReturn.Current   = dPeakCurrent;
-                
-                [dPeakCurrent, dCurrentUnit] = fAutoScale(dPeakCurrent, 'A');
-                [dBeamCharge,  sChargeUnit]  = fAutoScale(dBeamCharge,  'C');
-                
-                if ~obj.Silent
-                    fprintf(' Max Plasma Density:     %0.3e m^-3\n', dN0*dPMax);
-                    fprintf(' Max Plasma Frequency:   %0.3e s^-1\n', dMOmegaP);
-                    fprintf('\n');
-                    fprintf(' Beam Integral:          %0.3f \n',     dBeamInt);
-                    fprintf(' Beam Volume:            %0.3e m^3\n',  dBeamVol);
-                    fprintf(' Beam Charge:            %0.3f %s\n',   dBeamCharge, sChargeUnit);
-                    fprintf(' Beam Particle Count:    %0.3e \n',     dBeamNum);
-                    fprintf(' Beam Density:           %0.3e M^-3\n', dBeamDensity);
-                    fprintf('\n');
-                    fprintf(' Beam/Plasma Ratio:      %0.3e \n',     dBeamPlasma);
-                    fprintf('\n');
-                    fprintf(' Beam Peak Current:      %0.3f %s\n',    dPeakCurrent, dCurrentUnit);
+                if iDim == 2
+                    dBeamInt = 2*pi*sum(mMat(:))*dT^2;
+                else
+                    dBeamInt = sum(mMat(:))*dT^3;
                 end % if
+            else
+                if iDim == 3
+                    dBeamInt = sum(mMat(:))*dT^3;
+                end % if
+            end % if
 
+            %
+            % Output
+            %
+
+            dSIMeanX1  = dMeanX1*dLFac;
+            dSIMeanX2  = dMeanX2*dLFac;
+            dSISigmaX1 = dSigmaX1*dLFac;
+            dSISigmaX2 = dSigmaX2*dLFac;
+
+            stReturn.Equation = sMathFunc;
+            stReturn.X1Mean   = dSIMeanX1;
+            stReturn.X2Mean   = dSIMeanX2;
+            stReturn.X1Sigma  = dSISigmaX1;
+            stReturn.X2Sigma  = dSISigmaX2;
+
+            [dSIMeanX1,  sUnitM1] = fAutoScale(dSIMeanX1, 'm');
+            [dSIMeanX2,  sUnitM2] = fAutoScale(dSIMeanX2, 'm');
+            [dSISigmaX1, sUnitS1] = fAutoScale(dSISigmaX1, 'm');
+            [dSISigmaX2, sUnitS2] = fAutoScale(dSISigmaX2, 'm');
+
+            if ~obj.Silent
+                fprintf(' Density Function:       %s\n', sMathFunc);
+                fprintf(' X1 Mean, Sigma:         %7.2f, %9.4f [%7.2f %s, %7.2f %s]\n', dMeanX1, dSigmaX1, dSIMeanX1, sUnitM1, dSISigmaX1, sUnitS1);
+                fprintf(' X2 Mean, Sigma:         %7.2f, %9.4f [%7.2f %s, %7.2f %s]\n', dMeanX2, dSigmaX2, dSIMeanX2, sUnitM2, dSISigmaX2, sUnitS2);
+                fprintf('\n');
+            end % if
+
+            dBeamVol     = dBeamInt * dC^3/dNOmegaP^3;
+            dBeamNum     = dBeamVol * dDensity * dN0;
+            dBeamCharge  = dBeamNum * dE;
+            dBeamDensity = dBeamNum/dBeamVol;
+            dBeamPlasma  = dBeamDensity/(dN0*dPMax);
+            dPeakCurrent = dBeamCharge*dC / sqrt(2*pi*(dSigmaX1*dLFac)^2);
+
+            stReturn.Volume    = dBeamVol;
+            stReturn.Particles = dBeamNum;
+            stReturn.Charge    = dBeamCharge;
+            stReturn.Density   = dBeamDensity;
+            stReturn.Ratio     = dBeamPlasma;
+            stReturn.Current   = dPeakCurrent;
+
+            [dPeakCurrent, dCurrentUnit] = fAutoScale(dPeakCurrent, 'A');
+            [dBeamCharge,  sChargeUnit]  = fAutoScale(dBeamCharge,  'C');
+
+            if ~obj.Silent
+                fprintf(' Max Plasma Density:     %0.3e m^-3\n', dN0*dPMax);
+                fprintf(' Max Plasma Frequency:   %0.3e s^-1\n', dMOmegaP);
+                fprintf('\n');
+                fprintf(' Beam Integral:          %0.3f \n',     dBeamInt);
+                fprintf(' Beam Volume:            %0.3e m^3\n',  dBeamVol);
+                fprintf(' Beam Charge:            %0.3f %s\n',   dBeamCharge, sChargeUnit);
+                fprintf(' Beam Particle Count:    %0.3e \n',     dBeamNum);
+                fprintf(' Beam Density:           %0.3e M^-3\n', dBeamDensity);
+                fprintf('\n');
+                fprintf(' Beam/Plasma Ratio:      %0.3e \n',     dBeamPlasma);
+                fprintf('\n');
+                fprintf(' Beam Peak Current:      %0.3f %s\n',    dPeakCurrent, dCurrentUnit);
             end % if
             
             if ~obj.Silent
