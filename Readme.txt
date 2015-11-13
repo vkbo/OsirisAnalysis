@@ -18,6 +18,8 @@
   Version 1.2.1
   - Bug fixes
   - More code cleanup. Including removing fExtractEQ that has been replaced by class MathFunc.
+  - Added CAxis as an option to all five standard plots.
+  - Fixed reloading of vriables when switching datasets for all plots.
 
   Version 1.2
   - Introduced OsirisType as superclass for Charge, BField, EField, Momentum and Phase.
