@@ -690,7 +690,10 @@ classdef Variables
         function stReturn = EvalPhaseSpace(obj, vVar)
             
             % Output
-            stReturn = {};
+            stReturn.Details = {};
+            stReturn.Dim1    = {};
+            stReturn.Dim2    = {};
+            stReturn.Dim3    = {};
             
             % Check input
             if ~isempty(vVar)
@@ -703,28 +706,30 @@ classdef Variables
                 return;
             end % if
             
-            stReturn(length(cVar)).Input   = [];
-            stReturn(length(cVar)).Dim     = [];
-            stReturn(length(cVar)).Var1    = [];
-            stReturn(length(cVar)).Var2    = [];
-            stReturn(length(cVar)).Var3    = [];
-            stReturn(length(cVar)).Deposit = [];
+            stReturn.Details(length(cVar)).Input   = [];
+            stReturn.Details(length(cVar)).Name    = [];
+            stReturn.Details(length(cVar)).Dim     = [];
+            stReturn.Details(length(cVar)).Var1    = [];
+            stReturn.Details(length(cVar)).Var2    = [];
+            stReturn.Details(length(cVar)).Var3    = [];
+            stReturn.Details(length(cVar)).Deposit = [];
             
             for v=1:length(cVar)
                 
                 sVar = char(cVar{v});
-                stReturn(v).Input   = sVar;
-                stReturn(v).Dim     = 0;
-                stReturn(v).Var1    = '';
-                stReturn(v).Var2    = '';
-                stReturn(v).Var3    = '';
-                stReturn(v).Deposit = 'charge';
+                stReturn.Details(v).Input   = sVar;
+                stReturn.Details(v).Name    = '';
+                stReturn.Details(v).Dim     = 0;
+                stReturn.Details(v).Var1    = '';
+                stReturn.Details(v).Var2    = '';
+                stReturn.Details(v).Var3    = '';
+                stReturn.Details(v).Deposit = 'charge';
                 
                 cParts = strsplit(sVar,'_');
                 if length(cParts) > 1
                     sVar = cParts{1};
                     if sum(ismember(obj.Map.Diag.Deposit,cParts{2})) == 1
-                        stReturn(v).Deposit = cParts{2};
+                        stReturn.Details(v).Deposit = cParts{2};
                     end % if
                 end % if
                 
@@ -741,17 +746,37 @@ classdef Variables
                                 sVar = '';
                             end % if
 
-                            stReturn(v).Dim = i;
+                            stReturn.Details(v).Dim = i;
                             switch(i)
-                                case 1; stReturn(v).Var1 = sCheck;
-                                case 2; stReturn(v).Var2 = sCheck;
-                                case 3; stReturn(v).Var3 = sCheck;
+                                case 1; stReturn.Details(v).Var1 = sCheck;
+                                case 2; stReturn.Details(v).Var2 = sCheck;
+                                case 3; stReturn.Details(v).Var3 = sCheck;
                             end % switch
 
                             break;
                         end % if
                     end % for
                 end % for
+                
+                sDimVar = stReturn.Details(v).Var1;
+                if stReturn.Details(v).Dim > 1
+                    sDimVar = [sDimVar, stReturn.Details(v).Var2];
+                end % if
+                if stReturn.Details(v).Dim > 2
+                    sDimVar = [sDimVar, stReturn.Details(v).Var3];
+                end % if
+
+                switch(stReturn.Details(v).Dim)
+                    case 1
+                        stReturn.Dim1{end+1} = [sDimVar, '_', stReturn.Details(v).Deposit];
+                    case 2
+                        stReturn.Dim2{end+1} = [sDimVar, '_', stReturn.Details(v).Deposit];
+                    case 3
+                        stReturn.Dim3{end+1} = [sDimVar, '_', stReturn.Details(v).Deposit];
+                end % switch
+                
+                stReturn.Details(v).Name = [sDimVar, '_', stReturn.Details(v).Deposit];
+                
             end % for
             
         end % function
