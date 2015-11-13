@@ -93,7 +93,7 @@ function Analyse2D
     fMain.Units        = 'Pixels';
     fMain.MenuBar      = 'None';
     fMain.Position     = [aFPos(1:2) 560 640];
-    fMain.Name         = 'OsirisAnalysis Version 1.2.1 - GUI';
+    fMain.Name         = 'OsirisAnalysis Version Dev1.3 - GUI';
     fMain.NumberTitle  = 'Off';
     fMain.DockControls = 'Off';
     fMain.Tag          = 'uiOA-Main';
