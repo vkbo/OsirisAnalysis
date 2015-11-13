@@ -72,6 +72,7 @@ function Analyse2D
         X.Plot(f).MaxLim  = [0.0 0.0 0.0 0.0];
         X.Plot(f).Limits  = [0.0 0.0 0.0 0.0];
         X.Plot(f).Scale   = [1.0 1.0];
+        X.Plot(f).CAxis   = [];
     end % for
     for f=7:iXFig
         X.Plot(f).Figure  = f;
@@ -400,9 +401,14 @@ function Analyse2D
         iY = 115;
         
         iY = iY - 25;
+        [~,iVal] = incellarray(X.Plot(t).Data,X.Data.Field);
+        iVal     = iVal+(iVal==0);
         uicontrol(bgTab(t),'Style','Text','String','Field','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Field,'Value',1,'Position',[85 iY 150 20],'Callback',{@fPlotSetField,t});
-        
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Field,'Value',iVal,'Position',[85 iY 150 20],'Callback',{@fPlotSetField,t});
+
+        uicontrol(bgTab(t),'Style','Text','String','CAxis','Position',[255 iY+1 60 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','Edit','String','','Position',[300 iY 100 20],'Callback',{@fPlotSetCAxis,t,1});
+
     end % function
 
     function fCtrlPhase2D(t)
@@ -787,6 +793,7 @@ function Analyse2D
     function fToggleFig(~,~,f)
         
         if X.DataSet == 0
+            fOut('No dataset loaded',3);
             return;
         end % if
         
@@ -873,6 +880,7 @@ function Analyse2D
     function fToggleXFig(~,~,f)
         
         if X.DataSet == 0
+            fOut('No dataset loaded',3);
             return;
         end % if
         
@@ -959,9 +967,9 @@ function Analyse2D
                     fResetTab(f);
                     fCtrlPlasmaDensity(f);
 
-                %case 'Field Density'
-                %    fResetTab(f);
-                %    fCtrlFieldDensity(f);
+                case 'Field Density'
+                    fResetTab(f);
+                    fCtrlFieldDensity(f);
 
                 %case 'Phase 2D'
                 %    fResetTab(f);
@@ -1051,7 +1059,8 @@ function Analyse2D
                         iMakeSym = 1;
                         figure(X.Plot(f).Figure); clf;
                         X.Plot(f).Return = fPlotField2D(oData,X.Time.Dump,oVar.Reverse(X.Plot(f).Data,'Full'), ...
-                            'IsSubPlot','No','AutoResize','Off','HideDump','Yes','Limits',[aHLim aVLim]);
+                            'IsSubPlot','No','AutoResize','Off','HideDump','Yes','Limits',[aHLim aVLim], ...
+                            'CAxis',X.Plot(f).CAxis);
 
                     case 'Phase 2D'
                         iMakeSym = 0;
@@ -1185,7 +1194,7 @@ function Analyse2D
     
     function fOut(sText, iType)
         
-        stCol = {'#00ff00;','#ffdd66;','#ff6666;'};
+        stCol = {'#00ff00;','#ffdd66;','#ff9999;'};
         if rand >= 0.99
             stPrefix = {'','OOPS: ','WTF: '};
         else
@@ -1422,6 +1431,37 @@ function Analyse2D
 
         fRefresh(f);
 
+    end % function
+
+    function fPlotSetCAxis(uiSrc,~,f,iSym)
+        
+        sValue = strtrim(uiSrc.String);
+        cValue = strsplit(sValue,' ');
+        
+        aCAxis = [0.0 1.0];
+
+        if numel(cValue) == 1
+            if iSym
+                aCAxis(1) = -abs(str2double(cValue{1}));
+                aCAxis(2) =  abs(str2double(cValue{1}));
+                sReturn   = sprintf('%.1f %.1f', aCAxis(1), aCAxis(2));
+            else
+                aCAxis(2) = str2double(cValue{1});
+                sReturn   = sprintf('0.0 %.1f', aCAxis(2));
+            end % if
+        elseif numel(cValue) > 1
+            aCAxis(1) = str2double(cValue{1});
+            aCAxis(2) = str2double(cValue{2});
+            sReturn   = sprintf('%.1f %.1f', aCAxis(1), aCAxis(2));
+        else
+            aCAxis    = [];
+            sReturn   = '';
+        end % if
+        
+        uiSrc.String    = sReturn;
+        X.Plot(f).CAxis = aCAxis;
+        fRefresh(f);
+        
     end % function
    
 end % function
