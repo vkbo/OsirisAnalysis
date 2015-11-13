@@ -2,7 +2,7 @@
   Osiris Analysis Toolbox
  ******************************************
   MATLAB package for analysing Osiris data
-  Current version: Dev1.3
+  Current version: 1.2.1
  
 
   Developed by:
@@ -15,8 +15,9 @@
   Development History
  =====================
 
-  Version 1.3
-  - In development
+  Version 1.2.1
+  - Bug fixes
+  - More code cleanup. Including removing fExtractEQ that has been replaced by class MathFunc.
 
   Version 1.2
   - Introduced OsirisType as superclass for Charge, BField, EField, Momentum and Phase.
