@@ -467,14 +467,14 @@ classdef OsirisConfig
             
             % Look for species in raw data
             for i=1:iRows
-                sBeam = obj.Raw{i,7};
-                if ~strcmp(sBeam,sPrev)
-                    if obj.Translate.Lookup(sBeam).isPlasma
-                        stSpecies.Plasma{end+1,1} = sBeam;
+                sSpecies = obj.Raw{i,7};
+                if ~strcmp(sSpecies,sPrev)
+                    if obj.Translate.Lookup(sSpecies).isPlasma
+                        stSpecies.Plasma{end+1,1} = sSpecies;
                     else
-                        stSpecies.Beam{end+1,1} = sBeam;
+                        stSpecies.Beam{end+1,1} = sSpecies;
                     end % if
-                    stSpecies.Species{end+1,1} = sBeam;
+                    stSpecies.Species{end+1,1} = sSpecies;
                     sPrev = obj.Raw{i,7};
                 end % if
             end % for
@@ -508,6 +508,7 @@ classdef OsirisConfig
             stSpecies.DriveBeamCount   = length(stSpecies.DriveBeam);
             stSpecies.WitnessBeamCount = length(stSpecies.WitnessBeam);
             
+            % Write variables
             obj.Variables.Species = stSpecies;
 
         end % function
@@ -859,6 +860,13 @@ classdef OsirisConfig
                 aValue = obj.fExtractFixedNum(sPlasma,'diag_species','raw_fraction',[0]);
                 obj.Variables.Plasma.(sPlasma).RAWFraction = double(aValue(1));
                                 
+                % Diagnostics
+                sValue = obj.fExtractRaw(sPlasma,'diag_species','phasespaces');
+                sValue = strrep(sValue,'"','');
+                sValue = strrep(sValue,'''','');
+                cValue = strsplit(sValue,',');
+                obj.Variables.Beam.(sPlasma).PhaseSpaces = obj.Translate.EvalPhaseSpace(cValue);
+
             end % for
             
         end % function
@@ -927,6 +935,13 @@ classdef OsirisConfig
                 
                 aValue = obj.fExtractFixedNum(sBeam,'diag_species','raw_fraction',[0]);
                 obj.Variables.Beam.(sBeam).RAWFraction = double(aValue(1));
+                
+                % Diagnostics
+                sValue = obj.fExtractRaw(sBeam,'diag_species','phasespaces');
+                sValue = strrep(sValue,'"','');
+                sValue = strrep(sValue,'''','');
+                cValue = strsplit(sValue,',');
+                obj.Variables.Beam.(sBeam).PhaseSpaces = obj.Translate.EvalPhaseSpace(cValue);
                 
             end % for
             

@@ -10,13 +10,13 @@ classdef Variables
     % Properties
     %
 
-    properties(GetAccess = 'public', SetAccess = 'private')
+    properties(GetAccess='public', SetAccess='private')
         
         Coords = 1;  % 0 = cylindrical, 1 = cartesian
 
     end % properties
 
-    properties (GetAccess = 'private', SetAccess = 'private')
+    properties(GetAccess='public', SetAccess='private')
 
         Types = {};
         Map   = {};
@@ -98,8 +98,8 @@ classdef Variables
                                      'div_e','div_b','chargecons','psi', ...
                                      's1','s2','s3'};
             stMap.Diag.Species    = {'charge','m','ene','q1','q2','q3','j1','j2','j3'};
-            stMap.Diag.PhaseSpace = {'x1','x2','x3','p1','p2','p3','l1','l2','l3','g','gl', ...
-                                     'charge','m','ene','|charge|','q1','q2','q3','j1','j2','j3'};
+            stMap.Diag.PhaseSpace = {'x1','x2','x3','p1','p2','p3','l1','l2','l3','gl','g'};
+            stMap.Diag.Deposit    = {'charge','m','ene','|charge|','q1','q2','q3','j1','j2','j3'};
 
             % Alternative names used in input deck
             LocalConfig;
@@ -652,6 +652,7 @@ classdef Variables
             stReturn.isValidEMFDiag        = (sum(ismember(obj.Map.Diag.EMF,stReturn.Name)) == 1);
             stReturn.isValidSpeciesDiag    = (sum(ismember(obj.Map.Diag.Species,stReturn.Name)) == 1);
             stReturn.isValidPhaseSpaceDiag = (sum(ismember(obj.Map.Diag.PhaseSpace,stReturn.Name)) == 1);
+            stReturn.isValidDepositDiag    = (sum(ismember(obj.Map.Diag.Deposit,stReturn.Name)) == 1);
             
         end % function
 
@@ -684,6 +685,75 @@ classdef Variables
                 end % if
             end % for
 
+        end % function
+        
+        function stReturn = EvalPhaseSpace(obj, vVar)
+            
+            % Output
+            stReturn = {};
+            
+            % Check input
+            if ~isempty(vVar)
+                if iscell(vVar)
+                    cVar = vVar;
+                else
+                    cVar = {vVar};
+                end % if
+            else
+                return;
+            end % if
+            
+            stReturn(length(cVar)).Input   = [];
+            stReturn(length(cVar)).Dim     = [];
+            stReturn(length(cVar)).Var1    = [];
+            stReturn(length(cVar)).Var2    = [];
+            stReturn(length(cVar)).Var3    = [];
+            stReturn(length(cVar)).Deposit = [];
+            
+            for v=1:length(cVar)
+                
+                sVar = char(cVar{v});
+                stReturn(v).Input   = sVar;
+                stReturn(v).Dim     = 0;
+                stReturn(v).Var1    = '';
+                stReturn(v).Var2    = '';
+                stReturn(v).Var3    = '';
+                stReturn(v).Deposit = 'charge';
+                
+                cParts = strsplit(sVar,'_');
+                if length(cParts) > 1
+                    sVar = cParts{1};
+                    if sum(ismember(obj.Map.Diag.Deposit,cParts{2})) == 1
+                        stReturn(v).Deposit = cParts{2};
+                    end % if
+                end % if
+                
+                for i=1:3
+                    for p=1:length(obj.Map.Diag.PhaseSpace)
+
+                        sCheck = obj.Map.Diag.PhaseSpace{p};
+                        if length(sVar) < length(sCheck); continue; end % if
+
+                        if strcmpi(sCheck, sVar(1:length(sCheck)))
+                            if length(sVar) > length(sCheck) + 1
+                                sVar = sVar(length(sCheck)+1:end);
+                            else
+                                sVar = '';
+                            end % if
+
+                            stReturn(v).Dim = i;
+                            switch(i)
+                                case 1; stReturn(v).Var1 = sCheck;
+                                case 2; stReturn(v).Var2 = sCheck;
+                                case 3; stReturn(v).Var3 = sCheck;
+                            end % switch
+
+                            break;
+                        end % if
+                    end % for
+                end % for
+            end % for
+            
         end % function
 
     end % methods
