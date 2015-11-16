@@ -88,6 +88,7 @@ classdef Variables
             stMap.Allowed.Quantity     = {'charge','|charge|','chargecons','m','ene','g','gl','psi','t'};
             stMap.Allowed.Flux         = {'q1','q2','q3'};
             stMap.Allowed.Poynting     = {'s1','s2','s3'};
+            stMap.Allowed.RawAxis      = {'x1','x2','x3','p1','p2','p3','ene','charge','tag1','tag2'};
 
             % Osiris diagnostics options
             stMap.Diag.EMF        = {'e1','e2','e3','b1','b2','b3', ...

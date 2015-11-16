@@ -375,6 +375,43 @@ classdef Phase < OsirisType
             
         end % function
         
+        function stReturn = RawHist1D(obj, sAxis, varargin)
+
+            % Input/Output
+            stReturn = {};
+
+            oOpt = inputParser;
+            addParameter(oOpt, 'Grid', 100);
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
+            
+            iAxis = obj.Data.RawToIndex(lower(sAxis));
+            if iAxis == 0
+                fprintf(2,'Error: Unrecognised axis ''%s'' in Phase.RawHist1D.\n',sAxis);
+                return;
+            end % if
+            
+            % Get data
+            
+            aRaw = obj.Data.Data(obj.Time, 'RAW', '', obj.Species.Name);
+            
+            
+            stReturn.Raw = aRaw;
+
+        end % function
+
+        function stReturn = RawHist2D(obj, sAxis1, sAxis2, varargin)
+
+            % Input/Output
+            stReturn = {};
+        
+            oOpt = inputParser;
+            addParameter(oOpt, 'Grid', [1000 1000]);
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
+
+        end % function
+        
         function stReturn = CheckVariable(obj, sCheck, iDim)
             
             stReturn.Input   = '';
