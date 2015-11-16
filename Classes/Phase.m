@@ -381,7 +381,8 @@ classdef Phase < OsirisType
             stReturn = {};
 
             oOpt = inputParser;
-            addParameter(oOpt, 'Grid', 100);
+            addParameter(oOpt, 'Grid',  100);
+            addParameter(oOpt, 'Count', 'charge');
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
             
@@ -394,7 +395,26 @@ classdef Phase < OsirisType
             % Get data
             
             aRaw = obj.Data.Data(obj.Time, 'RAW', '', obj.Species.Name);
+            [iN,~] = size(aRaw);
             
+            dMin  = min(aRaw(:,iAxis));
+            dMax  = max(aRaw(:,iAxis));
+            dSpan = dMax-dMin;
+            dDel  = dSpan/(stOpt.Grid);
+            
+            aBins = linspace(dMin, dMax, stOpt.Grid+1);
+            aAxis = linspace(dMin,dMax,stOpt.Grid);
+            aData = zeros(1,stOpt.Grid);
+            
+            %for i=1:iN
+            for i=1:iN
+                iBin = round((aRaw(i,iAxis)-dMin)/dDel)+1;
+                if iBin > 100
+                    (aRaw(i,iAxis)-dMin)/dDel
+                    iBin
+                end % if
+                %aData(iBin) = aData(iBin) + aRaw(i,8);
+            end % for
             
             stReturn.Raw = aRaw;
 
