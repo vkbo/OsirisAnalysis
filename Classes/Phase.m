@@ -96,10 +96,15 @@ classdef Phase < OsirisType
             stOpt = oOpt.Results;
             
             % Get data
-            aData     = obj.Data.Data(obj.Time,'PHA',cAxis.Input,obj.Species.Name);
+            aData     = transpose(obj.Data.Data(obj.Time,'PHA',cAxis.Input,obj.Species.Name));
             aAxis     = obj.fGetDiagAxis(sAxis);
             stAxis    = obj.fConvertAxis(cAxis.Input);
             stDeposit = obj.fConvertDeposit(cAxis.Deposit);
+            
+            if obj.Cylindrical && strcmpi(cAxis.Input, 'x2')
+                aData = [fliplr(aData), aData];
+                aAxis = [-fliplr(aAxis), aAxis];
+            end % if
 
             % Prepare data
             aData = aData * stDeposit.Fac;
@@ -110,12 +115,12 @@ classdef Phase < OsirisType
             if ~isempty(stOpt.Lim)
                 iMin  = fGetIndex(aAxis, stOpt.Lim(1));
                 iMax  = fGetIndex(aAxis, stOpt.Lim(2));
-                aData = aData(:,iMin:iMax);
+                aData = aData(iMin:iMax);
                 aAxis = aAxis(iMin:iMax);
             end % if
             
             % Return
-            stReturn.Data        = aData;
+            stReturn.Data        = aData/dSum;
             stReturn.Axis        = aAxis;
             stReturn.AxisName    = cAxis.Var1;
             stReturn.AxisRange   = [aAxis(1) aAxis(end)];
@@ -124,7 +129,7 @@ classdef Phase < OsirisType
             stReturn.Deposit     = cAxis.Deposit;
             stReturn.DepositFac  = stDeposit.Fac;
             stReturn.DepositUnit = stDeposit.Unit;
-            stReturn.Dataset     = cAxis.Input;
+            stReturn.DataSet     = cAxis.Input;
             stReturn.Ratio       = sum(aData(:))/dSum;
             
         end % function
