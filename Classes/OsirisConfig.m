@@ -865,7 +865,7 @@ classdef OsirisConfig
                 sValue = strrep(sValue,'"','');
                 sValue = strrep(sValue,'''','');
                 cValue = strsplit(sValue,',');
-                obj.Variables.Beam.(sPlasma).PhaseSpaces = obj.Translate.EvalPhaseSpace(cValue);
+                obj.Variables.Plasma.(sPlasma).PhaseSpaces = obj.Translate.EvalPhaseSpace(cValue);
 
             end % for
             
