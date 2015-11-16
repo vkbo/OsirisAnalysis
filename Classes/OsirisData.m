@@ -339,10 +339,6 @@ classdef OsirisData
             iDim      = obj.Config.Variables.Simulation.Dimensions;
             sCoords   = obj.Config.Variables.Simulation.Coordinates;
 
-            iNX1      = obj.Config.Variables.Simulation.BoxNX1;
-            iNX2      = obj.Config.Variables.Simulation.BoxNX2;
-            iNX3      = obj.Config.Variables.Simulation.BoxNX3;
-
             dX1Min    = obj.Config.Variables.Simulation.BoxX1Min;
             dX1Max    = obj.Config.Variables.Simulation.BoxX1Max;
             dX2Min    = obj.Config.Variables.Simulation.BoxX2Min;
@@ -350,10 +346,10 @@ classdef OsirisData
             dX3Min    = obj.Config.Variables.Simulation.BoxX3Min;
             dX3Max    = obj.Config.Variables.Simulation.BoxX3Max;
 
-            dMeanX1   = obj.Config.Variables.Beam.(sSpecies).MeanX1;
-            dMeanX2   = obj.Config.Variables.Beam.(sSpecies).MeanX2;
-            dSigmaX1  = obj.Config.Variables.Beam.(sSpecies).SigmaX1;
-            dSigmaX2  = obj.Config.Variables.Beam.(sSpecies).SigmaX2;
+            %dMeanX1   = obj.Config.Variables.Beam.(sSpecies).MeanX1;
+            %dMeanX2   = obj.Config.Variables.Beam.(sSpecies).MeanX2;
+            %dSigmaX1  = obj.Config.Variables.Beam.(sSpecies).SigmaX1;
+            %dSigmaX2  = obj.Config.Variables.Beam.(sSpecies).SigmaX2;
             
             if ~obj.Silent
                 fprintf('\n');
@@ -389,26 +385,26 @@ classdef OsirisData
             % Output
             %
 
-            dSIMeanX1  = dMeanX1*dLFac;
-            dSIMeanX2  = dMeanX2*dLFac;
-            dSISigmaX1 = dSigmaX1*dLFac;
-            dSISigmaX2 = dSigmaX2*dLFac;
+            %dSIMeanX1  = dMeanX1*dLFac;
+            %dSIMeanX2  = dMeanX2*dLFac;
+            %dSISigmaX1 = dSigmaX1*dLFac;
+            %dSISigmaX2 = dSigmaX2*dLFac;
 
             stReturn.Equation = sMathFunc;
-            stReturn.X1Mean   = dSIMeanX1;
-            stReturn.X2Mean   = dSIMeanX2;
-            stReturn.X1Sigma  = dSISigmaX1;
-            stReturn.X2Sigma  = dSISigmaX2;
+            %stReturn.X1Mean   = dSIMeanX1;
+            %stReturn.X2Mean   = dSIMeanX2;
+            %stReturn.X1Sigma  = dSISigmaX1;
+            %stReturn.X2Sigma  = dSISigmaX2;
 
-            [dSIMeanX1,  sUnitM1] = fAutoScale(dSIMeanX1, 'm');
-            [dSIMeanX2,  sUnitM2] = fAutoScale(dSIMeanX2, 'm');
-            [dSISigmaX1, sUnitS1] = fAutoScale(dSISigmaX1, 'm');
-            [dSISigmaX2, sUnitS2] = fAutoScale(dSISigmaX2, 'm');
+            %[dSIMeanX1,  sUnitM1] = fAutoScale(dSIMeanX1, 'm');
+            %[dSIMeanX2,  sUnitM2] = fAutoScale(dSIMeanX2, 'm');
+            %[dSISigmaX1, sUnitS1] = fAutoScale(dSISigmaX1, 'm');
+            %[dSISigmaX2, sUnitS2] = fAutoScale(dSISigmaX2, 'm');
 
             if ~obj.Silent
                 fprintf(' Density Function:       %s\n', sMathFunc);
-                fprintf(' X1 Mean, Sigma:         %7.2f, %9.4f [%7.2f %s, %7.2f %s]\n', dMeanX1, dSigmaX1, dSIMeanX1, sUnitM1, dSISigmaX1, sUnitS1);
-                fprintf(' X2 Mean, Sigma:         %7.2f, %9.4f [%7.2f %s, %7.2f %s]\n', dMeanX2, dSigmaX2, dSIMeanX2, sUnitM2, dSISigmaX2, sUnitS2);
+                %fprintf(' X1 Mean, Sigma:         %7.2f, %9.4f [%7.2f %s, %7.2f %s]\n', dMeanX1, dSigmaX1, dSIMeanX1, sUnitM1, dSISigmaX1, sUnitS1);
+                %fprintf(' X2 Mean, Sigma:         %7.2f, %9.4f [%7.2f %s, %7.2f %s]\n', dMeanX2, dSigmaX2, dSIMeanX2, sUnitM2, dSISigmaX2, sUnitS2);
                 fprintf('\n');
             end % if
 
@@ -417,16 +413,16 @@ classdef OsirisData
             dBeamCharge  = dBeamNum * dE;
             dBeamDensity = dBeamNum/dBeamVol;
             dBeamPlasma  = dBeamDensity/(dN0*dPMax);
-            dPeakCurrent = dBeamCharge*dC / sqrt(2*pi*(dSigmaX1*dLFac)^2);
+            %dPeakCurrent = dBeamCharge*dC / sqrt(2*pi*(dSigmaX1*dLFac)^2);
 
             stReturn.Volume    = dBeamVol;
             stReturn.Particles = dBeamNum;
             stReturn.Charge    = dBeamCharge;
             stReturn.Density   = dBeamDensity;
             stReturn.Ratio     = dBeamPlasma;
-            stReturn.Current   = dPeakCurrent;
+            %stReturn.Current   = dPeakCurrent;
 
-            [dPeakCurrent, dCurrentUnit] = fAutoScale(dPeakCurrent, 'A');
+            %[dPeakCurrent, dCurrentUnit] = fAutoScale(dPeakCurrent, 'A');
             [dBeamCharge,  sChargeUnit]  = fAutoScale(dBeamCharge,  'C');
 
             if ~obj.Silent
@@ -440,8 +436,8 @@ classdef OsirisData
                 fprintf(' Beam Density:           %0.3e M^-3\n', dBeamDensity);
                 fprintf('\n');
                 fprintf(' Beam/Plasma Ratio:      %0.3e \n',     dBeamPlasma);
-                fprintf('\n');
-                fprintf(' Beam Peak Current:      %0.3f %s\n',    dPeakCurrent, dCurrentUnit);
+                %fprintf('\n');
+                %fprintf(' Beam Peak Current:      %0.3f %s\n',    dPeakCurrent, dCurrentUnit);
             end % if
             
             if ~obj.Silent

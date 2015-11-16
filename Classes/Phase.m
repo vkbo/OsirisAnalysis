@@ -80,187 +80,131 @@ classdef Phase < OsirisType
             % Input/Output
             stReturn = {};
             
+            % Check Axis input
+            cAxis = obj.CheckVariable(sAxis, 1);
+            if isempty(cAxis.Input)
+                if ~obj.Data.Silent
+                    fprintf(2,'Error: PhaseSpace variable ''%s'' not found.\n', sAxis);
+                end % if
+                return;
+            end % if
+
+            % Read input parameters
+            oOpt = inputParser;
+            addParameter(oOpt, 'Lim', []);
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
+            
+            % Get data
+            aData     = obj.Data.Data(obj.Time,'PHA',cAxis.Input,obj.Species.Name);
+            aAxis     = obj.fGetDiagAxis(sAxis);
+            stAxis    = obj.fConvertAxis(cAxis.Input);
+            stDeposit = obj.fConvertDeposit(cAxis.Deposit);
+
+            % Prepare data
+            aData = aData * stDeposit.Fac;
+            aAxis = aAxis * stAxis.Fac;
+            dSum  = sum(aData(:));
+            
+            % Crop
+            if ~isempty(stOpt.Lim)
+                iMin  = fGetIndex(aAxis, stOpt.Lim(1));
+                iMax  = fGetIndex(aAxis, stOpt.Lim(2));
+                aData = aData(:,iMin:iMax);
+                aAxis = aAxis(iMin:iMax);
+            end % if
+            
+            % Return
+            stReturn.Data        = aData;
+            stReturn.Axis        = aAxis;
+            stReturn.AxisName    = cAxis.Var1;
+            stReturn.AxisRange   = [aAxis(1) aAxis(end)];
+            stReturn.AxisFac     = stAxis.Fac;
+            stReturn.AxisUnit    = stAxis.Unit;
+            stReturn.Deposit     = cAxis.Deposit;
+            stReturn.DepositFac  = stDeposit.Fac;
+            stReturn.DepositUnit = stDeposit.Unit;
+            stReturn.Dataset     = cAxis.Input;
+            stReturn.Ratio       = sum(aData(:))/dSum;
+            
         end % function
 
-        function stReturn = Phase2D(obj, sAxis1, sAxis2, varargin)
+        function stReturn = Phase2D(obj, sAxis, varargin)
             
             % Input/Output
             stReturn = {};
             
-            vAxis1 = obj.Data.Translate.Lookup(sAxis1);
-            vAxis2 = obj.Data.Translate.Lookup(sAxis2);
-            
-            if ~vAxis1.isValidPhaseSpaceDiag
-                fprintf(2, '%s is not a valid axis.\n',sAxis1);
+            % Check Axis input
+            cAxis = obj.CheckVariable(sAxis, 2);
+            if isempty(cAxis.Input)
+                if ~obj.Data.Silent
+                    fprintf(2,'Error: PhaseSpace variable ''%s'' not found.\n', sAxis);
+                end % if
                 return;
             end % if
 
-            if ~vAxis2.isValidPhaseSpaceDiag
-                fprintf(2, '%s is not a valid axis.\n',sAxis2);
-                return;
-            end % if
-            
-            sAxis = '';
-            if obj.Data.DataSetExists('PHA',sprintf('%s%s',vAxis1.Name,vAxis2.Name),obj.Species.Name)
-                sAxis   = sprintf('%s%s',vAxis1.Name,vAxis2.Name);
-                bRotate = false;
-            end % if
-            if obj.Data.DataSetExists('PHA',sprintf('%s%s',vAxis2.Name,vAxis1.Name),obj.Species.Name)
-                sAxis   = sprintf('%s%s',vAxis2.Name,vAxis1.Name);
-                bRotate = true;
-            end % if
-            if isempty(sAxis)
-                fprintf(2, 'There is no combined phase data for %s and %s.\n',sAxis1,sAxis2);
-                return;
-            end % if
-            
             % Read input parameters
             oOpt = inputParser;
-            addParameter(oOpt, 'HLim',  []);
-            addParameter(oOpt, 'HAuto', 'No');
-            addParameter(oOpt, 'VLim',  []);
-            addParameter(oOpt, 'VAuto', 'No');
+            addParameter(oOpt, 'HLim', []);
+            addParameter(oOpt, 'VLim', []);
+            addParameter(oOpt, 'Flip', 'No');
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
             
-            % Get dataset values
-            dEMass = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
+            if strcmpi(stOpt.Flip, 'Yes')
+                sAxis1 = cAxis.Var2;
+                sAxis2 = cAxis.Var1;
+            else
+                sAxis1 = cAxis.Var1;
+                sAxis2 = cAxis.Var2;
+            end % if
             
-            % Retrieve data
-            aData = obj.Data.Data(obj.Time,'PHA',sAxis,obj.Species.Name);
-            dSum  = sum(aData(:));
-            aData = aData/dSum;
+            % Get data
+            aData     = obj.Data.Data(obj.Time,'PHA',cAxis.Input,obj.Species.Name);
+            aHAxis    = obj.fGetDiagAxis(sAxis1);
+            aVAxis    = obj.fGetDiagAxis(sAxis2);
+            stHAxis   = obj.fConvertAxis(sAxis1);
+            stVAxis   = obj.fConvertAxis(sAxis2);
+            stDeposit = obj.fConvertDeposit(cAxis.Deposit);
             
-            if bRotate
+            if strcmpi(stOpt.Flip, 'Yes')
                 aData = transpose(aData);
             end % if
             
-            aHAxis = obj.fGetDiagAxis(sAxis1);
-            aVAxis = obj.fGetDiagAxis(sAxis2);
-
-            % Return ranges
-            stReturn.AxisRange = [aHAxis(1) aHAxis(end) aVAxis(1) aVAxis(end)];
-            stReturn.AxisFac   = obj.AxisFac(1)*[1.0 1.0];
-            stReturn.AxisUnit  = {'N','N'};
-
-            if strcmpi(obj.Units, 'SI')
-                stReturn.AxisUnit = {'m','m'};
-                if strcmpi(sAxis1(1),'p')
-                    stReturn.AxisFac(1)  = dEMass;
-                    stReturn.AxisUnit{1} = 'eV/c';
-                end % if
-                if strcmpi(sAxis2(1),'p')
-                    stReturn.AxisFac(2)  = dEMass;
-                    stReturn.AxisUnit{2} = 'eV/c';
-                end % if
-            end % if
+            % Prepare data
+            aData  = aData * stDeposit.Fac;
+            aHAxis = aHAxis * stHAxis.Fac;
+            aVAxis = aVAxis * stVAxis.Fac;
+            dSum   = sum(aData(:));
 
             % Crop data and axes
-            if ~isempty(stOpt.HLim) || strcmpi(stOpt.HAuto, 'Yes')
-
-                if strcmpi(stOpt.HAuto, 'No')
-                
-                    iMin = fGetIndex(aHAxis, stOpt.HLim(1));
-                    iMax = fGetIndex(aHAxis, stOpt.HLim(2));
-                    
-                else
-                    
-                    % Auto scale
-                    iLen = length(aHAxis);
-
-                    iMin = 1;
-                    for i=1:iLen
-                        if sum(aData(:,i)) > 0
-                            iMin = i;
-                            break;
-                        end % if
-                    end % for
-
-                    iMax = iLen;
-                    for i=iMax:-1:1
-                        if sum(aData(:,i)) > 0
-                            iMax = i;
-                            break;
-                        end % if
-                    end % for
-                    
-                    iMargin = floor((iMax-iMin)*0.5);
-                    if iMargin < 10
-                        iMargin = 10;
-                    end % if
-                    iMin = iMin-iMargin;
-                    iMax = iMax+iMargin;
-                    
-                    if iMin < 1
-                        iMin = 1;
-                    end % if
-                    if iMax > iLen
-                        iMax = iLen;
-                    end % if
-
-                end % if
-
-                % Crop
+            if ~isempty(stOpt.HLim)
+                iMin   = fGetIndex(aHAxis, stOpt.HLim(1));
+                iMax   = fGetIndex(aHAxis, stOpt.HLim(2));
                 aData  = aData(:,iMin:iMax);
                 aHAxis = aHAxis(iMin:iMax);
-
             end % if
 
-            if ~isempty(stOpt.VLim) || strcmpi(stOpt.VAuto, 'Yes')
-
-                if strcmpi(stOpt.VAuto, 'No')
-                
-                    iMin   = fGetIndex(aVAxis, stOpt.VLim(1));
-                    iMax   = fGetIndex(aVAxis, stOpt.VLim(2));
-                    
-                else
-                    
-                    % Auto scale
-                    iLen = length(aVAxis);
-                    
-                    iMin = 1;
-                    for i=1:iLen
-                        if sum(aData(i,:)) > 0
-                            iMin = i;
-                            break;
-                        end % if
-                    end % for
-
-                    iMax = iLen;
-                    for i=iMax:-1:1
-                        if sum(aData(i,:)) > 0
-                            iMax = i;
-                            break;
-                        end % if
-                    end % for
-                    
-                    iMargin = floor((iMax-iMin)*0.5);
-                    if iMargin < 10
-                        iMargin = 10;
-                    end % if
-                    iMin = iMin-iMargin;
-                    iMax = iMax+iMargin;
-                    
-                    if iMin < 1
-                        iMin = 1;
-                    end % if
-                    if iMax > iLen
-                        iMax = iLen;
-                    end % if
-                    
-                end % if
-
-                % Crop
+            if ~isempty(stOpt.VLim)
+                iMin   = fGetIndex(aVAxis, stOpt.VLim(1));
+                iMax   = fGetIndex(aVAxis, stOpt.VLim(2));
                 aData  = aData(iMin:iMax,:);
                 aVAxis = aVAxis(iMin:iMax);
-                
             end % if
 
-            stReturn.Data    = aData;
-            stReturn.Ratio   = abs(sum(aData(:)));
-            stReturn.HAxis   = aHAxis;
-            stReturn.VAxis   = aVAxis;
-            stReturn.DataSet = sAxis;
+            % Return
+            stReturn.Data        = aData/dSum;
+            stReturn.HAxis       = aHAxis;
+            stReturn.VAxis       = aVAxis;
+            stReturn.AxisName    = {sAxis1, sAxis2};
+            stReturn.AxisRange   = [aHAxis(1) aHAxis(end) aVAxis(1) aVAxis(end)];
+            stReturn.AxisFac     = [stHAxis.Fac, stVAxis.Fac];
+            stReturn.AxisUnit    = {stHAxis.Unit, stVAxis.Unit};
+            stReturn.Deposit     = cAxis.Deposit;
+            stReturn.DepositFac  = stDeposit.Fac;
+            stReturn.DepositUnit = stDeposit.Unit;
+            stReturn.DataSet     = cAxis.Input;
+            stReturn.Ratio       = sum(aData(:))/dSum;
             
         end % function
         
@@ -425,6 +369,45 @@ classdef Phase < OsirisType
             stReturn.AxisFac   = [dHFac dVFac];
             
         end % function
+        
+        function stReturn = CheckVariable(obj, sCheck, iDim)
+            
+            stReturn.Input   = '';
+            stReturn.Name    = '';
+            stReturn.Dim     = 0;
+            stReturn.Var1    = '';
+            stReturn.Var2    = '';
+            stReturn.Var3    = '';
+            stReturn.Deposit = '';
+            
+            if nargin < 3
+                iDim = obj.Dim;
+            end % if
+            
+            if obj.Species.isBeam
+                stMap = obj.Data.Config.Variables.Beam.(obj.Species.Name).PhaseSpaces.Details;
+            elseif obj.Species.isPlasma
+                stMap = obj.Data.Config.Variables.Plasma.(obj.Species.Name).PhaseSpaces.Details;
+            else
+                fprintf(2,'Error: Only beam or plasma currently supported.\n');
+                return;
+            end % if
+            
+            [~,iN] = size(stMap);
+            
+            for i=1:iN
+                if stMap(i).Dim == iDim && (strcmpi(stMap(i).Input, sCheck) || strcmpi(stMap(i).Name, sCheck))
+                    stReturn.Input   = stMap(i).Input;
+                    stReturn.Name    = stMap(i).Name;
+                    stReturn.Dim     = stMap(i).Dim;
+                    stReturn.Var1    = stMap(i).Var1;
+                    stReturn.Var2    = stMap(i).Var2;
+                    stReturn.Var3    = stMap(i).Var3;
+                    stReturn.Deposit = stMap(i).Deposit;
+                end % if
+            end % for
+            
+        end % function
     
     end % methods
     
@@ -450,40 +433,151 @@ classdef Phase < OsirisType
                     dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagX1Min;
                     dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagX1Max;
                     iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNX1;
-                    dFac = obj.AxisFac(1);
                 case 'x2'
                     dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagX2Min;
                     dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagX2Max;
                     iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNX2;
-                    dFac = obj.AxisFac(2);
                 case 'x3'
                     dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagX3Min;
                     dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagX3Max;
                     iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNX3;
-                    dFac = obj.AxisFac(3);
                 case 'p1'
                     dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagP1Min;
                     dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagP1Max;
                     iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNP1;
-                    dFac = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
                 case 'p2'
                     dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagP2Min;
                     dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagP2Max;
                     iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNP2;
-                    dFac = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
                 case 'p3'
                     dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagP3Min;
                     dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagP3Max;
                     iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNP3;
-                    dFac = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
+                case 'l1'
+                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagL1Min;
+                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagL1Max;
+                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNL1;
+                case 'l2'
+                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagL2Min;
+                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagL2Max;
+                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNL2;
+                case 'l3'
+                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagL3Min;
+                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagL3Max;
+                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNL3;
+                case 'g'
+                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagGammaMin;
+                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagGammaMax;
+                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNGamma;
+                case 'gl'
+                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagGammaMin;
+                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagGammaMax;
+                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNGamma;
             end % switch
             
-            if strcmpi(obj.Units, 'N')
-                dFac = 1.0;
+            aReturn = linspace(dMin, dMax, iN);
+            
+        end % function
+        
+        function stReturn = fConvertAxis(obj, sAxis)
+
+            % Return Defualts
+            stReturn.Fac  = 1.0;
+            stReturn.Unit = 'N';
+
+            vAxis = obj.Data.Translate.Lookup(sAxis);
+
+            if strcmpi(obj.Units, 'SI')
+                
+                % Spatial Axis
+                if vAxis.isAxis
+                    if strcmpi(sAxis, 'x1')
+                        stReturn.Fac = obj.AxisFac(1);
+                    end % if
+                    if strcmpi(sAxis, 'x2')
+                        stReturn.Fac = obj.AxisFac(2);
+                    end % if
+                    if strcmpi(sAxis, 'x3')
+                        stReturn.Fac = obj.AxisFac(3);
+                    end % if
+                    stReturn.Unit = 'm';
+                end % if
+
+                % Momentum
+                if vAxis.isMomentum || vAxis.isAngular
+                    stReturn.Fac  = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
+                    stReturn.Unit = 'eV/c';
+                end % if
+                
+                % Gamma
+                if strcmpi(vAxis.Name, 'g')
+                    stReturn.Fac  = 1.0;
+                    stReturn.Unit = '\gamma';
+                end % if
+                
+                % Log Gamma
+                if strcmpi(vAxis.Name, 'gl')
+                    stReturn.Fac  = 1.0;
+                    stReturn.Unit = '\log(\gamma)';
+                end % if
+                
             end % if
 
-            aReturn = linspace(dMin, dMax, iN)*dFac;
-            
+        end % function
+
+        function stReturn = fConvertDeposit(obj, sDeposit)
+
+            % Return Defualts
+            stReturn.Fac  = 1.0;
+            stReturn.Unit = 'N';
+
+            vDeposit = obj.Data.Translate.Lookup(sDeposit);
+
+            if strcmpi(obj.Units, 'SI')
+                
+                % Charge Deposit
+                if strcmpi(vDeposit.Name, 'charge') || strcmpi(vDeposit.Name, '|charge|')
+                    stReturn.Fac  = obj.Data.Config.Variables.Convert.SI.ChargeFac;
+                    stReturn.Unit = 'C';
+                end % if
+
+                % Mass Deposit
+                % Not checked for sanity
+                if strcmpi(vDeposit.Name, 'm')
+                    stReturn.Fac  = obj.Data.Config.Variables.Convert.SI.ChargeFac;
+                    stReturn.Unit = 'm_e';
+                end % if
+
+                % Energy Deposit
+                % Not checked for sanity
+                if strcmpi(vDeposit.Name, 'ene')
+                    stReturn.Fac  = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
+                    stReturn.Unit = 'eV/c^2';
+                end % if
+
+                % Current Deposit
+                if vDeposit.isFlux
+                    if strcmpi(vDeposit, 'j1')
+                        stReturn.Fac = obj.Data.Config.Variables.Convert.SI.J1Fac;
+                    end % if
+                    if strcmpi(vDeposit, 'j2')
+                        stReturn.Fac = obj.Data.Config.Variables.Convert.SI.J2Fac;
+                    end % if
+                    if strcmpi(vDeposit, 'j2')
+                        stReturn.Fac = obj.Data.Config.Variables.Convert.SI.J2Fac;
+                    end % if
+                    stReturn.Unit = 'A';
+                end % if
+
+                % Heat Flux
+                if vDeposit.isFlux
+                    fprintf('Warning: Heat flux conversion factor not implemented.\n');
+                    stReturn.Fac  = 1.0;
+                    stReturn.Unit = 'W/m^2';
+                end % if
+                
+            end % if
+
         end % function
         
     end % methods

@@ -855,6 +855,34 @@ classdef OsirisConfig
                 obj.Variables.Plasma.(sPlasma).DiagNP2   = int64(aValue(2));
                 obj.Variables.Plasma.(sPlasma).DiagNP3   = int64(aValue(3));
                 
+                % Angular momentum output
+                
+                aValue = obj.fExtractFixedNum(sPlasma,'diag_species','ps_lmin',[0.0,0.0,0.0]);
+                obj.Variables.Plasma.(sPlasma).DiagL1Min = double(aValue(1));
+                obj.Variables.Plasma.(sPlasma).DiagL2Min = double(aValue(2));
+                obj.Variables.Plasma.(sPlasma).DiagL3Min = double(aValue(3));
+
+                aValue = obj.fExtractFixedNum(sPlasma,'diag_species','ps_lmax',[0.0,0.0,0.0]);
+                obj.Variables.Plasma.(sPlasma).DiagL1Max = double(aValue(1));
+                obj.Variables.Plasma.(sPlasma).DiagL2Max = double(aValue(2));
+                obj.Variables.Plasma.(sPlasma).DiagL3Max = double(aValue(3));
+
+                aValue = obj.fExtractFixedNum(sPlasma,'diag_species','ps_nl',[0,0,0]);
+                obj.Variables.Plasma.(sPlasma).DiagNL1   = int64(aValue(1));
+                obj.Variables.Plasma.(sPlasma).DiagNL2   = int64(aValue(2));
+                obj.Variables.Plasma.(sPlasma).DiagNL3   = int64(aValue(3));
+                
+                % Gamma output
+                
+                aValue = obj.fExtractFixedNum(sPlasma,'diag_species','ps_gammamin',[0.0]);
+                obj.Variables.Plasma.(sPlasma).DiagGammaMin = double(aValue(1));
+
+                aValue = obj.fExtractFixedNum(sPlasma,'diag_species','ps_gammamax',[0.0]);
+                obj.Variables.Plasma.(sPlasma).DiagGammaMax = double(aValue(1));
+
+                aValue = obj.fExtractFixedNum(sPlasma,'diag_species','ps_ngamma',[0]);
+                obj.Variables.Plasma.(sPlasma).DiagNGamma   = int64(aValue(1));
+                
                 % RAW output
                 
                 aValue = obj.fExtractFixedNum(sPlasma,'diag_species','raw_fraction',[0]);
@@ -931,11 +959,50 @@ classdef OsirisConfig
                 obj.Variables.Beam.(sBeam).DiagNP2   = int64(aValue(2));
                 obj.Variables.Beam.(sBeam).DiagNP3   = int64(aValue(3));
                 
+                % Angular momentum output
+                
+                aValue = obj.fExtractFixedNum(sBeam,'diag_species','ps_lmin',[0.0,0.0,0.0]);
+                obj.Variables.Beam.(sBeam).DiagL1Min = double(aValue(1));
+                obj.Variables.Beam.(sBeam).DiagL2Min = double(aValue(2));
+                obj.Variables.Beam.(sBeam).DiagL3Min = double(aValue(3));
+
+                aValue = obj.fExtractFixedNum(sBeam,'diag_species','ps_lmax',[0.0,0.0,0.0]);
+                obj.Variables.Beam.(sBeam).DiagL1Max = double(aValue(1));
+                obj.Variables.Beam.(sBeam).DiagL2Max = double(aValue(2));
+                obj.Variables.Beam.(sBeam).DiagL3Max = double(aValue(3));
+
+                aValue = obj.fExtractFixedNum(sBeam,'diag_species','ps_nl',[0,0,0]);
+                obj.Variables.Beam.(sBeam).DiagNL1   = int64(aValue(1));
+                obj.Variables.Beam.(sBeam).DiagNL2   = int64(aValue(2));
+                obj.Variables.Beam.(sBeam).DiagNL3   = int64(aValue(3));
+                
+                % Gamma output
+                
+                aValue = obj.fExtractFixedNum(sBeam,'diag_species','ps_gammamin',[0.0]);
+                obj.Variables.Beam.(sBeam).DiagGammaMin = double(aValue(1));
+
+                aValue = obj.fExtractFixedNum(sBeam,'diag_species','ps_gammamax',[0.0]);
+                obj.Variables.Beam.(sBeam).DiagGammaMax = double(aValue(1));
+
+                aValue = obj.fExtractFixedNum(sBeam,'diag_species','ps_ngamma',[0]);
+                obj.Variables.Beam.(sBeam).DiagNGamma   = int64(aValue(1));
+
                 % RAW output
                 
                 aValue = obj.fExtractFixedNum(sBeam,'diag_species','raw_fraction',[0]);
                 obj.Variables.Beam.(sBeam).RAWFraction = double(aValue(1));
                 
+                % Beam profile
+                
+                sValue = obj.fExtractRaw(sBeam, 'profile', 'profile_type');
+                obj.Variables.Beam.(sBeam).ProfileType     = strrep(sValue, '"', '');
+                
+                sValue = obj.fExtractRaw(sBeam, 'profile', 'math_func_expr');
+                obj.Variables.Beam.(sBeam).ProfileFunction = strrep(sValue, '"', '');
+                
+                aValue = obj.fExtractFixedNum(sBeam,'profile','density',[0]);
+                obj.Variables.Beam.(sBeam).Density         = double(aValue(1));
+
                 % Diagnostics
                 sValue = obj.fExtractRaw(sBeam,'diag_species','phasespaces');
                 sValue = strrep(sValue,'"','');

@@ -70,7 +70,7 @@ classdef Variables
             stMap.Allowed.Species = [stMap.Allowed.Beam,stMap.Allowed.Plasma];
 
             % Osiris variables
-            stMap.Allowed.Axis         = {'x1','x2','x3'};
+            stMap.Allowed.Axis         = {'x1','x2','x3','xi'};
             stMap.Allowed.Momentum     = {'p1','p2','p3'};
             stMap.Allowed.Angular      = {'l1','l2','l3'};
             stMap.Allowed.Current      = {'j1','j2','j3'};
@@ -178,6 +178,12 @@ classdef Variables
             stMap.Translate.Axis(3).Full  = {'Azimuthal Axis','Vertical Axis'};
             stMap.Translate.Axis(3).Short = {'th','y'};
             stMap.Translate.Axis(3).Tex   = {'\theta','y'};
+
+            stMap.Translate.Axis(4).Name  = 'xi';
+            stMap.Translate.Axis(4).Alt   = {};
+            stMap.Translate.Axis(4).Full  = {'Longitudinal Axis','Longitudinal Axis'};
+            stMap.Translate.Axis(4).Short = {'xi','xi'};
+            stMap.Translate.Axis(4).Tex   = {'\xi','\xi'};
 
             % Momentum
 
