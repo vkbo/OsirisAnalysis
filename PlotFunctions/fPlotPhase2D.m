@@ -89,6 +89,7 @@ function stReturn = fPlotPhase2D(oData, sTime, sSpecies, sAxis, varargin)
     
     if isempty(stData)
         fprintf(2, 'Error: No data.\n');
+        stReturn.Error = 'No data';
         return;
     end % if
 

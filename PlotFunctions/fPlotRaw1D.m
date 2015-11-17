@@ -77,6 +77,7 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
     
     if isempty(stData)
         fprintf(2, 'Error: No data.\n');
+        stReturn.Error = 'No data';
         return;
     end % if
 
@@ -90,7 +91,8 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
     aAxis   = aAxis*dAScale;
 
     stReturn.AxisRange = stData.AxisRange;
-    stReturn.AxisScale = stData.AxisScale;
+    stReturn.AxisScale = stData.AxisScale*dAScale;
+    stReturn.Error     = '';
     
 
     % Plot
@@ -142,7 +144,7 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
 
             hold off;
         catch
-            stReturn.Error = 'Curve fitting failed for fPlotRaw1D.';
+            stReturn.Error = 'Curve fitting failed';
         end % try
         
     end % if

@@ -150,5 +150,4 @@ function stReturn = fPlotField1D(oData, sTime, sField, varargin)
     stReturn.YLim  = ylim;
     stReturn.CLim  = caxis;
 
-end
-
+end % function

@@ -108,6 +108,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     
     if isempty(stData)
         fprintf(2, 'Error: No data.\n');
+        stReturn.Error = 'No data';
         return;
     end % if
 
