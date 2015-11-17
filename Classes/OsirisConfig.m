@@ -16,8 +16,11 @@ classdef OsirisConfig
         File       = '';    % Config file within data directory
         Name       = '';    % Name of the loaded dataset
         Raw        = {};    % Matrix of config file data
-        Variables  = {};    % Struct for all variables
-        N0         = 0.0;   % N0
+        RawTemp    = {};
+        InputDeck  = {};    % Hold all input deck variables
+        Variables  = {};    % Struct for all other variables
+        N0         = 0.0;   % N_0
+        NMax       = 0.0;   % N_max
         HasData    = false; % True if folder 'MS' exists
         HasTracks  = false; % True if folder 'MS/TRACKS' exists
         Completed  = false; % True if folder 'TIMINGS' exists
@@ -41,9 +44,10 @@ classdef OsirisConfig
         
         function obj = OsirisConfig()
             
-            % Setting default N0
+            % Setting default N_0 and N_max
             
-            obj.N0 = 1.0e20;
+            obj.N0   = 1.0e20;
+            obj.NMax = 1.0;
             
             % Initialising variable structs
             
@@ -146,6 +150,7 @@ classdef OsirisConfig
                 end % if
                 
                 obj = obj.fReadFile();
+                obj = obj.fScanInputDeck();
 
                 obj = obj.fGetSimulationVariables();
                 obj = obj.fGetSpecies();
@@ -306,6 +311,58 @@ classdef OsirisConfig
             end % for
             
             obj.Raw = aConfig;
+            
+        end % function
+        
+        function obj = fScanInputDeck(obj)
+            
+            mRaw = obj.Raw;
+            [nR,~] = size(mRaw);
+            
+            cGroupA = {'simulation','node_conf','grid','time_step','restart','space','time', ...
+                       'el_mag_fld','emf_bound','pgc','smooth','diag_emf','particles','collisions', ...
+                       'species','udist','profile','spe_bound','diag_species','cathode', ...
+                       'neutral','diag_neutral','neutral_mov_ions','zpulse','current', ...
+                       'diag_current','antenna_array','antenna'};
+            cGroupB = {'Simulation','NodeConf','Grid','TimeStep','Restart','Space','Time', ...
+                       'EmField','EmfBound','PGC','Smooth','DiagEmf','Particles','Collisions', ...
+                       'Species','UDist','Profile','SpeBound','DiagSpecies','Cathode', ...
+                       'Neutral','DiagNeutral','NeutralMovIons','ZPulse','Current', ...
+                       'DiagCurrent','AntennaArray','Antenna'};
+            mapGroup = containers.Map(cGroupA,cGroupB);
+            
+            cParam = {'SimParam','EMFields','Particles','ZPulses','Current','Antennas'};
+            iParam = 1;
+            stTree = {};
+            
+            for r=1:nR
+                if strcmpi(mRaw{r,1},'simulation') || strcmpi(mRaw{r,1},'node_conf')
+                    iParam = 1;
+                end % if
+                if strcmpi(mRaw{r,1},'el_mag_fld') || strcmpi(mRaw{r,1},'emf_bound')
+                    iParam = 2;
+                end % if
+                if strcmpi(mRaw{r,1},'particles')
+                    iParam = 3;
+                end % if
+                if strcmpi(mRaw{r,1},'zpulse')
+                    iParam = 4;
+                end % if
+                if strcmpi(mRaw{r,1},'current')
+                    iParam = 5;
+                end % if
+                if strcmpi(mRaw{r,1},'antenna_array') || strcmpi(mRaw{r,1},'antenna')
+                    iParam = 6;
+                end % if
+                mRaw{r,7} = cParam{iParam};
+                mRaw{r,8} = mapGroup(mRaw{r,1});
+            end % for
+            
+            r
+            
+            
+            obj.RawTemp   = mRaw;
+            obj.InputDeck = stTree;
             
         end % function
 
