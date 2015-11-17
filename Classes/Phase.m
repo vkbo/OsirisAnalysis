@@ -382,8 +382,8 @@ classdef Phase < OsirisType
 
             oOpt = inputParser;
             addParameter(oOpt, 'Grid',   100);
-            addParameter(oOpt, 'Count',  'Charge');
             addParameter(oOpt, 'Method', 'Deposit');
+            addParameter(oOpt, 'Lim',    []);
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
             
@@ -406,6 +406,9 @@ classdef Phase < OsirisType
                 aW = [ aW; aW];
             end % if
             aW = aW/sum(aW);
+            
+            dMin = min(aA);
+            dMax = max(aA);
 
             % Convert to array
             [aData, aAxis] = fAccu1D(aA, aW, stOpt.Grid,'Method',stOpt.Method);
@@ -413,7 +416,7 @@ classdef Phase < OsirisType
             % Get conversion factor
             if     iAxis == 1 || iAxis == 2 || iAxis == 3
                 dFac  = obj.AxisFac(iAxis);
-                sUnit = obj.AxisUnit(iAxis);
+                sUnit = obj.AxisUnits{iAxis};
             elseif iAxis == 4 || iAxis == 5 || iAxis == 6
                 dFac  = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
                 sUnit = 'eV/c';
@@ -426,10 +429,11 @@ classdef Phase < OsirisType
             end % if
             
             % Return data
-            stReturn.Data     = aData;
-            stReturn.Axis     = aAxis*dFac;
-            stReturn.AxisUnit = sUnit;
-            stReturn.AxisFac  = dFac;
+            stReturn.Data      = aData;
+            stReturn.Axis      = aAxis*dFac;
+            stReturn.AxisUnit  = sUnit;
+            stReturn.AxisScale = dFac;
+            stReturn.AxisRange = [dMin dMax];
 
         end % function
 

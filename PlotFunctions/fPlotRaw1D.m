@@ -1,8 +1,8 @@
 
 %
-%  Function: fPlotPhase1D
-% ************************
-%  Plots 1D Phase Data
+%  Function: fPlotRaw1D
+% **********************
+%  Plots 1D Raw Data
 %
 %  Inputs:
 % =========
@@ -20,7 +20,7 @@
 %  AutoResize  :: Default On
 %
 
-function stReturn = fPlotPhase1D(oData, sTime, sSpecies, sAxis, varargin)
+function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
 
     % Input/Output
 
@@ -28,9 +28,9 @@ function stReturn = fPlotPhase1D(oData, sTime, sSpecies, sAxis, varargin)
 
     if nargin == 0
         fprintf('\n');
-        fprintf('  Function: fPlotPhase1D\n');
-        fprintf(' ************************\n');
-        fprintf('  Plots 1D Phase Data\n');
+        fprintf('  Function: fPlotRaw1D\n');
+        fprintf(' **********************\n');
+        fprintf('  Plots 1D Raw Data\n');
         fprintf('\n');
         fprintf('  Inputs:\n');
         fprintf(' =========\n');
@@ -55,6 +55,9 @@ function stReturn = fPlotPhase1D(oData, sTime, sSpecies, sAxis, varargin)
 
     oOpt = inputParser;
     addParameter(oOpt, 'Lim',        []);
+    addParameter(oOpt, 'Method',     'Deposit');
+    addParameter(oOpt, 'Grid',       100);
+    addParameter(oOpt, 'Fit',        'Gauss1');
     addParameter(oOpt, 'FigureSize', [900 500]);
     addParameter(oOpt, 'HideDump',   'No');
     addParameter(oOpt, 'IsSubPlot',  'No');
@@ -68,28 +71,28 @@ function stReturn = fPlotPhase1D(oData, sTime, sSpecies, sAxis, varargin)
     end % if
 
     % Data
-    oPha      = Phase(oData,vSpecies.Name,'Units','SI');
+    oPha      = Phase(oData,vSpecies.Name,'Units','SI','X1Scale','mm','X2Scale','mm');
     oPha.Time = iTime;
-    stData    = oPha.Phase1D(sAxis,'Lim',stOpt.Lim);
+    stData    = oPha.RawHist1D(sAxis,'Grid',stOpt.Grid,'Lim',stOpt.Lim,'Method',stOpt.Method);
     
     if isempty(stData)
         fprintf(2, 'Error: No data.\n');
         return;
     end % if
 
-    aData    = stData.Data*100;
-    aAxis    = stData.Axis;
-    vAxis    = oData.Translate.Lookup(strrep(stData.AxisName,'x1','xi'));
-    vDeposit = oData.Translate.Lookup(stData.Deposit);
+    aData = stData.Data*100;
+    aAxis = stData.Axis;
+    vAxis = oData.Translate.Lookup(strrep(sAxis,'x1','xi'));
 
-    % Scale Data
-    dAMax = max(abs(aAxis));
-    [dAVal,sAUnit] = fAutoScale(dAMax,stData.AxisUnit);
-    aAxis = aAxis*dAVal/dAMax;
-
-    stReturn.DataSet   = stData.DataSet;
     stReturn.AxisRange = stData.AxisRange;
-    stReturn.AxisScale = dAVal/dAMax;
+    stReturn.AxisScale = stData.AxisScale;
+    
+    % Curve Fitting
+    
+    if ~isempty(stOpt.Fit)
+        
+    end % if
+    
 
     % Plot
     
@@ -98,12 +101,12 @@ function stReturn = fPlotPhase1D(oData, sTime, sSpecies, sAxis, varargin)
         if strcmpi(stOpt.AutoResize, 'On')
             fFigureSize(gcf, stOpt.FigureSize);
         end % if
-        set(gcf,'Name',sprintf('PhaseSpace 1D (%s #%d)',oData.Config.Name,iTime))
+        set(gcf,'Name',sprintf('Raw Data 1D (%s #%d)',oData.Config.Name,iTime))
     else
         cla;
     end % if
 
-    plot(aAxis,aData);
+    stairs(aAxis, aData);
 
     if strcmpi(stOpt.HideDump, 'No')
         sTitle = sprintf('%s on %s %s (%s #%d)',vSpecies.Full,vAxis.Full,oPha.PlasmaPosition,oData.Config.Name,iTime);
@@ -112,8 +115,8 @@ function stReturn = fPlotPhase1D(oData, sTime, sSpecies, sAxis, varargin)
     end % if
 
     title(sTitle);
-    xlabel(sprintf('%s [%s]',vAxis.Tex,sAUnit));
-    ylabel(sprintf('%s/\\Sigma%s [%%]',vDeposit.Tex,vDeposit.Tex));
+    xlabel(sprintf('%s [%s]',vAxis.Tex,stData.AxisUnit));
+    ylabel('Ratio [%]');
     
     if ~isempty(stOpt.Lim)
         xlim(stOpt.Lim*stReturn.AxisScale);
