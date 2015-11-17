@@ -10,7 +10,7 @@ classdef OsirisType
     % Properties
     %
     
-    properties(GetAccess = 'public', SetAccess = 'public')
+    properties(GetAccess='public', SetAccess='public')
         
         Time        = 0;                         % Current time (dumb number)
         X1Lim       = [];                        % Axes limits x1
@@ -19,7 +19,7 @@ classdef OsirisType
 
     end % properties
 
-    properties(GetAccess = 'public', SetAccess = 'private')
+    properties(GetAccess='public', SetAccess='private')
         
         Data        = [];                        % OsirisData dataset
         Units       = 'N';                       % Units of axes
@@ -35,7 +35,7 @@ classdef OsirisType
 
     end % properties
     
-    properties(GetAccess = 'protected', SetAccess = 'protected')
+    properties(GetAccess='protected', SetAccess='protected')
         
         Translate   = {};                        % Lookup class for variables
         
@@ -273,7 +273,7 @@ classdef OsirisType
     % Public Methods
     %
     
-    methods(Access = 'public')
+    methods(Access='public')
 
         function sReturn = PlasmaPosition(obj)
 
@@ -304,7 +304,7 @@ classdef OsirisType
     % Private Methods
     %
     
-    methods(Access = 'private')
+    methods(Access='private')
         
         function [dScale, sUnit] = fLengthScale(~, sToUnit, sFromUnit)
 
@@ -374,7 +374,35 @@ classdef OsirisType
     % Protected Methods
     %
     
-    methods(Access = 'protected')
+    methods(Static, Access='protected')
+        
+        function stReturn = fAccumulate1D(aData, aWeights, iGrid)
+            
+            iGrid = 10;
+            
+            stReturn = {};
+            
+            dMin = min(aData);
+            dMax = max(aData);
+            dDel = (dMax-dMin)/(iGrid-1);
+            
+            aGrid = zeros(1,iGrid);
+            aAxis = linspace(dMin,dMax,iGrid);
+            
+            min(aData)
+            max(aData)
+            aData = (aData-dMin+0.5*dDel)/dDel;
+            min(aData)
+            max(aData)
+            
+            stReturn.Data = aGrid;
+            stReturn.Axis = aAxis;
+            
+        end % function
+        
+    end % methods
+
+    methods(Access='protected')
         
         function aReturn = fGetTimeAxis(obj)
             
