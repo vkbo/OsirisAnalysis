@@ -57,7 +57,7 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
     addParameter(oOpt, 'Lim',        []);
     addParameter(oOpt, 'Method',     'Deposit');
     addParameter(oOpt, 'Grid',       100);
-    addParameter(oOpt, 'Fit',        'Gauss1');
+    addParameter(oOpt, 'GaussFit',   'No');
     addParameter(oOpt, 'FigureSize', [900 500]);
     addParameter(oOpt, 'HideDump',   'No');
     addParameter(oOpt, 'IsSubPlot',  'No');
@@ -71,7 +71,7 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
     end % if
 
     % Data
-    oPha      = Phase(oData,vSpecies.Name,'Units','SI','X1Scale','mm','X2Scale','mm');
+    oPha      = Phase(oData,vSpecies.Name,'Units','SI');
     oPha.Time = iTime;
     stData    = oPha.RawHist1D(sAxis,'Grid',stOpt.Grid,'Lim',stOpt.Lim,'Method',stOpt.Method);
     
@@ -84,14 +84,13 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
     aAxis = stData.Axis;
     vAxis = oData.Translate.Lookup(strrep(sAxis,'x1','xi'));
 
+    dAMax = max(abs(aAxis));
+    [dAVal,sAUnit] = fAutoScale(dAMax,stData.AxisUnit);
+    dAScale = dAVal/dAMax;
+    aAxis   = aAxis*dAScale;
+
     stReturn.AxisRange = stData.AxisRange;
     stReturn.AxisScale = stData.AxisScale;
-    
-    % Curve Fitting
-    
-    if ~isempty(stOpt.Fit)
-        
-    end % if
     
 
     % Plot
@@ -106,21 +105,61 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
         cla;
     end % if
 
-    stairs(aAxis, aData);
+    stairs(aAxis, aData, 'Color', [0.0 0.0 0.6], 'LineWidth', 1.5);
+
+    dYMax = max(aData);
+    if dYMax > 0
+        ylim([0 dYMax*1.1]);
+    end % if
+    if aAxis(end) > aAxis(1)
+        xlim([aAxis(1) aAxis(end)]);
+    end % if
+
+    % Curve Fitting
+    if strcmpi(stOpt.GaussFit,'Yes')
+    
+        try
+            oFit = fit(double(aAxis)',double(aData)','Gauss1');
+            aFit = feval(oFit,aAxis);
+            dAmp   = oFit.a1;
+            dMu    = oFit.b1;
+            dSigma = oFit.c1/sqrt(2);
+
+            [dSSigma,sSUnit] = fAutoScale(dSigma/dAScale,stData.AxisUnit);
+
+            hold on;
+            plot(aAxis, aFit, 'Color', 'Red');
+
+            sAmp   = sprintf('\\leftarrow A = %.2f%%',dAmp);
+            sMu    = sprintf('\\mu = %.2f %s \\rightarrow',dMu,sAUnit);
+            sSigma = sprintf('\\leftarrow \\sigma = %.2f %s',dSSigma,sSUnit);
+            text(dMu+dSigma*0.4,dAmp,sAmp);
+            text(dMu-dSigma*0.4,dAmp,sMu,'HorizontalAlignment','Right');
+            text(dMu+dSigma*1.4,dAmp*exp(-0.5),sSigma);
+
+            line([dMu dMu],ylim,'Color',[0.0 0.4 0.0],'LineStyle','--');
+            line([dMu-dSigma dMu+dSigma],[1 1]*dAmp*exp(-0.5),'Color',[0.0 0.4 0.0],'LineStyle','-');
+
+            hold off;
+        catch
+            stReturn.Error = 'Curve fitting failed for fPlotRaw1D.';
+        end % try
+        
+    end % if
 
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s on %s %s (%s #%d)',vSpecies.Full,vAxis.Full,oPha.PlasmaPosition,oData.Config.Name,iTime);
+        sTitle = sprintf('%s %s %s (%s #%d)',vSpecies.Full,vAxis.Full,oPha.PlasmaPosition,oData.Config.Name,iTime);
     else
-        sTitle = sprintf('%s on %s %s',vSpecies.Full,vAxis.Full,oPha.PlasmaPosition);
+        sTitle = sprintf('%s %s %s',vSpecies.Full,vAxis.Full,oPha.PlasmaPosition);
     end % if
 
     title(sTitle);
-    xlabel(sprintf('%s [%s]',vAxis.Tex,stData.AxisUnit));
+    xlabel(sprintf('%s [%s]',vAxis.Tex,sAUnit));
     ylabel('Ratio [%]');
     
-    if ~isempty(stOpt.Lim)
-        xlim(stOpt.Lim*stReturn.AxisScale);
-    end % if
+    %if ~isempty(stOpt.Lim)
+    %    xlim(stOpt.Lim);
+    %end % if
     
     % Return
 

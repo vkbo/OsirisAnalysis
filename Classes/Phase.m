@@ -409,9 +409,6 @@ classdef Phase < OsirisType
             
             dMin = min(aA);
             dMax = max(aA);
-
-            % Convert to array
-            [aData, aAxis] = fAccu1D(aA, aW, stOpt.Grid,'Method',stOpt.Method);
             
             % Get conversion factor
             if     iAxis == 1 || iAxis == 2 || iAxis == 3
@@ -427,7 +424,18 @@ classdef Phase < OsirisType
                 dFac  = obj.Data.Config.Variables.Convert.SI.ChargeFac;
                 sUnit = 'C';
             end % if
-            
+
+            % Apply limits
+            if ~isempty(stOpt.Lim)
+                aLim = stOpt.Lim/dFac;
+                aCut = find(aA < aLim(1) | aA > aLim(2));
+                aA(aCut) = [];
+                aW(aCut) = [];
+            end % if
+
+            % Convert to array
+            [aData, aAxis] = fAccu1D(aA, aW, stOpt.Grid,'Method',stOpt.Method);
+
             % Return data
             stReturn.Data      = aData;
             stReturn.Axis      = aAxis*dFac;

@@ -24,6 +24,9 @@ function [aGrid, aAxis] = fAccu1D(aData, aWeights, iGrid, varargin)
         aData = (aData-dMin)/dDel;
         for i=1:length(aData)
             iPos = round(aData(i));
+            if isnan(iPos)
+                continue;
+            end % if
             dRem = aData(i)-iPos;
             aGrid(iPos+1) = aGrid(iPos+1) + (1 - abs(dRem))*aWeights(i);
             if dRem > 0 && iPos < iGrid - 1
