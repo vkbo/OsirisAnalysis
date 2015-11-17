@@ -381,26 +381,55 @@ classdef Phase < OsirisType
             stReturn = {};
 
             oOpt = inputParser;
-            addParameter(oOpt, 'Grid',  100);
-            addParameter(oOpt, 'Count', 'charge');
+            addParameter(oOpt, 'Grid',   100);
+            addParameter(oOpt, 'Count',  'Charge');
+            addParameter(oOpt, 'Method', 'Deposit');
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
             
             iAxis = obj.Data.RawToIndex(lower(sAxis));
-            if iAxis == 0
+            if iAxis < 1 || iAxis > 8
                 fprintf(2,'Error: Unrecognised axis ''%s'' in Phase.RawHist1D.\n',sAxis);
                 return;
             end % if
             
             % Get data
-            
             aRaw = obj.Data.Data(obj.Time, 'RAW', '', obj.Species.Name);
+            aRaw(:,1) = aRaw(:,1) - obj.BoxOffset;
 
-            [aData, aAxis] = fAccu1D(aRaw(:,iAxis), aRaw(:,8), 1000);
+            % Prepare data
+            aA = aRaw(:,iAxis);
+            aW = aRaw(:,8);
+            if iAxis == 2 && obj.Cylindrical
+                aW = aW./aA;
+                aA = [-aA; aA];
+                aW = [ aW; aW];
+            end % if
+            aW = aW/sum(aW);
+
+            % Convert to array
+            [aData, aAxis] = fAccu1D(aA, aW, stOpt.Grid,'Method',stOpt.Method);
             
-            stReturn.Raw  = aRaw;
-            stReturn.Data = aData;
-            stReturn.Axis = aAxis;
+            % Get conversion factor
+            if     iAxis == 1 || iAxis == 2 || iAxis == 3
+                dFac  = obj.AxisFac(iAxis);
+                sUnit = obj.AxisUnit(iAxis);
+            elseif iAxis == 4 || iAxis == 5 || iAxis == 6
+                dFac  = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
+                sUnit = 'eV/c';
+            elseif iAxis == 7
+                dFac  = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
+                sUnit = 'eV/c^2';
+            elseif iAxis == 8
+                dFac  = obj.Data.Config.Variables.Convert.SI.ChargeFac;
+                sUnit = 'C';
+            end % if
+            
+            % Return data
+            stReturn.Data     = aData;
+            stReturn.Axis     = aAxis*dFac;
+            stReturn.AxisUnit = sUnit;
+            stReturn.AxisFac  = dFac;
 
         end % function
 

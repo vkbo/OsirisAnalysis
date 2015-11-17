@@ -32,6 +32,7 @@ classdef OsirisType
         Coords      = '';                        % Coordinates
         Cylindrical = 0;                         % Is cylindrical, true/false
         Dim         = 0;                         % Dimensions
+        BoxOffset   = 0.0;                       % Start of the box in simulation
 
     end % properties
     
@@ -170,7 +171,8 @@ classdef OsirisType
 
             else
                 
-                obj.Time = obj.Data.StringToDump(sTime);
+                obj.Time      = obj.Data.StringToDump(sTime);
+                obj.BoxOffset = obj.Time*obj.Data.Config.Variables.Convert.SI.TimeFac;
 
             end % if
             
