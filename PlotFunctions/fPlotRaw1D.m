@@ -159,10 +159,7 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
     xlabel(sprintf('%s [%s]',vAxis.Tex,sAUnit));
     ylabel('Ratio [%]');
     
-    %if ~isempty(stOpt.Lim)
-    %    xlim(stOpt.Lim);
-    %end % if
-    
+
     % Return
 
     stReturn.Species = vSpecies.Name;

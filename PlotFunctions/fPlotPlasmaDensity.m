@@ -365,4 +365,4 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     stReturn.YLim   = ylim;
     stReturn.CLim   = caxis;
     
-end
+end % function
