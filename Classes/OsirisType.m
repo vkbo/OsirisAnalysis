@@ -374,34 +374,6 @@ classdef OsirisType
     % Protected Methods
     %
     
-    methods(Static, Access='protected')
-        
-        function stReturn = fAccumulate1D(aData, aWeights, iGrid)
-            
-            iGrid = 10;
-            
-            stReturn = {};
-            
-            dMin = min(aData);
-            dMax = max(aData);
-            dDel = (dMax-dMin)/(iGrid-1);
-            
-            aGrid = zeros(1,iGrid);
-            aAxis = linspace(dMin,dMax,iGrid);
-            
-            min(aData)
-            max(aData)
-            aData = (aData-dMin+0.5*dDel)/dDel;
-            min(aData)
-            max(aData)
-            
-            stReturn.Data = aGrid;
-            stReturn.Axis = aAxis;
-            
-        end % function
-        
-    end % methods
-
     methods(Access='protected')
         
         function aReturn = fGetTimeAxis(obj)

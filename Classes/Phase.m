@@ -395,13 +395,12 @@ classdef Phase < OsirisType
             % Get data
             
             aRaw = obj.Data.Data(obj.Time, 'RAW', '', obj.Species.Name);
-            [iN,~] = size(aRaw);
-            
-            stData = obj.fAccumulate1D(aRaw(:,iAxis), aRaw(:,8), 1000);
+
+            [aData, aAxis] = fAccu1D(aRaw(:,iAxis), aRaw(:,8), 1000);
             
             stReturn.Raw  = aRaw;
-            stReturn.Data = stData.Data;
-            stReturn.Axis = stData.Axis;
+            stReturn.Data = aData;
+            stReturn.Axis = aAxis;
 
         end % function
 
