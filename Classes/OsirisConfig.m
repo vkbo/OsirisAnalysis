@@ -10,26 +10,33 @@ classdef OsirisConfig
     % Properties
     %
     
-    properties(GetAccess = 'public', SetAccess = 'public')
+    properties(GetAccess='public', SetAccess='public')
 
         Path       = '';    % Path to data directory
         File       = '';    % Config file within data directory
-        Name       = '';    % Name of the loaded dataset
-        Raw        = {};    % Matrix of config file data
-        RawTemp    = {};
-        InputDeck  = {};    % Hold all input deck variables
-        Variables  = {};    % Struct for all other variables
         N0         = 0.0;   % N_0
         NMax       = 0.0;   % N_max
+        Silent     = false; % Set to true to disable command window output
         HasData    = false; % True if folder 'MS' exists
         HasTracks  = false; % True if folder 'MS/TRACKS' exists
         Completed  = false; % True if folder 'TIMINGS' exists
         Consistent = false; % True if all data folders have the same number of files
-        Silent     = false; % Set to true to disable command window output
 
     end % properties
 
-    properties(GetAccess = 'private', SetAccess = 'private')
+    properties(GetAccess='public', SetAccess='private')
+    
+        Name       = '';    % Name of the loaded dataset
+        Raw        = {};    % Matrix of config file data
+        RawTemp    = {};
+        InputDeck  = {};    
+        NameLists  = {};    % Container for Fortran namelists
+        Variables  = {};    % Struct for all other variables
+        Temp       = {};
+
+    end % properties
+
+    properties(GetAccess='private', SetAccess='private')
 
         Files     = {}; % Holds possible config files
         Translate = {}; % Container for Variables class
@@ -149,16 +156,19 @@ classdef OsirisConfig
                     fprintf('Config file set: %s\n', obj.File);
                 end % if
                 
-                obj = obj.fReadFile();
-                obj = obj.fScanInputDeck();
+                %obj = obj.fReadFile();
+                %obj = obj.fScanInputDeck();
 
-                obj = obj.fGetSimulationVariables();
-                obj = obj.fGetSpecies();
-                obj = obj.fGetFieldVariables();
-                obj = obj.fGetPlasmaVariables();
-                obj = obj.fGetBeamVariables();
-                obj = obj.fGetFields();
-                obj = obj.fGetDensity();
+                %obj = obj.fGetSimulationVariables();
+                %obj = obj.fGetSpecies();
+                %obj = obj.fGetFieldVariables();
+                %obj = obj.fGetPlasmaVariables();
+                %obj = obj.fGetBeamVariables();
+                %obj = obj.fGetFields();
+                %obj = obj.fGetDensity();
+                
+                obj = obj.fReadNameLists();
+                obj.Temp = obj.fParseNameList(obj.NameLists(17).NameList);
                 
             end % if
 
@@ -170,7 +180,7 @@ classdef OsirisConfig
     %  Config File Methods
     %
     
-    methods(Access = 'private')
+    methods(Access='private')
         
         function obj = fReadFile(obj)
             
@@ -313,7 +323,70 @@ classdef OsirisConfig
             obj.Raw = aConfig;
             
         end % function
-        
+
+        function obj = fReadNameLists(obj)
+            
+            % Read file
+            oFile = fopen(strcat(obj.Path, '/', obj.File), 'r');
+            sFile = sprintf(fread(oFile,'*char'));
+            fclose(oFile);
+            
+            % Clean-up
+            sFile = regexprep(sFile,'\!.*?\n','\n');   % Removes all comments
+            sFile = regexprep(sFile,'[\n|\r|\t]',' '); % Removes tabs and line breaks
+            sFile = strrep(sFile,'.true.','1');        % Replace .true. with matlab logical true
+            sFile = strrep(sFile,'.false.','0');       % Replace .false. with matlab logical false
+            sFile = strrep(sFile,'"','''');            % Replace quote marks
+
+            % Parse file and extract name lists
+
+            sBuffer = ' ';
+            bQuote  = 0;
+
+            iNL = 1;
+            stNameLists(iNL).Section  = [];
+            stNameLists(iNL).NameList = [];
+            stNameLists(iNL).Parsed   = 0;
+
+            for c=1:length(sFile)
+                
+                % Check if inside quote
+                if sFile(c) == ''''
+                    bQuote = ~bQuote;
+                end % if
+
+                % Add character to buffer, except spaces outside of quotes
+                if ~(sFile(c) == ' ' && ~bQuote)
+                    sBuffer = [sBuffer sFile(c)];
+                end % if
+                
+                % If the character is a '{', the buffer so far contains a section name
+                if sFile(c) == '{' && ~bQuote
+                    if length(sBuffer) > 1
+                        stNameLists(iNL).Section = strtrim(sBuffer(1:end-1));
+                        sBuffer = ' '; % Reset buffer
+                    end % if
+                end % if
+                
+                % If the character is a '}', the buffer so far contains a name list
+                if sFile(c) == '}' && ~bQuote
+                    if length(sBuffer) > 1
+                        stNameLists(iNL).NameList = strtrim(sBuffer(1:end-1));
+                        stNameLists(iNL).Parsed   = 0;
+                        sBuffer = ' '; % Reset buffer
+                        iNL = iNL + 1; % Move to next section
+                    end % if
+                end % if
+                
+            end % for
+            
+            % Save the name list
+            obj.NameLists = stNameLists;
+            
+        end % function
+
+        % === OLD === %
+
         function obj = fScanInputDeck(obj)
             
             mRaw = obj.Raw;
@@ -357,9 +430,6 @@ classdef OsirisConfig
                 mRaw{r,7} = cParam{iParam};
                 mRaw{r,8} = mapGroup(mRaw{r,1});
             end % for
-            
-            r
-            
             
             obj.RawTemp   = mRaw;
             obj.InputDeck = stTree;
@@ -457,6 +527,126 @@ classdef OsirisConfig
             
         end % function
         
+    end % methods
+
+    methods(Static, Access='private')
+    
+        function stReturn = fParseNameList(sData)
+            
+            stReturn = {};
+            
+            sBuffer = '';
+            bQuote  = 0;
+            bBrack  = 0;
+            iComma  = 0;
+            iEqual  = 0;
+            
+            sOutA = '';
+            sOutB = '';
+            sOutC = '';
+            
+            iND = 1;
+            stData(iND).Var = [];
+            stData(iND).Val = [];
+
+            for c=1:length(sData)
+                
+                sOutA = [sOutA sData(c)];
+                
+                sBuffer = [sBuffer sData(c)];
+                
+                % Check if inside quote
+                if sData(c) == ''''
+                    bQuote = ~bQuote;
+                end % if
+                
+                % Check if inside brackets
+                if sData(c) == '('
+                    bBrack = 1;
+                end % if
+                if sData(c) == ')'
+                    bBrack = 0;
+                end % if
+                
+                % Record last comma outside of bracket and quote
+                if sData(c) == ',' && ~bQuote && ~bBrack
+                    iComma = c;
+                    %fprintf('Comma at %d\n', iComma);
+                    %sOutB = [sOutB '^'];
+                else
+                    %sOutB = [sOutB ' '];
+                end % if
+                
+                % At equal, buffer before last comma is data, after is variable
+                if sData(c) == '=' && ~bQuote && ~bBrack
+
+                    if iND > 1 && iComma > 0 && iEqual > 0 && iComma > iEqual + 1
+                        stData(iND-1).Val = sData(iEqual+1:iComma);
+                    else
+                        sVal = '';
+                    end % if
+                    
+                    iEqual = c;
+                    
+                    stData(iND).Var = sData(iComma+1:iEqual-1);
+                    
+                    %fprintf('Equal at %d, Comma at %d, Var = %s, Val = %s\n', iEqual, iComma, sVar, sVal);
+                    %sOutC = [sOutC '^'];
+                    
+                    iND = iND + 1;
+                    
+                else
+                    sOutC = [sOutC ' '];
+                end % if
+                
+
+            end % for
+
+            if iND > 1 && iEqual > 0
+                stData(iND-1).Val = sData(iEqual+1:end);
+            end % if
+            
+            for i=1:iND-1
+                sVar = stData(i).Var;
+                sVal = stData(i).Val;
+                
+                if isempty(sVar) || isempty(sVal)
+                    continue;
+                end % if
+                
+                if sVal(end) == ','
+                    sVal = sVal(1:end-1);
+                end % if
+                
+                if ~isempty(strfind(sVar, '('))
+                    aBrack = strfind(sVar, '(');
+                    sName  = sVar(1:aBrack(1)-1);
+                else
+                    sName  = sVar;
+                end % if
+                
+                if ~isempty(strfind(sVal, ''''))
+                    if ~isempty(strfind(sVal, ''','''))
+                        evalc(['stReturn.',sVar,'={',sVal,'}']);
+                    else
+                        ['stReturn.',sVar,'=',sVal]
+                        evalc(['stReturn.',sVar,'=',sVal]);
+                    end % if
+                else
+                    evalc(['stReturn.',sVar,'=[',sVal,']']);
+                end % if
+                
+            end % for
+            
+            %stReturn = stData;
+            
+            
+            %fprintf('Buffer: %s\n', sOutA);
+            %fprintf('Comma:  %s\n', sOutB);
+            %fprintf('Equal:  %s\n', sOutC);
+            
+        end % function
+
     end % methods
 
     %
