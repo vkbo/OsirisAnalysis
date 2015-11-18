@@ -26,13 +26,15 @@ classdef OsirisConfig
 
     properties(GetAccess='public', SetAccess='private')
     
-        Name       = '';    % Name of the loaded dataset
+        Name       = ''; % Name of the loaded dataset
         Raw        = {};    % Matrix of config file data
-        RawTemp    = {};
-        InputDeck  = {};    
-        NameLists  = {};    % Container for Fortran namelists
+        Input      = {}; % Parsed input file
         Variables  = {};    % Struct for all other variables
-        Temp       = {};
+        Constants  = {}; % Constants
+        Convert    = {}; % Unit conversion factors
+        Simulation = {}; % Simulation variables
+        EMFields   = {}; % Electro-magnetic field variables
+        Particles  = {}; % Particle variables
 
     end % properties
 
@@ -40,6 +42,7 @@ classdef OsirisConfig
 
         Files     = {}; % Holds possible config files
         Translate = {}; % Container for Variables class
+        NameLists = {}; % Container for Fortran namelists
         
     end % properties
 
@@ -51,6 +54,7 @@ classdef OsirisConfig
         
         function obj = OsirisConfig()
             
+% === OLD === %
             % Setting default N_0 and N_max
             
             obj.N0   = 1.0e20;
@@ -68,7 +72,6 @@ classdef OsirisConfig
             obj.Variables.Convert.CGS = {};
             
             % Setting constants
-            
             Constants;
             
             % SI
@@ -82,9 +85,25 @@ classdef OsirisConfig
 
             % CGS
             obj.Variables.Constants.ElementaryChargeCGS = stConstants.Nature.ElementaryChargeCGS;
+% === END === %
+
+            % SI
+            obj.Constants.SpeedOfLight        =  2.99792458e8;      % m/s (exact)
+            obj.Constants.ElectronMass        =  9.10938291e-31;    % kg
+            obj.Constants.ElectronMassMeV     =  5.109989282e-1;    % MeV/c^2
+           %obj.Constants.ElectronVolt        =  1.602176565e-19;   % J      [eV]
+            obj.Constants.ElementaryCharge    =  1.602176565e-19;   % C
+            obj.Constants.VacuumPermitivity   =  8.854187817e-12;   % F/m 
+            obj.Constants.VacuumPermeability  =  1.2566370614e-6;   % N/A^2
+
+            % CGS
+            obj.Constants.ElementaryChargeCGS =  4.80320425e-10;    % statC
+
             
+% === OLD === %
             % Translae Class for Variables
             obj.Translate = Variables();
+% === END === %
             
         end % function
         
@@ -115,7 +134,7 @@ classdef OsirisConfig
                     [~, ~, sFileExt] = fileparts(aDir(i).name);
                     
                     aExclude = {'.out','.sh','.e', '.tags'}; % Files to exclude as definitely not the config file
-                    aSizes   = [1024, 10240];                % Minimum, maximum size in bytes
+                    aSizes   = [1024, 20480];                % Minimum, maximum size in bytes
                     
                     if sum(ismember(sFileExt, aExclude)) == 0 ...
                             && sFileExt(end) ~= '~'           ...
@@ -159,7 +178,6 @@ classdef OsirisConfig
                 %obj = obj.fReadFile();
                 %obj = obj.fScanInputDeck();
 
-                %obj = obj.fGetSimulationVariables();
                 %obj = obj.fGetSpecies();
                 %obj = obj.fGetFieldVariables();
                 %obj = obj.fGetPlasmaVariables();
@@ -168,7 +186,11 @@ classdef OsirisConfig
                 %obj = obj.fGetDensity();
                 
                 obj = obj.fReadNameLists();
-                obj.Temp = obj.fParseNameList(obj.NameLists(17).NameList);
+                obj = obj.fParseInputFile();
+
+                obj = obj.fGetSimulationVariables();
+                obj = obj.fGetEMFVariables();
+                obj = obj.fGetParticleVariables();
                 
             end % if
 
@@ -182,6 +204,219 @@ classdef OsirisConfig
     
     methods(Access='private')
         
+        function obj = fReadNameLists(obj)
+            
+            % Read file
+            oFile = fopen(strcat(obj.Path, '/', obj.File), 'r');
+            sFile = sprintf(fread(oFile,'*char'));
+            fclose(oFile);
+            
+            % Clean-up
+            sFile = regexprep(sFile,'\!.*?\n','\n');   % Removes all comments
+            sFile = regexprep(sFile,'[\n|\r|\t]',' '); % Removes tabs and line breaks
+            sFile = strrep(sFile,'.true.','1');        % Replace .true. with matlab logical true
+            sFile = strrep(sFile,'.false.','0');       % Replace .false. with matlab logical false
+            sFile = strrep(sFile,'"','''');            % Replace quote marks
+
+            % Parse file and extract name lists
+
+            sBuffer = ' ';
+            bQuote  = 0;
+
+            iNL = 1;
+            stNameLists(iNL).Section  = [];
+            stNameLists(iNL).NameList = [];
+            stNameLists(iNL).Parsed   = 0;
+
+            for c=1:length(sFile)
+                
+                % Check if inside quote
+                if sFile(c) == ''''
+                    bQuote = ~bQuote;
+                end % if
+
+                % Add character to buffer, except spaces outside of quotes
+                if ~(sFile(c) == ' ' && ~bQuote)
+                    sBuffer = [sBuffer sFile(c)];
+                end % if
+                
+                % If the character is a '{', the buffer so far contains a section name
+                if sFile(c) == '{' && ~bQuote
+                    if length(sBuffer) > 1
+                        stNameLists(iNL).Section = strtrim(sBuffer(1:end-1));
+                        sBuffer = ' '; % Reset buffer
+                    end % if
+                end % if
+                
+                % If the character is a '}', the buffer so far contains a name list
+                if sFile(c) == '}' && ~bQuote
+                    if length(sBuffer) > 1
+                        stNameLists(iNL).NameList = strtrim(sBuffer(1:end-1));
+                        stNameLists(iNL).Parsed   = 0;
+                        sBuffer = ' '; % Reset buffer
+                        iNL = iNL + 1; % Move to next section
+                    end % if
+                end % if
+                
+            end % for
+            
+            % Save the name list
+            obj.NameLists = stNameLists;
+            
+        end % function
+        
+        function obj = fParseInputFile(obj)
+            
+            stInput = {};
+            cGrp = {'simulation','el_mag_fld','particles','zpulse','current','antenna_array'};
+            iGrp = 1;
+            
+            aSim = [];
+            aEMF = [];
+            aPar = [];
+            aZPl = [];
+            aCur = [];
+            aAnt = [];
+
+            [~,iLMax] = size(obj.NameLists);
+            for l=1:iLMax
+                sSection = obj.NameLists(l).Section;
+                if strcmpi(sSection,'simulation') || strcmpi(sSection,'node_conf')
+                    iGrp = 1;
+                end % if
+                if strcmpi(sSection,'el_mag_fld') || strcmpi(sSection,'emf_bound')
+                    iGrp = 2;
+                end % if
+                if strcmpi(sSection,'particles')
+                    iGrp = 3;
+                end % if
+                if strcmpi(sSection,'zpulse')
+                    iGrp = 4;
+                end % if
+                if iGrp > 2 && (strcmpi(sSection,'current') || strcmpi(sSection,'smooth') || strcmpi(sSection,'diag_current'))
+                    iGrp = 5;
+                end % if
+                if strcmpi(sSection,'antenna_array') || strcmpi(sSection,'antenna')
+                    iGrp = 6;
+                end % if
+                switch(iGrp)
+                    case 1; aSim = [aSim l];
+                    case 2; aEMF = [aEMF l];
+                    case 3; aPar = [aPar l];
+                    case 4; aZPl = [aZPl l];
+                    case 5; aCur = [aCur l];
+                    case 6; aAnt = [aAnt l];
+                end % switch
+            end % for
+
+            % General Simulation Parameters
+            for s=1:length(aSim)
+                iSec = aSim(s);
+                sSec = obj.NameLists(iSec).Section;
+                sVal = obj.NameLists(iSec).NameList;
+                stInput.(cGrp{1}).(sSec) = obj.fParseNameList(sVal);
+            end % for
+            
+            % Electro-Magnetic Fields
+            for s=1:length(aEMF)
+                iSec = aEMF(s);
+                sSec = obj.NameLists(iSec).Section;
+                sVal = obj.NameLists(iSec).NameList;
+                stInput.(cGrp{2}).(sSec) = obj.fParseNameList(sVal);
+            end % for
+
+            % Particles
+            iCntS = 0;
+            iCntC = 0;
+            iCntN = 0;
+            iCntI = 0;
+            iType = 1;
+            sType = '';
+            for s=1:length(aPar)
+                iSec = aPar(s);
+                sSec = obj.NameLists(iSec).Section;
+                sVal = obj.NameLists(iSec).NameList;
+                stNL = obj.fParseNameList(sVal);
+                if strcmpi(sSec,'particles') || strcmpi(sSec,'collisions')
+                    stInput.(cGrp{3}).(sSec) = stNL;
+                else
+                    if strcmpi(sSec,'species') && iType == 1
+                        iType = 1;
+                        iCntS = iCntS + 1;
+                        sType = sprintf('species_%d',iCntS);
+                    end % if
+                    if strcmpi(sSec,'cathode')
+                        iType = 2;
+                        iCntC = iCntC + 1;
+                        sType = sprintf('cathode_%d',iCntC);
+                    end % if
+                    if strcmpi(sSec,'neutral')
+                        iType = 3;
+                        iCntN = iCntN + 1;
+                        sType = sprintf('neutral_%d',iCntN);
+                    end % if
+                    if strcmpi(sSec,'neutral_mov_ions')
+                        iType = 4;
+                        iMovT = 0;
+                        iCntI = iCntI + 1;
+                        sType = sprintf('neutral_mov_ions_%d',iCntI);
+                    end % if
+                    if iType < 4
+                        stInput.(cGrp{3}).(sType).(sSec) = stNL;
+                    else
+                        if strcmpi(sSec,'species') && iType == 4
+                            iMovT = iMovT + 1;
+                            sMovT = sprintf('species_%d',iMovT);
+                        end % if
+                        if iMovT == 0
+                            stInput.(cGrp{3}).(sType).(sSec) = stNL;
+                        else
+                            stInput.(cGrp{3}).(sType).(sMovT).(sSec) = stNL;
+                        end % if
+                    end % if
+                end % if
+            end % for
+            
+            % Laser Pulses
+            iCntZ = 0;
+            sName = '';
+            for s=1:length(aZPl)
+                iSec = aZPl(s);
+                sSec = obj.NameLists(iSec).Section;
+                sVal = obj.NameLists(iSec).NameList;
+                stNL = obj.fParseNameList(sVal);
+                if strcmpi(sSec,'zpulse')
+                    iCntZ = iCntZ + 1;
+                    sName = sprintf('zpulse_%d',iCntZ);
+                end % if
+                stInput.(cGrp{4}).(sName).(sSec) = stNL;
+            end % for
+
+            % Electrical Current
+            % This input is skipped
+
+            % Antennas
+            iCntA = 0;
+            sName = '';
+            for s=1:length(aAnt)
+                iSec = aAnt(s);
+                sSec = obj.NameLists(iSec).Section;
+                sVal = obj.NameLists(iSec).NameList;
+                stNL = obj.fParseNameList(sVal);
+                if strcmpi(sSec,'antenna')
+                    iCntA = iCntA + 1;
+                    sName = sprintf('antenna_%d',iCntA);
+                end % if
+                stInput.(cGrp{6}).(sName).(sSec) = stNL;
+            end % for
+
+            % Save Struct
+            obj.Input = stInput;
+        
+        end % function
+
+        % === OLD === %
+
         function obj = fReadFile(obj)
             
             % Read file
@@ -324,118 +559,6 @@ classdef OsirisConfig
             
         end % function
 
-        function obj = fReadNameLists(obj)
-            
-            % Read file
-            oFile = fopen(strcat(obj.Path, '/', obj.File), 'r');
-            sFile = sprintf(fread(oFile,'*char'));
-            fclose(oFile);
-            
-            % Clean-up
-            sFile = regexprep(sFile,'\!.*?\n','\n');   % Removes all comments
-            sFile = regexprep(sFile,'[\n|\r|\t]',' '); % Removes tabs and line breaks
-            sFile = strrep(sFile,'.true.','1');        % Replace .true. with matlab logical true
-            sFile = strrep(sFile,'.false.','0');       % Replace .false. with matlab logical false
-            sFile = strrep(sFile,'"','''');            % Replace quote marks
-
-            % Parse file and extract name lists
-
-            sBuffer = ' ';
-            bQuote  = 0;
-
-            iNL = 1;
-            stNameLists(iNL).Section  = [];
-            stNameLists(iNL).NameList = [];
-            stNameLists(iNL).Parsed   = 0;
-
-            for c=1:length(sFile)
-                
-                % Check if inside quote
-                if sFile(c) == ''''
-                    bQuote = ~bQuote;
-                end % if
-
-                % Add character to buffer, except spaces outside of quotes
-                if ~(sFile(c) == ' ' && ~bQuote)
-                    sBuffer = [sBuffer sFile(c)];
-                end % if
-                
-                % If the character is a '{', the buffer so far contains a section name
-                if sFile(c) == '{' && ~bQuote
-                    if length(sBuffer) > 1
-                        stNameLists(iNL).Section = strtrim(sBuffer(1:end-1));
-                        sBuffer = ' '; % Reset buffer
-                    end % if
-                end % if
-                
-                % If the character is a '}', the buffer so far contains a name list
-                if sFile(c) == '}' && ~bQuote
-                    if length(sBuffer) > 1
-                        stNameLists(iNL).NameList = strtrim(sBuffer(1:end-1));
-                        stNameLists(iNL).Parsed   = 0;
-                        sBuffer = ' '; % Reset buffer
-                        iNL = iNL + 1; % Move to next section
-                    end % if
-                end % if
-                
-            end % for
-            
-            % Save the name list
-            obj.NameLists = stNameLists;
-            
-        end % function
-
-        % === OLD === %
-
-        function obj = fScanInputDeck(obj)
-            
-            mRaw = obj.Raw;
-            [nR,~] = size(mRaw);
-            
-            cGroupA = {'simulation','node_conf','grid','time_step','restart','space','time', ...
-                       'el_mag_fld','emf_bound','pgc','smooth','diag_emf','particles','collisions', ...
-                       'species','udist','profile','spe_bound','diag_species','cathode', ...
-                       'neutral','diag_neutral','neutral_mov_ions','zpulse','current', ...
-                       'diag_current','antenna_array','antenna'};
-            cGroupB = {'Simulation','NodeConf','Grid','TimeStep','Restart','Space','Time', ...
-                       'EmField','EmfBound','PGC','Smooth','DiagEmf','Particles','Collisions', ...
-                       'Species','UDist','Profile','SpeBound','DiagSpecies','Cathode', ...
-                       'Neutral','DiagNeutral','NeutralMovIons','ZPulse','Current', ...
-                       'DiagCurrent','AntennaArray','Antenna'};
-            mapGroup = containers.Map(cGroupA,cGroupB);
-            
-            cParam = {'SimParam','EMFields','Particles','ZPulses','Current','Antennas'};
-            iParam = 1;
-            stTree = {};
-            
-            for r=1:nR
-                if strcmpi(mRaw{r,1},'simulation') || strcmpi(mRaw{r,1},'node_conf')
-                    iParam = 1;
-                end % if
-                if strcmpi(mRaw{r,1},'el_mag_fld') || strcmpi(mRaw{r,1},'emf_bound')
-                    iParam = 2;
-                end % if
-                if strcmpi(mRaw{r,1},'particles')
-                    iParam = 3;
-                end % if
-                if strcmpi(mRaw{r,1},'zpulse')
-                    iParam = 4;
-                end % if
-                if strcmpi(mRaw{r,1},'current')
-                    iParam = 5;
-                end % if
-                if strcmpi(mRaw{r,1},'antenna_array') || strcmpi(mRaw{r,1},'antenna')
-                    iParam = 6;
-                end % if
-                mRaw{r,7} = cParam{iParam};
-                mRaw{r,8} = mapGroup(mRaw{r,1});
-            end % for
-            
-            obj.RawTemp   = mRaw;
-            obj.InputDeck = stTree;
-            
-        end % function
-
         function sReturn = fExtractRaw(obj, sSpecies, sName, sLabel, iIndex, sDefault)
             
             if nargin < 5
@@ -538,20 +661,11 @@ classdef OsirisConfig
             sBuffer = '';
             bQuote  = 0;
             bBrack  = 0;
-            iComma  = 0;
-            iEqual  = 0;
             
-            sOutA = '';
-            sOutB = '';
-            sOutC = '';
-            
-            iND = 1;
-            stData(iND).Var = [];
-            stData(iND).Val = [];
+            sVar = '';
+            cVar = {};
 
             for c=1:length(sData)
-                
-                sOutA = [sOutA sData(c)];
                 
                 sBuffer = [sBuffer sData(c)];
                 
@@ -568,81 +682,42 @@ classdef OsirisConfig
                     bBrack = 0;
                 end % if
                 
-                % Record last comma outside of bracket and quote
-                if sData(c) == ',' && ~bQuote && ~bBrack
-                    iComma = c;
-                    %fprintf('Comma at %d\n', iComma);
-                    %sOutB = [sOutB '^'];
-                else
-                    %sOutB = [sOutB ' '];
-                end % if
-                
-                % At equal, buffer before last comma is data, after is variable
+                % After each variable follows an equal
                 if sData(c) == '=' && ~bQuote && ~bBrack
-
-                    if iND > 1 && iComma > 0 && iEqual > 0 && iComma > iEqual + 1
-                        stData(iND-1).Val = sData(iEqual+1:iComma);
-                    else
-                        sVal = '';
+                    if ~isempty(sVar)
+                        try
+                            evalc(['stReturn.',sVar,'={',strjoin(cVar,','),'}']);
+                        catch
+                            fprintf(2,'Error: Cannot parse variable ''%s'' in input file.\n',sVar);
+                        end % try
                     end % if
-                    
-                    iEqual = c;
-                    
-                    stData(iND).Var = sData(iComma+1:iEqual-1);
-                    
-                    %fprintf('Equal at %d, Comma at %d, Var = %s, Val = %s\n', iEqual, iComma, sVar, sVal);
-                    %sOutC = [sOutC '^'];
-                    
-                    iND = iND + 1;
-                    
-                else
-                    sOutC = [sOutC ' '];
+                    sVar = sBuffer(1:end-1);
+                    cVar = {};
+                    sBuffer = '';
                 end % if
-                
+
+                % After each value follows a comma
+                if sData(c) == ',' && ~bQuote && ~bBrack
+                    cVar{end+1} = sBuffer(1:end-1);
+                    sBuffer = '';
+                end % if
 
             end % for
 
-            if iND > 1 && iEqual > 0
-                stData(iND-1).Val = sData(iEqual+1:end);
+            if ~isempty(sVar)
+                try
+                    evalc(['stReturn.',sVar,'={',strjoin(cVar,','),'}']);
+                catch
+                    fprintf(2,'Error: Cannot parse variable ''%s'' in input file.\n',sVar);
+                end % try
             end % if
             
-            for i=1:iND-1
-                sVar = stData(i).Var;
-                sVal = stData(i).Val;
-                
-                if isempty(sVar) || isempty(sVal)
-                    continue;
-                end % if
-                
-                if sVal(end) == ','
-                    sVal = sVal(1:end-1);
-                end % if
-                
-                if ~isempty(strfind(sVar, '('))
-                    aBrack = strfind(sVar, '(');
-                    sName  = sVar(1:aBrack(1)-1);
-                else
-                    sName  = sVar;
-                end % if
-                
-                if ~isempty(strfind(sVal, ''''))
-                    if ~isempty(strfind(sVal, ''','''))
-                        evalc(['stReturn.',sVar,'={',sVal,'}']);
-                    else
-                        evalc(['stReturn.',sVar,'={',sVal,'}']);
-                    end % if
-                else
-                    evalc(['stReturn.',sVar,'=[',sVal,']']);
-                end % if
-                
-            end % for
+        end % function
+        
+        function aReturn = fArrayPad(aData, aTemplate)
             
-            %stReturn = stData;
-            
-            
-            %fprintf('Buffer: %s\n', sOutA);
-            %fprintf('Comma:  %s\n', sOutB);
-            %fprintf('Equal:  %s\n', sOutC);
+            aTemplate(1:length(aData)) = aData;
+            aReturn = aTemplate;
             
         end % function
 
@@ -656,51 +731,215 @@ classdef OsirisConfig
 
         function obj = fGetSimulationVariables(obj)
             
-            % Store variables
+            % Constants
+            dC          = obj.Constants.SpeedOfLight;
+            dECharge    = obj.Constants.ElementaryCharge;
+            dEChargeCGS = obj.Constants.ElementaryChargeCGS;
+            dEMass      = obj.Constants.ElectronMass;
+            dEpsilon0   = obj.Constants.VacuumPermitivity;
+            dMu0        = obj.Constants.VacuumPermeability;
+
+            %
+            % Main Simulation Variables
+            %
             
-            aValue = obj.fExtractFixedNum('','grid','nx_p',[0,0,0]);
-            obj.Variables.Simulation.BoxNX1      = int64(aValue(1));
-            obj.Variables.Simulation.BoxNX2      = int64(aValue(2));
-            obj.Variables.Simulation.BoxNX3      = int64(aValue(3));
-
-            aValue = obj.fExtractFixedNum('','space','xmin',[0.0,0.0,0.0]);
-            obj.Variables.Simulation.BoxX1Min    = double(aValue(1));
-            obj.Variables.Simulation.BoxX2Min    = double(aValue(2));
-            obj.Variables.Simulation.BoxX3Min    = double(aValue(3));
-
-            aValue = obj.fExtractFixedNum('','space','xmax',[0.0,0.0,0.0]);
-            obj.Variables.Simulation.BoxX1Max    = double(aValue(1));
-            obj.Variables.Simulation.BoxX2Max    = double(aValue(2));
-            obj.Variables.Simulation.BoxX3Max    = double(aValue(3));
-
-            aValue = obj.fExtractFixedNum('','time','tmin',[0.0]);
-            obj.Variables.Simulation.TMin        = double(aValue(1));
-
-            aValue = obj.fExtractFixedNum('','time','tmax',[0.0]);
-            obj.Variables.Simulation.TMax        = double(aValue(1));
-
-            aValue = obj.fExtractFixedNum('','time_step','dt',[0.0]);
-            obj.Variables.Simulation.TimeStep    = double(aValue(1));
-
-            aValue = obj.fExtractFixedNum('','time_step','ndump',[0]);
-            obj.Variables.Simulation.NDump       = double(aValue(1));
-
-            aValue = obj.fExtractFixedNum('','grid','nx_p',[0]);
-            obj.Variables.Simulation.Dimensions  = length(aValue);
-
-            sValue = obj.fExtractRaw('','grid','coordinates');
-            obj.Variables.Simulation.Coordinates = strrep(sValue,'"','');
-
-            % Extract variables
-
-            dTimeStep = obj.Variables.Simulation.TimeStep;
-            iNDump    = obj.Variables.Simulation.NDump;
+            % Plasma Density
+            try
+                dN0 = double(obj.Input.simulation.simulation.n0{1})*1.0e6;
+            catch
+                dN0 = 1.0e20;
+            end % try
             
-            % Calculate scaling variables
+            % Plasma Frequency
+            try
+                dOmegaP = double(obj.Input.simulation.simulation.omega_p0{1});
+            catch
+                dOmegaP = sqrt((dN0 * dECharge^2) / (dEMass * dEpsilon0));
+            end % try
+
+            % Plasma Wavelength
+            dLambdaP = 2*pi * dC / dOmegaP;
             
-            obj.Variables.Convert.SI.TimeFac = dTimeStep*iNDump;
+            % Coordinates
+            try
+                aGrid = int64(cell2mat(obj.Input.simulation.grid.nx_p));
+            catch
+                aGrid = [1];
+            end % try
+            iDim  = length(aGrid);
+            aGrid = obj.fArrayPad(aGrid, [0 0 0]);
+
+            % Grid
+            try
+                sCoords = obj.Input.simulation.grid.coordinates{1};
+            catch
+                sCoords = 'cartesian';
+            end % try
+            bCylindrical = strcmpi(sCoords,'cylindrical');
+
+            % Time Step
+            try
+                dTimeStep = double(obj.Input.simulation.time_step.dt{1});
+            catch
+                dTimeStep = 0.0;
+            end % try
+
+            % NDump
+            try
+                iNDump = int64(obj.Input.simulation.time_step.ndump{1});
+            catch
+                iNDump = 0;
+            end % try
+
+            % Start Time
+            try
+                dTMin = double(obj.Input.simulation.time.tmin{1});
+            catch
+                dTMin = 0.0;
+            end % try
+
+            % End Time
+            try
+                dTMax = double(obj.Input.simulation.time.tmax{1});
+            catch
+                dTMax = 0.0;
+            end % try
+
+            % Start Box
+            try
+                aXMin = double(cell2mat(obj.Input.simulation.space.xmin));
+            catch
+                aXMin = [0.0];
+            end % try
+            aXMin = obj.fArrayPad(aXMin, [0.0 0.0 0.0]);
+
+            % End Box
+            try
+                aXMax = double(cell2mat(obj.Input.simulation.space.xmax));
+            catch
+                aXMax = [0.0];
+            end % try
+            aXMax = obj.fArrayPad(aXMax, [0.0 0.0 0.0]);
+
+            % Save Plasma Variables for Simulation
+            obj.Simulation.N0          = dN0;
+            obj.Simulation.OmegaP      = dOmegaP;
+            obj.Simulation.LambdaP     = dLambdaP;
+
+            % Save Plasma Variables for Physics
+            obj.Simulation.PhysN0      = dN0;
+            obj.Simulation.PhysOmegaP  = dOmegaP;
+            obj.Simulation.PhysLambdaP = dLambdaP;
+            
+            % Save Other Variables
+            obj.Simulation.Coordinates = sCoords;
+            obj.Simulation.Cylindrical = bCylindrical;
+            obj.Simulation.Dimensions  = iDim;
+            obj.Simulation.Grid        = aGrid;
+            
+            % Save Time Variables
+            obj.Simulation.TimeStep    = dTimeStep;
+            obj.Simulation.NDump       = iNDump;
+            obj.Simulation.TMin        = dTMin;
+            obj.Simulation.TMax        = dTMax;
+
+            % Save Space Variables
+            obj.Simulation.XMin        = aXMin;
+            obj.Simulation.XMax        = aXMax;
+
+            
+            %
+            % Conversion Factors
+            %
+            
+            % Geometry
+            dLFactor = dC / dOmegaP;
+
+            % Electric and Magnetic Field
+            dSIE0 = dEMass * dC^3 * dOmegaP * dMu0*dEpsilon0 / dECharge;
+            dSIB0 = dEMass * dC^2 * dOmegaP * dMu0*dEpsilon0 / dECharge;
+
+            % Save Conversion Variables
+            obj.Convert.SI.E0        = dSIE0;
+            obj.Convert.SI.B0        = dSIB0;
+            obj.Convert.SI.LengthFac = dLFactor;
+            obj.Convert.SI.TimeFac   = dTimeStep*iNDump;
+            
+            
+            %
+            % Particle and Charge Conversion
+            %
+            
+            dDX1 = (aXMax(1) - aXMin(1))/aGrid(1);
+            dDX2 = (aXMax(2) - aXMin(2))/aGrid(2);
+            if iDim == 2
+                dDX3 = 1.0;
+            else
+                dDX3 = (aXMax(3) - aXMin(3))/aGrid(3);
+            end % if
+
+            dQFac = 1.0;                 % Factor for charge in normalised units
+            dPFac = dN0;                 % Density is relative to N0
+
+            if bCylindrical
+                dQFac = dQFac*2*pi;      % Cylindrical factor
+            end % if
+            dPFac = dPFac*dDX1;          % Longitudinal cell size
+            dPFac = dPFac*dDX2;          % Radial/X cell size
+            dPFac = dPFac*dDX3;          % Azimuthal/Y cell size
+
+            dPFac = dPFac*dLFactor^3;    % Convert from normalised units to unitless
+            dPFac = dPFac*dQFac;         % Combine particle factor and charge factor
+
+            obj.Convert.Norm.ChargeFac   = dQFac;
+            obj.Convert.Norm.ParticleFac = dPFac;
+            obj.Convert.SI.ChargeFac     = dPFac*dECharge;
+            obj.Convert.SI.ParticleFac   = dPFac;
+            obj.Convert.CGS.ChargeFac    = dPFac*dEChargeCGS;
+            obj.Convert.CGS.ParticleFac  = dPFac;
+
+            
+            %
+            % Current Conversion
+            %
+
+            aJFac = [1.0 1.0 1.0]; % In normalised units
+            if strcmpi(sCoords, 'cylindrical')
+                aJFacSI  = aJFac     * dPFac*dECharge*dC;
+                aJFacSI  = aJFacSI  ./ (2*pi*[dDX1 dDX2 dDX3]*dLFactor);
+                aJFacCGS = aJFac     * dPFac*dEChargeCGS*dC;
+                aJFacCGS = aJFacCGS ./ (2*pi*[dDX1 dDX2 dDX3]*dLFactor);
+            else
+                aJFacSI  = aJFac     * dPFac*dECharge*dC;
+                aJFacSI  = aJFacSI  ./ ([dDX1 dDX2 dDX3]*dLFactor);
+                aJFacCGS = aJFac     * dPFac*dEChargeCGS*dC;
+                aJFacCGS = aJFacCGS ./ ([dDX1 dDX2 dDX3]*dLFactor);
+            end % if
+
+            obj.Convert.Norm.JFac = aJFac;
+            obj.Convert.SI.JFac   = aJFacSI;
+            obj.Convert.CGS.JFac  = aJFacCGS;
+
+        end % function
+
+        function obj = fGetEMFVariables(obj)
+            
+            % Get Field Reports
+            try
+                cReports = obj.Input.el_mag_fld.diag_emf.reports;
+            catch
+                cReports = {};
+            end % try
+            
+            % Save EMF Diagnostics
+            obj.EMFields.Reports = cReports;
             
         end % function
+        
+        function obj = fGetParticleVariables(obj)
+        end % function
+
+        % === OLD === %
         
         function obj = fGetSpecies(obj)
             
@@ -756,113 +995,6 @@ classdef OsirisConfig
             
             % Write variables
             obj.Variables.Species = stSpecies;
-
-        end % function
-
-        function obj = fGetFieldVariables(obj)
-            
-            % Retrieving constants
-
-            dC          = obj.Variables.Constants.SpeedOfLight;
-            dECharge    = obj.Variables.Constants.ElementaryCharge;
-            dEChargeCGS = obj.Variables.Constants.ElementaryChargeCGS;
-            dEMass      = obj.Variables.Constants.ElectronMass;
-            dEpsilon0   = obj.Variables.Constants.VacuumPermitivity;
-            dMu0        = obj.Variables.Constants.VacuumPermeability;
-            
-
-            % Calculating normalised plasma variables derived from N0
-
-            dN0       = obj.N0;
-            dOmegaP   = sqrt((dN0 * dECharge^2) / (dEMass * dEpsilon0));
-            dLambdaP  = 2*pi * dC / dOmegaP;
-            
-            obj.Variables.Plasma.N0          = dN0;
-            obj.Variables.Plasma.NormOmegaP  = dOmegaP;
-            obj.Variables.Plasma.NormLambdaP = dLambdaP;
-            
-            
-            % Calculating conversion variables
-            
-            dSIE0    = dEMass * dC^3 * dOmegaP * dMu0*dEpsilon0 / dECharge;
-            dSIB0    = dEMass * dC^2 * dOmegaP * dMu0*dEpsilon0 / dECharge;
-            dLFactor = dC / dOmegaP;
-
-            % Setting conversion variables
-            
-            obj.Variables.Convert.SI.E0        = dSIE0;
-            obj.Variables.Convert.SI.B0        = dSIB0;
-            obj.Variables.Convert.SI.LengthFac = dLFactor;
-
-
-            % Charge conversion factor
-            
-            sCoords    = obj.Variables.Simulation.Coordinates;
-            iDim       = obj.Variables.Simulation.Dimensions;
-            dTMin      = obj.Variables.Simulation.TMin;
-            dTMax      = obj.Variables.Simulation.TMax;
-
-            dBoxNX1    = double(obj.Variables.Simulation.BoxNX1);
-            dBoxNX2    = double(obj.Variables.Simulation.BoxNX2);
-            dBoxNX3    = double(obj.Variables.Simulation.BoxNX3);
-            
-            dBoxX1Size = obj.Variables.Simulation.BoxX1Max - obj.Variables.Simulation.BoxX1Min;
-            dBoxX2Size = obj.Variables.Simulation.BoxX2Max - obj.Variables.Simulation.BoxX2Min;
-            dBoxX3Size = obj.Variables.Simulation.BoxX3Max - obj.Variables.Simulation.BoxX3Min;
-
-            dDX1 = dBoxX1Size/dBoxNX1;
-            dDX2 = dBoxX2Size/dBoxNX2;
-            if iDim == 2
-                dDX3 = 1.0;
-            else
-                dDX3 = dBoxX3Size/dBoxNX3;
-            end % if
-
-            dQFac = 1.0;    % Factor for charge in normalised units
-            dPFac = obj.N0; % Density is relative to N0
-
-            % 2D cylindrical
-            if strcmpi(sCoords, 'cylindrical')
-                dQFac = dQFac*2*pi; % Cylindrical factor
-            end % if
-            dPFac = dPFac*dDX1; % Longitudinal cell size
-            dPFac = dPFac*dDX2; % Radial/X cell size
-            dPFac = dPFac*dDX3; % Azimuthal/Y cell size
-
-            dPFac = dPFac*dLFactor^3; % Convert from normalised units to unitless
-            dPFac = dPFac*dQFac;      % Combine particle factor and charge factor
-
-            obj.Variables.Convert.Norm.ChargeFac   = dQFac;
-            obj.Variables.Convert.Norm.ParticleFac = dPFac;
-            obj.Variables.Convert.SI.ChargeFac     = dPFac*dECharge;
-            obj.Variables.Convert.SI.ParticleFac   = dPFac;
-            obj.Variables.Convert.CGS.ChargeFac    = dPFac*dEChargeCGS;
-            obj.Variables.Convert.CGS.ParticleFac  = dPFac;
-
-            % Current
-
-            aJFac = [1.0 1.0 1.0]; % In normalised units
-            if strcmpi(sCoords, 'cylindrical')
-                aJFacSI  = aJFac     * dPFac*dECharge*dC;
-                aJFacSI  = aJFacSI  ./ (2*pi*[dDX1 dDX2 dDX3]*dLFactor);
-                aJFacCGS = aJFac     * dPFac*dEChargeCGS*dC;
-                aJFacCGS = aJFacCGS ./ (2*pi*[dDX1 dDX2 dDX3]*dLFactor);
-            else
-                aJFacSI  = aJFac     * dPFac*dECharge*dC;
-                aJFacSI  = aJFacSI  ./ ([dDX1 dDX2 dDX3]*dLFactor);
-                aJFacCGS = aJFac     * dPFac*dEChargeCGS*dC;
-                aJFacCGS = aJFacCGS ./ ([dDX1 dDX2 dDX3]*dLFactor);
-            end % if
-
-            obj.Variables.Convert.Norm.J1Fac = aJFac(1);
-            obj.Variables.Convert.Norm.J2Fac = aJFac(2);
-            obj.Variables.Convert.Norm.J3Fac = aJFac(3);
-            obj.Variables.Convert.SI.J1Fac   = aJFacSI(1);
-            obj.Variables.Convert.SI.J2Fac   = aJFacSI(2);
-            obj.Variables.Convert.SI.J3Fac   = aJFacSI(3);
-            obj.Variables.Convert.CGS.J1Fac  = aJFacCGS(1);
-            obj.Variables.Convert.CGS.J2Fac  = aJFacCGS(2);
-            obj.Variables.Convert.CGS.J3Fac  = aJFacCGS(3);
 
         end % function
 
@@ -1260,35 +1392,6 @@ classdef OsirisConfig
             
         end % function
         
-        function obj = fGetFields(obj)
-            
-            sFields = fExtractRaw(obj, '', 'diag_emf', 'reports', 0);
-
-            if isempty(sFields)
-                return;
-            end % if
-            
-            sFields = strrep(sFields, '"', '');
-            aFields = strsplit(sFields, ',');
-            obj.Variables.Fields.Field  = aFields;
-            obj.Variables.Fields.EField = {};
-            obj.Variables.Fields.BField = {};
-            
-            iE = 1;
-            iB = 1;
-            for i=1:length(aFields)
-                if strcmpi(aFields{i}(1), 'e')
-                    obj.Variables.Fields.EField{iE} = aFields{i};
-                    iE = iE + 1;
-                end % if
-                if strcmpi(aFields{i}(1), 'b')
-                    obj.Variables.Fields.BField{iB} = aFields{i};
-                    iB = iB + 1;
-                end % if
-            end % for
-            
-        end % function
-
         function obj = fGetDensity(obj)
             
             stSpecies = obj.Variables.Species.Species;
