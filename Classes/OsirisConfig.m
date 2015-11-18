@@ -629,8 +629,7 @@ classdef OsirisConfig
                     if ~isempty(strfind(sVal, ''','''))
                         evalc(['stReturn.',sVar,'={',sVal,'}']);
                     else
-                        ['stReturn.',sVar,'=',sVal]
-                        evalc(['stReturn.',sVar,'=',sVal]);
+                        evalc(['stReturn.',sVar,'={',sVal,'}']);
                     end % if
                 else
                     evalc(['stReturn.',sVar,'=[',sVal,']']);
