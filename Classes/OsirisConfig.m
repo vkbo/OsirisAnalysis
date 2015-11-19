@@ -762,6 +762,11 @@ classdef OsirisConfig
 
             end % for
 
+            
+            %
+            % Guess Species Roles
+            %
+            
             obj.Particles.Beams  = cBeams;
             obj.Particles.Plasma = cPlasma;
             
@@ -775,12 +780,63 @@ classdef OsirisConfig
             else
                 obj.Particles.DriveBeam = {};
             end % if
+            if ~isempty(cPlasma)
+                obj.Particles.PrimaryPlasma = cPlasma{1};
+            else
+                obj.Particles.PrimaryPlasma = {};
+            end % if
             
+            
+            %
+            % Extract Simulation Info From Plasma
+            %
+            
+            if ~isempty(cPlasma)
+
+                sPlasma    = cPlasma{1};
+                aProfile   = obj.Particles.Species.(sPlasma).Profile.ProfileX1;
+                dPlasmaMax = obj.Particles.Species.(sPlasma).Profile.PeakDensity;
+                
+                dStart = 0.0;
+                dStop  = 0.0;
+                dMax   = max(aProfile(:,2));
+                for x=1:length(aProfile(:,1))
+                    if aProfile(x,2) > 0.5*dMax
+                        dStart = aProfile(x,1);
+                        break;
+                    end % if
+                end % for
+                for x=length(aProfile(:,1)):-1:1
+                    if aProfile(x,2) > 0.5*dMax
+                        dStop = aProfile(x,1);
+                        break;
+                    end % if
+                end % for
+                
+            else
+                
+                dStart     = obj.Simulation.TMin;
+                dStop      = obj.Simulation.TMax;
+                dPlasmaMax = 1.0;
+
+            end % if
+            
+            % Save Plasma Details
+            obj.Simulation.PlasmaStart  = dStart;
+            obj.Simulation.PlasmaEnd    = dStop;
+            obj.Simulation.MaxPlasmaFac = dPlasmaMax;
+            
+            % Update Simulation Units
+            obj.Simulation.PhysN0       = obj.Simulation.N0 * dPlasmaMax;
+            obj.Simulation.PhysOmegaP   = obj.Simulation.OmegaP * sqrt(dPlasmaMax);
+            obj.Simulation.PhysLambdaP  = obj.Simulation.LambdaP / sqrt(dPlasmaMax);
+
         end % function
         
         function stReturn = fGetParticleSpecies(obj, sRawName, stData, iType)
             
             stReturn = {};
+            iMoving  = 0; % 1 for moving particles in x1 direction
 
             % Species Name
             try
@@ -818,7 +874,7 @@ classdef OsirisConfig
             
 
             %
-            % UDist
+            % Species UDist
             %
             
             % Only for Species and Catode
@@ -839,6 +895,9 @@ classdef OsirisConfig
                     aUfl = [0.0];
                 end % try
                 aUfl = obj.fArrayPad(aUfl, [0.0 0.0 0.0]);
+                if aUfl(1) > 0.0
+                    iMoving = 1;
+                end % if
 
                 % Return Variables
                 stReturn.Data.Thermal  = aUth;
@@ -982,229 +1041,250 @@ classdef OsirisConfig
             stReturn.Data.DiagReports  = cReports;
             stReturn.Data.PhaseSpaces  = cPhaseSpaces;
 
+
+            %
+            % Species Profile
+            %
+            
+            % Only for Species, Neutral and NeutralMovIons
+            if iType == 1 || iType == 3 || iType == 4
+                
+                stProfile = obj.fGetSpeciesProfile(stData,iMoving);
+                stReturn.Data.Profile = stProfile;
+                
+            end % if
+            
         end % function
-
-        % === OLD === %
         
-        function obj = fGetPlasmaVariables(obj)
+        function stReturn = fGetSpeciesProfile(obj, stData, iMov)
             
-            % Get variables
+            stReturn = {};
             
-            dTMin      = obj.Variables.Simulation.TMin;
-            dTMax      = obj.Variables.Simulation.TMax;
-            dOmegaP    = obj.Variables.Plasma.NormOmegaP;
-            dLambdaP   = obj.Variables.Plasma.NormLambdaP;
+            % Variables
+            iDim  = obj.Simulation.Dimensions;
+            dTMin = obj.Simulation.TMin;
+            dTMax = obj.Simulation.TMax;
+            aXMin = obj.Simulation.XMin;
+            aXMax = obj.Simulation.XMax;
+            aGrid = obj.Simulation.Grid;
 
-            % Extract plasma species variables
-            [iRows,~] = size(obj.Variables.Species.Plasma);
-            
-            for i=1:iRows
-                
-                sPlasma    = obj.Variables.Species.Plasma{i,1};
-                
-                dPStart    = -1.0;
-                dPEnd      = -1.0;
-                dPlasmaMax =  1.0;
+            % Profile Size
+            try
+                iNumX = int64(stData.profile.num_x{1});
+            catch
+                iNumX = -1;
+            end % try
 
-                obj.Variables.Plasma.(sPlasma) = {};
-                
-                % Extracting plasma profile
-                
-                sValue   = obj.fExtractRaw(sPlasma,'profile','profile_type',0,'uniform');
-                sProfile = strrep(sValue, '"', '');
-                iNumX    = obj.fExtractSingle(sPlasma,'profile','num_x',-1);
-                
-                if iNumX > 0 && strcmpi(sProfile,'uniform')
-                    sProfile = 'piecewise-linear';
+            % Density
+            try
+                dDensity = double(stData.profile.density{1});
+            catch
+                dDensity = 1.0;
+            end % try
+
+            % Profile Type
+            try
+                cType = stData.profile.profile_type;
+            catch
+                cType = {};
+            end % try
+            
+            sTypeAll = '';
+            sTypeX1  = '';
+            sTypeX2  = '';
+            sTypeX3  = '';
+            if isempty(cType)
+                if iNumX > 0
+                    sTypeX1 = 'piecewise-linear';
+                    sTypeX2 = 'piecewise-linear';
+                    if iDim > 2
+                        sTypeX3 = 'piecewise-linear';
+                    end % if
+                else
+                    sTypeAll = 'uniform';
                 end % if
-                
-                obj.Variables.Plasma.(sPlasma).ProfileType = sProfile;
-                
-                switch(sProfile)
+            else
+                switch(length(cType))
+                    case 1
+                        sTypeAll = cType{1};
+                    case 2
+                        sTypeX1 = cType{1};
+                        sTypeX2 = cType{2};
+                    case 3
+                        sTypeX1 = cType{1};
+                        sTypeX2 = cType{2};
+                        sTypeX3 = cType{3};
+                end % switch
+            end % if
+            
+            % Return Variables
+            stReturn.TypeAll = sTypeAll;
+            stReturn.TypeX1  = sTypeX1;
+            stReturn.TypeX2  = sTypeX2;
+            stReturn.TypeX3  = sTypeX3;
+            stReturn.NumX    = iNumX;
+            stReturn.Density = dDensity;
+            
+
+            %
+            % Calculate Profile Slice for Each Dimension
+            %
+            
+            aProfileX1 = [0,0];
+            aProfileX2 = [0,0];
+            aProfileX3 = [0,0];
+            oMathFunc  = {};
+            dPeak      = dDensity;
+
+            for d=1:iDim
+
+                % Determine Type
+                switch(d)
+                    case 1; sType = sTypeX1;
+                    case 2; sType = sTypeX2;
+                    case 3; sType = sTypeX3;
+                end % switch
+
+                % Determine Limits
+                if iMov || d > 1
+                    dMin = aXMin(d);
+                    dMax = aXMax(d);
+                    iN   = aGrid(d);
+                else
+                    dMin = dTMin;
+                    dMax = dTMax;
+                    iN   = floor(dMax-dMin);
+                end % if
+
+                % Set Minimum Resolution
+                if iN < 1000
+                    iN = 1000;
+                end % if
+
+                % Make Profile Array
+                aProfile      = [];
+                aProfile(:,1) = linspace(dMin,dMax,iN+1);
+                aProfile(:,2) = zeros(1,iN+1);
+                dDelta        = (dMax-dMin)/iN;
+            
+                if isempty(sTypeAll)
                     
-                    case 'piecewise-linear'
-                        
-                        % Piecewise Linear Plasma Function
+                    %
+                    % Individual Profile Types
+                    %
 
-                        aFX1 = obj.fExtractVarNum(sPlasma,'profile','fx',1);
-                        aX1  = obj.fExtractVarNum(sPlasma,'profile','x' ,1);
-                        aFX2 = obj.fExtractVarNum(sPlasma,'profile','fx',2);
-                        aX2  = obj.fExtractVarNum(sPlasma,'profile','x' ,2);
-                        aFX3 = obj.fExtractVarNum(sPlasma,'profile','fx',3);
-                        aX3  = obj.fExtractVarNum(sPlasma,'profile','x' ,3);
+                    % Make Profiles
+                    switch(sType)
 
-                        dMaxFX1 = max(aFX1);
-                        dMaxFX2 = max(aFX2);
-                        dMaxFX3 = max(aFX3);
+                        case 'gaussian'
+                            fprintf(2,'Gaussian particle profile calculations not implemented.+n');
 
-                        if isempty(aFX3)
-                            dMaxFX3 = 0;
-                            aFX3    = 0;
-                            aX3     = 0;
-                        end % if
-
-                        iTMin = floor(dTMin);
-                        iTMax = floor(dTMax);
-                        iNT   = iTMax-iTMin+1;
-                        aPD   = zeros(1,iNT);
-                        aZ    = linspace(iTMin,iTMax,iNT);
-                        iPR   = 0;
-                        aReg  = zeros(1,2);
-                        for j=1:length(aFX1)-1
-                            iSMin = floor(aX1(j))+iTMin;
-                            iSMax = floor(aX1(j+1))+iTMin;
-                            iNS   = iSMax-iSMin+1;
-                            aSPD  = linspace(aFX1(j),aFX1(j+1),iNS);
-                            aPD(iSMin+1:iSMax+1) = aSPD;
-                            if aFX1(j+1) > 0 && aFX1(j) == 0
-                                iPR = iPR + 1;
-                                aReg(iPR,1) = aX1(j);
+                        case 'piecewise-linear'
+                            
+                            % Get Profile Vectors
+                            try
+                                aX = double(cell2mat(stData.profile.x(:,d)));
+                            catch
+                                aX = zeros(iNumX,1);
+                            end % try
+                            try
+                                aFX = double(cell2mat(stData.profile.fx(:,d)));
+                            catch
+                                aFX = zeros(iNumX,1);
+                            end % try
+                            
+                            bErr = 0;
+                            if length(aX)  ~= length(aFX); bErr = 1; end % if
+                            if length(aX)  ~= iNumX;       bErr = 1; end % if
+                            if length(aFX) ~= iNumX;       bErr = 1; end % if
+                            
+                            if bErr
+                                fprintf(2,'Error: x, fx, num_x and dimensions do not match in input file.\n');
+                                continue;
                             end % if
-                            if aFX1(j+1) == 0 && aFX1(j) > 0
-                                aReg(iPR,2) = aX1(j);
-                            end % if
-                        end % for
-
-                        if aReg(iPR,2) == 0
-                            aReg(iPR,2) = aX1(end);
-                        end % if
-
-                        obj.Variables.Plasma.(sPlasma).DensityProfile = aPD;
-                        obj.Variables.Plasma.(sPlasma).DensityAxis    = aZ;
-                        obj.Variables.Plasma.(sPlasma).PlasmaRegions  = aReg;
-
-                        for j=1:length(aFX1)
-                            if dPStart < 0.0
-                                if aFX1(j) > 0.9*dMaxFX1
-                                    dPStart = aX1(j);
-                                end % if
-                            end % if
-                        end % for
-
-                        for j=length(aFX1):-1:1
-                            if dPEnd < 0.0
-                                if aFX1(j) > 0.1*dMaxFX1
-                                    dPEnd = aX1(j);
-                                end % if
-                            end % if
-                        end % for
-
-                        if dPEnd < 0.0
-                            dPEnd = obj.Variables.Simulation.TMax;
-                        end % if
-
-                        if dPEnd > aX1(end)
-                            dPEnd = aX1(end);
-                        end % if
-
-                        dPlasmaMax = dMaxFX1 * dMaxFX2;
-                        if dMaxFX3 > 0
-                            dPlasmaMax = dPlasmaMax * dMaxFX3;
-                        end % if
-
-                        % Save Variables
-
-                        obj.Variables.Plasma.(sPlasma).ProfileFX1   = aFX1;
-                        obj.Variables.Plasma.(sPlasma).ProfileX1    = aX1;
-                        obj.Variables.Plasma.(sPlasma).ProfileFX2   = aFX2;
-                        obj.Variables.Plasma.(sPlasma).ProfileX2    = aX2;
-                        obj.Variables.Plasma.(sPlasma).ProfileFX3   = aFX3;
-                        obj.Variables.Plasma.(sPlasma).ProfileX3    = aX3;
-
-                        obj.Variables.Plasma.(sPlasma).PlasmaMaxFX1 = dMaxFX1;
-                        obj.Variables.Plasma.(sPlasma).PlasmaMaxFX2 = dMaxFX2;
-                        obj.Variables.Plasma.(sPlasma).PlasmaMaxFX3 = dMaxFX3;
-
-                    case 'mathfunc'
-                        
-                        % Math Plasma Function
-
-                        sValue = obj.fExtractRaw(sPlasma,'profile','math_func_expr');
-                        sFunc  = strrep(sValue, '"', '');
-                        obj.Variables.Plasma.(sPlasma).ProfileFunction = sFunc;
-                        
-                        iTMin = floor(dTMin);
-                        iTMax = floor(dTMax);
-                        iNT   = iTMax-iTMin+1;
-                        aZ    = linspace(iTMin,iTMax,iNT);
-
-                        oMF = MathFunc(sFunc);
-                        aPD = oMF.Eval(aZ,0,0);
-
-                        if isempty(aPD)
-                        
-                            fprintf(2,'OsirisConfig Error: Cannot parse math function from input deck.\n');
-
-                        else
-                        
-                            obj.Variables.Plasma.(sPlasma).DensityProfile = aPD;
-                            obj.Variables.Plasma.(sPlasma).DensityAxis    = aZ;
-
-                            dPlasmaMax = max(aPD);
-
-                            for j=1:length(aPD)
-                                if dPStart < 0.0
-                                    if aPD(j) > 0.95*dPlasmaMax
-                                        dPStart = aZ(j);
-                                    end % if
-                                end % if
+                            
+                            aX = floor(aX/dDelta);
+                            for n=1:iNumX-1
+                                iA = aX(n)+1; iB = aX(n+1)+1; iC = iB-iA+1;
+                                aProfile(iA:iB,2) = linspace(aFX(n),aFX(n+1),iC);
                             end % for
+                            
+                            dPeak = dPeak * max(aProfile(:,2));
 
-                            for j=length(aPD):-1:1
-                                if dPEnd < 0.0
-                                    if aPD(j) > 0.05*dPlasmaMax
-                                        dPEnd = aZ(j);
-                                    end % if
+                    end % switch
+
+                else
+                    
+                    %
+                    % Common Profile Types
+                    %
+
+                    switch(sTypeAll)
+
+                        case 'uniform'
+                            aProfile = aProfile + 1;
+
+                        case 'channel'
+                            fprintf(2,'Channel particle profile calculations not implemented.+n');
+
+                        case 'sphere'
+                            fprintf(2,'Spherical particle profile calculations not implemented.+n');
+
+                        case 'math func'
+
+                            if isempty(oMathFunc)
+                            
+                                % Get Math Function
+                                try
+                                    sFunction = stData.profile.math_func_expr{1};
+                                catch
+                                    sFunction = '';
+                                end % try
+
+                                if ~isempty(sFunction)
+                                    oMathFunc = MathFunc(sFunction);
                                 end % if
-                            end % for
 
-                            if dPEnd < 0.0
-                                dPEnd = obj.Variables.Simulation.TMax;
                             end % if
 
-                            if dPEnd > aZ(end)
-                                dPEnd = aZ(end);
-                            end % if
-                        end % if
-                        
-                    otherwise
-                        
-                        fprintf('OsirisConfig Warning: Unsupported species profile encountered.\n');
-
+                    end % switch
+                    
                 end % if
-
-                if strcmpi(obj.Variables.Species.PrimaryPlasma,sPlasma)
-                    obj.Variables.Plasma.PlasmaStart  = dPStart;
-                    obj.Variables.Plasma.PlasmaEnd    = dPEnd;
-
-                    obj.Variables.Plasma.MaxPlasmaFac = dPlasmaMax;
-                    obj.Variables.Plasma.MaxOmegaP    = dOmegaP  * sqrt(dPlasmaMax);
-                    obj.Variables.Plasma.MaxLambdaP   = dLambdaP / sqrt(dPlasmaMax);
-                end % if
+                
+                % Save Results
+                switch(d)
+                    case 1; aProfileX1 = aProfile;
+                    case 2; aProfileX2 = aProfile;
+                    case 3; aProfileX3 = aProfile;
+                end % switch
 
             end % for
-            
-        end % function
-        
-        function obj = fGetBeamVariables(obj)
-            
-            % Loop through beam species
-            [iRows,~] = size(obj.Variables.Species.Beam);
-            
-            for i=1:iRows
+
+            % If Was Math Function, Eval
+            if ~isempty(oMathFunc)
+
+                if iDim > 2
+                    mTemp = oMathFunc.Eval(aProfileX1(:,1),aProfileX2(:,1),aProfileX3(:,1));
+                    mTemp = mTemp.*(mTemp > 0);
+                    aProfileX1(:,2) = sum(mTemp,1);
+                    aProfileX2(:,2) = sum(mTemp,2);
+                    aProfileX3(:,3) = sum(mTemp,3);
+                else
+                    mTemp = oMathFunc.Eval(aProfileX1(:,1),aProfileX2(:,1),[0]);
+                    mTemp = mTemp.*(mTemp > 0);
+                    aProfileX1(:,2) = sum(mTemp,1);
+                    aProfileX2(:,2) = sum(mTemp,2);
+                end % if
                 
-                % Beam profile
-                
-                sValue = obj.fExtractRaw(sBeam, 'profile', 'profile_type');
-                obj.Variables.Beam.(sBeam).ProfileType     = strrep(sValue, '"', '');
-                
-                sValue = obj.fExtractRaw(sBeam, 'profile', 'math_func_expr');
-                obj.Variables.Beam.(sBeam).ProfileFunction = strrep(sValue, '"', '');
-                
-                aValue = obj.fExtractFixedNum(sBeam,'profile','density',[0]);
-                obj.Variables.Beam.(sBeam).Density         = double(aValue(1));
-                
-            end % for
+                dPeak = dPeak * max(mTemp(:));
+
+            end % if
+
+            % Save Profile Lineouts
+            stReturn.ProfileX1   = aProfileX1;
+            stReturn.ProfileX2   = aProfileX2;
+            stReturn.ProfileX3   = aProfileX3;
+            stReturn.PeakDensity = dPeak;
             
         end % function
 
