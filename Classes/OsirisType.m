@@ -237,8 +237,8 @@ classdef OsirisType
  
         function obj = set.X3Lim(obj, aX3Lim)
 
-            dX3Min = obj.Data.Config.Variables.Simulation.XMin(3);
-            dX3Max = obj.Data.Config.Variables.Simulation.XMax(3);
+            dX3Min = obj.Data.Config.Simulation.XMin(3);
+            dX3Max = obj.Data.Config.Simulation.XMax(3);
 
             if length(aX3Lim) ~= 2
                 fprintf(2, 'Error: x3 limit needs to be a vector of dimension 2.\n');
