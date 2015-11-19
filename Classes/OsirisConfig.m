@@ -764,9 +764,9 @@ classdef OsirisConfig
             obj.Particles.Plasma = cPlasma;
             
             if ~isempty(cBeams)
-                obj.Particles.DriveBeam = cBeams{1};
+                obj.Particles.DriveBeam = cBeams(1);
                 if length(cBeams) > 1
-                    obj.Particles.WitnessBeam = cBeams{2:end};
+                    obj.Particles.WitnessBeam = cBeams(2:end);
                 else
                     obj.Particles.WitnessBeam = {};
                 end % if
@@ -774,7 +774,7 @@ classdef OsirisConfig
                 obj.Particles.DriveBeam = {};
             end % if
             if ~isempty(cPlasma)
-                obj.Particles.PrimaryPlasma = cPlasma{1};
+                obj.Particles.PrimaryPlasma = cPlasma(1);
             else
                 obj.Particles.PrimaryPlasma = {};
             end % if

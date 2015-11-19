@@ -486,7 +486,7 @@ classdef OsirisData
                 fprintf(2, 'Error: Data type needs to be specified.\n');
                 return;
             end % if
-            if ~obj.fDataSetExists(sType, sSet, sSpecies)
+            if ~obj.DataSetExists(sType, sSet, sSpecies)
                 fprintf(2, 'Error: Specified data set does not exist.\n');
                 return;
             end % if
@@ -572,6 +572,20 @@ classdef OsirisData
             
         end % function
         
+        function bReturn = DataSetExists(obj, sType, sSet, sSpecies)
+            
+            bReturn = false;
+            
+            [~,iMS] = size(obj.MSData.Data);
+            for m=1:iMS
+                if strcmp(obj.MSData.Data(m).Type, sType) && strcmp(obj.MSData.Data(m).Set, sSet) && strcmp(obj.MSData.Data(m).Species, sSpecies)
+                    bReturn = true;
+                    return;
+                end % if
+            end % for
+            
+        end % function
+
         function stReturn = ExportTags(obj, sTime, sSpecies, varargin)
             
             stReturn = {};
@@ -947,20 +961,6 @@ classdef OsirisData
             stReturn.Index    = stIndex;
             stReturn.MinFiles = iMin;
             stReturn.MaxFiles = iMax;
-            
-        end % function
-        
-        function bReturn = fDataSetExists(obj, sType, sSet, sSpecies)
-            
-            bReturn = false;
-            
-            [~,iMS] = size(obj.MSData.Data);
-            for m=1:iMS
-                if strcmp(obj.MSData.Data(m).Type, sType) && strcmp(obj.MSData.Data(m).Set, sSet) && strcmp(obj.MSData.Data(m).Species, sSpecies)
-                    bReturn = true;
-                    return;
-                end % if
-            end % for
             
         end % function
 
