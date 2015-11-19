@@ -14,13 +14,7 @@ classdef OsirisConfig
 
         Path       = '';    % Path to data directory
         File       = '';    % Config file within data directory
-        N0         = 0.0;   % N_0
-        NMax       = 0.0;   % N_max
         Silent     = false; % Set to true to disable command window output
-        HasData    = false; % True if folder 'MS' exists
-        HasTracks  = false; % True if folder 'MS/TRACKS' exists
-        Completed  = false; % True if folder 'TIMINGS' exists
-        Consistent = false; % True if all data folders have the same number of files
 
     end % properties
 
@@ -55,16 +49,15 @@ classdef OsirisConfig
             % Constants
             
             % SI
-            obj.Constants.SpeedOfLight        =  2.99792458e8;      % m/s (exact)
-            obj.Constants.ElectronMass        =  9.10938291e-31;    % kg
-            obj.Constants.ElectronMassMeV     =  5.109989282e-1;    % MeV/c^2
-           %obj.Constants.ElectronVolt        =  1.602176565e-19;   % J      [eV]
-            obj.Constants.ElementaryCharge    =  1.602176565e-19;   % C
-            obj.Constants.VacuumPermitivity   =  8.854187817e-12;   % F/m 
-            obj.Constants.VacuumPermeability  =  1.2566370614e-6;   % N/A^2
+            obj.Constants.SpeedOfLight        =  2.99792458e8;    % m/s (exact)
+            obj.Constants.ElectronMass        =  9.10938291e-31;  % kg
+            obj.Constants.ElectronMassMeV     =  5.109989282e-1;  % MeV/c^2
+            obj.Constants.ElementaryCharge    =  1.602176565e-19; % C
+            obj.Constants.VacuumPermitivity   =  8.854187817e-12; % F/m 
+            obj.Constants.VacuumPermeability  =  1.2566370614e-6; % N/A^2
 
             % CGS
-            obj.Constants.ElementaryChargeCGS =  4.80320425e-10;    % statC
+            obj.Constants.ElementaryChargeCGS =  4.80320425e-10;  % statC
 
             % Translae Class for Variables
             obj.Translate = Variables();
