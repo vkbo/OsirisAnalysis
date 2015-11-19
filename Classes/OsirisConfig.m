@@ -35,6 +35,7 @@ classdef OsirisConfig
         Simulation = {}; % Simulation variables
         EMFields   = {}; % Electro-magnetic field variables
         Particles  = {}; % Particle variables
+        NameLists = {}; % Container for Fortran namelists
 
     end % properties
 
@@ -42,7 +43,6 @@ classdef OsirisConfig
 
         Files     = {}; % Holds possible config files
         Translate = {}; % Container for Variables class
-        NameLists = {}; % Container for Fortran namelists
         
     end % properties
 
@@ -226,7 +226,6 @@ classdef OsirisConfig
             iNL = 1;
             stNameLists(iNL).Section  = [];
             stNameLists(iNL).NameList = [];
-            stNameLists(iNL).Parsed   = 0;
 
             for c=1:length(sFile)
                 
@@ -251,8 +250,13 @@ classdef OsirisConfig
                 % If the character is a '}', the buffer so far contains a name list
                 if sFile(c) == '}' && ~bQuote
                     if length(sBuffer) > 1
-                        stNameLists(iNL).NameList = strtrim(sBuffer(1:end-1));
-                        stNameLists(iNL).Parsed   = 0;
+                        sBuffer = strtrim(sBuffer(1:end-1));
+                        if ~isempty(sBuffer)
+                            if sBuffer(end) ~= ','
+                                sBuffer = [sBuffer,','];
+                            end % if
+                        end % if
+                        stNameLists(iNL).NameList = sBuffer;
                         sBuffer = ' '; % Reset buffer
                         iNL = iNL + 1; % Move to next section
                     end % if
@@ -937,6 +941,100 @@ classdef OsirisConfig
         end % function
         
         function obj = fGetParticleVariables(obj)
+            
+            % Get Number of Species
+            try
+                iSpecies = int64(obj.Input.particles.particles.num_species{1});
+            catch
+                iSpecies = 0;
+            end % try
+
+            % Get Number of Cathodes
+            try
+                iCathode = int64(obj.Input.particles.particles.num_cathode{1});
+            catch
+                iCathode = 0;
+            end % try
+            
+            % Get Number of Neutrals
+            try
+                iNeutral = int64(obj.Input.particles.particles.num_neutral{1});
+            catch
+                iNeutral = 0;
+            end % try
+
+            % Get Number of Neutrals
+            try
+                iNMovIons = int64(obj.Input.particles.particles.num_neutral_mov_ions{1});
+            catch
+                iNMovIons = 0;
+            end % try
+            
+            % Save Particle Values
+            obj.Particles.NSpecies        = iSpecies;
+            obj.Particles.NCathode        = iCathode;
+            obj.Particles.NNeutral        = iNeutral;
+            obj.Particles.NNeutralMovIons = iNMovIons;
+            
+            %
+            % Loop All Particles
+            %
+            
+            % Build Particle List
+            cPart = {};
+            aType = [];
+            for p=1:iSpecies
+                cPart = {cPart{:} sprintf('species_%d',p)};
+                aType = [aType 1];
+            end % for
+            for p=1:iCathode
+                cPart = {cPart{:} sprintf('cathode_%d',p)};
+                aType = [aType 2];
+            end % for
+            for p=1:iNeutral
+                cPart = {cPart{:} sprintf('neutral_%d',p)};
+                aType = [aType 3];
+            end % for
+            for p=1:iNMovIons
+                cPart = {cPart{:} sprintf('neutral_mov_ions_%d',p)};
+                aType = [aType 4];
+            end % for
+
+            % Get Proper Names
+            cType = {'Species','Cathode','Neutral','NeutralMovIons'};
+            for p=1:length(cPart)
+
+                % Species Name
+                try
+                    sName = obj.Input.particles.(cPart{p}).species.name{1};
+                catch
+                    sName = cPart{p};
+                end % try
+                sType = cType{aType(p)};
+                
+                vSpecies = obj.Translate.Lookup(sName);
+                sPName   = vSpecies.Name;
+                sPName   = strrep(sPName,' ','_');
+                sPName   = strrep(sPName,'-','_');
+                
+                % Species Type
+                sSpeciesType = 'Unknown';
+                if vSpecies.isBeam
+                    sSpeciesType = 'Beam';
+                end % if
+                if vSpecies.isPlasma
+                    sSpeciesType = 'Plasma';
+                end % if
+                
+                obj.Particles.(sType).(sPName).Name = sName;
+                obj.Particles.(sType).(sPName).Type = sSpeciesType;
+                
+            end % for
+
+            
+        end % function
+        
+        function stReturn = fGetParticleSpecies(obj)
         end % function
 
         % === OLD === %

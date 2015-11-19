@@ -182,7 +182,7 @@ classdef OsirisData
                obj.Config.Consistent = false;
             end % if
             
-            obj.Translate = Variables(obj.Config.Variables.Simulation.Coordinates);
+            obj.Translate = Variables(obj.Config.Simulation.Coordinates);
 
         end % function
         
