@@ -61,7 +61,7 @@ classdef Momentum < OsirisType
             if stSpecies.isSpecies
                 obj.Species = stSpecies;
             else
-                sDefault = obj.Data.Config.Variables.Species.WitnessBeam{1};
+                sDefault = obj.Data.Config.Particles.WitnessBeam{1};
                 fprintf(2, 'Error: ''%s'' is not a recognised species name. Using ''%s'' instead.\n', sSpecies, sDefault);
                 obj.Species = obj.Translate.Lookup(sDefault);
             end % if
@@ -147,7 +147,7 @@ classdef Momentum < OsirisType
             stOpt = oOpt.Results;
             
             % Read simulation data
-            dEMass = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
+            dEMass = obj.Data.Config.Constants.ElectronMassMeV*1e6;
 
             % Calculate axes
             aTAxis = obj.fGetTimeAxis;
@@ -209,8 +209,8 @@ classdef Momentum < OsirisType
             
             % Variables
             dLFac     = obj.AxisFac(1);
-            dTimeStep = obj.Data.Config.Variables.Simulation.TimeStep;
-            iNDump    = obj.Data.Config.Variables.Simulation.NDump;
+            dTimeStep = obj.Data.Config.Simulation.TimeStep;
+            iNDump    = obj.Data.Config.Simulation.NDump;
             dDeltaZ   = dTimeStep*iNDump;
             
             for i=iStart:iStop
@@ -307,7 +307,7 @@ classdef Momentum < OsirisType
                     aXth = aRaw(:,3);
                 end % if
 
-                if strcmpi(obj.Coords, 'cylindrical')
+                if obj.Cylindrical
                     aPz  = aRaw(:,4);
                     aPr  = aRaw(:,5);
                     aPth = aRaw(:,6);
@@ -328,7 +328,7 @@ classdef Momentum < OsirisType
                 aERMS(s)  = sqrt(det(aCov));
                 aENorm(s) = sqrt(det(aCov))*dGamma*dBeta;
             
-                if strcmpi(obj.Coords, 'cylindrical')
+                if obj.Cylindrical
                     aX      = [-aX;aX];
                     aXPrime = [-aXPrime;aXPrime];
                     aCharge = [aCharge;aCharge];
@@ -387,16 +387,8 @@ classdef Momentum < OsirisType
     
         function aReturn = MomentumToEnergy(obj, aMomentum)
             
-            if obj.Species.isBeam
-                dRQM = obj.Data.Config.Variables.Beam.(obj.Species.Name).RQM;
-            elseif obj.Species.isPlasma
-                dRQM = obj.Data.Config.Variables.Plasma.(obj.Species.Name).RQM;
-            else
-                fprintf(2,'Error: Unknown species type.\n');
-                return;
-            end % if
-
-            dEMass  = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
+            dRQM    = obj.Data.Config.Particles.Species.(obj.Species.Name).RQM;
+            dEMass  = obj.Data.Config.Constants.ElectronMassMeV*1e6;
             dPFac   = abs(dRQM)*dEMass;
             aReturn = sqrt(aMomentum.^2 + 1)*dPFac;
             
