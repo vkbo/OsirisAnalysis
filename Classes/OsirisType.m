@@ -22,6 +22,8 @@ classdef OsirisType
     properties(GetAccess='public', SetAccess='private')
         
         Data        = [];                        % OsirisData dataset
+        Species     = [];                        % Holds species information
+        Field       = [];                        % Holds field information
         Units       = 'N';                       % Units of axes
         AxisUnits   = {'N' 'N' 'N'};             % Units of axes
         AxisScale   = {'Auto' 'Auto' 'Auto'};    % Scale of axes
@@ -48,19 +50,10 @@ classdef OsirisType
 
     methods
         
-        function obj = OsirisType(oData, varargin)
+        function obj = OsirisType(oData, sSpecies, sField, varargin)
             
-            % Set data
+            % Set Data
             obj.Data = oData;
-
-            % Read input parameters
-            oOpt = inputParser;
-            addParameter(oOpt, 'Units',   'N');
-            addParameter(oOpt, 'X1Scale', 'Auto');
-            addParameter(oOpt, 'X2Scale', 'Auto');
-            addParameter(oOpt, 'X3Scale', 'Auto');
-            parse(oOpt, varargin{:});
-            stOpt = oOpt.Results;
 
             % Read config
             aXMin    = obj.Data.Config.Simulation.XMin;
@@ -70,14 +63,49 @@ classdef OsirisType
             dLFactor = obj.Data.Config.Convert.SI.LengthFac;
             iDim     = obj.Data.Config.Simulation.Dimensions;
 
-            % Set Scale and Units
-            obj.AxisScale   = {stOpt.X1Scale, stOpt.X2Scale, stOpt.X3Scale};
+            % Set Variables
             obj.Dim         = iDim;
             obj.Coords      = sCoords;
             obj.Cylindrical = bCyl;
             obj.Translate   = Variables(sCoords);
+            
+            % Set Species
+            if ~isempty(sSpecies)
+                stSpecies = obj.Translate.Lookup(sSpecies);
+                if stSpecies.isSpecies
+                    obj.Species.Var    = stSpecies;
+                    obj.Species.Config = obj.Data.Config.Particles.Species.(stSpecies.Name);
+                else
+                    sDefault = obj.Data.Config.Particles.WitnessBeam{1};
+                    fprintf(2, 'Error: ''%s'' is not a recognised species name. Using ''%s'' instead.\n', sSpecies, sDefault);
+                    obj.Species = obj.Translate.Lookup(sDefault);
+                end % if
+            end % if
+            
+            % Set Field
+            if ~isempty(sField)
+                stField = obj.Translate.Lookup(sField);
+                if stField.isValidEMFDiag
+                    obj.Field.Var = stField;
+                else
+                    fprintf(2, 'Error: ''%s'' is not a recognised field. Using ''e1'' instead.\n', sField);
+                    obj.Field = obj.Translate.Lookup('e1');
+                end % if
+            end % if
 
-            % Evaluate units
+            % Read Input Parameters
+            oOpt = inputParser;
+            addParameter(oOpt, 'Units',   'N');
+            addParameter(oOpt, 'X1Scale', 'Auto');
+            addParameter(oOpt, 'X2Scale', 'Auto');
+            addParameter(oOpt, 'X3Scale', 'Auto');
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
+
+            % Set Scale
+            obj.AxisScale = {stOpt.X1Scale, stOpt.X2Scale, stOpt.X3Scale};
+
+            % Evaluate Units
             switch(lower(stOpt.Units))
 
                 case 'si'

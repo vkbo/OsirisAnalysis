@@ -29,16 +29,6 @@
 classdef BField < OsirisType
 
     %
-    % Properties
-    %
-
-    properties(GetAccess = 'public', SetAccess = 'public')
-        
-        Field = ''; % Field to analyse
-        
-    end % properties
-
-    %
     % Constructor
     %
 
@@ -47,16 +37,7 @@ classdef BField < OsirisType
         function obj = BField(oData, sField, varargin)
             
             % Call OsirisType constructor
-            obj@OsirisType(oData, varargin{:});
-
-            % Set field
-            stField = obj.Translate.Lookup(sField);
-            if stField.isBField
-                obj.Field = stField;
-            else
-                fprintf(2, 'Error: ''%s'' is not a recognised magnetic field. Using ''b1'' instead.\n', sField);
-                obj.Field = obj.Translate.Lookup('b1');
-            end % if
+            obj@OsirisType(oData, '', sField, varargin{:});
             
         end % function
         
@@ -77,13 +58,13 @@ classdef BField < OsirisType
             dB0 = obj.Data.Config.Convert.SI.B0;
             
             % Get data and axes
-            aData   = obj.Data.Data(obj.Time, 'FLD', obj.Field.Name, '');
+            aData   = obj.Data.Data(obj.Time, 'FLD', obj.Field.Var.Name, '');
             aX1Axis = obj.fGetBoxAxis('x1');
             aX2Axis = obj.fGetBoxAxis('x2');
 
             % Check if cylindrical
             if obj.Cylindrical
-                if strcmpi(obj.Field.Name,'b3')
+                if strcmpi(obj.Field.Var.Name,'b3')
                     aData = transpose([-fliplr(aData),aData]);
                 else
                     aData = transpose([fliplr(aData),aData]);

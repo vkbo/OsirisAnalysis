@@ -40,7 +40,7 @@ classdef Phase < OsirisType
 
     properties(GetAccess = 'public', SetAccess = 'public')
         
-        Species = ''; % Species to analyse
+        % None
 
     end % properties
     
@@ -53,17 +53,7 @@ classdef Phase < OsirisType
         function obj = Phase(oData, sSpecies, varargin)
             
             % Call OsirisType constructor
-            obj@OsirisType(oData, varargin{:});
-            
-            % Set species
-            stSpecies = obj.Translate.Lookup(sSpecies);
-            if stSpecies.isSpecies
-                obj.Species = stSpecies;
-            else
-                sDefault = obj.Data.Config.Particles.WitnessBeam{1};
-                fprintf(2, 'Error: ''%s'' is not a recognised species name. Using ''%s'' instead.\n', sSpecies, sDefault);
-                obj.Species = obj.Translate.Lookup(sDefault);
-            end % if
+            obj@OsirisType(oData, sSpecies, '', varargin{:});
             
         end % function
         
@@ -96,7 +86,7 @@ classdef Phase < OsirisType
             stOpt = oOpt.Results;
             
             % Get data
-            aData     = transpose(obj.Data.Data(obj.Time,'PHA',cAxis.Input,obj.Species.Name));
+            aData     = transpose(obj.Data.Data(obj.Time,'PHA',cAxis.Input,obj.Species.Var.Name));
             aAxis     = obj.fGetDiagAxis(sAxis);
             stAxis    = obj.fConvertAxis(cAxis.Input);
             stDeposit = obj.fConvertDeposit(cAxis.Deposit);
@@ -165,7 +155,7 @@ classdef Phase < OsirisType
             end % if
             
             % Get data
-            aData     = obj.Data.Data(obj.Time,'PHA',cAxis.Input,obj.Species.Name);
+            aData     = obj.Data.Data(obj.Time,'PHA',cAxis.Input,obj.Species.Var.Name);
             aHAxis    = obj.fGetDiagAxis(sAxis1);
             aVAxis    = obj.fGetDiagAxis(sAxis2);
             stHAxis   = obj.fConvertAxis(sAxis1);
@@ -232,11 +222,11 @@ classdef Phase < OsirisType
             end % if
             
             sAxis = '';
-            if obj.Data.DataSetExists('PHA',sprintf('%s%s',vAxis1.Name,vAxis2.Name),obj.Species.Name)
+            if obj.Data.DataSetExists('PHA',sprintf('%s%s',vAxis1.Name,vAxis2.Name),obj.Species.Var.Name)
                 sAxis   = sprintf('%s%s',vAxis1.Name,vAxis2.Name);
                 bRotate = false;
             end % if
-            if obj.Data.DataSetExists('PHA',sprintf('%s%s',vAxis2.Name,vAxis1.Name),obj.Species.Name)
+            if obj.Data.DataSetExists('PHA',sprintf('%s%s',vAxis2.Name,vAxis1.Name),obj.Species.Var.Name)
                 sAxis   = sprintf('%s%s',vAxis2.Name,vAxis1.Name);
                 bRotate = true;
             end % if
@@ -261,7 +251,7 @@ classdef Phase < OsirisType
             dQFac  = obj.Data.Config.Convert.SI.ChargeFac;
             
             % Retrieve data
-            aRaw = obj.Data.Data(obj.Time,'RAW','',obj.Species.Name);
+            aRaw = obj.Data.Data(obj.Time,'RAW','',obj.Species.Var.Name);
             
             % Move x1 to box start
             aRaw(:,1) = aRaw(:,1) - dTFac*obj.Time;
@@ -394,7 +384,7 @@ classdef Phase < OsirisType
             end % if
             
             % Get data
-            aRaw = obj.Data.Data(obj.Time, 'RAW', '', obj.Species.Name);
+            aRaw = obj.Data.Data(obj.Time, 'RAW', '', obj.Species.Var.Name);
             aRaw(:,1) = aRaw(:,1) - obj.BoxOffset;
 
             % Prepare data
@@ -471,7 +461,7 @@ classdef Phase < OsirisType
                 iDim = obj.Dim;
             end % if
             
-            stMap = obj.Data.Config.Particles.Species.(obj.Species.Name).PhaseSpaces.Details;
+            stMap = obj.Data.Config.Particles.Species.(obj.Species.Var.Name).PhaseSpaces.Details;
             
             [~,iN] = size(stMap);
             
@@ -501,49 +491,49 @@ classdef Phase < OsirisType
             
             switch sAxis
                 case 'x1'
-                    dMin = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagXMin(1);
-                    dMax = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagXMax(1);
-                    iN   = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagNX(1);
+                    dMin = obj.Data.Config.Particles.Species.(obj.Species.Var.Name).DiagXMin(1);
+                    dMax = obj.Data.Config.Particles.Species.(obj.Species.Var.Name).DiagXMax(1);
+                    iN   = obj.Data.Config.Particles.Species.(obj.Species.Var.Name).DiagNX(1);
                 case 'x2'
-                    dMin = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagXMin(2);
-                    dMax = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagXMax(2);
-                    iN   = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagNX(2);
+                    dMin = obj.Data.Config.Particles.Species.(obj.Species.Var.Name).DiagXMin(2);
+                    dMax = obj.Data.Config.Particles.Species.(obj.Species.Var.Name).DiagXMax(2);
+                    iN   = obj.Data.Config.Particles.Species.(obj.Species.Var.Name).DiagNX(2);
                 case 'x3'
-                    dMin = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagXMin(3);
-                    dMax = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagXMax(3);
-                    iN   = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagNX(3);
+                    dMin = obj.Data.Config.Particles.Species.(obj.Species.Var.Name).DiagXMin(3);
+                    dMax = obj.Data.Config.Particles.Species.(obj.Species.Var.Name).DiagXMax(3);
+                    iN   = obj.Data.Config.Particles.Species.(obj.Species.Var.Name).DiagNX(3);
                 case 'p1'
-                    dMin = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagPMin(1);
-                    dMax = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagPMax(1);
-                    iN   = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagNP(1);
+                    dMin = obj.Data.Config.Particles.Species.(obj.Species.Var.Name).DiagPMin(1);
+                    dMax = obj.Data.Config.Particles.Species.(obj.Species.Var.Name).DiagPMax(1);
+                    iN   = obj.Data.Config.Particles.Species.(obj.Species.Var.Name).DiagNP(1);
                 case 'p2'
-                    dMin = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagPMin(2);
-                    dMax = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagPMax(2);
-                    iN   = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagNP(2);
+                    dMin = obj.Data.Config.Particles.Species.(obj.Species.Var.Name).DiagPMin(2);
+                    dMax = obj.Data.Config.Particles.Species.(obj.Species.Var.Name).DiagPMax(2);
+                    iN   = obj.Data.Config.Particles.Species.(obj.Species.Var.Name).DiagNP(2);
                 case 'p3'
-                    dMin = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagPMin(3);
-                    dMax = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagPMax(3);
-                    iN   = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagNP(3);
+                    dMin = obj.Data.Config.Particles.Species.(obj.Species.Var.Name).DiagPMin(3);
+                    dMax = obj.Data.Config.Particles.Species.(obj.Species.Var.Name).DiagPMax(3);
+                    iN   = obj.Data.Config.Particles.Species.(obj.Species.Var.Name).DiagNP(3);
                 case 'l1'
-                    dMin = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagLMin(1);
-                    dMax = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagLMax(1);
-                    iN   = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagNL(1);
+                    dMin = obj.Data.Config.Particles.Species.(obj.Species.Var.Name).DiagLMin(1);
+                    dMax = obj.Data.Config.Particles.Species.(obj.Species.Var.Name).DiagLMax(1);
+                    iN   = obj.Data.Config.Particles.Species.(obj.Species.Var.Name).DiagNL(1);
                 case 'l2'
-                    dMin = obj.Data.Config.Variables.Species.(obj.Species.Name).DiagLMin(2);
-                    dMax = obj.Data.Config.Variables.Species.(obj.Species.Name).DiagLMax(2);
-                    iN   = obj.Data.Config.Variables.Species.(obj.Species.Name).DiagNL(2);
+                    dMin = obj.Data.Config.Variables.Species.(obj.Species.Var.Name).DiagLMin(2);
+                    dMax = obj.Data.Config.Variables.Species.(obj.Species.Var.Name).DiagLMax(2);
+                    iN   = obj.Data.Config.Variables.Species.(obj.Species.Var.Name).DiagNL(2);
                 case 'l3'
-                    dMin = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagLMin(3);
-                    dMax = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagLMax(3);
-                    iN   = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagNL(3);
+                    dMin = obj.Data.Config.Particles.Species.(obj.Species.Var.Name).DiagLMin(3);
+                    dMax = obj.Data.Config.Particles.Species.(obj.Species.Var.Name).DiagLMax(3);
+                    iN   = obj.Data.Config.Particles.Species.(obj.Species.Var.Name).DiagNL(3);
                 case 'g'
-                    dMin = obj.Data.Config.Variables.Species.(obj.Species.Name).DiagGammaMin;
-                    dMax = obj.Data.Config.Variables.Species.(obj.Species.Name).DiagGammaMax;
-                    iN   = obj.Data.Config.Variables.Species.(obj.Species.Name).DiagNGamma;
+                    dMin = obj.Data.Config.Variables.Species.(obj.Species.Var.Name).DiagGammaMin;
+                    dMax = obj.Data.Config.Variables.Species.(obj.Species.Var.Name).DiagGammaMax;
+                    iN   = obj.Data.Config.Variables.Species.(obj.Species.Var.Name).DiagNGamma;
                 case 'gl'
-                    dMin = obj.Data.Config.Variables.Species.(obj.Species.Name).DiagGammaMin;
-                    dMax = obj.Data.Config.Variables.Species.(obj.Species.Name).DiagGammaMax;
-                    iN   = obj.Data.Config.Variables.Species.(obj.Species.Name).DiagNGamma;
+                    dMin = obj.Data.Config.Variables.Species.(obj.Species.Var.Name).DiagGammaMin;
+                    dMax = obj.Data.Config.Variables.Species.(obj.Species.Var.Name).DiagGammaMax;
+                    iN   = obj.Data.Config.Variables.Species.(obj.Species.Var.Name).DiagNGamma;
             end % switch
             
             aReturn = linspace(dMin, dMax, iN);
