@@ -1,37 +1,25 @@
 
 %
-%  Class Object :: Translate Variable Name
-% *****************************************
+%  Class Object :: Translates Variable Name
+% ******************************************
 %
 
-classdef Variable
+classdef Variables
 
     %
-    % Public Properties
+    % Properties
     %
 
-    properties (GetAccess = 'public', SetAccess = 'public')
-
-        Original = ''; % Original input variable
-        Search   = {}; % Set of types to search
-        Type     = ''; % Actual type
-        Coords   = 1;  % 0 = cylindrical, 1 = cartesian
-        Name     = ''; % Standard name of the variable
-        Full     = ''; % Full description of the variable
-        Short    = ''; % Short description of the variable
-        Tex      = ''; % Tex version of the variable
+    properties(GetAccess='public', SetAccess='private')
+        
+        Coords = 1;  % 0 = cylindrical, 1 = cartesian
 
     end % properties
 
-    %
-    % Private Properties
-    %
+    properties(GetAccess='public', SetAccess='private')
 
-    properties (GetAccess = 'private', SetAccess = 'private')
-
-        Map   = {};
         Types = {};
-        Count = 0;
+        Map   = {};
 
     end % properties
 
@@ -41,51 +29,26 @@ classdef Variable
 
     methods
 
-        function obj = Variable(sVar, vCoords, vType)
+        function obj = Variables(vCoords)
 
             %
             % Check Inputs
             %
 
-            % Default Args
-            if nargin < 3
-                vType = '';
-            end % if
-            if nargin < 2
+            if nargin < 1
                 vCoords = 'cylindrical';
             end % if
 
-            % Variable
-            obj.Original = sVar;
-
             % Coordinates
-            if isInteger(vCoords)
-                iCoords = vCoords;
-            else
-                switch vCoords
-                    case 'cylindrical'
-                        iCoords = 1;
-                    case 'cartesian'
-                        iCoords = 2;
-                    otherwise
-                        iCoords = 2;
-                end % switch
-            end % if
-
-            if ~(iCoords == 1 || iCoords == 2)
-                iCoords = 1;
-            end % if
+            switch lower(vCoords)
+                case 'cylindrical'
+                    iCoords = 1;
+                case 'cartesian'
+                    iCoords = 2;
+                otherwise
+                    iCoords = 1;
+            end % switch
             obj.Coords = iCoords;
-
-            % Type
-            stSearch = {};
-            if ~isempty(vType)
-                if iscell(vType)
-                    stSearch = vType;
-                else
-                    stSearch = {vType};
-                end % if
-            end % if
 
             obj.Types = {'Beam','Plasma','Species', ...
                          'Axis','Momentum','Angular','Current', ...
@@ -94,15 +57,6 @@ classdef Variable
                          'Field','FieldEnergy','FieldDiv', ...
                          'Quantity','Flux','Poynting'};
 
-            for t=1:length(stSearch)
-                sType = stSearch{t};
-                sType = [upper(sType(1)) lower(sType(2:end))];
-                if sum(ismember(obj.Types, sType)) == 1
-                    obj.Search{end+1} = sType;
-                else
-                    fprintf(2,'Error: Unknown variable type "%s".\n',stSearch{t});
-                end % if
-            end % for
 
 
             %
@@ -116,7 +70,7 @@ classdef Variable
             stMap.Allowed.Species = [stMap.Allowed.Beam,stMap.Allowed.Plasma];
 
             % Osiris variables
-            stMap.Allowed.Axis         = {'x1','x2','x3'};
+            stMap.Allowed.Axis         = {'x1','x2','x3','xi'};
             stMap.Allowed.Momentum     = {'p1','p2','p3'};
             stMap.Allowed.Angular      = {'l1','l2','l3'};
             stMap.Allowed.Current      = {'j1','j2','j3'};
@@ -144,17 +98,12 @@ classdef Variable
                                      'div_e','div_b','chargecons','psi', ...
                                      's1','s2','s3'};
             stMap.Diag.Species    = {'charge','m','ene','q1','q2','q3','j1','j2','j3'};
-            stMap.Diag.PhaseSpace = {'x1','x2','x3','p1','p2','p3','l1','l2','l3','g','gl', ...
-                                     'charge','m','ene','|charge|','q1','q2','q3','j1','j2','j3'};
+            stMap.Diag.PhaseSpace = {'x1','x2','x3','p1','p2','p3','l1','l2','l3','gl','g'};
+            stMap.Diag.Deposit    = {'charge','m','ene','|charge|','q1','q2','q3','j1','j2','j3'};
 
             % Alternative names used in input deck
-            stMap.Deck.Species.ElectronBeam    = {'electron_beam'};
-            stMap.Deck.Species.PositronBeam    = {'positron_beam'};
-            stMap.Deck.Species.ProtonBeam      = {'proton_beam'};
-            stMap.Deck.Species.IonBeam         = {'ion_beam'};
-            stMap.Deck.Species.PlasmaElectrons = {'electrons','plasma_electrons'};
-            stMap.Deck.Species.PlasmaProtons   = {'protons','plasma_protons'};
-            stMap.Deck.Species.PlasmaIons      = {'ions','plasma_ions'};
+            LocalConfig;
+            stMap.Deck.Species = stInput;
 
             %
             % Translations
@@ -229,6 +178,12 @@ classdef Variable
             stMap.Translate.Axis(3).Full  = {'Azimuthal Axis','Vertical Axis'};
             stMap.Translate.Axis(3).Short = {'th','y'};
             stMap.Translate.Axis(3).Tex   = {'\theta','y'};
+
+            stMap.Translate.Axis(4).Name  = 'xi';
+            stMap.Translate.Axis(4).Alt   = {};
+            stMap.Translate.Axis(4).Full  = {'Longitudinal Axis','Longitudinal Axis'};
+            stMap.Translate.Axis(4).Short = {'xi','xi'};
+            stMap.Translate.Axis(4).Tex   = {'\xi','\xi'};
 
             % Momentum
 
@@ -598,18 +553,6 @@ classdef Variable
             % Save map
             obj.Map = stMap;
 
-            stLookup = obj.fLookup;
-
-            if ~isempty(stLookup)
-                obj.Name  = stLookup.Name;
-                obj.Full  = stLookup.Full{obj.Coords};
-                obj.Short = stLookup.Short{obj.Coords};
-                obj.Tex   = stLookup.Tex{obj.Coords};
-            end % if
-
-            % Delete Translation Map
-            obj.Map.Translate = [];
-
         end % function
 
     end % methods
@@ -618,146 +561,230 @@ classdef Variable
     % Public Methods
     %
 
-    methods (Access = 'public')
+    methods(Access = 'public')
+        
+        function stReturn = Lookup(obj, sVar, vType)
+            
+            % Return
+            stReturn.Original = sVar;
+            stReturn.Name     = sVar;
+            stReturn.Full     = '';
+            stReturn.Short    = '';
+            stReturn.Tex      = '';
+            stReturn.Type     = '';
 
-        function bReturn = IsBeam(obj)
-            bReturn = (sum(ismember(obj.Map.Allowed.Beam,obj.Name)) == 1);
-        end % function
+            %
+            % Input
+            %
+            
+            % Variable
+            sVar = lower(sVar);
 
-        function bReturn = IsPlasma(obj)
-            bReturn = (sum(ismember(obj.Map.Allowed.Plasma,obj.Name)) == 1);
-        end % function
-
-        function bReturn = IsSpecies(obj)
-            bReturn = (sum(ismember(obj.Map.Allowed.Species,obj.Name)) == 1);
-        end % function
-
-        function bReturn = IsAxis(obj)
-            bReturn = (sum(ismember(obj.Map.Allowed.Axis,obj.Name)) == 1);
-        end % function
-
-        function bReturn = IsMomentum(obj)
-            bReturn = (sum(ismember(obj.Map.Allowed.Momentum,obj.Name)) == 1);
-        end % function
-
-        function bReturn = IsAngular(obj)
-            bReturn = (sum(ismember(obj.Map.Allowed.Angular,obj.Name)) == 1);
-        end % function
-
-        function  bReturn = IsCurrent(obj)
-            bReturn = (sum(ismember(obj.Map.Allowed.Current,obj.Name)) == 1);
-        end % function
-
-        function bReturn = IsEField(obj)
-            bReturn = (sum(ismember(obj.Map.Allowed.EField,obj.Name)) == 1);
-        end % function
-
-        function bReturn = IsBField(obj)
-            bReturn = (sum(ismember(obj.Map.Allowed.BField,obj.Name)) == 1);
-        end % function
-
-        function bReturn = IsEFieldExt(obj)
-            bReturn = (sum(ismember(obj.Map.Allowed.EFieldExt,obj.Name)) == 1);
-        end % function
-
-        function bReturn = IsBFieldExt(obj)
-            bReturn = (sum(ismember(obj.Map.Allowed.BFieldExt,obj.Name)) == 1);
-        end % function
-
-        function bReturn = IsEFieldPart(obj)
-            bReturn = (sum(ismember(obj.Map.Allowed.EFieldPart,obj.Name)) == 1);
-        end % function
-
-        function bReturn = IsBFieldPart(obj)
-            bReturn = (sum(ismember(obj.Map.Allowed.BFieldPart,obj.Name)) == 1);
-        end % function
-
-        function bReturn = IsEFieldEnergy(obj)
-            bReturn = (sum(ismember(obj.Map.Allowed.EFieldEnergy,obj.Name)) == 1);
-        end % function
-
-        function bReturn = IsBFieldEnergy(obj)
-            bReturn = (sum(ismember(obj.Map.Allowed.BFieldEnergy,obj.Name)) == 1);
-        end % function
-
-        function bReturn = IsField(obj)
-            bReturn = (sum(ismember(obj.Map.Allowed.Field,obj.Name)) == 1);
-        end % function
-
-        function bReturn = IsFieldEnergy(obj)
-            bReturn = (sum(ismember(obj.Map.Allowed.FieldEnergy,obj.Name)) == 1);
-        end % function
-
-        function bReturn = IsFieldDiv(obj)
-            bReturn = (sum(ismember(obj.Map.Allowed.FieldDiv,obj.Name)) == 1);
-        end % function
-
-        function bReturn = IsQuantity(obj)
-            bReturn = (sum(ismember(obj.Map.Allowed.Quantity,obj.Name)) == 1);
-        end % function
-
-        function bReturn = IsFlux(obj)
-            bReturn = (sum(ismember(obj.Map.Allowed.Flux,obj.Name)) == 1);
-        end % function
-
-        function bReturn = IsPoynting(obj)
-            bReturn = (sum(ismember(obj.Map.Allowed.Poynting,obj.Name)) == 1);
-        end % function
-
-        function bReturn = ValidEMFDiag(obj)
-            bReturn = (sum(ismember(obj.Map.Diag.EMF,obj.Name)) == 1);
-        end % function
-
-        function bReturn = ValidSpeciesDiag(obj)
-            bReturn = (sum(ismember(obj.Map.Diag.Species,obj.Name)) == 1);
-        end % function
-
-        function bReturn = ValidPhaseSpaceDiag(obj)
-            bReturn = (sum(ismember(obj.Map.Diag.PhaseSpace,obj.Name)) == 1);
-        end % function
-
-    end % methods
-
-    %
-    % Private Methods
-    %
-
-    methods (Access = 'private')
-
-        function stReturn = fLookup(obj)
-
-            stReturn = {};
-
-            % If types are specified, search those.
-            % Otherwise search all valid types.
-            if ~isempty(obj.Search)
-                stSearch = obj.Search;
-            else
-                stSearch = obj.Types;
+            % Search
+            if nargin < 3
+                vType = '';
             end % if
 
-            sVar = lower(obj.Original);
+            stSearch = {};
+            if ~isempty(vType)
+                if iscell(vType)
+                    stSearch = vType;
+                else
+                    stSearch = {vType};
+                end % if
+            end % if
+            
+            stTemp = stSearch;
+            for t=1:length(stSearch)
+                sType = stSearch{t};
+                sType = [upper(sType(1)) lower(sType(2:end))];
+                if sum(ismember(obj.Types, sType)) == 0
+                    stTemp{t} = [];
+                    fprintf(2,'Error: Unknown variable type "%s".\n',stSearch{t});
+                end % if
+            end % for
+            stSearch = stTemp;
 
+            if isempty(stSearch)
+                stSearch = obj.Types;
+            end % if
+            
+            %
+            % Lookup
+            %
+
+            bFound = 0;
             for s=1:length(stSearch)
-
                 sType = stSearch{s};
-
                 for i=1:size(obj.Map.Translate.(sType),2)
                     stItem = obj.Map.Translate.(sType)(i);
-                    if strcmpi(stItem.Name,sVar)
-                        stReturn      = stItem;
-                        stReturn.Type = sType;
-                        return;
-                    end % if
-                    if sum(ismember(stItem.Alt,sVar)) == 1
-                        stReturn      = stItem;
-                        stReturn.Type = sType;
-                        return;
+                    if strcmpi(stItem.Name,sVar) || sum(ismember(stItem.Alt,sVar)) ~= 0
+                        stReturn.Name  = stItem.Name;
+                        stReturn.Full  = stItem.Full{obj.Coords};
+                        stReturn.Short = stItem.Short{obj.Coords};
+                        stReturn.Tex   = stItem.Tex{obj.Coords};
+                        stReturn.Type  = sType;
+                        bFound         = 1;
+                        break;
                     end % if
                 end % for
+                if bFound
+                    break;
+                end % if
+            end % for
+            
+            % Check
+            stReturn.isBeam                = (sum(ismember(obj.Map.Allowed.Beam,stReturn.Name)) == 1);
+            stReturn.isPlasma              = (sum(ismember(obj.Map.Allowed.Plasma,stReturn.Name)) == 1);
+            stReturn.isSpecies             = (sum(ismember(obj.Map.Allowed.Species,stReturn.Name)) == 1);
+            stReturn.isAxis                = (sum(ismember(obj.Map.Allowed.Axis,stReturn.Name)) == 1);
+            stReturn.isMomentum            = (sum(ismember(obj.Map.Allowed.Momentum,stReturn.Name)) == 1);
+            stReturn.isAngular             = (sum(ismember(obj.Map.Allowed.Angular,stReturn.Name)) == 1);
+            stReturn.isCurrent             = (sum(ismember(obj.Map.Allowed.Current,stReturn.Name)) == 1);
+            stReturn.isEField              = (sum(ismember(obj.Map.Allowed.EField,stReturn.Name)) == 1);
+            stReturn.isBField              = (sum(ismember(obj.Map.Allowed.BField,stReturn.Name)) == 1);
+            stReturn.isEFieldExt           = (sum(ismember(obj.Map.Allowed.EFieldExt,stReturn.Name)) == 1);
+            stReturn.isBFieldExt           = (sum(ismember(obj.Map.Allowed.BFieldExt,stReturn.Name)) == 1);
+            stReturn.isEFieldPart          = (sum(ismember(obj.Map.Allowed.EFieldPart,stReturn.Name)) == 1);
+            stReturn.isBFieldPart          = (sum(ismember(obj.Map.Allowed.BFieldPart,stReturn.Name)) == 1);
+            stReturn.isEFieldEnergy        = (sum(ismember(obj.Map.Allowed.EFieldEnergy,stReturn.Name)) == 1);
+            stReturn.isBFieldEnergy        = (sum(ismember(obj.Map.Allowed.BFieldEnergy,stReturn.Name)) == 1);
+            stReturn.isField               = (sum(ismember(obj.Map.Allowed.Field,stReturn.Name)) == 1);
+            stReturn.isFieldEnergy         = (sum(ismember(obj.Map.Allowed.FieldEnergy,stReturn.Name)) == 1);
+            stReturn.isFieldDiv            = (sum(ismember(obj.Map.Allowed.FieldDiv,stReturn.Name)) == 1);
+            stReturn.isQuantity            = (sum(ismember(obj.Map.Allowed.Quantity,stReturn.Name)) == 1);
+            stReturn.isFlux                = (sum(ismember(obj.Map.Allowed.Flux,stReturn.Name)) == 1);
+            stReturn.isPoynting            = (sum(ismember(obj.Map.Allowed.Poynting,stReturn.Name)) == 1);
+            stReturn.isValidEMFDiag        = (sum(ismember(obj.Map.Diag.EMF,stReturn.Name)) == 1);
+            stReturn.isValidSpeciesDiag    = (sum(ismember(obj.Map.Diag.Species,stReturn.Name)) == 1);
+            stReturn.isValidPhaseSpaceDiag = (sum(ismember(obj.Map.Diag.PhaseSpace,stReturn.Name)) == 1);
+            stReturn.isValidDepositDiag    = (sum(ismember(obj.Map.Diag.Deposit,stReturn.Name)) == 1);
+            
+        end % function
 
+        function sReturn = Reverse(obj, sVar, sFrom)
+            
+            sReturn = '';
+            
+            if nargin < 3
+                sFrom = 'Full';
+            end % if
+            
+            %
+            % Lookup
+            %
+
+            bFound   = 0;
+            stSearch = obj.Types;
+            for s=1:length(stSearch)
+                sType = stSearch{s};
+                for i=1:size(obj.Map.Translate.(sType),2)
+                    stItem = obj.Map.Translate.(sType)(i);
+                    if strcmpi(stItem.(sFrom)(obj.Coords),sVar)
+                        sReturn = stItem.Name;
+                        bFound  = 1;
+                        break;
+                    end % if
+                end % for
+                if bFound
+                    break;
+                end % if
             end % for
 
+        end % function
+        
+        function stReturn = EvalPhaseSpace(obj, vVar)
+            
+            % Output
+            stReturn.Details = {};
+            stReturn.Dim1    = {};
+            stReturn.Dim2    = {};
+            stReturn.Dim3    = {};
+            
+            % Check input
+            if ~isempty(vVar)
+                if iscell(vVar)
+                    cVar = vVar;
+                else
+                    cVar = {vVar};
+                end % if
+            else
+                return;
+            end % if
+            
+            stReturn.Details(length(cVar)).Input   = [];
+            stReturn.Details(length(cVar)).Name    = [];
+            stReturn.Details(length(cVar)).Dim     = [];
+            stReturn.Details(length(cVar)).Var1    = [];
+            stReturn.Details(length(cVar)).Var2    = [];
+            stReturn.Details(length(cVar)).Var3    = [];
+            stReturn.Details(length(cVar)).Deposit = [];
+            
+            for v=1:length(cVar)
+                
+                sVar = char(cVar{v});
+                stReturn.Details(v).Input   = sVar;
+                stReturn.Details(v).Name    = '';
+                stReturn.Details(v).Dim     = 0;
+                stReturn.Details(v).Var1    = '';
+                stReturn.Details(v).Var2    = '';
+                stReturn.Details(v).Var3    = '';
+                stReturn.Details(v).Deposit = 'charge';
+                
+                cParts = strsplit(sVar,'_');
+                if length(cParts) > 1
+                    sVar = cParts{1};
+                    if sum(ismember(obj.Map.Diag.Deposit,cParts{2})) == 1
+                        stReturn.Details(v).Deposit = cParts{2};
+                    end % if
+                end % if
+                
+                for i=1:3
+                    for p=1:length(obj.Map.Diag.PhaseSpace)
+
+                        sCheck = obj.Map.Diag.PhaseSpace{p};
+                        if length(sVar) < length(sCheck); continue; end % if
+
+                        if strcmpi(sCheck, sVar(1:length(sCheck)))
+                            if length(sVar) > length(sCheck) + 1
+                                sVar = sVar(length(sCheck)+1:end);
+                            else
+                                sVar = '';
+                            end % if
+
+                            stReturn.Details(v).Dim = i;
+                            switch(i)
+                                case 1; stReturn.Details(v).Var1 = sCheck;
+                                case 2; stReturn.Details(v).Var2 = sCheck;
+                                case 3; stReturn.Details(v).Var3 = sCheck;
+                            end % switch
+
+                            break;
+                        end % if
+                    end % for
+                end % for
+                
+                sDimVar = stReturn.Details(v).Var1;
+                if stReturn.Details(v).Dim > 1
+                    sDimVar = [sDimVar, stReturn.Details(v).Var2];
+                end % if
+                if stReturn.Details(v).Dim > 2
+                    sDimVar = [sDimVar, stReturn.Details(v).Var3];
+                end % if
+
+                switch(stReturn.Details(v).Dim)
+                    case 1
+                        stReturn.Dim1{end+1} = [sDimVar, '_', stReturn.Details(v).Deposit];
+                    case 2
+                        stReturn.Dim2{end+1} = [sDimVar, '_', stReturn.Details(v).Deposit];
+                    case 3
+                        stReturn.Dim3{end+1} = [sDimVar, '_', stReturn.Details(v).Deposit];
+                end % switch
+                
+                stReturn.Details(v).Name = [sDimVar, '_', stReturn.Details(v).Deposit];
+                
+            end % for
+            
         end % function
 
     end % methods

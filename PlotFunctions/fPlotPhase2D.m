@@ -24,7 +24,7 @@
 %  ShowOverlay :: Default Yes
 %
 
-function stReturn = fPlotPhase2D(oData, sTime, sSpecies, sAxis1, sAxis2, varargin)
+function stReturn = fPlotPhase2D(oData, sTime, sSpecies, sAxis, varargin)
 
     % Input/Output
 
@@ -58,16 +58,12 @@ function stReturn = fPlotPhase2D(oData, sTime, sSpecies, sAxis1, sAxis2, varargi
         return;
     end % if
     
-    sSpecies = fTranslateSpecies(sSpecies);
-    iTime    = fStringToDump(oData, num2str(sTime));
+    vSpecies = oData.Translate.Lookup(sSpecies,'Species');
+    iTime    = oData.StringToDump(num2str(sTime));
 
     oOpt = inputParser;
     addParameter(oOpt, 'HLim',        []);
-    addParameter(oOpt, 'HAuto',       'No');
     addParameter(oOpt, 'VLim',        []);
-    addParameter(oOpt, 'VAuto',       'No');
-    addParameter(oOpt, 'UseRaw',      'No');
-    addParameter(oOpt, 'Scatter',     0);
     addParameter(oOpt, 'FigureSize',  [900 500]);
     addParameter(oOpt, 'HideDump',    'No');
     addParameter(oOpt, 'IsSubPlot',   'No');
@@ -86,46 +82,24 @@ function stReturn = fPlotPhase2D(oData, sTime, sSpecies, sAxis1, sAxis2, varargi
         return;
     end % if
 
-    aAllowed = {'p1','p2','p3','x1','x2','x3'};
-    if ~ismember(sAxis1, aAllowed) || ~ismember(sAxis2, aAllowed)
-        fprintf(2, 'Error: Unknown axes\n');
-        return;
-    end % if
-
     % Data
-    oPha      = Phase(oData,sSpecies,'Units','SI');
+    oPha      = Phase(oData,vSpecies.Name,'Units','SI');
     oPha.Time = iTime;
-    if stOpt.Scatter == 0 && strcmpi(stOpt.UseRaw, 'No')
-        stData = oPha.Phase2D(sAxis1,sAxis2,'HLim',stOpt.HLim,'VLim',stOpt.VLim,'HAuto',stOpt.HAuto,'VAuto',stOpt.VAuto);
-    else
-        if stOpt.Scatter == 0
-            stData = oPha.Scatter2D(sAxis1,sAxis2,'HLim',stOpt.HLim,'VLim',stOpt.VLim,'Sample',100000);
-        else
-            stData = oPha.Scatter2D(sAxis1,sAxis2,'HLim',stOpt.HLim,'VLim',stOpt.VLim,'Sample',stOpt.Scatter);
-        end % if
-    end % if
+    stData    = oPha.Phase2D(sAxis,'HLim',stOpt.HLim,'VLim',stOpt.VLim);
     
     if isempty(stData)
         fprintf(2, 'Error: No data.\n');
         return;
     end % if
 
-    aData = stData.Data;
+    aData    = stData.Data*100;
+    aHAxis   = stData.HAxis;
+    aVAxis   = stData.VAxis;
+    vHAxis   = oData.Translate.Lookup(strrep(stData.AxisName{1},'x1','xi'));
+    vVAxis   = oData.Translate.Lookup(strrep(stData.AxisName{2},'x1','xi'));
+    vDeposit = oData.Translate.Lookup(stData.Deposit);
 
-    if strcmpi(stOpt.UseRaw, 'No')
-        aData = aData*100;
-    else
-        dQTot = sum(aData(:));
-        [dQVal,sQUnit] = fAutoScale(dQTot,'C');
-
-        dDMax = max(abs(aData(:)));
-        [dDVal,sDUnit] = fAutoScale(dDMax,'C');
-        aData = aData*dDVal/dDMax;
-    end % if
-    
-    aHAxis = stData.HAxis;
-    aVAxis = stData.VAxis;
-
+    % Scale Data
     dHMax = max(abs(aHAxis));
     [dHVal,sHUnit] = fAutoScale(dHMax,stData.AxisUnit{1});
     aHAxis = aHAxis*dHVal/dHMax;
@@ -150,66 +124,46 @@ function stReturn = fPlotPhase2D(oData, sTime, sSpecies, sAxis1, sAxis2, varargi
         cla;
     end % if
 
-    if stOpt.Scatter == 0
-        imagesc(aHAxis,aVAxis,aData);
-        set(gca,'YDir','Normal');
-        colormap('hot');
-        hCol = colorbar();
-        if ~isempty(stOpt.CAxis)
-            caxis(stOpt.CAxis);
-        end % if
-    else
-        cMap = hot(stData.Count);
-        scatter(stData.HData, stData.VData, 5, cMap, 'Filled');
+    imagesc(aHAxis,aVAxis,aData);
+    set(gca,'YDir','Normal');
+    colormap('hot');
+    hCol = colorbar();
+    if ~isempty(stOpt.CAxis)
+        caxis(stOpt.CAxis);
     end % if
 
-    if stOpt.Scatter == 0
+    % Overlay
+    hold on;
+    if strcmpi(stOpt.ShowOverlay, 'Yes')
         aProjZ = abs(sum(aData));
         aProjZ = 0.15*(aVAxis(end)-aVAxis(1))*aProjZ/max(abs(aProjZ))+aVAxis(1);
 
-        hold on;
-        if strcmpi(stOpt.ShowOverlay, 'Yes')
-            plot(aHAxis, aProjZ, 'White');
-            if strcmpi(stOpt.UseRaw, 'No')
-                h = legend(sprintf('Particles: %.2f %%',stData.Ratio*100), 'Location', 'NE');
-            else
-                h = legend(sprintf('Q_{tot} = %.2f %s',dQVal,sQUnit), 'Location', 'NE');
-            end % if
-            set(h,'Box','Off');
-            set(h,'TextColor', [1 1 1]);
-            set(findobj(h, 'type', 'line'), 'visible', 'off')
-        end % if
-        hold off;
+        plot(aHAxis, aProjZ, 'White');
+        h = legend(sprintf('%s: %.2f %%',vDeposit.Full,stData.Ratio*100), 'Location', 'NE');
+        set(h,'Box','Off');
+        set(h,'TextColor', [1 1 1]);
+        set(findobj(h, 'type', 'line'), 'visible', 'off')
     end % if
-
-    if strcmpi(oPha.Coords, 'cylindrical')
-        sRType = 'ReadableCyl';
-    else
-        sRType = 'Readable';
-    end % of
+    hold off;
 
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s Phase %s (%s #%d)',fTranslateSpecies(sSpecies,'Readable'),fPlasmaPosition(oData, iTime),oData.Config.Name,iTime);
+        sTitle = sprintf('%s Phase %s (%s #%d)',vSpecies.Full,oPha.PlasmaPosition,oData.Config.Name,iTime);
     else
-        sTitle = sprintf('%s Phase %s',fTranslateSpecies(sSpecies,'Readable'),fPlasmaPosition(oData, iTime));
+        sTitle = sprintf('%s Phase %s',vSpecies.Full,oPha.PlasmaPosition);
     end % if
 
     title(sTitle);
-    xlabel(sprintf('%s [%s]',fTranslateAxis(sAxis1,sRType),sHUnit));
-    ylabel(sprintf('%s [%s]',fTranslateAxis(sAxis2,sRType),sVUnit));
-
-    if stOpt.Scatter == 0
-        if strcmpi(stOpt.UseRaw, 'No')
-            title(hCol,'%');
-        else
-            title(hCol,sDUnit);
-        end % if
-    end % if
+    xlabel(sprintf('%s [%s]',vHAxis.Tex,sHUnit));
+    ylabel(sprintf('%s [%s]',vVAxis.Tex,sVUnit));
+    title(hCol,'%');
     
     % Return
 
-    stReturn.XLim  = xlim;
-    stReturn.YLim  = ylim;
-    stReturn.CLim  = caxis;
+    stReturn.Species = vSpecies.Name;
+    stReturn.Axis1   = vHAxis.Name;
+    stReturn.Axis2   = vVAxis.Name;
+    stReturn.XLim    = xlim;
+    stReturn.YLim    = ylim;
+    stReturn.CLim    = caxis;
 
-end
+end % function

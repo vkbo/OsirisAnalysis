@@ -62,8 +62,8 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         return;
     end % if
     
-    sPlasma = fTranslateSpecies(sPlasma);
-    iTime   = fStringToDump(oData, num2str(sTime));
+    vPlasma = oData.Translate.Lookup(sPlasma,'Plasma');
+    iTime   = oData.StringToDump(num2str(sTime));
 
     oOpt = inputParser;
     addParameter(oOpt, 'Limits',      []);
@@ -157,7 +157,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     
     % Prepare Data
 
-    oCH      = Charge(oData, sPlasma, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
+    oCH      = Charge(oData, vPlasma.Name, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
     oCH.Time = iTime;
 
     if length(stOpt.Limits) == 4
@@ -282,7 +282,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
             [dQ, sQUnit] = fAutoScale(stQTot.QTotal,'C');
 
             plot(aZAxis, aProjZ, 'Color', aCol(i,:));
-            stOLLeg{iOLNum} = sprintf('Q_{tot}^{%s} = %.2f %s', fTranslateSpecies(stOLBeam{i},'Short'), dQ, sQUnit);
+            stOLLeg{iOLNum} = sprintf('Q_{tot}^{%s} = %.2f %s', oData.Translate.Lookup(stOLBeam{i}).Short, dQ, sQUnit);
             iOLNum = iOLNum + 1;
 
         end % if
@@ -319,7 +319,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         dSVal          = stEF.X2Range(1)*dEVal/stEF.X2Range(2);
         
         plot(stEF.X1Axis,aEFData,'Color',stField(i).Color);
-        stOLLeg{iOLNum} = sprintf('%s^{%.0f–%.0f %s} < %.1f %s',fTranslateField(stField(i).Name,'ReadableCyl'),dSVal,dEVal,sUnit,dEne,sEne);
+        stOLLeg{iOLNum} = sprintf('%s^{%.0f–%.0f %s} < %.1f %s',oData.Translate.Lookup(stField(i).Name).Tex,dSVal,dEVal,sUnit,dEne,sEne);
         iOLNum = iOLNum + 1;
         
     end % if
@@ -342,9 +342,9 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     end % if
     
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s Density %s (%s #%d)', fTranslateSpecies(sPlasma,'Readable'), fPlasmaPosition(oData, iTime), oData.Config.Name, iTime);
+        sTitle = sprintf('%s Density %s (%s #%d)', vPlasma.Full, oCH.PlasmaPosition, oData.Config.Name, iTime);
     else
-        sTitle = sprintf('%s Density %s', fTranslateSpecies(sPlasma,'Readable'), fPlasmaPosition(oData, iTime));
+        sTitle = sprintf('%s Density %s', vPlasma.Full, oCH.PlasmaPosition);
     end % if
 
     title(sTitle);
@@ -360,7 +360,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     % ********
     %
 
-    stReturn.Plasma = sPlasma;
+    stReturn.Plasma = vPlasma.Name;
     stReturn.XLim   = xlim;
     stReturn.YLim   = ylim;
     stReturn.CLim   = caxis;

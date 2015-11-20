@@ -1,40 +1,40 @@
 
 %
-%  Class Object :: Analyse Species Charge
-% ****************************************
+%  Class Object :: Analyse Charge
+% ********************************
+%  SubClass of OsirisType
+%
+%  Description:
+%    A class to analyse and handle Osiris data related to the charge
+%    and current density of particles.
+%
+%  Constructor:
+%    oData    : OsirisDara object
+%    sSpecies : What species to study
+%    Parameter pairs:
+%      Units   : 'N', 'SI' or 'CGS'
+%      X1Scale : Unit scale on x1 axis. 'Auto', or specify metric unit
+%      X2Scale : Unit scale on x2 axis. 'Auto', or specify metric unit
+%      X3Scale : Unit scale on x3 axis. 'Auto', or specify metric unit
+%
+%  Set Methods:
+%    Time  : Set time dump for dataset. Default is 0.
+%    X1Lim : 2D array of limits for x1 axis. Default is full box.
+%    X2Lim : 2D array of limits for x2 axis. Default is full box.
+%    X3Lim : 2D array of limits for x3 axis. Default is full box.
+%
+%  Public Methods:
 %
 
-classdef Charge
+classdef Charge < OsirisType
 
     %
-    % Public Properties
+    % Properties
     %
 
-    properties (GetAccess = 'public', SetAccess = 'public')
+    properties(GetAccess = 'public', SetAccess = 'public')
         
-        Data        = [];                        % OsirisData dataset
-        Species     = '';                        % Species to analyse
-        Time        = 0;                         % Current time (dumb number)
-        X1Lim       = [];                        % Axes limits x1
-        X2Lim       = [];                        % Axes limits x2
-        X3Lim       = [];                        % Axes limits x3
-        Units       = 'N';                       % Units of axes
-        AxisUnits   = {'N' 'N' 'N'};             % Units of axes
-        AxisScale   = {'Auto' 'Auto' 'Auto'};    % Scale of axes
-        AxisRange   = [0.0 0.0 0.0 0.0 0.0 0.0]; % Max and min of axes
-        AxisFac     = [1.0 1.0 1.0];             % Axes scale factors
-        ParticleFac = 1.0;                       % Q-to-particles factor
-        ChargeFac   = 1.0;                       % Q-to-charge factor
-        Coords      = '';                        % Coordinates
-
-    end % properties
-
-    %
-    % Private Properties
-    %
-    
-    properties (GetAccess = 'private', SetAccess = 'private')
-        
+        Species = ''; % Species to analyse
 
     end % properties
 
@@ -46,211 +46,28 @@ classdef Charge
         
         function obj = Charge(oData, sSpecies, varargin)
             
-            % Set data and species
-            obj.Data    = oData;
-            obj.Species = fTranslateSpecies(sSpecies);
-
-            % Read input parameters
-            oOpt = inputParser;
-            addParameter(oOpt, 'Units',   'N');
-            addParameter(oOpt, 'X1Scale', 'Auto');
-            addParameter(oOpt, 'X2Scale', 'Auto');
-            addParameter(oOpt, 'X3Scale', 'Auto');
-            parse(oOpt, varargin{:});
-            stOpt = oOpt.Results;
-
-            % Read config
-            dBoxX1Min = obj.Data.Config.Variables.Simulation.BoxX1Min;
-            dBoxX1Max = obj.Data.Config.Variables.Simulation.BoxX1Max;
-            dBoxX2Min = obj.Data.Config.Variables.Simulation.BoxX2Min;
-            dBoxX2Max = obj.Data.Config.Variables.Simulation.BoxX2Max;
-            dBoxX3Min = obj.Data.Config.Variables.Simulation.BoxX3Min;
-            dBoxX3Max = obj.Data.Config.Variables.Simulation.BoxX3Max;
-            sCoords   = obj.Data.Config.Variables.Simulation.Coordinates;
-            dLFactor  = obj.Data.Config.Variables.Convert.SI.LengthFac;
-
-            % Set Scale and Units
-            obj.AxisScale = {stOpt.X1Scale, stOpt.X2Scale, stOpt.X3Scale};
-            obj.Coords    = sCoords;
-
-            % Evaluate units
-            switch(lower(stOpt.Units))
-
-                case 'si'
-                    obj.Units = 'SI';
-                    
-                    [dX1Fac, sX1Unit]  = fLengthScale(obj.AxisScale{1}, 'm');
-                    [dX2Fac, sX2Unit]  = fLengthScale(obj.AxisScale{2}, 'm');
-                    [dX3Fac, sX3Unit]  = fLengthScale(obj.AxisScale{3}, 'm');
-                    obj.AxisFac        = [dLFactor*dX1Fac, dLFactor*dX2Fac, dLFactor*dX3Fac];
-                    obj.AxisUnits      = {sX1Unit, sX2Unit, sX3Unit};
-                    obj.AxisRange(1:2) = [dBoxX1Min dBoxX1Max]*obj.AxisFac(1);
-                    obj.AxisRange(3:4) = [dBoxX2Min dBoxX2Max]*obj.AxisFac(2);
-                    obj.AxisRange(5:6) = [dBoxX3Min dBoxX3Max]*obj.AxisFac(3);
-                    
-                    obj.ParticleFac = obj.Data.Config.Variables.Convert.SI.ParticleFac;
-                    obj.ChargeFac   = obj.Data.Config.Variables.Convert.SI.ChargeFac;
-
-                otherwise
-                    obj.Units = 'N';
-
-                    obj.AxisFac = [1.0, 1.0, 1.0];
-                    if strcmpi(sCoords, 'cylindrical')
-                        obj.AxisUnits = {'c/\omega_p', 'c_/\omega_p', 'rad'};
-                    else
-                        obj.AxisUnits = {'c/\omega_p', 'c_/\omega_p', 'c/\omega_p'};
-                    end % if
-                    obj.AxisRange   = [dBoxX1Min dBoxX1Max dBoxX2Min dBoxX2Max dBoxX3Min dBoxX3Max];
-
-                    obj.ParticleFac = obj.Data.Config.Variables.Convert.Norm.ParticleFac;
-                    obj.ChargeFac   = obj.Data.Config.Variables.Convert.Norm.ChargeFac;
-
-            end % switch
-
-            % Set defult axis limits
-            obj.X1Lim = [dBoxX1Min, dBoxX1Max]*obj.AxisFac(1);
-            if strcmpi(sCoords, 'cylindrical')
-                obj.X2Lim = [-dBoxX2Max, dBoxX2Max]*obj.AxisFac(2);
+            % Call OsirisType constructor
+            obj@OsirisType(oData, varargin{:});
+            
+            % Set species
+            stSpecies = obj.Translate.Lookup(sSpecies);
+            if stSpecies.isSpecies
+                obj.Species = stSpecies;
             else
-                obj.X2Lim = [ dBoxX2Min, dBoxX2Max]*obj.AxisFac(2);
+                sDefault = obj.Data.Config.Particles.WitnessBeam{1};
+                fprintf(2, 'Error: ''%s'' is not a recognised species name. Using ''%s'' instead.\n', sSpecies, sDefault);
+                obj.Species = obj.Translate.Lookup(sDefault);
             end % if
-            obj.X3Lim = [dBoxX3Min, dBoxX3Max]*obj.AxisFac(3);
 
         end % function
 
     end % methods
 
-    %
-    % Setters and Getters
-    %
-
-    methods
-        
-        function obj = set.Time(obj, sTime)
-            
-            sTime = num2str(sTime);
-            iEnd  = fStringToDump(obj.Data, 'end');
-            
-            if strcmpi(sTime, 'next') || strcmpi(sTime, 'n')
-
-                obj.Time = obj.Time + 1;
-                if obj.Time > iEnd
-                    obj.Time = iEnd;
-                end % if
-
-            elseif strcmpi(sTime, 'prev') || strcmpi(sTime, 'previous') || strcmpi(sTime, 'p')
-            
-                obj.Time = obj.Time - 1;
-                if obj.Time < 0
-                    obj.Time = 0;
-                end % if
-
-            else
-                
-                obj.Time = fStringToDump(obj.Data, sTime);
-
-            end % if
-            
-        end % function
-        
-        function obj = set.X1Lim(obj, aX1Lim)
-
-            dBoxX1Min = obj.Data.Config.Variables.Simulation.BoxX1Min;
-            dBoxX1Max = obj.Data.Config.Variables.Simulation.BoxX1Max;
-
-            if length(aX1Lim) ~= 2
-                fprintf(2, 'Error: x1 limit needs to be a vector of dimension 2.\n');
-                return;
-            end % if
-
-            if aX1Lim(2) < aX1Lim(1)
-                fprintf(2, 'Error: second value must be larger than first value.\n');
-                return;
-            end % if
-
-            if aX1Lim(1)/obj.AxisFac(1) < dBoxX1Min || aX1Lim(1)/obj.AxisFac(1) > dBoxX1Max ...
-            || aX1Lim(2)/obj.AxisFac(1) < dBoxX1Min || aX1Lim(2)/obj.AxisFac(1) > dBoxX1Max
-                fprintf('Warning: X1Lim input is out of range. Range is %.2f–%.2f %s.\n', dBoxX1Min*obj.AxisFac(1), dBoxX1Max*obj.AxisFac(1), obj.AxisUnits{1});
-                aX1Lim(1) = dBoxX1Min*obj.AxisFac(1);
-            end % if
-
-            obj.X1Lim = aX1Lim/obj.AxisFac(1);
-
-        end % function
-         
-        function obj = set.X2Lim(obj, aX2Lim)
- 
-            dBoxX2Min = obj.Data.Config.Variables.Simulation.BoxX2Min;
-            dBoxX2Max = obj.Data.Config.Variables.Simulation.BoxX2Max;
-            sCoords   = obj.Data.Config.Variables.Simulation.Coordinates;
-
-            if length(aX2Lim) ~= 2
-                fprintf(2, 'Error: x2 limit needs to be a vector of dimension 2.\n');
-                return;
-            end % if
-
-            if aX2Lim(2) < aX2Lim(1)
-                fprintf(2, 'Error: second value must be larger than first value.\n');
-                return;
-            end % if
-            
-            if strcmpi(sCoords, 'cylindrical')
-
-                if aX2Lim(1)/obj.AxisFac(2) < -dBoxX2Max || aX2Lim(1)/obj.AxisFac(2) > dBoxX2Max ...
-                || aX2Lim(2)/obj.AxisFac(2) < -dBoxX2Max || aX2Lim(2)/obj.AxisFac(2) > dBoxX2Max
-                    fprintf('Warning: X2Lim input is out of range. Range is %.2f–%.2f %s.\n', ...
-                            -dBoxX2Max*obj.AxisFac(2), dBoxX2Max*obj.AxisFac(2), obj.AxisUnits{2});
-                    aX2Lim = [-dBoxX2Max*obj.AxisFac(2) dBoxX2Max*obj.AxisFac(2)];
-                end % if
-
-            else
-                
-                if aX2Lim(1)/obj.AxisFac(2) < dBoxX2Min || aX2Lim(1)/obj.AxisFac(2) > dBoxX2Max ...
-                || aX2Lim(2)/obj.AxisFac(2) < dBoxX2Min || aX2Lim(2)/obj.AxisFac(2) > dBoxX2Max
-                    fprintf('Warning: X2Lim input is out of range. Range is %.2f–%.2f %s.\n', ...
-                            dBoxX2Min*obj.AxisFac(2), dBoxX2Max*obj.AxisFac(2), obj.AxisUnits{2});
-                    aX2Lim = [dBoxX2Min*obj.AxisFac(2) dBoxX2Max*obj.AxisFac(2)];
-                end % if
-
-            end % if
-
-            obj.X2Lim = aX2Lim/obj.AxisFac(2);
-             
-        end % function
- 
-        function obj = set.X3Lim(obj, aX3Lim)
-
-            dBoxX3Min = obj.Data.Config.Variables.Simulation.BoxX3Min;
-            dBoxX3Max = obj.Data.Config.Variables.Simulation.BoxX3Max;
-
-            if length(aX3Lim) ~= 2
-                fprintf(2, 'Error: x3 limit needs to be a vector of dimension 2.\n');
-                return;
-            end % if
-
-            if aX3Lim(2) < aX3Lim(1)
-                fprintf(2, 'Error: second value must be larger than first value.\n');
-                return;
-            end % if
-
-            if aX3Lim(1)/obj.AxisFac(3) < dBoxX3Min || aX3Lim(1)/obj.AxisFac(3) > dBoxX3Max ...
-            || aX3Lim(2)/obj.AxisFac(3) < dBoxX3Min || aX3Lim(2)/obj.AxisFac(3) > dBoxX3Max
-                fprintf('Warning: X3Lim input is out of range. Range is %.2f–%.2f %s.\n', ...
-                        dBoxX3Min*obj.AxisFac(3), dBoxX3Max*obj.AxisFac(3), obj.AxisUnits{3});
-                aX3Lim = [dBoxX3Min*obj.AxisFac(3) dBoxX3Max*obj.AxisFac(3)];
-            end % if
-
-            obj.X3Lim = aX3Lim/obj.AxisFac(3);
-
-        end % function
-
-    end % methods
-    
     %
     % Public Methods
     %
     
-    methods (Access = 'public')
+    methods(Access = 'public')
         
         function stReturn = Density(obj)
             
@@ -258,16 +75,15 @@ classdef Charge
             stReturn = {};
 
             % Get simulation variables
-            sCoords = obj.Data.Config.Variables.Simulation.Coordinates;
-            dNMax   = obj.Data.Config.Variables.Plasma.MaxPlasmaFac;
+            dNMax = obj.Data.Config.Simulation.MaxPlasmaFac;
             
             % Get data and axes
-            aData   = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
+            aData   = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species.Name);
             aX1Axis = obj.fGetBoxAxis('x1');
             aX2Axis = obj.fGetBoxAxis('x2');
 
             % Check if cylindrical
-            if strcmpi(sCoords, 'cylindrical')
+            if obj.Cylindrical
                 aData   = transpose([fliplr(aData),aData]);
                 aX2Axis = [-fliplr(aX2Axis), aX2Axis];
             else
@@ -306,10 +122,10 @@ classdef Charge
             end % if
             
             % Get simulation variables
-            dE0     = obj.Data.Config.Variables.Convert.SI.E0;
+            dE0 = obj.Data.Config.Convert.SI.E0;
             
             % Get data and axes
-            aData   = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
+            aData   = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species.Name);
             aX1Axis = obj.fGetBoxAxis('x1');
             aX2Axis = obj.fGetBoxAxis('x2');
             
@@ -336,14 +152,11 @@ classdef Charge
             stReturn = {};
             
             sAxis = lower(sAxis);
-            if ~ismember(sAxis, {'j1','j2','j3'}) || ~obj.Data.DataSetExists('DENSITY',sAxis,obj.Species)
+            if ~ismember(sAxis, {'j1','j2','j3'}) || ~obj.Data.DataSetExists('DENSITY',sAxis,obj.Species.Name)
                 fprintf(2, 'Error: Current %s does not exist in dataset.\n', sAxis);
                 return;
             end % if
 
-            % Get simulation variables
-            sCoords = obj.Data.Config.Variables.Simulation.Coordinates;
-            
             if strcmpi(obj.Units, 'SI')
                 switch(sAxis)
                     case 'j1'
@@ -358,12 +171,12 @@ classdef Charge
             end % if
             
             % Get data and axes
-            aData   = obj.Data.Data(obj.Time, 'DENSITY', sAxis, obj.Species);
+            aData   = obj.Data.Data(obj.Time, 'DENSITY', sAxis, obj.Species.Name);
             aX1Axis = obj.fGetBoxAxis('x1');
             aX2Axis = obj.fGetBoxAxis('x2');
 
             % Check if cylindrical
-            if strcmpi(sCoords, 'cylindrical')
+            if obj.Cylindrical
                 aData   = transpose([fliplr(aData),aData]);
                 aX2Axis = [-fliplr(aX2Axis), aX2Axis];
             else
@@ -396,12 +209,12 @@ classdef Charge
                 aRange = [];
             end % if
             
-            dPlasmaFac = obj.Data.Config.Variables.Plasma.MaxPlasmaFac;
-            dXMin      = obj.Data.Config.Variables.Simulation.BoxX1Min;
-            dXMax      = obj.Data.Config.Variables.Simulation.BoxX1Max;
+            dPlasmaFac = obj.Data.Config.Simulation.MaxPlasmaFac;
+            dXMin      = obj.Data.Config.Simulation.XMin(1);
+            dXMax      = obj.Data.Config.Simulation.XMax(1);
             dBoxSize   = dXMax-dXMin;
             
-            h5Data = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
+            h5Data = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species.Name);
             if isempty(aRange)
                 aProj = abs(sum(transpose(h5Data),1));
             else
@@ -439,14 +252,14 @@ classdef Charge
             stOpt = oOpt.Results;
 
             % Simulation parameters
-            dPlasmaFac = obj.Data.Config.Variables.Plasma.MaxPlasmaFac;
-            iBoxNX     = obj.Data.Config.Variables.Simulation.BoxNX1;
-            dXMin      = obj.Data.Config.Variables.Simulation.BoxX1Min;
-            dXMax      = obj.Data.Config.Variables.Simulation.BoxX1Max;
+            dPlasmaFac = obj.Data.Config.Simulation.MaxPlasmaFac;
+            dXMin      = obj.Data.Config.Simulation.XMin(1);
+            dXMax      = obj.Data.Config.Simulation.XMax(1);
+            iBoxNX     = obj.Data.Config.Simulation.Grid(1);
             dBoxSize   = dXMax-dXMin;
 
             % Get dataset
-            aData = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
+            aData = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species.Name);
 
             if isempty(aRange)
                 aProj = abs(sum(transpose(aData),1));
@@ -497,19 +310,19 @@ classdef Charge
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
             
+            
             % Species must be a beam
-            if ~isBeam(obj.Species)
-                fprintf(2, 'Error: Species %s is not a beam.\n', obj.Species);
+            if ~obj.Species.isBeam
+                fprintf(2, 'Error: Species %s is not a beam.\n', obj.Species.Name);
                 return;
             end % if
             
-            
-            dRAWFrac  = obj.Data.Config.Variables.Beam.(obj.Species).RAWFraction;
-            dTFactor  = obj.Data.Config.Variables.Convert.SI.TimeFac;
-            dRQM      = obj.Data.Config.Variables.Beam.(obj.Species).RQM;
+            dRawFrac  = obj.Data.Config.Particles.Species.(obj.Species.Name).RawFraction;
+            dTFactor  = obj.Data.Config.Convert.SI.TimeFac;
+            dRQM      = obj.Data.Config.Particles.Species.(obj.Species.Name).RQM;
             dSign     = dRQM/abs(dRQM);
             
-            aRaw      = obj.Data.Data(obj.Time, 'RAW', '', obj.Species);
+            aRaw      = obj.Data.Data(obj.Time, 'RAW', '', obj.Species.Name);
             iCount    = length(aRaw(:,1));
             aRaw(:,1) = aRaw(:,1) - dTFactor*obj.Time;
             
@@ -534,22 +347,22 @@ classdef Charge
             
             % Total charge
             
-            dQ = sum(aRaw(:,8))/dRAWFrac; % Sum of RAW field q
+            dQ = sum(aRaw(:,8))/dRawFrac; % Sum of RAW field q
             dP = dQ*obj.ParticleFac;
             dQ = dQ*obj.ChargeFac;
             
             % Meta data
             
             iSCount  = nnz(aRaw(:,8));
-            dExact   = dQ/sqrt(iCount/dRAWFrac);
-            dSErrorQ = abs(dQ/(dRAWFrac*sqrt(iSCount))-dExact);
-            dSErrorP = abs(dP/(dRAWFrac*sqrt(iSCount))-dExact);
+            dExact   = dQ/sqrt(iCount/dRawFrac);
+            dSErrorQ = abs(dQ/(dRawFrac*sqrt(iSCount))-dExact);
+            dSErrorP = abs(dP/(dRawFrac*sqrt(iSCount))-dExact);
             
             % Return data
             
             stReturn.QTotal              = dQ;
             stReturn.Particles           = dP*dSign;
-            stReturn.RAWFraction         = dRAWFrac;
+            stReturn.RAWFraction         = dRawFrac;
             stReturn.RAWCount            = iCount;
             stReturn.SampleCount         = iSCount;
             stReturn.ChargeSampleError   = dSErrorQ;
@@ -563,11 +376,10 @@ classdef Charge
             stReturn = {};
 
             % Values
-            dMaxPlasma = obj.Data.Config.Variables.Plasma.MaxPlasmaFac;
-            sCoords    = obj.Data.Config.Variables.Simulation.Coordinates;
-            dRAWFrac   = obj.Data.Config.Variables.Beam.(obj.Species).RAWFraction;
-            dTFactor   = obj.Data.Config.Variables.Convert.SI.TimeFac;
-            dRQM       = obj.Data.Config.Variables.Beam.(obj.Species).RQM;
+            dMaxPlasma = obj.Data.Config.Simulation.MaxPlasmaFac;
+            dRawFrac   = obj.Data.Config.Particles.Species.(obj.Species.Name).RawFraction;
+            dRQM       = obj.Data.Config.Particles.Species.(obj.Species.Name).RQM;
+            dTFactor   = obj.Data.Config.Convert.SI.TimeFac;
 
             % Read input parameters
             oOpt = inputParser;
@@ -580,20 +392,20 @@ classdef Charge
             stOpt = oOpt.Results;
 
             % Species must be a beam
-            if ~isBeam(obj.Species)
-                fprintf(2, 'Error: Species %s is not a beam.\n', obj.Species);
+            if ~obj.Species.isBeam
+                fprintf(2, 'Error: Species %s is not a beam.\n', obj.Species.Name);
                 return;
             end % if
 
             % Load charge density data
-            h5Data  = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species);
+            h5Data  = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species.Name);
             h5Data  = double(abs(h5Data));
             [nX1,~] = size(h5Data);
 
             % Get axes
             aX1Axis = obj.fGetBoxAxis('x1');
             aX2Axis = obj.fGetBoxAxis('x2');
-            if strcmpi(sCoords, 'Cylindrical')
+            if obj.Cylindrical
                 aX2Axis = [-fliplr(aX2Axis) aX2Axis];
             end % if
 
@@ -645,7 +457,7 @@ classdef Charge
             %hold off;
             
             % Get RAW data
-            aRaw      = obj.Data.Data(obj.Time, 'RAW', '', obj.Species);
+            aRaw      = obj.Data.Data(obj.Time, 'RAW', '', obj.Species.Name);
             aRaw(:,1) = (aRaw(:,1) - dTFactor*obj.Time)*obj.AxisFac(1);
             
             % Create return matrix
@@ -727,7 +539,7 @@ classdef Charge
                 stBeamlets(i).Charge = sum(aRaw(:,8).*( ...
                                            aRaw(:,1) >= aX1Axis(aSpan(1,i)) & ...
                                            aRaw(:,1) <= aX1Axis(aSpan(2,i))   ...
-                                          ))*obj.ChargeFac/dRAWFrac;
+                                          ))*obj.ChargeFac/dRawFrac;
             end % for
             
             % Return data
@@ -740,7 +552,7 @@ classdef Charge
             stReturn.Prominence  = transpose(aProms);
             stReturn.Span        = aSpan;
             stReturn.Beamlets    = stBeamlets;
-            stReturn.TotalCharge = sum(aRaw(:,8))*obj.ChargeFac/dRAWFrac;
+            stReturn.TotalCharge = sum(aRaw(:,8))*obj.ChargeFac/dRawFrac;
             
         end % function
         
@@ -761,15 +573,14 @@ classdef Charge
             stOpt = oOpt.Results;
 
             % Read variables
-            sCoords   = obj.Data.Config.Variables.Simulation.Coordinates;
-            dTFactor  = obj.Data.Config.Variables.Convert.SI.TimeFac;
-            dEMass    = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
-            dRQM      = obj.Data.Config.Variables.Beam.(obj.Species).RQM;
+            dTFactor  = obj.Data.Config.Convert.SI.TimeFac;
+            dEMass    = obj.Data.Config.Constants.ElectronMassMeV*1e6;
+            dRQM      = obj.Data.Config.Particles.Species.(obj.Species.Name).RQM;
             dSign     = dRQM/abs(dRQM);
             
-            aRaw      = obj.Data.Data(stOpt.Time, 'RAW', '', obj.Species);
+            aRaw      = obj.Data.Data(stOpt.Time, 'RAW', '', obj.Species.Name);
             aRaw(:,1) = aRaw(:,1) - dTFactor*stOpt.Time;
-            if strcmpi(sCoords, 'cylindrical')
+            if obj.Cylindrical
                 aRaw(:,8) = aRaw(:,8)./aRaw(:,2);
             end % if
             
@@ -797,12 +608,12 @@ classdef Charge
                     iCount = length(aRaw(:,1));
                 end % if
 
-                if strcmpi(sCoords, 'cylindrical') && strcmpi(stOpt.Mirror, 'yes')
+                if obj.Cylindrical && strcmpi(stOpt.Mirror, 'yes')
                     aRaw = [aRaw; aRaw(:,1) -aRaw(:,2) aRaw(:,3:end)];
                 end % if
 
                 aRaw(:,11) = aRaw(:,8)*dSign;
-                aRaw(:,12) = abs(aRaw(:,fRawAxisToIndex(lower(stOpt.Weights))));
+                aRaw(:,12) = abs(aRaw(:,obj.Data.RawToIndex(lower(stOpt.Weights))));
                 switch(lower(stOpt.Filter))
                     case 'random'
                         [~,aI]     = datasample(aRaw(:,1),iCount,'Replace',false);
@@ -857,8 +668,8 @@ classdef Charge
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
 
-            iStart = fStringToDump(obj.Data, sStart);
-            iStop  = fStringToDump(obj.Data, sStop);
+            iStart = obj.Data.StringToDump(sStart);
+            iStop  = obj.Data.StringToDump(sStop);
             iSteps = iStop-iStart+1;
 
             % Get Axes
@@ -942,59 +753,4 @@ classdef Charge
         
     end % methods
     
-    %
-    % Private Methods
-    %
-    
-    methods (Access = 'private')
-        
-        function aReturn = fGetTimeAxis(obj)
-            
-            iDumps  = obj.Data.Elements.DENSITY.(obj.Species).charge.Info.Files-1;
-            
-            dPStart = obj.Data.Config.Variables.Plasma.PlasmaStart;
-            dTFac   = obj.Data.Config.Variables.Convert.SI.TimeFac;
-            dLFac   = obj.Data.Config.Variables.Convert.SI.LengthFac;
-            
-            aReturn = (linspace(0.0, dTFac*iDumps, iDumps+1)-dPStart)*dLFac;
-            
-        end % function
-
-        function aReturn = fGetBoxAxis(obj, sAxis)
-            
-            switch sAxis
-                case 'x1'
-                    dXMin = obj.Data.Config.Variables.Simulation.BoxX1Min;
-                    dXMax = obj.Data.Config.Variables.Simulation.BoxX1Max;
-                    iNX   = obj.Data.Config.Variables.Simulation.BoxNX1;
-                    dLFac = obj.AxisFac(1);
-                case 'x2'
-                    dXMin = obj.Data.Config.Variables.Simulation.BoxX2Min;
-                    dXMax = obj.Data.Config.Variables.Simulation.BoxX2Max;
-                    iNX   = obj.Data.Config.Variables.Simulation.BoxNX2;
-                    dLFac = obj.AxisFac(2);
-                case 'x3'
-                    dXMin = obj.Data.Config.Variables.Simulation.BoxX3Min;
-                    dXMax = obj.Data.Config.Variables.Simulation.BoxX3Max;
-                    iNX   = obj.Data.Config.Variables.Simulation.BoxNX3;
-                    dLFac = obj.AxisFac(3);
-            end % switch
-
-            aReturn = linspace(dXMin, dXMax, iNX)*dLFac;
-            
-        end % function
-        
-        function dReturn = fGetZPos(obj)
-            
-            dLFactor = obj.Data.Config.Variables.Convert.SI.LengthFac;
-            dTFactor = obj.Data.Config.Variables.Convert.SI.TimeFac;
-            dPStart  = obj.Data.Config.Variables.Plasma.PlasmaStart;
-            
-            dReturn  = (obj.Time*dTFactor - dPStart)*dLFactor;
-            
-        end % function
-
-    end % methods
-
 end % classdef
-

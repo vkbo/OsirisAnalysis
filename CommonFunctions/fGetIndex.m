@@ -1,3 +1,4 @@
+
 %
 %  Function: fGetIndex
 % *********************
@@ -17,6 +18,7 @@ function iIndex = fGetIndex(aVector, dValue)
                 iIndex = i+1;
                 return;
             end % if
+        end % if
     end % for
     
     if dValue >= aVector(end-1)-(aVector(end)-aVector(end-1))/2

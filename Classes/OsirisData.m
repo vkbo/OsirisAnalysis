@@ -1,37 +1,43 @@
 
 %
-%  Class Object to hold Osiris data
-% **********************************
-%  Version 1.1
+%  Class Object :: Wrapper for Osiris data sets
+% **********************************************
+%  Version Dev1.3
 %
 
 classdef OsirisData
     
     %
-    % Public Properties
+    % Properties
     %
     
-    properties (GetAccess = 'public', SetAccess = 'public')
+    properties(GetAccess='public', SetAccess='public')
 
-        Path        = '';     % Path to dataset
-        PathID      = '';     % Path as ID instead of free text input
-        Elements    = {};     % Struct of all datafiles in dataset ('MS/' subfolder)
-        MSData      = {};     % Struct of all MS data
-        Config      = [];     % Content of the config files and extraction of all runtime variables
-        DataSets    = {};     % Available datasets in folders indicated by LocalConfig.m
-        DefaultPath = {};     % Default data folder
-        Silent      = 0;      % Set to 1 to disable command window output
-        Temp        = '/tmp'; % Temp folder (set in LocalConfig.m)
+        Path        = '';    % Path to dataset
+        PathID      = '';    % Path as ID instead of free text input
+        Config      = [];    % Content of the config files and extraction of all runtime variables
+        Silent      = 0;     % Set to 1 to disable command window output
 
     end % properties
 
-    %
-    % Private Properties
-    %
-    
-    properties (GetAccess = 'private', SetAccess = 'private')
+    properties(GetAccess='public', SetAccess='private')
 
-        DefaultData = {}; % Data in default folder
+        Elements    = {};    % Struct of all datafiles in dataset ('MS/' subfolder)
+        MSData      = {};    % Struct of all MS data
+        DataSets    = {};    % Available datasets in folders indicated by LocalConfig.m
+        DefaultPath = {};    % Default data folder
+        Temp        = '';    % Temp folder (set in LocalConfig.m)
+        Translate   = {};    % Tool for translating Osiris variables
+        HasData     = false; % True if folder 'MS' exists
+        HasTracks   = false; % True if folder 'MS/TRACKS' exists
+        Completed   = false; % True if folder 'TIMINGS' exists
+        Consistent  = false; % True if all data folders have the same number of files
+
+    end % properties
+
+    properties(GetAccess='private', SetAccess='private')
+
+        DefaultData = {};    % Data in default folder
 
     end % properties
     
@@ -56,8 +62,8 @@ classdef OsirisData
             % Initiate OsirisData
             LocalConfig;
             
-            obj.Temp   = sLocalTemp;
-            obj.Config = OsirisConfig;
+            obj.Temp          = sLocalTemp;
+            obj.Config        = OsirisConfig;
             obj.Config.Silent = obj.Silent;
             
             obj.DefaultPath = stFolders;
@@ -174,16 +180,18 @@ classdef OsirisData
             obj.MSData   = obj.fScanElements;
 
             % Set path in OsirisConfig object
-            obj.Config.Path      = obj.Path;
-            obj.Config.HasData   = iHasData;
-            obj.Config.HasTracks = iHasTracks;
-            obj.Config.Completed = iCompleted;
+            obj.Config.Path = obj.Path;
+            obj.HasData     = iHasData;
+            obj.HasTracks   = iHasTracks;
+            obj.Completed   = iCompleted;
             
             if obj.MSData.MinFiles == obj.MSData.MaxFiles
-               obj.Config.Consistent = true;
+               obj.Consistent = true;
             else
-               obj.Config.Consistent = false;
+               obj.Consistent = false;
             end % if
+            
+            obj.Translate = Variables(obj.Config.Simulation.Coordinates);
 
         end % function
         
@@ -199,14 +207,14 @@ classdef OsirisData
     % Public Methods
     %
     
-    methods (Access = 'public')
+    methods(Access = 'public')
         
-        function Version(obj)
+        function Version(~)
             
-            fprintf('OsirisAnalysis Version 1.1\n');
+            fprintf('OsirisAnalysis Version Dev1.3\n');
             
         end % function
-
+        
         function stReturn = Info(obj)
             
             %
@@ -216,9 +224,9 @@ classdef OsirisData
 
             stReturn  = {};
 
-            dTMax     = obj.Config.Variables.Simulation.TMax;
-            dTimeStep = obj.Config.Variables.Simulation.TimeStep;
-            dNDump    = obj.Config.Variables.Simulation.NDump;
+            dTMax     = obj.Config.Simulation.TMax;
+            dTimeStep = obj.Config.Simulation.TimeStep;
+            dNDump    = obj.Config.Simulation.NDump;
 
             if ~obj.Silent
                 fprintf('\n');
@@ -246,37 +254,37 @@ classdef OsirisData
             
             stReturn  = {};
 
-            dPStart   = obj.Config.Variables.Plasma.PlasmaStart;
-            dPEnd     = obj.Config.Variables.Plasma.PlasmaEnd;
-            dTFac     = obj.Config.Variables.Convert.SI.TimeFac;
-            dLFac     = obj.Config.Variables.Convert.SI.LengthFac;
+            dPStart   = obj.Config.Simulation.PlasmaStart;
+            dPEnd     = obj.Config.Simulation.PlasmaEnd;
+            dTFac     = obj.Config.Convert.SI.TimeFac;
+            dLFac     = obj.Config.Convert.SI.LengthFac;
 
-            dN0       = obj.Config.Variables.Plasma.N0;
-            dNOmegaP  = obj.Config.Variables.Plasma.NormOmegaP;
-            dMOmegaP  = obj.Config.Variables.Plasma.MaxOmegaP;
-            dNLambdaP = obj.Config.Variables.Plasma.NormLambdaP;
-            dMLambdaP = obj.Config.Variables.Plasma.MaxLambdaP;
-            dPMax     = obj.Config.Variables.Plasma.MaxPlasmaFac;
+            dN0       = obj.Config.Simulation.N0;
+            dNOmegaP  = obj.Config.Simulation.OmegaP;
+            dMOmegaP  = obj.Config.Simulation.PhysOmegaP;
+            dNLambdaP = obj.Config.Simulation.LambdaP;
+            dMLambdaP = obj.Config.Simulation.PhysLambdaP;
+            dPMax     = obj.Config.Simulation.MaxPlasmaFac;
             
             if ~obj.Silent
                 fprintf('\n');
                 fprintf(' Plasma Info\n');
                 fprintf('*************\n');
                 fprintf('\n');
-                fprintf(' Plasma Start:     %8.2f between dump %03d and %03d\n', dPStart, floor(dPStart/dTFac), ceil(dPStart/dTFac));
-                fprintf(' Plasma End:       %8.2f between dump %03d and %03d\n', dPEnd,   floor(dPEnd/dTFac),   ceil(dPEnd/dTFac));
+                fprintf(' Plasma Start:           %8.2f between dump %03d and %03d\n', dPStart, floor(dPStart/dTFac), ceil(dPStart/dTFac));
+                fprintf(' Plasma End:             %8.2f between dump %03d and %03d\n', dPEnd,   floor(dPEnd/dTFac),   ceil(dPEnd/dTFac));
                 fprintf('\n');
-                fprintf(' Plasma Start:     %8.2f m\n', dPStart*dLFac);
-                fprintf(' Plasma End:       %8.2f m\n', dPEnd*dLFac);
-                fprintf(' Plasma Length:    %8.2f m\n', (dPEnd-dPStart)*dLFac);
+                fprintf(' Plasma Start:           %8.2f m\n', dPStart*dLFac);
+                fprintf(' Plasma End:             %8.2f m\n', dPEnd*dLFac);
+                fprintf(' Plasma Length:          %8.2f m\n', (dPEnd-dPStart)*dLFac);
                 fprintf('\n');
-                fprintf(' Nomralised Plasma Density:    %8.2e m^-3\n', dN0);
-                fprintf(' Normalised Plasma Frequency:  %8.2e s^-1\n', dNOmegaP);
-                fprintf(' Normalised Plasma Skin Depth: %8.2e mm\n',   dNLambdaP*1e3);
+                fprintf(' Plasma Density:         %8.2e m^-3\n', dN0);
+                fprintf(' Plasma Frequency:       %8.2e s^-1\n', dNOmegaP);
+                fprintf(' Plasma Skin Depth:      %8.2e mm\n',   dNLambdaP*1e3);
                 fprintf('\n');
-                fprintf(' Peak Plasma Density:          %8.2e m^-3\n', dN0*dPMax);
-                fprintf(' Peak Plasma Frequency:        %8.2e s^-1\n', dMOmegaP);
-                fprintf(' Peak Plasma Skin Depth:       %8.2e mm\n',   dMLambdaP*1e3);
+                fprintf(' Peak Plasma Density:    %8.2e m^-3\n', dN0*dPMax);
+                fprintf(' Peak Plasma Frequency:  %8.2e s^-1\n', dMOmegaP);
+                fprintf(' Peak Plasma Skin Depth: %8.2e mm\n',   dMLambdaP*1e3);
                 fprintf('\n');
             end % if
             
@@ -298,27 +306,28 @@ classdef OsirisData
         function stReturn = BeamInfo(obj, sSpecies)
             
             %
-            %  Attempts to calculate beam data
+            %  Attempts to Calculate Beam Info
             % *********************************
             %
             
             stReturn  = {};
-            sSpecies  = fTranslateSpecies(sSpecies);
+            sSpecies  = obj.Translate.Lookup(sSpecies,'Beam').Name;
             
-            dC        = obj.Config.Variables.Constants.SpeedOfLight;
-            dE        = obj.Config.Variables.Constants.ElementaryCharge;
-            dLFac     = obj.Config.Variables.Convert.SI.LengthFac;
-            dT        = obj.Config.Variables.Simulation.TimeStep;
+            dC        = obj.Config.Constants.SpeedOfLight;
+            dE        = obj.Config.Constants.ElementaryCharge;
+            dLFac     = obj.Config.Convert.SI.LengthFac;
+            dT        = obj.Config.Simulation.TimeStep*2;
             
-            dN0       = obj.Config.Variables.Plasma.N0;
-            dNOmegaP  = obj.Config.Variables.Plasma.NormOmegaP;
-            dMOmegaP  = obj.Config.Variables.Plasma.MaxOmegaP;
-            dPMax     = obj.Config.Variables.Plasma.MaxPlasmaFac;
-            dDensity  = obj.Config.Variables.Beam.(sSpecies).Density;
+            dN0       = obj.Config.Simulation.N0;
+            dNOmegaP  = obj.Config.Simulation.OmegaP;
+            dMOmegaP  = obj.Config.Simulation.PhysOmegaP;
+            dPMax     = obj.Config.Simulation.MaxPlasmaFac;
+            dDensity  = obj.Config.Particles.Species.(sSpecies).Density;
             
             sMathFunc = obj.Config.Variables.Beam.(sSpecies).ProfileFunction;
             iDim      = obj.Config.Variables.Simulation.Dimensions;
             sCoords   = obj.Config.Variables.Simulation.Coordinates;
+
             dX1Min    = obj.Config.Variables.Simulation.BoxX1Min;
             dX1Max    = obj.Config.Variables.Simulation.BoxX1Max;
             dX2Min    = obj.Config.Variables.Simulation.BoxX2Min;
@@ -326,10 +335,10 @@ classdef OsirisData
             dX3Min    = obj.Config.Variables.Simulation.BoxX3Min;
             dX3Max    = obj.Config.Variables.Simulation.BoxX3Max;
 
-            dMeanX1   = obj.Config.Variables.Beam.(sSpecies).MeanX1;
-            dMeanX2   = obj.Config.Variables.Beam.(sSpecies).MeanX2;
-            dSigmaX1  = obj.Config.Variables.Beam.(sSpecies).SigmaX1;
-            dSigmaX2  = obj.Config.Variables.Beam.(sSpecies).SigmaX2;
+            %dMeanX1   = obj.Config.Variables.Beam.(sSpecies).MeanX1;
+            %dMeanX2   = obj.Config.Variables.Beam.(sSpecies).MeanX2;
+            %dSigmaX1  = obj.Config.Variables.Beam.(sSpecies).SigmaX1;
+            %dSigmaX2  = obj.Config.Variables.Beam.(sSpecies).SigmaX2;
             
             if ~obj.Silent
                 fprintf('\n');
@@ -338,76 +347,86 @@ classdef OsirisData
                 fprintf('\n');
             end % if
 
-            stFunc   = fExtractEq(sMathFunc, iDim, [dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max]);
-            fProfile = @(x1,x2) eval(stFunc.ForEval);
+            % Beam Integral
+            
+            oMF  = MathFunc(sMathFunc);
+            aX1  = dX1Min:dT:dX1Max;
+            aX2  = dX2Min:dT:dX2Max;
+            aX3  = dX3Min:dT:dX3Max;
+            mMat = oMF.Eval(aX1,aX2,aX3);
             
             if strcmpi(sCoords, 'cylindrical')
-
-                dSIMeanX1  = dMeanX1*dLFac;
-                dSIMeanX2  = dMeanX2*dLFac;
-                dSISigmaX1 = dSigmaX1*dLFac;
-                dSISigmaX2 = dSigmaX2*dLFac;
-                
-                stReturn.Equation = stFunc.Equation;
-                stReturn.X1Mean   = dSIMeanX1;
-                stReturn.X2Mean   = dSIMeanX2;
-                stReturn.X1Sigma  = dSISigmaX1;
-                stReturn.X2Sigma  = dSISigmaX2;
-
-                [dSIMeanX1,  sUnitM1] = fAutoScale(dSIMeanX1, 'm');
-                [dSIMeanX2,  sUnitM2] = fAutoScale(dSIMeanX2, 'm');
-                [dSISigmaX1, sUnitS1] = fAutoScale(dSISigmaX1, 'm');
-                [dSISigmaX2, sUnitS2] = fAutoScale(dSISigmaX2, 'm');
-
-                sFunction = sprintf('%s.*x2', stFunc.ForEval);
-                if ~obj.Silent
-                    fprintf(' Density Function:       %s\n', stFunc.Equation);
-                    fprintf(' X1 Mean, Sigma:         %7.2f, %9.4f [%7.2f %s, %7.2f %s]\n', dMeanX1, dSigmaX1, dSIMeanX1, sUnitM1, dSISigmaX1, sUnitS1);
-                    fprintf(' X2 Mean, Sigma:         %7.2f, %9.4f [%7.2f %s, %7.2f %s]\n', dMeanX2, dSigmaX2, dSIMeanX2, sUnitM2, dSISigmaX2, sUnitS2);
-                    fprintf('\n');
-                end % if
-                
-                % Beam integral
-                aSpanX1 = stFunc.Lims(1):dT:stFunc.Lims(2);
-                aSpanX2 = stFunc.Lims(3):dT:stFunc.Lims(4);
-                for i=1:length(aSpanX2)
-                    aReturn(:,i) = fProfile(aSpanX1,aSpanX2(i))*aSpanX2(i);
+                for r=1:length(aX2)
+                    mMat(r,:) = aX2(r)*mMat(r,:);
                 end % for
-                aReturn  = aReturn.*(aReturn > 0);
-                dBeamInt = 2*pi*sum(aReturn(:))*dT^2;
-                
-                dBeamVol     = dBeamInt * dC^3/dNOmegaP^3;
-                dBeamNum     = dBeamVol * dDensity * dN0;
-                dBeamCharge  = dBeamNum * dE;
-                dBeamDensity = dBeamNum/dBeamVol;
-                dBeamPlasma  = dBeamDensity/(dN0*dPMax);
-                dPeakCurrent = dBeamCharge*dC / sqrt(2*pi*(dSigmaX1*dLFac)^2);
-                
-                stReturn.Volume    = dBeamVol;
-                stReturn.Particles = dBeamNum;
-                stReturn.Charge    = dBeamCharge;
-                stReturn.Density   = dBeamDensity;
-                stReturn.Ratio     = dBeamPlasma;
-                stReturn.Current   = dPeakCurrent;
-                
-                [dPeakCurrent, dCurrentUnit] = fAutoScale(dPeakCurrent, 'A');
-                [dBeamCharge,  sChargeUnit]  = fAutoScale(dBeamCharge,  'C');
-                
-                if ~obj.Silent
-                    fprintf(' Max Plasma Density:     %0.3e m^-3\n', dN0*dPMax);
-                    fprintf(' Max Plasma Frequency:   %0.3e s^-1\n', dMOmegaP);
-                    fprintf('\n');
-                    fprintf(' Beam Integral:          %0.3f \n',     dBeamInt);
-                    fprintf(' Beam Volume:            %0.3e m^3\n',  dBeamVol);
-                    fprintf(' Beam Charge:            %0.3f %s\n',   dBeamCharge, sChargeUnit);
-                    fprintf(' Beam Particle Count:    %0.3e \n',     dBeamNum);
-                    fprintf(' Beam Density:           %0.3e M^-3\n', dBeamDensity);
-                    fprintf('\n');
-                    fprintf(' Beam/Plasma Ratio:      %0.3e \n',     dBeamPlasma);
-                    fprintf('\n');
-                    fprintf(' Beam Peak Current:      %0.3f %s\n',    dPeakCurrent, dCurrentUnit);
+                if iDim == 2
+                    dBeamInt = 2*pi*sum(mMat(:))*dT^2;
+                else
+                    dBeamInt = sum(mMat(:))*dT^3;
                 end % if
+            else
+                if iDim == 3
+                    dBeamInt = sum(mMat(:))*dT^3;
+                end % if
+            end % if
 
+            %
+            % Output
+            %
+
+            %dSIMeanX1  = dMeanX1*dLFac;
+            %dSIMeanX2  = dMeanX2*dLFac;
+            %dSISigmaX1 = dSigmaX1*dLFac;
+            %dSISigmaX2 = dSigmaX2*dLFac;
+
+            stReturn.Equation = sMathFunc;
+            %stReturn.X1Mean   = dSIMeanX1;
+            %stReturn.X2Mean   = dSIMeanX2;
+            %stReturn.X1Sigma  = dSISigmaX1;
+            %stReturn.X2Sigma  = dSISigmaX2;
+
+            %[dSIMeanX1,  sUnitM1] = fAutoScale(dSIMeanX1, 'm');
+            %[dSIMeanX2,  sUnitM2] = fAutoScale(dSIMeanX2, 'm');
+            %[dSISigmaX1, sUnitS1] = fAutoScale(dSISigmaX1, 'm');
+            %[dSISigmaX2, sUnitS2] = fAutoScale(dSISigmaX2, 'm');
+
+            if ~obj.Silent
+                fprintf(' Density Function:       %s\n', sMathFunc);
+                %fprintf(' X1 Mean, Sigma:         %7.2f, %9.4f [%7.2f %s, %7.2f %s]\n', dMeanX1, dSigmaX1, dSIMeanX1, sUnitM1, dSISigmaX1, sUnitS1);
+                %fprintf(' X2 Mean, Sigma:         %7.2f, %9.4f [%7.2f %s, %7.2f %s]\n', dMeanX2, dSigmaX2, dSIMeanX2, sUnitM2, dSISigmaX2, sUnitS2);
+                fprintf('\n');
+            end % if
+
+            dBeamVol     = dBeamInt * dC^3/dNOmegaP^3;
+            dBeamNum     = dBeamVol * dDensity * dN0;
+            dBeamCharge  = dBeamNum * dE;
+            dBeamDensity = dBeamNum/dBeamVol;
+            dBeamPlasma  = dBeamDensity/(dN0*dPMax);
+            %dPeakCurrent = dBeamCharge*dC / sqrt(2*pi*(dSigmaX1*dLFac)^2);
+
+            stReturn.Volume    = dBeamVol;
+            stReturn.Particles = dBeamNum;
+            stReturn.Charge    = dBeamCharge;
+            stReturn.Density   = dBeamDensity;
+            stReturn.Ratio     = dBeamPlasma;
+            %stReturn.Current   = dPeakCurrent;
+
+            %[dPeakCurrent, dCurrentUnit] = fAutoScale(dPeakCurrent, 'A');
+            [dBeamCharge,  sChargeUnit]  = fAutoScale(dBeamCharge,  'C');
+
+            if ~obj.Silent
+                fprintf(' Max Plasma Density:     %0.3e m^-3\n', dN0*dPMax);
+                fprintf(' Max Plasma Frequency:   %0.3e s^-1\n', dMOmegaP);
+                fprintf('\n');
+                fprintf(' Beam Integral:          %0.3f \n',     dBeamInt);
+                fprintf(' Beam Volume:            %0.3e m^3\n',  dBeamVol);
+                fprintf(' Beam Charge:            %0.3f %s\n',   dBeamCharge, sChargeUnit);
+                fprintf(' Beam Particle Count:    %0.3e \n',     dBeamNum);
+                fprintf(' Beam Density:           %0.3e M^-3\n', dBeamDensity);
+                fprintf('\n');
+                fprintf(' Beam/Plasma Ratio:      %0.3e \n',     dBeamPlasma);
+                %fprintf('\n');
+                %fprintf(' Beam Peak Current:      %0.3f %s\n',    dPeakCurrent, dCurrentUnit);
             end % if
             
             if ~obj.Silent
@@ -435,8 +454,8 @@ classdef OsirisData
 
             if nargin == 1
                 fprintf('\n');
-                fprintf(' object.Data(iTime, *)\n');
-                fprintf('***********************\n');
+                fprintf(' Data-extraction function\n');
+                fprintf('**************************\n');
                 fprintf('\n');
                 fprintf(' Input:\n');
                 fprintf('========\n');
@@ -454,9 +473,14 @@ classdef OsirisData
             end % if
             
             % Convert and check input values
-            sType     = upper(sType);                % Type is always upper case
-            sSet      = lower(sSet);                 % Set is always lower case
-            sSpecies  = fTranslateSpecies(sSpecies); % Species translated to standard format
+            sType     = upper(sType); % Type is always upper case
+            sSet      = lower(sSet);  % Set is always lower case
+            
+            % Species translated to standard format, and then to actual file name used
+            sSpecies  = obj.Translate.Lookup(sSpecies).Name;
+            if ~isempty(sSpecies)
+                sSpecies  = obj.Config.Particles.Species.(sSpecies).Name;
+            end % if
 
             if isempty(sType)
                 fprintf(2, 'Error: Data type needs to be specified.\n');
@@ -548,12 +572,26 @@ classdef OsirisData
             
         end % function
         
+        function bReturn = DataSetExists(obj, sType, sSet, sSpecies)
+            
+            bReturn = false;
+            
+            [~,iMS] = size(obj.MSData.Data);
+            for m=1:iMS
+                if strcmp(obj.MSData.Data(m).Type, sType) && strcmp(obj.MSData.Data(m).Set, sSet) && strcmp(obj.MSData.Data(m).Species, sSpecies)
+                    bReturn = true;
+                    return;
+                end % if
+            end % for
+            
+        end % function
+
         function stReturn = ExportTags(obj, sTime, sSpecies, varargin)
             
             stReturn = {};
 
-            sSpecies = fTranslateSpecies(sSpecies);
-            iTime    = fStringToDump(obj, num2str(sTime));
+            sSpecies = obj.TranslateInput(sSpecies);
+            iTime    = obj.StringToDump(num2str(sTime));
 
             dBoxX1Min = obj.Config.Variables.Simulation.BoxX1Min;
             dBoxX1Max = obj.Config.Variables.Simulation.BoxX1Max;
@@ -620,20 +658,6 @@ classdef OsirisData
             stReturn.Selection = aRaw;
             stReturn.File      = sFile;
 
-        end % function
-        
-        function bReturn = DataSetExists(obj, sType, sSet, sSpecies)
-            
-            bReturn = false;
-            
-            [~,iMS] = size(obj.MSData.Data);
-            for m=1:iMS
-                if strcmp(obj.MSData.Data(m).Type, sType) && strcmp(obj.MSData.Data(m).Set, sSet) && strcmp(obj.MSData.Data(m).Species, sSpecies)
-                    bReturn = true;
-                    break;
-                end % if
-            end % for
-            
         end % function
         
         function stReturn = Timings(obj, bPrint)
@@ -704,13 +728,77 @@ classdef OsirisData
             
         end % function
 
+        function iReturn = StringToDump(obj, vValue)
+
+            iReturn = 0;
+            sString = num2str(vValue);
+
+            if isempty(sString)
+                return;
+            end % if
+
+            if strcmp(sString(end), 'm')
+                % Function will translate from metres to closest dump
+                % Not yet implemented
+                iReturn = 0;
+                return;
+            end % if
+
+            if isintegerstring(sString)
+                iReturn = floor(str2double(sString));
+                return;
+            end % if
+
+            if strcmpi(sString, 'Start')
+                iReturn = 0;
+                return;
+            end % if
+
+            if strcmpi(sString, 'End')
+                iReturn = obj.MSData.MinFiles - 1;
+                if iReturn < 0
+                    iReturn = 0;
+                end % if
+                return;
+            end % if
+
+            if strcmpi(sString, 'PStart')
+                dPStart   = obj.Config.Simulation.PlasmaStart;
+                dTimeStep = obj.Config.Simulation.TimeStep;
+                iNDump    = obj.Config.Simulation.NDump;
+                iReturn   = round(dPStart/(dTimeStep*iNDump));
+                if iReturn > obj.MSData.MinFiles - 1
+                    iReturn = obj.MSData.MinFiles - 1;
+                end % if
+                if iReturn < 0
+                    iReturn = 0;
+                end % if
+                return;
+            end % if
+
+            if strcmpi(sString, 'PEnd')
+                dPEnd     = obj.Config.Simulation.PlasmaEnd;
+                dTimeStep = obj.Config.Simulation.TimeStep;
+                iNDump    = obj.Config.Simulation.NDump;
+                iReturn   = round(dPEnd/(dTimeStep*iNDump));
+                if iReturn > obj.MSData.MinFiles - 1
+                    iReturn = obj.MSData.MinFiles - 1;
+                end % if
+                if iReturn < 0
+                    iReturn = 0;
+                end % if
+                return;
+            end % if
+
+        end % function
+        
     end % methods
     
     %
     % Private Methods
     %
     
-    methods (Access = 'private')
+    methods(Access = 'private')
         
         function stReturn = fScanFolder(obj, sScanRoot, sScanPath)
             
@@ -875,7 +963,48 @@ classdef OsirisData
             stReturn.MaxFiles = iMax;
             
         end % function
-        
+
+    end % methods
+
+    %
+    % Static Methods
+    %
+    
+    methods(Static)
+
+        function iReturn = RawToIndex(sAxis)
+
+            switch(sAxis)
+                case 'x1'
+                    iReturn = 1;
+                case 'x2'
+                    iReturn = 2;
+                case 'x3'
+                    iReturn = 3;
+                case 'p1'
+                    iReturn = 4;
+                case 'p2'
+                    iReturn = 5;
+                case 'p3'
+                    iReturn = 6;
+                case 'ene'
+                    iReturn = 7;
+                case 'energy'
+                    iReturn = 7;
+                case 'q'
+                    iReturn = 8;
+                case 'charge'
+                    iReturn = 8;
+                case 'tag1'
+                    iReturn = 9;
+                case 'tag2'
+                    iReturn = 10;
+                otherwise
+                    iReturn = 0;
+            end % switch
+
+        end % function
+
     end % methods
     
 end % classdef

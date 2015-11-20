@@ -10,7 +10,7 @@ classdef MathFunc
     % Public Properties
     %
 
-    properties (GetAccess = 'public', SetAccess = 'public')
+    properties(GetAccess = 'public', SetAccess = 'public')
 
         Func       = '';
         FuncStruct = {};
@@ -25,7 +25,7 @@ classdef MathFunc
 
         function obj = MathFunc(sFunction)
 
-            obj.Func = sFunction;
+            obj.Func = strrep(sFunction,' ','');
             obj = obj.fParse();
 
         end % function
@@ -50,12 +50,12 @@ classdef MathFunc
     % Public Methods
     %
 
-    methods (Access = 'public')
+    methods(Access = 'public')
 
         function mReturn = Eval(obj, aX1, aX2, aX3)
 
             [mX1,mX2,mX3] = meshgrid(aX1,aX2,aX3);
-
+            
             stFunc = obj.FuncStruct;
             [~,nF] = size(stFunc);
 
@@ -65,7 +65,7 @@ classdef MathFunc
 
                 aCh = stFunc(f).Children; % Array of children functions
                 sFn = stFunc(f).Clean;    % Parsed function to evaluate
-                sMa = stFunc(f).Func;     % Math function for curren5 paranthesis
+                sMa = stFunc(f).Func;     % Math function for current paranthesis
                 nCh = length(aCh);        % Number of children
 
                 % Insert variables for children functions
@@ -97,7 +97,7 @@ classdef MathFunc
                 % Apply math function call
                 stF(f).X = obj.fFunc(sMa,stR(1).X,stR(2).X,stR(3).X);
                 if isempty(stF(f).X)
-                    fprintf(2,'MathFunc Error: Cannot parse math function.\n');
+                    fprintf(2,'MathFunc Error: Cannot parse math function for step %d.\n', f);
                     mReturn = [];
                     return;
                 end % if
@@ -115,7 +115,7 @@ classdef MathFunc
     % Private Methods
     %
 
-    methods (Access = 'private')
+    methods(Access = 'private')
 
         function obj = fParse(obj)
 
@@ -202,7 +202,15 @@ classdef MathFunc
 
         end % function
 
-        function sReturn = fFormat(~, sReturn)
+    end % methods
+
+    %
+    % Static Methods
+    %
+
+    methods(Static)
+
+        function sReturn = fFormat(sReturn)
 
             sReturn = strrep(sReturn,'&&', '&');
             sReturn = strrep(sReturn,'||', '|');
@@ -212,15 +220,15 @@ classdef MathFunc
 
         end % function
 
-        function mReturn = fFunc(~, sFunc, vX, vY, vZ)
+        function mReturn = fFunc(sFunc, vX, vY, vZ)
 
             mReturn = [];
-
-            if nargin < 4
+            
+            if nargin < 3
                 vY = [];
             end % if
 
-            if nargin < 5
+            if nargin < 4
                 vZ = [];
             end % if
 

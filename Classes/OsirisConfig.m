@@ -1,38 +1,42 @@
 
 %
-%  Class Object to hold the Osiris Config file
-% *********************************************
+%  Class Object :: Holds the Osiris Config file
+% **********************************************
 %
 
 classdef OsirisConfig
     
     %
-    % Public Properties
+    % Properties
     %
     
-    properties (GetAccess = 'public', SetAccess = 'public')
+    properties(GetAccess='public', SetAccess='public')
 
-        Path       = '';    % Path to data directory
-        File       = '';    % Config file within data directory
-        Name       = '';    % Name of the loaded dataset
-        Raw        = {};    % Matrix of config file data
-        Variables  = {};    % Struct for all variables
-        N0         = 0.0;   % N0
-        HasData    = false; % True if folder 'MS' exists
-        HasTracks  = false; % True if folder 'MS/TRACKS' exists
-        Completed  = false; % True if folder 'TIMINGS' exists
-        Consistent = false; % True if all data folders have the same number of files
-        Silent     = false; % Set to true to disable command window output
+        Path       = '';     % Path to data directory
+        File       = '';     % Config file within data directory
+        SimN0      = 1.0e20; % Plasma density for simulation
+        PhysN0     = 0.0;    % Plasma density for physics
+        Silent     = false;  % Set to true to disable command window output
 
     end % properties
 
-    %
-    % Private Properties
-    %
+    properties(GetAccess='public', SetAccess='private')
     
-    properties (GetAccess = 'private', SetAccess = 'private')
+        Name       = '';     % Name of the loaded dataset
+        Input      = {};     % Parsed input file
+        Constants  = {};     % Constants
+        Convert    = {};     % Unit conversion factors
+        Simulation = {};     % Simulation variables
+        EMFields   = {};     % Electro-magnetic field variables
+        Particles  = {};     % Particle variables
 
-        Files = {}; % Holds possible config files
+    end % properties
+
+    properties(GetAccess='private', SetAccess='private')
+
+        Files      = {};     % Holds possible config files
+        Translate  = {};     % Container for Variables class
+        NameLists  = {};     % Container for Fortran namelists
         
     end % properties
 
@@ -44,36 +48,19 @@ classdef OsirisConfig
         
         function obj = OsirisConfig()
             
-            % Setting default N0
-            
-            obj.N0 = 1.0e20;
-            
-            % Initialising variable structs
-            
-            obj.Variables.Constants   = struct;
-            obj.Variables.Simulation  = struct;
-            obj.Variables.Fields      = struct;
-            obj.Variables.Species     = struct;
-            obj.Variables.Plasma      = struct;
-            obj.Variables.Beam        = struct;
-            obj.Variables.Convert.SI  = struct;
-            obj.Variables.Convert.CGS = struct;
-            
-            % Setting constants
-            
-            Constants;
-            
-            % SI
-            obj.Variables.Constants.SpeedOfLight        = stConstants.Nature.SpeedOfLight;
-            obj.Variables.Constants.ElectronMass        = stConstants.Particles.Electron.Mass;
-            obj.Variables.Constants.ElectronMassMeV     = stConstants.Particles.Electron.MassMeV;
-            obj.Variables.Constants.ElectronVolt        = stConstants.Units.ElectronVolt.Mass;
-            obj.Variables.Constants.ElementaryCharge    = stConstants.Nature.ElementaryCharge;
-            obj.Variables.Constants.VacuumPermitivity   = stConstants.Nature.VacuumPermitivity;
-            obj.Variables.Constants.VacuumPermeability  = stConstants.Nature.VacuumPermeability;
+            % SI Constants
+            obj.Constants.SpeedOfLight        =  2.99792458e8;    % m/s (exact)
+            obj.Constants.ElectronMass        =  9.10938291e-31;  % kg
+            obj.Constants.ElectronMassMeV     =  5.109989282e-1;  % MeV/c^2
+            obj.Constants.ElementaryCharge    =  1.602176565e-19; % C
+            obj.Constants.VacuumPermitivity   =  8.854187817e-12; % F/m 
+            obj.Constants.VacuumPermeability  =  1.2566370614e-6; % N/A^2
 
-            % CGS
-            obj.Variables.Constants.ElementaryChargeCGS = stConstants.Nature.ElementaryChargeCGS;
+            % CGS Constants
+            obj.Constants.ElementaryChargeCGS =  4.80320425e-10;  % statC
+
+            % Translae Class for Variables
+            obj.Translate = Variables();
             
         end % function
         
@@ -104,7 +91,7 @@ classdef OsirisConfig
                     [~, ~, sFileExt] = fileparts(aDir(i).name);
                     
                     aExclude = {'.out','.sh','.e', '.tags'}; % Files to exclude as definitely not the config file
-                    aSizes   = [1024, 10240];                % Minimum, maximum size in bytes
+                    aSizes   = [1024, 20480];                % Minimum, maximum size in bytes
                     
                     if sum(ismember(sFileExt, aExclude)) == 0 ...
                             && sFileExt(end) ~= '~'           ...
@@ -145,17 +132,48 @@ classdef OsirisConfig
                     fprintf('Config file set: %s\n', obj.File);
                 end % if
                 
-                obj = obj.fReadFile();
+                obj = obj.fReadNameLists();
+                obj = obj.fParseInputFile();
 
                 obj = obj.fGetSimulationVariables();
-                obj = obj.fGetSpecies();
-                obj = obj.fGetFieldVariables();
-                obj = obj.fGetPlasmaVariables();
-                obj = obj.fGetBeamVariables();
-                obj = obj.fGetFields();
-                obj = obj.fGetDensity();
+                obj = obj.fGetEMFVariables();
+                obj = obj.fGetParticleVariables();
+                
+                % Set N0Sim and N0Phys
+                obj.SimN0  = obj.Simulation.N0;
+                obj.PhysN0 = obj.Simulation.PhysN0;
                 
             end % if
+
+        end % function
+        
+        function obj = set.SimN0(obj, dValue)
+            
+            % If N0 is defined in the input file, this value cannot be overridden!
+            
+            obj.SimN0         = abs(double(dValue));
+            obj.Simulation.N0 = obj.SimN0;
+
+            obj = obj.fGetSimulationVariables();
+            
+            dPlasmaFac                 = obj.Simulation.MaxPlasmaFac;
+            obj.Simulation.PhysN0      = obj.SimN0 * dPlasmaFac;
+            obj.Simulation.PhysOmegaP  = obj.Simulation.OmegaP * sqrt(dPlasmaFac);
+            obj.Simulation.PhysLambdaP = obj.Simulation.LambdaP / sqrt(dPlasmaFac);
+            
+        end % function
+
+        function obj = set.PhysN0(obj, dValue)
+            
+            % This Value does not affect any calculations in OsirisConfig,
+            % but the chosen value is set to maximum plasma density.
+            
+            obj.PhysN0 = abs(double(dValue));
+
+            dPlasmaFac                 = obj.PhysN0 / obj.SimN0;
+            obj.Simulation.PhysN0      = obj.PhysN0;
+            obj.Simulation.PhysOmegaP  = obj.Simulation.OmegaP * sqrt(dPlasmaFac);
+            obj.Simulation.PhysLambdaP = obj.Simulation.LambdaP / sqrt(dPlasmaFac);
 
         end % function
         
@@ -165,433 +183,478 @@ classdef OsirisConfig
     %  Config File Methods
     %
     
-    methods (Access = 'private')
+    methods(Access='private')
         
-        function obj = fReadFile(obj)
+        function obj = fReadNameLists(obj)
             
             % Read file
-            oFile   = fopen(strcat(obj.Path, '/', obj.File), 'r');
-            sConfig = fread(oFile,'*char');
+            oFile = fopen(strcat(obj.Path, '/', obj.File), 'r');
+            sFile = sprintf(fread(oFile,'*char'));
             fclose(oFile);
             
             % Clean-up
-            sConfig = regexprep(sprintf(sConfig),'\!.*?\n','\n'); % Removes all comments
-            sConfig = regexprep(sprintf(sConfig),'\s','');        % Removes space, tab & line breaks
-            aLines  = strsplit(sConfig,'}');                      % Split string for each group
-            
-            aConfig = {};
-            
-            for i=1:length(aLines)-1
+            sFile = regexprep(sFile,'\!.*?\n','\n');   % Removes all comments
+            sFile = regexprep(sFile,'[\n|\r|\t]',' '); % Removes tabs and line breaks
+            sFile = strrep(sFile,'.true.','1');        % Replace .true. with matlab logical true
+            sFile = strrep(sFile,'.false.','0');       % Replace .false. with matlab logical false
+            sFile = strrep(sFile,'"','''');            % Replace quote marks
+
+            % Parse file and extract name lists
+
+            sBuffer = ' ';
+            bQuote  = 0;
+
+            iNL = 1;
+            stNameLists(iNL).Section  = [];
+            stNameLists(iNL).NameList = [];
+
+            for c=1:length(sFile)
                 
-                sLine   = aLines{i};
-                iName   = 0;         % 0 for dataset name, 1 between { and }
-                sName   = '';        % The dataset name
-                aBreaks = [];        % Array for variable breaks
-                iComma  = 1;         % Default first comma (actually start of string)
-                iPar    = 0;         % 0 for outside of paranteses, 1 inside
-                iString = 0;         % 0 for outside of string, 1 inside
+                % Check if inside quote
+                if sFile(c) == ''''
+                    bQuote = ~bQuote;
+                end % if
 
-                for c=1:length(sLine)
-                    
-                    % Inside/outside string
-                    if sLine(c) == '"'
-                        if iString
-                            iString = 0;
-                        else
-                            iString = 1;
-                        end % if
+                % Add character to buffer, except spaces outside of quotes
+                if ~(sFile(c) == ' ' && ~bQuote)
+                    sBuffer = [sBuffer sFile(c)];
+                end % if
+                
+                % If the character is a '{', the buffer so far contains a section name
+                if sFile(c) == '{' && ~bQuote
+                    if length(sBuffer) > 1
+                        stNameLists(iNL).Section = strtrim(sBuffer(1:end-1));
+                        sBuffer = ' '; % Reset buffer
                     end % if
-
-                    % Inside paranteses 
-                    if sLine(c) == '(' && iString == 0
-                        iPar = 1;
-                    end % if
-
-                    % Outside paranteses
-                    if sLine(c) == ')' && iString == 0
-                        iPar = 0;
-                    end % if
-
-                    % Get name of set
-                    if iName == 0
-                        if sLine(c) ~= '{'
-                            sName = [sName,sLine(c)];
-                        else
-                            aBreaks = [c];
-                            iName   = 1;
-                            continue;
-                        end % if
-                    end % if
-                    
-                    % Figure out which commas separate variables.
-                    % That is, the last one before an '='
-                    if iName == 1
-                        if sLine(c) == ',' && iPar == 0 && iString == 0
-                            iComma = c;
-                        end % if
-                        if sLine(c) == '=' && iString == 0
-                            if iComma > 1
-                                aBreaks(end+1) = iComma;
+                end % if
+                
+                % If the character is a '}', the buffer so far contains a name list
+                if sFile(c) == '}' && ~bQuote
+                    if length(sBuffer) > 1
+                        sBuffer = strtrim(sBuffer(1:end-1));
+                        if ~isempty(sBuffer)
+                            if sBuffer(end) ~= ','
+                                sBuffer = [sBuffer,','];
                             end % if
                         end % if
+                        stNameLists(iNL).NameList = sBuffer;
+                        sBuffer = ' '; % Reset buffer
+                        iNL = iNL + 1; % Move to next section
                     end % if
-
-                end % for
-                
-                % Separate labels for data, and store everything
-                aBreaks(end+1) = c;
-                for k=2:length(aBreaks)
-  
-                    sString = sLine(aBreaks(k-1)+1:aBreaks(k));
-                    aSplit  = strfind(sString,'=');
-                    sLabel  = 'None';
-                    sValue  = '';
-                    
-                    if ~isempty(aSplit)
-                        if aSplit(1) > 1
-                            sLabel = sString(1:aSplit(1)-1);
-                            sValue = sString(aSplit(1)+1:end);
-                        end % if
-                    end % if
-                    
-                    aLabel = strsplit(sLabel,'(');
-
-                    aConfig{end+1,1} = sName;
-                    aConfig(end,  2) = aLabel(1);
-                    aConfig{end,  3} = 0;
-                    aConfig{end,  4} = 0;
-                    aConfig{end,  5} = 0;
-                    
-                    if length(aLabel) > 1
-                        sNum1 = strrep(aLabel{2},')','');
-                        aNum1 = strsplit(sNum1,':');
-
-                        aConfig{end,3} = str2num(aNum1{1});
-                        if length(aNum1) > 1
-                            sNum2 = aNum1{2};
-                            aNum2 = strsplit(sNum2,',');
-
-                            aConfig{end,4} = str2num(aNum2{1});
-                            if length(aNum2) > 1
-                                aConfig{end,5} = str2num(aNum2{2});
-                            end % if
-                        end % if
-                    end % if
-
-                    if ~isempty(sValue)
-                        if sValue(end) == ','
-                            sValue = sValue(1:end-1);
-                        end % if
-                    end % if
-                    aConfig{end,6} = sValue;
-
-                end % for
-    
-                % Find species
-                [iRows,~] = size(aConfig);
-                sSpecies = '';
-
-                for k=1:iRows
-
-                    if strcmpi(aConfig{k,1},'species') && strcmpi(aConfig{k,2},'name')
-                        sSpecies = strrep(aConfig{k,6},'"','');
-                        sSpecies = fTranslateSpecies(sSpecies);
-                    end % if
-                
-                    aConfig{k,7} = sSpecies;
-
-                end % for
-                
-            end % for
-            
-            obj.Raw = aConfig;
-            
-        end % function
-
-        function sReturn = fExtractRaw(obj, sSpecies, sName, sLabel, iIndex, sDefault)
-            
-            if nargin < 5
-                iIndex = 0;
-            end % if
-
-            if nargin < 6
-                sDefault = 0;
-            end % if
-            
-            [iRows,~] = size(obj.Raw);
-            
-            sReturn = sDefault;
-            
-            for i=1:iRows
-                if   strcmpi(obj.Raw{i,1},sName)    ...
-                  && strcmpi(obj.Raw{i,2},sLabel)   ...
-                  && strcmpi(obj.Raw{i,7},sSpecies) ...
-                  && obj.Raw{i,5} == iIndex
-                    sReturn = obj.Raw{i,6};
                 end % if
+                
             end % for
             
-        end % function
-
-        function aValue = fExtractVariables(obj, sSpecies, sName, sLabel, iIndex)
-            
-            if nargin < 5
-                iIndex = 0;
-            end % if
-            
-            [iRows,~] = size(obj.Raw);
-            
-            aValue = {};
-            
-            for i=1:iRows
-                if   strcmpi(obj.Raw{i,1},sName)    ...
-                  && strcmpi(obj.Raw{i,2},sLabel)   ...
-                  && strcmpi(obj.Raw{i,7},sSpecies) ...
-                  && obj.Raw{i,5} == iIndex
-                    aValue = strsplit(obj.Raw{i,6},',');
-                end % if
-            end % for
-            
-        end % function
-
-        function aReturn = fExtractFixedNum(obj, sSpecies, sName, sLabel, aReturn, iIndex)
-            
-            if nargin < 6
-                iIndex = 0;
-            end % if
-            
-            aValue = obj.fExtractVariables(sSpecies, sName, sLabel, iIndex);
-            
-            if ~isempty(aValue)
-                for i=1:length(aValue)
-                    aReturn(i) = str2num(aValue{i});
-                end % for
-            end % if
-            
-        end % function
-
-        function dReturn = fExtractSingle(obj, sSpecies, sName, sLabel, dReturn, iIndex)
-            
-            if nargin < 6
-                iIndex = 0;
-            end % if
-            
-            aValue = obj.fExtractVariables(sSpecies, sName, sLabel, iIndex);
-            
-            if ~isempty(aValue)
-                dReturn = str2num(aValue{1});
-            end % if
-            
-        end % function
-
-        function aReturn = fExtractVarNum(obj, sSpecies, sName, sLabel, iIndex)
-            
-            if nargin < 5
-                iIndex = 0;
-            end % if
-            
-            aValue = obj.fExtractVariables(sSpecies, sName, sLabel, iIndex);
-            
-            aReturn = [];
-            for i=1:length(aValue)
-                aReturn(i) = str2num(aValue{i});
-            end % for
+            % Save the name list
+            obj.NameLists = stNameLists;
             
         end % function
         
+        function obj = fParseInputFile(obj)
+            
+            stInput = {};
+            cGrp = {'simulation','el_mag_fld','particles','zpulse','current','antenna_array'};
+            iGrp = 1;
+            
+            aSim = [];
+            aEMF = [];
+            aPar = [];
+            aZPl = [];
+            aCur = [];
+            aAnt = [];
+
+            [~,iLMax] = size(obj.NameLists);
+            for l=1:iLMax
+                sSection = obj.NameLists(l).Section;
+                if strcmpi(sSection,'simulation') || strcmpi(sSection,'node_conf')
+                    iGrp = 1;
+                end % if
+                if strcmpi(sSection,'el_mag_fld') || strcmpi(sSection,'emf_bound')
+                    iGrp = 2;
+                end % if
+                if strcmpi(sSection,'particles')
+                    iGrp = 3;
+                end % if
+                if strcmpi(sSection,'zpulse')
+                    iGrp = 4;
+                end % if
+                if iGrp > 2 && (strcmpi(sSection,'current') || strcmpi(sSection,'smooth') || strcmpi(sSection,'diag_current'))
+                    iGrp = 5;
+                end % if
+                if strcmpi(sSection,'antenna_array') || strcmpi(sSection,'antenna')
+                    iGrp = 6;
+                end % if
+                switch(iGrp)
+                    case 1; aSim = [aSim l];
+                    case 2; aEMF = [aEMF l];
+                    case 3; aPar = [aPar l];
+                    case 4; aZPl = [aZPl l];
+                    case 5; aCur = [aCur l];
+                    case 6; aAnt = [aAnt l];
+                end % switch
+            end % for
+
+            % General Simulation Parameters
+            for s=1:length(aSim)
+                iSec = aSim(s);
+                sSec = obj.NameLists(iSec).Section;
+                sVal = obj.NameLists(iSec).NameList;
+                stInput.(cGrp{1}).(sSec) = obj.fParseNameList(sVal);
+            end % for
+            
+            % Electro-Magnetic Fields
+            for s=1:length(aEMF)
+                iSec = aEMF(s);
+                sSec = obj.NameLists(iSec).Section;
+                sVal = obj.NameLists(iSec).NameList;
+                stInput.(cGrp{2}).(sSec) = obj.fParseNameList(sVal);
+            end % for
+
+            % Particles
+            iCntS = 0;
+            iCntC = 0;
+            iCntN = 0;
+            iCntI = 0;
+            iType = 1;
+            sType = '';
+            for s=1:length(aPar)
+                iSec = aPar(s);
+                sSec = obj.NameLists(iSec).Section;
+                sVal = obj.NameLists(iSec).NameList;
+                stNL = obj.fParseNameList(sVal);
+                if strcmpi(sSec,'particles') || strcmpi(sSec,'collisions')
+                    stInput.(cGrp{3}).(sSec) = stNL;
+                else
+                    if strcmpi(sSec,'species') && iType == 1
+                        iType = 1;
+                        iCntS = iCntS + 1;
+                        sType = sprintf('species_%d',iCntS);
+                    end % if
+                    if strcmpi(sSec,'cathode')
+                        iType = 2;
+                        iCntC = iCntC + 1;
+                        sType = sprintf('cathode_%d',iCntC);
+                    end % if
+                    if strcmpi(sSec,'neutral')
+                        iType = 3;
+                        iCntN = iCntN + 1;
+                        sType = sprintf('neutral_%d',iCntN);
+                    end % if
+                    if strcmpi(sSec,'neutral_mov_ions')
+                        iType = 4;
+                        iMovT = 0;
+                        iCntI = iCntI + 1;
+                        sType = sprintf('neutral_mov_ions_%d',iCntI);
+                    end % if
+                    if iType < 4
+                        stInput.(cGrp{3}).(sType).(sSec) = stNL;
+                    else
+                        if strcmpi(sSec,'species') && iType == 4
+                            iMovT = iMovT + 1;
+                            sMovT = sprintf('species_%d',iMovT);
+                        end % if
+                        if iMovT == 0
+                            stInput.(cGrp{3}).(sType).(sSec) = stNL;
+                        else
+                            stInput.(cGrp{3}).(sType).(sMovT).(sSec) = stNL;
+                        end % if
+                    end % if
+                end % if
+            end % for
+            
+            % Laser Pulses
+            iCntZ = 0;
+            sName = '';
+            for s=1:length(aZPl)
+                iSec = aZPl(s);
+                sSec = obj.NameLists(iSec).Section;
+                sVal = obj.NameLists(iSec).NameList;
+                stNL = obj.fParseNameList(sVal);
+                if strcmpi(sSec,'zpulse')
+                    iCntZ = iCntZ + 1;
+                    sName = sprintf('zpulse_%d',iCntZ);
+                end % if
+                stInput.(cGrp{4}).(sName).(sSec) = stNL;
+            end % for
+
+            % Electrical Current
+            % This input is skipped
+
+            % Antennas
+            iCntA = 0;
+            sName = '';
+            for s=1:length(aAnt)
+                iSec = aAnt(s);
+                sSec = obj.NameLists(iSec).Section;
+                sVal = obj.NameLists(iSec).NameList;
+                stNL = obj.fParseNameList(sVal);
+                if strcmpi(sSec,'antenna')
+                    iCntA = iCntA + 1;
+                    sName = sprintf('antenna_%d',iCntA);
+                end % if
+                stInput.(cGrp{6}).(sName).(sSec) = stNL;
+            end % for
+
+            % Save Struct
+            obj.Input = stInput;
+        
+        end % function
+
+    end % methods
+
+    methods(Static, Access='private')
+    
+        function stReturn = fParseNameList(sData)
+            
+            stReturn = {};
+            
+            sBuffer = '';
+            bQuote  = 0;
+            bBrack  = 0;
+            
+            sVar = '';
+            cVar = {};
+
+            for c=1:length(sData)
+                
+                sBuffer = [sBuffer sData(c)];
+                
+                % Check if inside quote
+                if sData(c) == ''''
+                    bQuote = ~bQuote;
+                end % if
+                
+                % Check if inside brackets
+                if sData(c) == '('
+                    bBrack = 1;
+                end % if
+                if sData(c) == ')'
+                    bBrack = 0;
+                end % if
+                
+                % After each variable follows an equal
+                if sData(c) == '=' && ~bQuote && ~bBrack
+                    if ~isempty(sVar)
+                        try
+                            evalc(['stReturn.',sVar,'={',strjoin(cVar,','),'}']);
+                        catch
+                            fprintf(2,'Error: Cannot parse variable ''%s'' in input file.\n',sVar);
+                        end % try
+                    end % if
+                    sVar = sBuffer(1:end-1);
+                    cVar = {};
+                    sBuffer = '';
+                end % if
+
+                % After each value follows a comma
+                if sData(c) == ',' && ~bQuote && ~bBrack
+                    cVar{end+1} = sBuffer(1:end-1);
+                    sBuffer = '';
+                end % if
+
+            end % for
+
+            if ~isempty(sVar)
+                try
+                    evalc(['stReturn.',sVar,'={',strjoin(cVar,','),'}']);
+                catch
+                    fprintf(2,'Error: Cannot parse variable ''%s'' in input file.\n',sVar);
+                end % try
+            end % if
+            
+        end % function
+        
+        function aReturn = fArrayPad(aData, aTemplate)
+            
+            aTemplate(1:length(aData)) = aData;
+            aReturn = aTemplate;
+            
+        end % function
+
     end % methods
 
     %
     %  Variable Methods
     %
 
-    methods (Access = 'private')
+    methods(Access = 'private')
 
         function obj = fGetSimulationVariables(obj)
             
-            % Store variables
+            % Constants
+            dC          = obj.Constants.SpeedOfLight;
+            dECharge    = obj.Constants.ElementaryCharge;
+            dEChargeCGS = obj.Constants.ElementaryChargeCGS;
+            dEMass      = obj.Constants.ElectronMass;
+            dEpsilon0   = obj.Constants.VacuumPermitivity;
+            dMu0        = obj.Constants.VacuumPermeability;
+
+            %
+            % Main Simulation Variables
+            %
             
-            aValue = obj.fExtractFixedNum('','grid','nx_p',[0,0,0]);
-            obj.Variables.Simulation.BoxNX1      = int64(aValue(1));
-            obj.Variables.Simulation.BoxNX2      = int64(aValue(2));
-            obj.Variables.Simulation.BoxNX3      = int64(aValue(3));
-
-            aValue = obj.fExtractFixedNum('','space','xmin',[0.0,0.0,0.0]);
-            obj.Variables.Simulation.BoxX1Min    = double(aValue(1));
-            obj.Variables.Simulation.BoxX2Min    = double(aValue(2));
-            obj.Variables.Simulation.BoxX3Min    = double(aValue(3));
-
-            aValue = obj.fExtractFixedNum('','space','xmax',[0.0,0.0,0.0]);
-            obj.Variables.Simulation.BoxX1Max    = double(aValue(1));
-            obj.Variables.Simulation.BoxX2Max    = double(aValue(2));
-            obj.Variables.Simulation.BoxX3Max    = double(aValue(3));
-
-            aValue = obj.fExtractFixedNum('','time','tmin',[0.0]);
-            obj.Variables.Simulation.TMin        = double(aValue(1));
-
-            aValue = obj.fExtractFixedNum('','time','tmax',[0.0]);
-            obj.Variables.Simulation.TMax        = double(aValue(1));
-
-            aValue = obj.fExtractFixedNum('','time_step','dt',[0.0]);
-            obj.Variables.Simulation.TimeStep    = double(aValue(1));
-
-            aValue = obj.fExtractFixedNum('','time_step','ndump',[0]);
-            obj.Variables.Simulation.NDump       = double(aValue(1));
-
-            aValue = obj.fExtractFixedNum('','grid','nx_p',[0]);
-            obj.Variables.Simulation.Dimensions  = length(aValue);
-
-            sValue = obj.fExtractRaw('','grid','coordinates');
-            obj.Variables.Simulation.Coordinates = strrep(sValue,'"','');
-
-            % Extract variables
-
-            dTimeStep = obj.Variables.Simulation.TimeStep;
-            iNDump    = obj.Variables.Simulation.NDump;
+            % Plasma Density
+            % If this is defined, setting obj.SimN0 will not change anything!
+            try
+                dN0 = double(obj.Input.simulation.simulation.n0{1})*1.0e6;
+            catch
+                dN0 = obj.SimN0;
+            end % try
             
-            % Calculate scaling variables
-            
-            obj.Variables.Convert.SI.TimeFac = dTimeStep*iNDump;
-            
-        end % function
-        
-        function obj = fGetSpecies(obj)
-            
-            stSpecies.Beam    = {};
-            stSpecies.Plasma  = {};
-            stSpecies.Species = {};
+            % Plasma Frequency
+            try
+                dOmegaP = double(obj.Input.simulation.simulation.omega_p0{1});
+            catch
+                dOmegaP = sqrt((dN0 * dECharge^2) / (dEMass * dEpsilon0));
+            end % try
 
-            [iRows,~] = size(obj.Raw);
-            sPrev     = '';
+            % Plasma Wavelength
+            dLambdaP = 2*pi * dC / dOmegaP;
             
-            % Look for species in raw data
-            for i=1:iRows
-                sBeam = obj.Raw{i,7};
-                if ~strcmp(sBeam,sPrev)
-                    if strcmpi(sBeam(1:6), 'Plasma')
-                        stSpecies.Plasma{end+1,1} = sBeam;
-                    else
-                        stSpecies.Beam{end+1,1} = sBeam;
-                    end % if
-                    stSpecies.Species{end+1,1} = sBeam;
-                    sPrev = obj.Raw{i,7};
-                end % if
-            end % for
+            % Coordinates
+            try
+                aGrid = cell2mat(obj.Input.simulation.grid.nx_p);
+            catch
+                aGrid = 1;
+            end % try
+            iDim  = length(aGrid);
+            aGrid = obj.fArrayPad(aGrid, [0 0 0]);
 
-            iBeams   = length(stSpecies.Beam);
-            iPlasmas = length(stSpecies.Plasma);
-            
-            % Assume first beam in input deck is the drive beam
-            if iBeams > 0
-                stSpecies.DriveBeam = stSpecies.Beam(1);
-            else
-                stSpecies.DriveBeam = {};
-            end % if
+            % Grid
+            try
+                sCoords = obj.Input.simulation.grid.coordinates{1};
+            catch
+                sCoords = 'cartesian';
+            end % try
+            bCylindrical = strcmpi(sCoords,'cylindrical');
 
-            % Assume the rest of the beams are witness beams
-            if iBeams > 1
-                stSpecies.WitnessBeam = stSpecies.Beam(2:end);
-            else
-                stSpecies.WitnessBeam = {};
-            end % if
-            
-            % Assume first plasma in input deck is the primary plasma
-            if iPlasmas > 0
-                stSpecies.PrimaryPlasma = stSpecies.Plasma(1);
-            else
-                stSpecies.PrimaryPlasma = {};
-            end % if
+            % Time Step
+            try
+                dTimeStep = double(obj.Input.simulation.time_step.dt{1});
+            catch
+                dTimeStep = 0.0;
+            end % try
 
-            stSpecies.BeamCount        = iBeams;
-            stSpecies.PlasmaCount      = iPlasmas;
-            stSpecies.DriveBeamCount   = length(stSpecies.DriveBeam);
-            stSpecies.WitnessBeamCount = length(stSpecies.WitnessBeam);
-            
-            obj.Variables.Species = stSpecies;
+            % NDump
+            try
+                iNDump = obj.Input.simulation.time_step.ndump{1};
+            catch
+                iNDump = 0;
+            end % try
 
-        end % function
+            % Start Time
+            try
+                dTMin = double(obj.Input.simulation.time.tmin{1});
+            catch
+                dTMin = 0.0;
+            end % try
 
-        function obj = fGetFieldVariables(obj)
-            
-            % Retrieving constants
+            % End Time
+            try
+                dTMax = double(obj.Input.simulation.time.tmax{1});
+            catch
+                dTMax = 0.0;
+            end % try
 
-            dC          = obj.Variables.Constants.SpeedOfLight;
-            dECharge    = obj.Variables.Constants.ElementaryCharge;
-            dEChargeCGS = obj.Variables.Constants.ElementaryChargeCGS;
-            dEMass      = obj.Variables.Constants.ElectronMass;
-            dEpsilon0   = obj.Variables.Constants.VacuumPermitivity;
-            dMu0        = obj.Variables.Constants.VacuumPermeability;
-            
+            % Start Box
+            try
+                aXMin = double(cell2mat(obj.Input.simulation.space.xmin));
+            catch
+                aXMin = 0.0;
+            end % try
+            aXMin = obj.fArrayPad(aXMin, [0.0 0.0 0.0]);
 
-            % Calculating normalised plasma variables derived from N0
+            % End Box
+            try
+                aXMax = double(cell2mat(obj.Input.simulation.space.xmax));
+            catch
+                aXMax = 0.0;
+            end % try
+            aXMax = obj.fArrayPad(aXMax, [0.0 0.0 0.0]);
 
-            dN0       = obj.N0;
-            dOmegaP   = sqrt((dN0 * dECharge^2) / (dEMass * dEpsilon0));
-            dLambdaP  = 2*pi * dC / dOmegaP;
+            % Save Plasma Variables for Simulation
+            obj.Simulation.N0          = dN0;
+            obj.Simulation.OmegaP      = dOmegaP;
+            obj.Simulation.LambdaP     = dLambdaP;
+
+            % Save Plasma Variables for Physics
+            % By default simulation values are used
+            % These are later recalculated if a plasma species is found
+            obj.Simulation.PhysN0      = dN0;
+            obj.Simulation.PhysOmegaP  = dOmegaP;
+            obj.Simulation.PhysLambdaP = dLambdaP;
             
-            obj.Variables.Plasma.N0          = dN0;
-            obj.Variables.Plasma.NormOmegaP  = dOmegaP;
-            obj.Variables.Plasma.NormLambdaP = dLambdaP;
+            % Save Other Variables
+            obj.Simulation.Coordinates = sCoords;
+            obj.Simulation.Cylindrical = bCylindrical;
+            obj.Simulation.Dimensions  = iDim;
+            obj.Simulation.Grid        = aGrid;
             
+            % Save Time Variables
+            obj.Simulation.TimeStep    = dTimeStep;
+            obj.Simulation.NDump       = iNDump;
+            obj.Simulation.TMin        = dTMin;
+            obj.Simulation.TMax        = dTMax;
+
+            % Save Space Variables
+            obj.Simulation.XMin        = aXMin;
+            obj.Simulation.XMax        = aXMax;
+
             
-            % Calculating conversion variables
+            %
+            % Conversion Factors
+            %
             
-            dSIE0    = dEMass * dC^3 * dOmegaP * dMu0*dEpsilon0 / dECharge;
-            dSIB0    = dEMass * dC^2 * dOmegaP * dMu0*dEpsilon0 / dECharge;
+            % Geometry
             dLFactor = dC / dOmegaP;
 
-            % Setting conversion variables
+            % Electric and Magnetic Field
+            dSIE0 = dEMass * dC^3 * dOmegaP * dMu0*dEpsilon0 / dECharge;
+            dSIB0 = dEMass * dC^2 * dOmegaP * dMu0*dEpsilon0 / dECharge;
+
+            % Save Conversion Variables
+            obj.Convert.SI.E0        = dSIE0;
+            obj.Convert.SI.B0        = dSIB0;
+            obj.Convert.SI.LengthFac = dLFactor;
+            obj.Convert.SI.TimeFac   = dTimeStep*iNDump;
             
-            obj.Variables.Convert.SI.E0        = dSIE0;
-            obj.Variables.Convert.SI.B0        = dSIB0;
-            obj.Variables.Convert.SI.LengthFac = dLFactor;
-
-
-            % Charge conversion factor
             
-            sCoords    = obj.Variables.Simulation.Coordinates;
-            iDim       = obj.Variables.Simulation.Dimensions;
-            dTMin      = obj.Variables.Simulation.TMin;
-            dTMax      = obj.Variables.Simulation.TMax;
-
-            dBoxNX1    = double(obj.Variables.Simulation.BoxNX1);
-            dBoxNX2    = double(obj.Variables.Simulation.BoxNX2);
-            dBoxNX3    = double(obj.Variables.Simulation.BoxNX3);
+            %
+            % Particle and Charge Conversion
+            %
             
-            dBoxX1Size = obj.Variables.Simulation.BoxX1Max - obj.Variables.Simulation.BoxX1Min;
-            dBoxX2Size = obj.Variables.Simulation.BoxX2Max - obj.Variables.Simulation.BoxX2Min;
-            dBoxX3Size = obj.Variables.Simulation.BoxX3Max - obj.Variables.Simulation.BoxX3Min;
-
-            dDX1 = dBoxX1Size/dBoxNX1;
-            dDX2 = dBoxX2Size/dBoxNX2;
+            dDX1 = (aXMax(1) - aXMin(1))/aGrid(1);
+            dDX2 = (aXMax(2) - aXMin(2))/aGrid(2);
             if iDim == 2
                 dDX3 = 1.0;
             else
-                dDX3 = dBoxX3Size/dBoxNX3;
+                dDX3 = (aXMax(3) - aXMin(3))/aGrid(3);
             end % if
 
-            dQFac = 1.0;    % Factor for charge in normalised units
-            dPFac = obj.N0; % Density is relative to N0
+            dQFac = 1.0;                 % Factor for charge in normalised units
+            dPFac = dN0;                 % Density is relative to N0
 
-            % 2D cylindrical
-            if strcmpi(sCoords, 'cylindrical')
-                dQFac = dQFac*2*pi; % Cylindrical factor
+            if bCylindrical
+                dQFac = dQFac*2*pi;      % Cylindrical factor
             end % if
-            dPFac = dPFac*dDX1; % Longitudinal cell size
-            dPFac = dPFac*dDX2; % Radial/X cell size
-            dPFac = dPFac*dDX3; % Azimuthal/Y cell size
+            dPFac = dPFac*dDX1;          % Longitudinal cell size
+            dPFac = dPFac*dDX2;          % Radial/X cell size
+            dPFac = dPFac*dDX3;          % Azimuthal/Y cell size
 
-            dPFac = dPFac*dLFactor^3; % Convert from normalised units to unitless
-            dPFac = dPFac*dQFac;      % Combine particle factor and charge factor
+            dPFac = dPFac*dLFactor^3;    % Convert from normalised units to unitless
+            dPFac = dPFac*dQFac;         % Combine particle factor and charge factor
 
-            obj.Variables.Convert.Norm.ChargeFac   = dQFac;
-            obj.Variables.Convert.Norm.ParticleFac = dPFac;
-            obj.Variables.Convert.SI.ChargeFac     = dPFac*dECharge;
-            obj.Variables.Convert.SI.ParticleFac   = dPFac;
-            obj.Variables.Convert.CGS.ChargeFac    = dPFac*dEChargeCGS;
-            obj.Variables.Convert.CGS.ParticleFac  = dPFac;
+            obj.Convert.Norm.ChargeFac   = dQFac;
+            obj.Convert.Norm.ParticleFac = dPFac;
+            obj.Convert.SI.ChargeFac     = dPFac*dECharge;
+            obj.Convert.SI.ParticleFac   = dPFac;
+            obj.Convert.CGS.ChargeFac    = dPFac*dEChargeCGS;
+            obj.Convert.CGS.ParticleFac  = dPFac;
 
-            % Current
+            
+            %
+            % Current Conversion
+            %
 
             aJFac = [1.0 1.0 1.0]; % In normalised units
             if strcmpi(sCoords, 'cylindrical')
@@ -606,449 +669,650 @@ classdef OsirisConfig
                 aJFacCGS = aJFacCGS ./ ([dDX1 dDX2 dDX3]*dLFactor);
             end % if
 
-            obj.Variables.Convert.Norm.J1Fac = aJFac(1);
-            obj.Variables.Convert.Norm.J2Fac = aJFac(2);
-            obj.Variables.Convert.Norm.J3Fac = aJFac(3);
-            obj.Variables.Convert.SI.J1Fac   = aJFacSI(1);
-            obj.Variables.Convert.SI.J2Fac   = aJFacSI(2);
-            obj.Variables.Convert.SI.J3Fac   = aJFacSI(3);
-            obj.Variables.Convert.CGS.J1Fac  = aJFacCGS(1);
-            obj.Variables.Convert.CGS.J2Fac  = aJFacCGS(2);
-            obj.Variables.Convert.CGS.J3Fac  = aJFacCGS(3);
+            obj.Convert.Norm.JFac = aJFac;
+            obj.Convert.SI.JFac   = aJFacSI;
+            obj.Convert.CGS.JFac  = aJFacCGS;
 
         end % function
 
-        function obj = fGetPlasmaVariables(obj)
+        function obj = fGetEMFVariables(obj)
             
-            % Get variables
+            % Get Field Reports
+            try
+                cReports = obj.Input.el_mag_fld.diag_emf.reports;
+            catch
+                cReports = {};
+            end % try
             
-            dTMin      = obj.Variables.Simulation.TMin;
-            dTMax      = obj.Variables.Simulation.TMax;
-            dOmegaP    = obj.Variables.Plasma.NormOmegaP;
-            dLambdaP   = obj.Variables.Plasma.NormLambdaP;
+            % Save EMF Diagnostics
+            obj.EMFields.Reports = cReports;
+            
+        end % function
+        
+        function obj = fGetParticleVariables(obj)
+            
+            % Get Number of Species
+            try
+                iSpecies = int64(obj.Input.particles.particles.num_species{1});
+            catch
+                iSpecies = 0;
+            end % try
 
-            % Extract plasma species variables
-            [iRows,~] = size(obj.Variables.Species.Plasma);
+            % Get Number of Cathodes
+            try
+                iCathode = int64(obj.Input.particles.particles.num_cathode{1});
+            catch
+                iCathode = 0;
+            end % try
             
-            for i=1:iRows
-                
-                sPlasma    = obj.Variables.Species.Plasma{i,1};
-                
-                dPStart    = -1.0;
-                dPEnd      = -1.0;
-                dPlasmaMax =  1.0;
+            % Get Number of Neutrals
+            try
+                iNeutral = int64(obj.Input.particles.particles.num_neutral{1});
+            catch
+                iNeutral = 0;
+            end % try
 
-                obj.Variables.Plasma.(sPlasma) = {};
+            % Get Number of Neutrals
+            try
+                iNMovIons = int64(obj.Input.particles.particles.num_neutral_mov_ions{1});
+            catch
+                iNMovIons = 0;
+            end % try
+            
+            % Save Particle Values
+            obj.Particles.NSpecies        = iSpecies;
+            obj.Particles.NCathode        = iCathode;
+            obj.Particles.NNeutral        = iNeutral;
+            obj.Particles.NNeutralMovIons = iNMovIons;
+            
+            %
+            % Loop All Particles
+            %
+            
+            % Build Particle List
+            cPart = {};
+            aType = [];
+            for p=1:iSpecies
+                cPart = [cPart {sprintf('species_%d',p)}];
+                aType = [aType 1];
+            end % for
+            for p=1:iCathode
+                cPart = [cPart {sprintf('cathode_%d',p)}];
+                aType = [aType 2];
+            end % for
+            for p=1:iNeutral
+                cPart = [cPart {sprintf('neutral_%d',p)}];
+                aType = [aType 3];
+            end % for
+            for p=1:iNMovIons
+                cPart = [cPart {sprintf('neutral_mov_ions_%d',p)}];
+                aType = [aType 4];
+            end % for
+
+            % Get Proper Names
+            cType   = {'Species','Cathode','Neutral','NeutralMovIons'};
+            cBeams  = {};
+            cPlasma = {};
+            for p=1:length(cPart)
+
+                if aType(p) < 4
                 
-                % Extracting plasma profile
-                
-                sValue   = obj.fExtractRaw(sPlasma,'profile','profile_type',0,'uniform');
-                sProfile = strrep(sValue, '"', '');
-                iNumX    = obj.fExtractSingle(sPlasma,'profile','num_x',-1);
-                
-                if iNumX > 0 && strcmpi(sProfile,'uniform')
-                    sProfile = 'piecewise-linear';
-                end % if
-                
-                obj.Variables.Plasma.(sPlasma).ProfileType = sProfile;
-                
-                switch(sProfile)
+                    stData = obj.fGetParticleSpecies(cPart{p}, obj.Input.particles.(cPart{p}), aType(p));
+                    obj.Particles.Species.(stData.Name) = stData.Data;
+                    if strcmpi(stData.Data.Type,'Beam')
+                        cBeams = [cBeams {stData.Name}];
+                    end % if
+                    if strcmpi(stData.Data.Type,'Plasma')
+                        cPlasma = [cPlasma {stData.Name}];
+                    end % if
+
+                else
                     
-                    case 'piecewise-linear'
-                        
-                        % Piecewise Linear Plasma Function
+                    stData = obj.fGetParticleSpecies(cPart{p}, obj.Input.particles.(cPart{p}).species_1, aType(p));
+                    obj.Particles.Species.(stData.Name) = stData.Data;
+                    if strcmpi(stData.Data.Type,'Beam')
+                        cBeams = [cBeams {stData.Name}];
+                    end % if
+                    if strcmpi(stData.Data.Type,'Plasma')
+                        cPlasma = [cPlasma {stData.Name}];
+                    end % if
 
-                        aFX1 = obj.fExtractVarNum(sPlasma,'profile','fx',1);
-                        aX1  = obj.fExtractVarNum(sPlasma,'profile','x' ,1);
-                        aFX2 = obj.fExtractVarNum(sPlasma,'profile','fx',2);
-                        aX2  = obj.fExtractVarNum(sPlasma,'profile','x' ,2);
-                        aFX3 = obj.fExtractVarNum(sPlasma,'profile','fx',3);
-                        aX3  = obj.fExtractVarNum(sPlasma,'profile','x' ,3);
-
-                        dMaxFX1 = max(aFX1);
-                        dMaxFX2 = max(aFX2);
-                        dMaxFX3 = max(aFX3);
-
-                        if isempty(aFX3)
-                            dMaxFX3 = 0;
-                            aFX3    = 0;
-                            aX3     = 0;
-                        end % if
-
-                        iTMin = floor(dTMin);
-                        iTMax = floor(dTMax);
-                        iNT   = iTMax-iTMin+1;
-                        aPD   = zeros(1,iNT);
-                        aZ    = linspace(iTMin,iTMax,iNT);
-                        iPR   = 0;
-                        aReg  = zeros(1,2);
-                        for j=1:length(aFX1)-1
-                            iSMin = floor(aX1(j))+iTMin;
-                            iSMax = floor(aX1(j+1))+iTMin;
-                            iNS   = iSMax-iSMin+1;
-                            aSPD  = linspace(aFX1(j),aFX1(j+1),iNS);
-                            aPD(iSMin+1:iSMax+1) = aSPD;
-                            if aFX1(j+1) > 0 && aFX1(j) == 0
-                                iPR = iPR + 1;
-                                aReg(iPR,1) = aX1(j);
-                            end % if
-                            if aFX1(j+1) == 0 && aFX1(j) > 0
-                                aReg(iPR,2) = aX1(j);
-                            end % if
-                        end % for
-
-                        if aReg(iPR,2) == 0
-                            aReg(iPR,2) = aX1(end);
-                        end % if
-
-                        obj.Variables.Plasma.(sPlasma).DensityProfile = aPD;
-                        obj.Variables.Plasma.(sPlasma).DensityAxis    = aZ;
-                        obj.Variables.Plasma.(sPlasma).PlasmaRegions  = aReg;
-
-                        for j=1:length(aFX1)
-                            if dPStart < 0.0
-                                if aFX1(j) > 0.9*dMaxFX1
-                                    dPStart = aX1(j);
-                                end % if
-                            end % if
-                        end % for
-
-                        for j=length(aFX1):-1:1
-                            if dPEnd < 0.0
-                                if aFX1(j) > 0.1*dMaxFX1
-                                    dPEnd = aX1(j);
-                                end % if
-                            end % if
-                        end % for
-
-                        if dPEnd < 0.0
-                            dPEnd = obj.Variables.Simulation.TMax;
-                        end % if
-
-                        if dPEnd > aX1(end)
-                            dPEnd = aX1(end);
-                        end % if
-
-                        dPlasmaMax = dMaxFX1 * dMaxFX2;
-                        if dMaxFX3 > 0
-                            dPlasmaMax = dPlasmaMax * dMaxFX3;
-                        end % if
-
-                        % Save Variables
-
-                        obj.Variables.Plasma.(sPlasma).ProfileFX1   = aFX1;
-                        obj.Variables.Plasma.(sPlasma).ProfileX1    = aX1;
-                        obj.Variables.Plasma.(sPlasma).ProfileFX2   = aFX2;
-                        obj.Variables.Plasma.(sPlasma).ProfileX2    = aX2;
-                        obj.Variables.Plasma.(sPlasma).ProfileFX3   = aFX3;
-                        obj.Variables.Plasma.(sPlasma).ProfileX3    = aX3;
-
-                        obj.Variables.Plasma.(sPlasma).PlasmaMaxFX1 = dMaxFX1;
-                        obj.Variables.Plasma.(sPlasma).PlasmaMaxFX2 = dMaxFX2;
-                        obj.Variables.Plasma.(sPlasma).PlasmaMaxFX3 = dMaxFX3;
-
-                    case 'mathfunc'
-                        
-                        % Math Plasma Function
-
-                        sValue = obj.fExtractRaw(sPlasma,'profile','math_func_expr');
-                        sFunc  = strrep(sValue, '"', '');
-                        obj.Variables.Plasma.(sPlasma).ProfileFunction = sFunc;
-                        
-                        iTMin = floor(dTMin);
-                        iTMax = floor(dTMax);
-                        iNT   = iTMax-iTMin+1;
-                        aZ    = linspace(iTMin,iTMax,iNT);
-
-                        oMF = MathFunc(sFunc);
-                        aPD = oMF.Eval(aZ,0,0);
-
-                        if isempty(aPD)
-                        
-                            fprintf(2,'OsirisConfig Error: Cannot parse math function from input deck.\n');
-
-                        else
-                        
-                            obj.Variables.Plasma.(sPlasma).DensityProfile = aPD;
-                            obj.Variables.Plasma.(sPlasma).DensityAxis    = aZ;
-
-                            dPlasmaMax = max(aPD);
-
-                            for j=1:length(aPD)
-                                if dPStart < 0.0
-                                    if aPD(j) > 0.95*dPlasmaMax
-                                        dPStart = aZ(j);
-                                    end % if
-                                end % if
-                            end % for
-
-                            for j=length(aPD):-1:1
-                                if dPEnd < 0.0
-                                    if aPD(j) > 0.05*dPlasmaMax
-                                        dPEnd = aZ(j);
-                                    end % if
-                                end % if
-                            end % for
-
-                            if dPEnd < 0.0
-                                dPEnd = obj.Variables.Simulation.TMax;
-                            end % if
-
-                            if dPEnd > aZ(end)
-                                dPEnd = aZ(end);
-                            end % if
-                        end % if
-                        
-                    otherwise
-                        
-                        fprintf('OsirisConfig Warning: Unsupported species profile encountered.\n');
+                    stData = obj.fGetParticleSpecies(cPart{p}, obj.Input.particles.(cPart{p}).species_2, aType(p));
+                    obj.Particles.Species.(stData.Name) = stData.Data;
+                    if strcmpi(stData.Data.Type,'Beam')
+                        cBeams = [cBeams {stData.Name}];
+                    end % if
+                    if strcmpi(stData.Data.Type,'Plasma')
+                        cPlasma = [cPlasma {stData.Name}];
+                    end % if
 
                 end % if
 
-                if strcmpi(obj.Variables.Species.PrimaryPlasma,sPlasma)
-                    obj.Variables.Plasma.PlasmaStart  = dPStart;
-                    obj.Variables.Plasma.PlasmaEnd    = dPEnd;
-
-                    obj.Variables.Plasma.MaxPlasmaFac = dPlasmaMax;
-                    obj.Variables.Plasma.MaxOmegaP    = dOmegaP  * sqrt(dPlasmaMax);
-                    obj.Variables.Plasma.MaxLambdaP   = dLambdaP / sqrt(dPlasmaMax);
-                end % if
-
-                % Species
-
-                aValue = obj.fExtractFixedNum(sPlasma,'species','rqm',[0]);
-                obj.Variables.Plasma.(sPlasma).RQM       = double(aValue(1));
-
-                % Space output
-                
-                aValue = obj.fExtractFixedNum(sPlasma,'diag_species','ps_xmin',[0.0,0.0,0.0]);
-                obj.Variables.Plasma.(sPlasma).DiagX1Min = double(aValue(1));
-                obj.Variables.Plasma.(sPlasma).DiagX2Min = double(aValue(2));
-                obj.Variables.Plasma.(sPlasma).DiagX3Min = double(aValue(3));
-
-                aValue = obj.fExtractFixedNum(sPlasma,'diag_species','ps_xmax',[0.0,0.0,0.0]);
-                obj.Variables.Plasma.(sPlasma).DiagX1Max = double(aValue(1));
-                obj.Variables.Plasma.(sPlasma).DiagX2Max = double(aValue(2));
-                obj.Variables.Plasma.(sPlasma).DiagX3Max = double(aValue(3));
-
-                aValue = obj.fExtractFixedNum(sPlasma,'diag_species','ps_nx',[0,0,0]);
-                obj.Variables.Plasma.(sPlasma).DiagNX1   = int64(aValue(1));
-                obj.Variables.Plasma.(sPlasma).DiagNX2   = int64(aValue(2));
-                obj.Variables.Plasma.(sPlasma).DiagNX3   = int64(aValue(3));
-
-                % Momentum output
-                
-                aValue = obj.fExtractFixedNum(sPlasma,'diag_species','ps_pmin',[0.0,0.0,0.0]);
-                obj.Variables.Plasma.(sPlasma).DiagP1Min = double(aValue(1));
-                obj.Variables.Plasma.(sPlasma).DiagP2Min = double(aValue(2));
-                obj.Variables.Plasma.(sPlasma).DiagP3Min = double(aValue(3));
-
-                aValue = obj.fExtractFixedNum(sPlasma,'diag_species','ps_pmax',[0.0,0.0,0.0]);
-                obj.Variables.Plasma.(sPlasma).DiagP1Max = double(aValue(1));
-                obj.Variables.Plasma.(sPlasma).DiagP2Max = double(aValue(2));
-                obj.Variables.Plasma.(sPlasma).DiagP3Max = double(aValue(3));
-
-                aValue = obj.fExtractFixedNum(sPlasma,'diag_species','ps_np',[0,0,0]);
-                obj.Variables.Plasma.(sPlasma).DiagNP1   = int64(aValue(1));
-                obj.Variables.Plasma.(sPlasma).DiagNP2   = int64(aValue(2));
-                obj.Variables.Plasma.(sPlasma).DiagNP3   = int64(aValue(3));
-                
-                % RAW output
-                
-                aValue = obj.fExtractFixedNum(sPlasma,'diag_species','raw_fraction',[0]);
-                obj.Variables.Plasma.(sPlasma).RAWFraction = double(aValue(1));
-                                
             end % for
+
             
-        end % function
-        
-        function obj = fGetBeamVariables(obj)
+            %
+            % Guess Species Roles
+            %
             
-            % Extract variables
-            iDim   = obj.Variables.Simulation.Dimensions;
-            dX1Min = obj.Variables.Simulation.BoxX1Min;
-            dX1Max = obj.Variables.Simulation.BoxX1Max;
-            dX2Min = obj.Variables.Simulation.BoxX2Min;
-            dX2Max = obj.Variables.Simulation.BoxX2Max;
-            dX3Min = obj.Variables.Simulation.BoxX3Min;
-            dX3Max = obj.Variables.Simulation.BoxX3Max;
-
-            % Loop through beam species
-            [iRows,~] = size(obj.Variables.Species.Beam);
+            obj.Particles.Beams  = cBeams;
+            obj.Particles.Plasma = cPlasma;
             
-            for i=1:iRows
-                
-                sBeam = obj.Variables.Species.Beam{i,1};
-                
-                obj.Variables.Beam.(sBeam) = {};
-                
-                % Species
-
-                aValue = obj.fExtractFixedNum(sBeam,'species','rqm',[0]);
-                obj.Variables.Beam.(sBeam).RQM       = double(aValue(1));
-
-                aValue = obj.fExtractFixedNum(sBeam,'udist','uth',[0.0,0.0,0.0]);
-                obj.Variables.Beam.(sBeam).Spread1   = double(aValue(1));
-                obj.Variables.Beam.(sBeam).Spread2   = double(aValue(2));
-                obj.Variables.Beam.(sBeam).Spread3   = double(aValue(3));
-
-                aValue = obj.fExtractFixedNum(sBeam,'udist','ufl',[0.0,0.0,0.0]);
-                obj.Variables.Beam.(sBeam).Momentum1 = double(aValue(1));
-                obj.Variables.Beam.(sBeam).Momentum2 = double(aValue(2));
-                obj.Variables.Beam.(sBeam).Momentum3 = double(aValue(3));
-
-                % Space output
-                
-                aValue = obj.fExtractFixedNum(sBeam,'diag_species','ps_xmin',[0.0,0.0,0.0]);
-                obj.Variables.Beam.(sBeam).DiagX1Min = double(aValue(1));
-                obj.Variables.Beam.(sBeam).DiagX2Min = double(aValue(2));
-                obj.Variables.Beam.(sBeam).DiagX3Min = double(aValue(3));
-
-                aValue = obj.fExtractFixedNum(sBeam,'diag_species','ps_xmax',[0.0,0.0,0.0]);
-                obj.Variables.Beam.(sBeam).DiagX1Max = double(aValue(1));
-                obj.Variables.Beam.(sBeam).DiagX2Max = double(aValue(2));
-                obj.Variables.Beam.(sBeam).DiagX3Max = double(aValue(3));
-
-                aValue = obj.fExtractFixedNum(sBeam,'diag_species','ps_nx',[0,0,0]);
-                obj.Variables.Beam.(sBeam).DiagNX1   = int64(aValue(1));
-                obj.Variables.Beam.(sBeam).DiagNX2   = int64(aValue(2));
-                obj.Variables.Beam.(sBeam).DiagNX3   = int64(aValue(3));
-
-                % Momentum output
-                
-                aValue = obj.fExtractFixedNum(sBeam,'diag_species','ps_pmin',[0.0,0.0,0.0]);
-                obj.Variables.Beam.(sBeam).DiagP1Min = double(aValue(1));
-                obj.Variables.Beam.(sBeam).DiagP2Min = double(aValue(2));
-                obj.Variables.Beam.(sBeam).DiagP3Min = double(aValue(3));
-
-                aValue = obj.fExtractFixedNum(sBeam,'diag_species','ps_pmax',[0.0,0.0,0.0]);
-                obj.Variables.Beam.(sBeam).DiagP1Max = double(aValue(1));
-                obj.Variables.Beam.(sBeam).DiagP2Max = double(aValue(2));
-                obj.Variables.Beam.(sBeam).DiagP3Max = double(aValue(3));
-
-                aValue = obj.fExtractFixedNum(sBeam,'diag_species','ps_np',[0,0,0]);
-                obj.Variables.Beam.(sBeam).DiagNP1   = int64(aValue(1));
-                obj.Variables.Beam.(sBeam).DiagNP2   = int64(aValue(2));
-                obj.Variables.Beam.(sBeam).DiagNP3   = int64(aValue(3));
-                
-                % RAW output
-                
-                aValue = obj.fExtractFixedNum(sBeam,'diag_species','raw_fraction',[0]);
-                obj.Variables.Beam.(sBeam).RAWFraction = double(aValue(1));
-
-                % Beam profile
-                
-                sValue = obj.fExtractRaw(sBeam, 'profile', 'profile_type');
-                obj.Variables.Beam.(sBeam).ProfileType     = strrep(sValue, '"', '');
-                
-                sValue = obj.fExtractRaw(sBeam, 'profile', 'math_func_expr');
-                obj.Variables.Beam.(sBeam).ProfileFunction = strrep(sValue, '"', '');
-                sMathFunc = strrep(sValue, '"', '');
-                
-                aValue = obj.fExtractFixedNum(sBeam,'profile','density',[0]);
-                obj.Variables.Beam.(sBeam).Density         = double(aValue(1));
-                
-                % Analyse beam profile
-                
-                stFunc    = fExtractEq(sMathFunc, iDim, [dX1Min,dX1Max,dX2Min,dX2Max,dX3Min,dX3Max]);
-                sFunction = stFunc.ForEval;
-                fProfile  = @(x1,x2) eval(sFunction);
-
-                aSpan   = linspace(stFunc.Lims(1), stFunc.Lims(2), 20000);
-                aReturn = fProfile(aSpan,0);
-                aReturn = aReturn.*(aReturn > 0);
-                if sum(aReturn) > 0 && max(aReturn) >= 0
-                    dMeanX1  = dround(wmean(aSpan, aReturn),3);
-                    dSigmaX1 = dround(sqrt(var(aSpan,aReturn)),5);
+            if ~isempty(cBeams)
+                obj.Particles.DriveBeam = cBeams(1);
+                if length(cBeams) > 1
+                    obj.Particles.WitnessBeam = cBeams(2:end);
                 else
-                    dMeanX1  = 0.0;
-                    dSigmaX1 = 0.0;
+                    obj.Particles.WitnessBeam = {};
                 end % if
-
-                aSpan   = linspace(-stFunc.Lims(4), stFunc.Lims(4), 10000); % Assumes cylindrical
-                aReturn = fProfile(dMeanX1,aSpan);
-                aReturn = aReturn.*(aReturn > 0);
-                if sum(aReturn) > 0 && max(aReturn) >= 0
-                    dMeanX2  = dround(wmean(aSpan, aReturn),3);
-                    dSigmaX2 = dround(sqrt(var(aSpan,aReturn)),5);
-                else
-                    dMeanX2  = 0.0;
-                    dSigmaX2 = 0.0;
-                end % if
-
-                obj.Variables.Beam.(sBeam).MeanX1  = dMeanX1;
-                obj.Variables.Beam.(sBeam).MeanX2  = dMeanX2;
-                obj.Variables.Beam.(sBeam).SigmaX1 = dSigmaX1;
-                obj.Variables.Beam.(sBeam).SigmaX2 = dSigmaX2;
-                
-            end % for
-            
-        end % function
-        
-        function obj = fGetFields(obj)
-            
-            sFields = fExtractRaw(obj, '', 'diag_emf', 'reports', 0);
-
-            if isempty(sFields)
-                return;
+            else
+                obj.Particles.DriveBeam = {};
+            end % if
+            if ~isempty(cPlasma)
+                obj.Particles.PrimaryPlasma = cPlasma(1);
+            else
+                obj.Particles.PrimaryPlasma = {};
             end % if
             
-            sFields = strrep(sFields, '"', '');
-            aFields = strsplit(sFields, ',');
-            obj.Variables.Fields.Field  = aFields;
-            obj.Variables.Fields.EField = {};
-            obj.Variables.Fields.BField = {};
             
-            iE = 1;
-            iB = 1;
-            for i=1:length(aFields)
-                if strcmpi(aFields{i}(1), 'e')
-                    obj.Variables.Fields.EField{iE} = aFields{i};
-                    iE = iE + 1;
-                end % if
-                if strcmpi(aFields{i}(1), 'b')
-                    obj.Variables.Fields.BField{iB} = aFields{i};
-                    iB = iB + 1;
-                end % if
-            end % for
+            %
+            % Extract Simulation Info From Plasma
+            %
             
-        end % function
+            if ~isempty(cPlasma)
 
-        function obj = fGetDensity(obj)
-            
-            stSpecies = obj.Variables.Species.Species;
-            
-            for s=1:length(stSpecies)
-
-                sDensity = fExtractRaw(obj, stSpecies{s}, 'diag_species', 'reports', 0, '');
-
-                if isempty(sDensity)
-                    return;
-                end % if
-
-                sDensity = strrep(sDensity, '"', '');
-                aDensity = strsplit(sDensity, ',');
-                obj.Variables.Density.(stSpecies{s}).Density = aDensity;
-                obj.Variables.Density.(stSpecies{s}).Charge  = {};
-                obj.Variables.Density.(stSpecies{s}).Current = {};
-
-                iQ = 1;
-                iC = 1;
-                for i=1:length(aDensity)
-                    if strcmpi(aDensity{i}(1), 'c')
-                        obj.Variables.Density.(stSpecies{s}).Charge{iQ} = aDensity{i};
-                        iQ = iQ + 1;
-                    end % if
-                    if strcmpi(aDensity{i}(1), 'j')
-                        obj.Variables.Density.(stSpecies{s}).Current{iC} = aDensity{i};
-                        iC = iC + 1;
+                sPlasma    = cPlasma{1};
+                stProfile  = obj.Particles.Species.(sPlasma).Profile.ProfileX1;
+                dPlasmaMax = obj.Particles.Species.(sPlasma).Profile.PeakDensity;
+                
+                dStart = 0.0;
+                dStop  = 0.0;
+                for x=1:stProfile.Length
+                    if stProfile.Value(x) > 0.5*dPlasmaMax
+                        dStart = stProfile.Axis(x);
+                        break;
                     end % if
                 end % for
+                for x=stProfile.Length:-1:1
+                    if stProfile.Value(x) > 0.5*dPlasmaMax
+                        dStop = stProfile.Axis(x);
+                        break;
+                    end % if
+                end % for
+                
+            else
+                
+                dStart     = obj.Simulation.TMin;
+                dStop      = obj.Simulation.TMax;
+                dPlasmaMax = 1.0;
 
-            end % for
+            end % if
+            
+            % Save Plasma Details
+            obj.Simulation.PlasmaStart  = dStart;
+            obj.Simulation.PlasmaEnd    = dStop;
+            obj.Simulation.MaxPlasmaFac = dPlasmaMax;
+            
+            % Update Simulation Units
+            obj.Simulation.PhysN0       = obj.Simulation.N0 * dPlasmaMax;
+            obj.Simulation.PhysOmegaP   = obj.Simulation.OmegaP * sqrt(dPlasmaMax);
+            obj.Simulation.PhysLambdaP  = obj.Simulation.LambdaP / sqrt(dPlasmaMax);
+
+        end % function
+        
+        function stReturn = fGetParticleSpecies(obj, sRawName, stData, iType)
+            
+            stReturn = {};
+            iMoving  = 0; % 1 for moving particles in x1 direction
+            cType    = {'Species','Cathode','Neutral','NeutralMovIons'};
+
+            % Species Name
+            try
+                sName = stData.species.name{1};
+            catch
+                sName = sRawName;
+            end % try
+
+            vSpecies = obj.Translate.Lookup(sName);
+            sPName   = vSpecies.Name;
+            sPName   = strrep(sPName,' ','_');
+            sPName   = strrep(sPName,'-','_');
+
+            % Species Type
+            sSpeciesType = 'Unknown';
+            if vSpecies.isBeam
+                sSpeciesType = 'Beam';
+            end % if
+            if vSpecies.isPlasma
+                sSpeciesType = 'Plasma';
+            end % if
+
+            % Species Mass/Charge
+            try
+                dRQM = double(stData.species.rqm{1});
+            catch
+                dRQM = 0.0;
+            end % try
+
+            % Return Variables
+            stReturn.Name       = sPName;
+            stReturn.Data.Name  = sName;
+            stReturn.Data.Type  = sSpeciesType;
+            stReturn.Data.Class = cType{iType};
+            stReturn.Data.RQM   = dRQM;
+            
+
+            %
+            % Species UDist
+            %
+            
+            % Only for Species and Catode
+            if iType == 1 || iType == 2
+                
+                % Thermal Spread
+                try
+                    aUth = double(cell2mat(stData.udist.uth));
+                catch
+                    aUth = [0.0];
+                end % try
+                aUth = obj.fArrayPad(aUth, [0.0 0.0 0.0]);
+
+                % Flow
+                try
+                    aUfl = double(cell2mat(stData.udist.ufl));
+                catch
+                    aUfl = [0.0];
+                end % try
+                aUfl = obj.fArrayPad(aUfl, [0.0 0.0 0.0]);
+                if aUfl(1) > 0.0
+                    iMoving = 1;
+                end % if
+
+                % Return Variables
+                stReturn.Data.Thermal  = aUth;
+                stReturn.Data.Momentum = aUfl;
+                
+            end % if
+
+            
+            %
+            % Species Diagnostic
+            %
+
+            % Raw Fraction
+            try
+                dRawFrac = double(stData.diag_species.raw_fraction{1});
+            catch
+                dRawFrac = 0.0;
+            end % try
+
+            % PhaseSpace XMin
+            try
+                aDiagXMin = double(cell2mat(stData.diag_species.ps_xmin));
+            catch
+                aDiagXMin = [0.0];
+            end % try
+            aDiagXMin = obj.fArrayPad(aDiagXMin, [0.0 0.0 0.0]);
+
+            % PhaseSpace XMax
+            try
+                aDiagXMax = double(cell2mat(stData.diag_species.ps_xmax));
+            catch
+                aDiagXMax = [0.0];
+            end % try
+            aDiagXMax = obj.fArrayPad(aDiagXMax, [0.0 0.0 0.0]);
+
+            % PhaseSpace NX
+            try
+                aDiagNX = int64(cell2mat(stData.diag_species.ps_nx));
+            catch
+                aDiagNX = [0];
+            end % try
+            aDiagNX = obj.fArrayPad(aDiagNX, [0 0 0]);
+
+            % PhaseSpace PMin
+            try
+                aDiagPMin = double(cell2mat(stData.diag_species.ps_pmin));
+            catch
+                aDiagPMin = [0.0];
+            end % try
+            aDiagPMin = obj.fArrayPad(aDiagPMin, [0.0 0.0 0.0]);
+
+            % PhaseSpace PMax
+            try
+                aDiagPMax = double(cell2mat(stData.diag_species.ps_pmax));
+            catch
+                aDiagPMax = [0.0];
+            end % try
+            aDiagPMax = obj.fArrayPad(aDiagPMax, [0.0 0.0 0.0]);
+
+            % PhaseSpace NP
+            try
+                aDiagNP = int64(cell2mat(stData.diag_species.ps_np));
+            catch
+                aDiagNP = [0];
+            end % try
+            aDiagNP = obj.fArrayPad(aDiagNP, [0 0 0]);
+            
+            % PhaseSpace LMin
+            try
+                aDiagLMin = double(cell2mat(stData.diag_species.ps_lmin));
+            catch
+                aDiagLMin = [0.0];
+            end % try
+            aDiagLMin = obj.fArrayPad(aDiagLMin, [0.0 0.0 0.0]);
+
+            % PhaseSpace LMax
+            try
+                aDiagLMax = double(cell2mat(stData.diag_species.ps_lmax));
+            catch
+                aDiagLMax = [0.0];
+            end % try
+            aDiagLMax = obj.fArrayPad(aDiagLMax, [0.0 0.0 0.0]);
+
+            % PhaseSpace NL
+            try
+                aDiagNL = int64(cell2mat(stData.diag_species.ps_nl));
+            catch
+                aDiagNL = [0];
+            end % try
+            aDiagNL = obj.fArrayPad(aDiagNL, [0 0 0]);
+            
+            % PhaseSpace Gamma Min
+            try
+                dDiagGMin = double(stData.diag_species.ps_gammamin{1});
+            catch
+                dDiagGMin = 0.0;
+            end % try
+
+            % PhaseSpace Gamma Max
+            try
+                dDiagGMax = double(stData.diag_species.ps_gammamax{1});
+            catch
+                dDiagGMax = 0.0;
+            end % try
+
+            % PhaseSpace NGamma
+            try
+                iDiagNG = int64(stData.diag_species.ps_ngamma{1});
+            catch
+                iDiagNG = 0;
+            end % try
+
+            % PhaseSpaces
+            try
+                cPhaseSpaces = obj.Translate.EvalPhaseSpace(stData.diag_species.phasespaces);
+            catch
+                cPhaseSpaces = {};
+            end % try
+            
+            % Reports
+            try
+                cReports = stData.diag_species.reports;
+            catch
+                cReports = {};
+            end % try
+            
+            % Return Variables
+            stReturn.Data.RawFraction  = dRawFrac;
+            stReturn.Data.DiagXMin     = aDiagXMin;
+            stReturn.Data.DiagXMax     = aDiagXMax;
+            stReturn.Data.DiagNX       = aDiagNX;
+            stReturn.Data.DiagPMin     = aDiagPMin;
+            stReturn.Data.DiagPMax     = aDiagPMax;
+            stReturn.Data.DiagNP       = aDiagNP;
+            stReturn.Data.DiagLMin     = aDiagLMin;
+            stReturn.Data.DiagLMax     = aDiagLMax;
+            stReturn.Data.DiagNL       = aDiagNL;
+            stReturn.Data.DiagGammaMin = dDiagGMin;
+            stReturn.Data.DiagGammaMax = dDiagGMax;
+            stReturn.Data.DiagNGamma   = iDiagNG;
+            stReturn.Data.DiagReports  = cReports;
+            stReturn.Data.PhaseSpaces  = cPhaseSpaces;
+
+
+            %
+            % Species Profile
+            %
+            
+            % Only for Species, Neutral and NeutralMovIons
+            if iType == 1 || iType == 3 || iType == 4
+                
+                stProfile = obj.fGetSpeciesProfile(stData,iMoving);
+                stReturn.Data.Profile = stProfile;
+                
+            end % if
+            
+            % Set Species Type if Still Unknown
+            if strcmpi(sSpeciesType,'Unknown')
+                if iMoving
+                    stReturn.Data.Type = 'Beam';
+                else
+                    stReturn.Data.Type = 'Plasma';
+                end % if
+            end % if
             
         end % function
         
+        function stReturn = fGetSpeciesProfile(obj, stData, iMov)
+            
+            stReturn = {};
+            
+            % Variables
+            iDim  = obj.Simulation.Dimensions;
+            dTMin = obj.Simulation.TMin;
+            dTMax = obj.Simulation.TMax;
+            aXMin = obj.Simulation.XMin;
+            aXMax = obj.Simulation.XMax;
+            aGrid = obj.Simulation.Grid;
+
+            % Profile Size
+            try
+                iNumX = int64(stData.profile.num_x{1});
+            catch
+                iNumX = -1;
+            end % try
+
+            % Density
+            try
+                dDensity = double(stData.profile.density{1});
+            catch
+                dDensity = 1.0;
+            end % try
+
+            % Profile Type
+            try
+                cType = stData.profile.profile_type;
+            catch
+                cType = {};
+            end % try
+            
+            sTypeAll = '';
+            sTypeX1  = '';
+            sTypeX2  = '';
+            sTypeX3  = '';
+            if isempty(cType)
+                if iNumX > 0
+                    sTypeX1 = 'piecewise-linear';
+                    sTypeX2 = 'piecewise-linear';
+                    if iDim > 2
+                        sTypeX3 = 'piecewise-linear';
+                    end % if
+                else
+                    sTypeAll = 'uniform';
+                end % if
+            else
+                switch(length(cType))
+                    case 1
+                        sTypeAll = cType{1};
+                    case 2
+                        sTypeX1 = cType{1};
+                        sTypeX2 = cType{2};
+                    case 3
+                        sTypeX1 = cType{1};
+                        sTypeX2 = cType{2};
+                        sTypeX3 = cType{3};
+                end % switch
+            end % if
+            
+            % Return Variables
+            stReturn.TypeAll = sTypeAll;
+            stReturn.TypeX1  = sTypeX1;
+            stReturn.TypeX2  = sTypeX2;
+            stReturn.TypeX3  = sTypeX3;
+            stReturn.NumX    = iNumX;
+            stReturn.Density = dDensity;
+            
+
+            %
+            % Calculate Profile Slice for Each Dimension
+            %
+            
+            stProfile(3).Axis   = [];
+            stProfile(3).Value  = [];
+            stProfile(3).Delta  = [];
+            stProfile(3).Length = [];
+            
+            for d=1:iDim
+            
+                % Determine Limits
+                if iMov || d > 1
+                    dMin = aXMin(d);
+                    dMax = aXMax(d);
+                    iN   = aGrid(d);
+                else
+                    dMin = dTMin;
+                    dMax = dTMax;
+                    iN   = floor(dMax-dMin);
+                end % if
+
+                % Set Minimum Resolution
+                if iN < 1000
+                    iN = 1000;
+                end % if
+
+                % Make Profile Array
+                stProfile(d).Axis   = linspace(dMin,dMax,iN+1);
+                stProfile(d).Value  = zeros(1,iN+1);
+                stProfile(d).Delta  = (dMax-dMin)/iN;
+                stProfile(d).Length = iN+1;
+
+            end % for
+
+            dPeak = dDensity;
+            
+            % With Type Set for Each Dimension
+
+            if isempty(sTypeAll)
+
+                for d=1:iDim
+
+                    % Determine Type
+                    switch(d)
+                        case 1; sType = sTypeX1;
+                        case 2; sType = sTypeX2;
+                        case 3; sType = sTypeX3;
+                    end % switch
+
+                    % Make Profiles
+                    switch(sType)
+
+                        case 'gaussian'
+                            fprintf(2,'Gaussian particle profile calculations not implemented.+n');
+
+                        case 'piecewise-linear'
+                            
+                            % Get Profile Vectors
+                            try
+                                aX = double(cell2mat(stData.profile.x(:,d)));
+                            catch
+                                aX = zeros(iNumX,1);
+                            end % try
+                            try
+                                aFX = double(cell2mat(stData.profile.fx(:,d)));
+                            catch
+                                aFX = zeros(iNumX,1);
+                            end % try
+                            
+                            bErr = 0;
+                            if length(aX)  ~= length(aFX); bErr = 1; end % if
+                            if length(aX)  ~= iNumX;       bErr = 1; end % if
+                            if length(aFX) ~= iNumX;       bErr = 1; end % if
+                            
+                            if bErr
+                                fprintf(2,'Error: x, fx, num_x and dimensions do not match in input file.\n');
+                                continue;
+                            end % if
+                            
+                            aX = floor(aX/stProfile(d).Delta);
+                            for n=1:iNumX-1
+                                iA = aX(n)+1; iB = aX(n+1)+1; iC = iB-iA+1;
+                                stProfile(d).Value(iA:iB) = linspace(aFX(n),aFX(n+1),iC);
+                            end % for
+                            
+                            dPeak = dPeak * max(stProfile(d).Value);
+
+                    end % switch
+
+                end % if
+
+            end % for
+                    
+            % Common Profile Types
+
+            switch(sTypeAll)
+
+                case 'uniform'
+                    stProfile(1).Value = ones(1,stProfile(1).Length);
+                    stProfile(2).Value = ones(1,stProfile(2).Length);
+                    stProfile(3).Value = ones(1,stProfile(3).Length);
+
+                case 'channel'
+                    fprintf(2,'Channel particle profile calculations not implemented.+n');
+
+                case 'sphere'
+                    fprintf(2,'Spherical particle profile calculations not implemented.+n');
+
+                case 'math func'
+
+                    % Get Math Function
+                    try
+                        sFunction = stData.profile.math_func_expr{1};
+                    catch
+                        sFunction = '';
+                    end % try
+
+                    if ~isempty(sFunction)
+
+                        oMathFunc = MathFunc(sFunction);
+
+                        if iDim > 2
+                            mTemp = oMathFunc.Eval(stProfile(1).Axis,stProfile(2).stProfile(3).Axis);
+                            mTemp = mTemp.*(mTemp > 0);
+                            stProfile(1).Value = sum(mTemp,1);
+                            stProfile(2).Value = sum(mTemp,2);
+                            stProfile(3).Value = sum(mTemp,3);
+                        else
+                            mTemp = oMathFunc.Eval(stProfile(1).Axis,stProfile(2).Axis,[0]);
+                            mTemp = mTemp.*(mTemp > 0);
+                            stProfile(1).Value = sum(mTemp,1);
+                            stProfile(2).Value = sum(mTemp,2);
+                        end % if
+
+                        dPeak = dPeak * max(mTemp(:));
+
+                    end % if
+
+            end % switch
+
+            % Save Profile Lineouts
+            stReturn.ProfileX1   = stProfile(1);
+            stReturn.ProfileX2   = stProfile(2);
+            stReturn.ProfileX3   = stProfile(3);
+            stReturn.PeakDensity = dPeak;
+            
+        end % function
+
     end % methods
     
 end % classdef
