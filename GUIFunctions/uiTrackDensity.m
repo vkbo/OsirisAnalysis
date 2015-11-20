@@ -48,9 +48,9 @@ function uiTrackDensity(oData)
 
     % Get Time Axis
     iDumps  = oData.Elements.FLD.e1.Info.Files-1;
-    dPStart = oData.Config.Variables.Plasma.PlasmaStart;
-    dTFac   = oData.Config.Variables.Convert.SI.TimeFac;
-    dLFac   = oData.Config.Variables.Convert.SI.LengthFac;
+    dPStart = oData.Config.Simulation.PlasmaStart;
+    dTFac   = oData.Config.Convert.SI.TimeFac;
+    dLFac   = oData.Config.Convert.SI.LengthFac;
     X.TAxis = (linspace(0.0, dTFac*iDumps, iDumps+1)-dPStart)*dLFac;
     
 

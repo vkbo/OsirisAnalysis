@@ -25,7 +25,7 @@ classdef MathFunc
 
         function obj = MathFunc(sFunction)
 
-            obj.Func = sFunction;
+            obj.Func = strrep(sFunction,' ','');
             obj = obj.fParse();
 
         end % function

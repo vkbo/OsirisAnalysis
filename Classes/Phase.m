@@ -60,7 +60,7 @@ classdef Phase < OsirisType
             if stSpecies.isSpecies
                 obj.Species = stSpecies;
             else
-                sDefault = obj.Data.Config.Variables.Species.WitnessBeam{1};
+                sDefault = obj.Data.Config.Particles.WitnessBeam{1};
                 fprintf(2, 'Error: ''%s'' is not a recognised species name. Using ''%s'' instead.\n', sSpecies, sDefault);
                 obj.Species = obj.Translate.Lookup(sDefault);
             end % if
@@ -256,9 +256,9 @@ classdef Phase < OsirisType
             stOpt = oOpt.Results;
             
             % Get dataset values
-            dEMass = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
-            dTFac  = obj.Data.Config.Variables.Convert.SI.TimeFac;
-            dQFac  = obj.Data.Config.Variables.Convert.SI.ChargeFac;
+            dEMass = obj.Data.Config.Constants.ElectronMassMeV*1e6;
+            dTFac  = obj.Data.Config.Convert.SI.TimeFac;
+            dQFac  = obj.Data.Config.Convert.SI.ChargeFac;
             
             % Retrieve data
             aRaw = obj.Data.Data(obj.Time,'RAW','',obj.Species.Name);
@@ -471,14 +471,7 @@ classdef Phase < OsirisType
                 iDim = obj.Dim;
             end % if
             
-            if obj.Species.isBeam
-                stMap = obj.Data.Config.Variables.Beam.(obj.Species.Name).PhaseSpaces.Details;
-            elseif obj.Species.isPlasma
-                stMap = obj.Data.Config.Variables.Plasma.(obj.Species.Name).PhaseSpaces.Details;
-            else
-                fprintf(2,'Error: Only beam or plasma currently supported.\n');
-                return;
-            end % if
+            stMap = obj.Data.Config.Particles.Species.(obj.Species.Name).PhaseSpaces.Details;
             
             [~,iN] = size(stMap);
             
@@ -506,60 +499,51 @@ classdef Phase < OsirisType
         
         function aReturn = fGetDiagAxis(obj, sAxis)
             
-            if obj.Species.isBeam
-                sSPType = 'Beam';
-            elseif obj.Species.isPlasma
-                sSPType = 'Plasma';
-            else
-                fprintf(2,'Error: Unknown species type.\n');
-                return;
-            end % if
-            
             switch sAxis
                 case 'x1'
-                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagX1Min;
-                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagX1Max;
-                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNX1;
+                    dMin = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagXMin(1);
+                    dMax = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagXMax(1);
+                    iN   = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagNX(1);
                 case 'x2'
-                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagX2Min;
-                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagX2Max;
-                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNX2;
+                    dMin = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagXMin(2);
+                    dMax = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagXMax(2);
+                    iN   = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagNX(2);
                 case 'x3'
-                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagX3Min;
-                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagX3Max;
-                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNX3;
+                    dMin = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagXMin(3);
+                    dMax = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagXMax(3);
+                    iN   = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagNX(3);
                 case 'p1'
-                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagP1Min;
-                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagP1Max;
-                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNP1;
+                    dMin = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagPMin(1);
+                    dMax = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagPMax(1);
+                    iN   = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagNP(1);
                 case 'p2'
-                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagP2Min;
-                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagP2Max;
-                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNP2;
+                    dMin = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagPMin(2);
+                    dMax = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagPMax(2);
+                    iN   = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagNP(2);
                 case 'p3'
-                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagP3Min;
-                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagP3Max;
-                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNP3;
+                    dMin = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagPMin(3);
+                    dMax = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagPMax(3);
+                    iN   = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagNP(3);
                 case 'l1'
-                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagL1Min;
-                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagL1Max;
-                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNL1;
+                    dMin = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagLMin(1);
+                    dMax = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagLMax(1);
+                    iN   = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagNL(1);
                 case 'l2'
-                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagL2Min;
-                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagL2Max;
-                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNL2;
+                    dMin = obj.Data.Config.Variables.Species.(obj.Species.Name).DiagLMin(2);
+                    dMax = obj.Data.Config.Variables.Species.(obj.Species.Name).DiagLMax(2);
+                    iN   = obj.Data.Config.Variables.Species.(obj.Species.Name).DiagNL(2);
                 case 'l3'
-                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagL3Min;
-                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagL3Max;
-                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNL3;
+                    dMin = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagLMin(3);
+                    dMax = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagLMax(3);
+                    iN   = obj.Data.Config.Particles.Species.(obj.Species.Name).DiagNL(3);
                 case 'g'
-                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagGammaMin;
-                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagGammaMax;
-                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNGamma;
+                    dMin = obj.Data.Config.Variables.Species.(obj.Species.Name).DiagGammaMin;
+                    dMax = obj.Data.Config.Variables.Species.(obj.Species.Name).DiagGammaMax;
+                    iN   = obj.Data.Config.Variables.Species.(obj.Species.Name).DiagNGamma;
                 case 'gl'
-                    dMin = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagGammaMin;
-                    dMax = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagGammaMax;
-                    iN   = obj.Data.Config.Variables.(sSPType).(obj.Species.Name).DiagNGamma;
+                    dMin = obj.Data.Config.Variables.Species.(obj.Species.Name).DiagGammaMin;
+                    dMax = obj.Data.Config.Variables.Species.(obj.Species.Name).DiagGammaMax;
+                    iN   = obj.Data.Config.Variables.Species.(obj.Species.Name).DiagNGamma;
             end % switch
             
             aReturn = linspace(dMin, dMax, iN);
@@ -592,7 +576,7 @@ classdef Phase < OsirisType
 
                 % Momentum
                 if vAxis.isMomentum || vAxis.isAngular
-                    stReturn.Fac  = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
+                    stReturn.Fac  = obj.Data.Config.Constants.ElectronMassMeV*1e6;
                     stReturn.Unit = 'eV/c';
                 end % if
                 
@@ -624,34 +608,34 @@ classdef Phase < OsirisType
                 
                 % Charge Deposit
                 if strcmpi(vDeposit.Name, 'charge') || strcmpi(vDeposit.Name, '|charge|')
-                    stReturn.Fac  = obj.Data.Config.Variables.Convert.SI.ChargeFac;
+                    stReturn.Fac  = obj.Data.Config.Convert.SI.ChargeFac;
                     stReturn.Unit = 'C';
                 end % if
 
                 % Mass Deposit
                 % Not checked for sanity
                 if strcmpi(vDeposit.Name, 'm')
-                    stReturn.Fac  = obj.Data.Config.Variables.Convert.SI.ChargeFac;
+                    stReturn.Fac  = obj.Data.Config.Convert.SI.ChargeFac;
                     stReturn.Unit = 'm_e';
                 end % if
 
                 % Energy Deposit
                 % Not checked for sanity
                 if strcmpi(vDeposit.Name, 'ene')
-                    stReturn.Fac  = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
+                    stReturn.Fac  = obj.Data.Config.Constants.ElectronMassMeV*1e6;
                     stReturn.Unit = 'eV/c^2';
                 end % if
 
                 % Current Deposit
                 if vDeposit.isFlux
                     if strcmpi(vDeposit, 'j1')
-                        stReturn.Fac = obj.Data.Config.Variables.Convert.SI.J1Fac;
+                        stReturn.Fac = obj.Data.Config.Convert.SI.JFac(1);
                     end % if
                     if strcmpi(vDeposit, 'j2')
-                        stReturn.Fac = obj.Data.Config.Variables.Convert.SI.J2Fac;
+                        stReturn.Fac = obj.Data.Config.Convert.SI.JFac(2);
                     end % if
                     if strcmpi(vDeposit, 'j2')
-                        stReturn.Fac = obj.Data.Config.Variables.Convert.SI.J2Fac;
+                        stReturn.Fac = obj.Data.Config.Convert.SI.JFac(3);
                     end % if
                     stReturn.Unit = 'A';
                 end % if

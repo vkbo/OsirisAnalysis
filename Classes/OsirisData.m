@@ -11,24 +11,33 @@ classdef OsirisData
     % Properties
     %
     
-    properties(GetAccess = 'public', SetAccess = 'public')
+    properties(GetAccess='public', SetAccess='public')
 
-        Path        = '';     % Path to dataset
-        PathID      = '';     % Path as ID instead of free text input
-        Elements    = {};     % Struct of all datafiles in dataset ('MS/' subfolder)
-        MSData      = {};     % Struct of all MS data
-        Config      = [];     % Content of the config files and extraction of all runtime variables
-        DataSets    = {};     % Available datasets in folders indicated by LocalConfig.m
-        DefaultPath = {};     % Default data folder
-        Silent      = 0;      % Set to 1 to disable command window output
-        Temp        = '/tmp'; % Temp folder (set in LocalConfig.m)
-        Translate   = {};     % Tool for translating Osiris variables
+        Path        = '';    % Path to dataset
+        PathID      = '';    % Path as ID instead of free text input
+        Config      = [];    % Content of the config files and extraction of all runtime variables
+        Silent      = 0;     % Set to 1 to disable command window output
 
     end % properties
 
-    properties(GetAccess = 'private', SetAccess = 'private')
+    properties(GetAccess='public', SetAccess='private')
 
-        DefaultData = {};     % Data in default folder
+        Elements    = {};    % Struct of all datafiles in dataset ('MS/' subfolder)
+        MSData      = {};    % Struct of all MS data
+        DataSets    = {};    % Available datasets in folders indicated by LocalConfig.m
+        DefaultPath = {};    % Default data folder
+        Temp        = '';    % Temp folder (set in LocalConfig.m)
+        Translate   = {};    % Tool for translating Osiris variables
+        HasData     = false; % True if folder 'MS' exists
+        HasTracks   = false; % True if folder 'MS/TRACKS' exists
+        Completed   = false; % True if folder 'TIMINGS' exists
+        Consistent  = false; % True if all data folders have the same number of files
+
+    end % properties
+
+    properties(GetAccess='private', SetAccess='private')
+
+        DefaultData = {};    % Data in default folder
 
     end % properties
     
@@ -171,18 +180,18 @@ classdef OsirisData
             obj.MSData   = obj.fScanElements;
 
             % Set path in OsirisConfig object
-            obj.Config.Path      = obj.Path;
-            obj.Config.HasData   = iHasData;
-            obj.Config.HasTracks = iHasTracks;
-            obj.Config.Completed = iCompleted;
+            obj.Config.Path = obj.Path;
+            obj.HasData     = iHasData;
+            obj.HasTracks   = iHasTracks;
+            obj.Completed   = iCompleted;
             
             if obj.MSData.MinFiles == obj.MSData.MaxFiles
-               obj.Config.Consistent = true;
+               obj.Consistent = true;
             else
-               obj.Config.Consistent = false;
+               obj.Consistent = false;
             end % if
             
-            obj.Translate = Variables(obj.Config.Variables.Simulation.Coordinates);
+            obj.Translate = Variables(obj.Config.Simulation.Coordinates);
 
         end % function
         
@@ -206,26 +215,6 @@ classdef OsirisData
             
         end % function
         
-        function stReturn = LookupVar(obj, sName, vType)
-            %
-            %  OsirisData.LookupVar
-            % **********************
-            %  Just a wrapper for obj.Translate.Lookup()
-            %
-            %  Input
-            % =======
-            %  sName :: Text to translate
-            %  vType :: Suggestion for data type
-            %
-            
-            if nargin < 3
-                vType = '';
-            end % if
-            
-            stReturn = obj.Translate.Lookup(sName, vType);
-            
-        end % function
-
         function stReturn = Info(obj)
             
             %
@@ -235,9 +224,9 @@ classdef OsirisData
 
             stReturn  = {};
 
-            dTMax     = obj.Config.Variables.Simulation.TMax;
-            dTimeStep = obj.Config.Variables.Simulation.TimeStep;
-            dNDump    = obj.Config.Variables.Simulation.NDump;
+            dTMax     = obj.Config.Simulation.TMax;
+            dTimeStep = obj.Config.Simulation.TimeStep;
+            dNDump    = obj.Config.Simulation.NDump;
 
             if ~obj.Silent
                 fprintf('\n');
@@ -265,37 +254,37 @@ classdef OsirisData
             
             stReturn  = {};
 
-            dPStart   = obj.Config.Variables.Plasma.PlasmaStart;
-            dPEnd     = obj.Config.Variables.Plasma.PlasmaEnd;
-            dTFac     = obj.Config.Variables.Convert.SI.TimeFac;
-            dLFac     = obj.Config.Variables.Convert.SI.LengthFac;
+            dPStart   = obj.Config.Simulation.PlasmaStart;
+            dPEnd     = obj.Config.Simulation.PlasmaEnd;
+            dTFac     = obj.Config.Convert.SI.TimeFac;
+            dLFac     = obj.Config.Convert.SI.LengthFac;
 
-            dN0       = obj.Config.Variables.Plasma.N0;
-            dNOmegaP  = obj.Config.Variables.Plasma.NormOmegaP;
-            dMOmegaP  = obj.Config.Variables.Plasma.MaxOmegaP;
-            dNLambdaP = obj.Config.Variables.Plasma.NormLambdaP;
-            dMLambdaP = obj.Config.Variables.Plasma.MaxLambdaP;
-            dPMax     = obj.Config.Variables.Plasma.MaxPlasmaFac;
+            dN0       = obj.Config.Simulation.N0;
+            dNOmegaP  = obj.Config.Simulation.OmegaP;
+            dMOmegaP  = obj.Config.Simulation.PhysOmegaP;
+            dNLambdaP = obj.Config.Simulation.LambdaP;
+            dMLambdaP = obj.Config.Simulation.PhysLambdaP;
+            dPMax     = obj.Config.Simulation.MaxPlasmaFac;
             
             if ~obj.Silent
                 fprintf('\n');
                 fprintf(' Plasma Info\n');
                 fprintf('*************\n');
                 fprintf('\n');
-                fprintf(' Plasma Start:     %8.2f between dump %03d and %03d\n', dPStart, floor(dPStart/dTFac), ceil(dPStart/dTFac));
-                fprintf(' Plasma End:       %8.2f between dump %03d and %03d\n', dPEnd,   floor(dPEnd/dTFac),   ceil(dPEnd/dTFac));
+                fprintf(' Plasma Start:           %8.2f between dump %03d and %03d\n', dPStart, floor(dPStart/dTFac), ceil(dPStart/dTFac));
+                fprintf(' Plasma End:             %8.2f between dump %03d and %03d\n', dPEnd,   floor(dPEnd/dTFac),   ceil(dPEnd/dTFac));
                 fprintf('\n');
-                fprintf(' Plasma Start:     %8.2f m\n', dPStart*dLFac);
-                fprintf(' Plasma End:       %8.2f m\n', dPEnd*dLFac);
-                fprintf(' Plasma Length:    %8.2f m\n', (dPEnd-dPStart)*dLFac);
+                fprintf(' Plasma Start:           %8.2f m\n', dPStart*dLFac);
+                fprintf(' Plasma End:             %8.2f m\n', dPEnd*dLFac);
+                fprintf(' Plasma Length:          %8.2f m\n', (dPEnd-dPStart)*dLFac);
                 fprintf('\n');
-                fprintf(' Nomralised Plasma Density:    %8.2e m^-3\n', dN0);
-                fprintf(' Normalised Plasma Frequency:  %8.2e s^-1\n', dNOmegaP);
-                fprintf(' Normalised Plasma Skin Depth: %8.2e mm\n',   dNLambdaP*1e3);
+                fprintf(' Plasma Density:         %8.2e m^-3\n', dN0);
+                fprintf(' Plasma Frequency:       %8.2e s^-1\n', dNOmegaP);
+                fprintf(' Plasma Skin Depth:      %8.2e mm\n',   dNLambdaP*1e3);
                 fprintf('\n');
-                fprintf(' Peak Plasma Density:          %8.2e m^-3\n', dN0*dPMax);
-                fprintf(' Peak Plasma Frequency:        %8.2e s^-1\n', dMOmegaP);
-                fprintf(' Peak Plasma Skin Depth:       %8.2e mm\n',   dMLambdaP*1e3);
+                fprintf(' Peak Plasma Density:    %8.2e m^-3\n', dN0*dPMax);
+                fprintf(' Peak Plasma Frequency:  %8.2e s^-1\n', dMOmegaP);
+                fprintf(' Peak Plasma Skin Depth: %8.2e mm\n',   dMLambdaP*1e3);
                 fprintf('\n');
             end % if
             
@@ -324,16 +313,16 @@ classdef OsirisData
             stReturn  = {};
             sSpecies  = obj.Translate.Lookup(sSpecies,'Beam').Name;
             
-            dC        = obj.Config.Variables.Constants.SpeedOfLight;
-            dE        = obj.Config.Variables.Constants.ElementaryCharge;
-            dLFac     = obj.Config.Variables.Convert.SI.LengthFac;
-            dT        = obj.Config.Variables.Simulation.TimeStep*2;
+            dC        = obj.Config.Constants.SpeedOfLight;
+            dE        = obj.Config.Constants.ElementaryCharge;
+            dLFac     = obj.Config.Convert.SI.LengthFac;
+            dT        = obj.Config.Simulation.TimeStep*2;
             
-            dN0       = obj.Config.Variables.Plasma.N0;
-            dNOmegaP  = obj.Config.Variables.Plasma.NormOmegaP;
-            dMOmegaP  = obj.Config.Variables.Plasma.MaxOmegaP;
-            dPMax     = obj.Config.Variables.Plasma.MaxPlasmaFac;
-            dDensity  = obj.Config.Variables.Beam.(sSpecies).Density;
+            dN0       = obj.Config.Simulation.N0;
+            dNOmegaP  = obj.Config.Simulation.OmegaP;
+            dMOmegaP  = obj.Config.Simulation.PhysOmegaP;
+            dPMax     = obj.Config.Simulation.MaxPlasmaFac;
+            dDensity  = obj.Config.Particles.Species.(sSpecies).Density;
             
             sMathFunc = obj.Config.Variables.Beam.(sSpecies).ProfileFunction;
             iDim      = obj.Config.Variables.Simulation.Dimensions;
@@ -490,7 +479,7 @@ classdef OsirisData
             % Species translated to standard format, and then to actual file name used
             sSpecies  = obj.Translate.Lookup(sSpecies).Name;
             if ~isempty(sSpecies)
-                sSpecies  = obj.Config.Variables.Simulation.FileNames.(sSpecies);
+                sSpecies  = obj.Config.Particles.Species.(sSpecies).Name;
             end % if
 
             if isempty(sType)
@@ -583,6 +572,20 @@ classdef OsirisData
             
         end % function
         
+        function bReturn = DataSetExists(obj, sType, sSet, sSpecies)
+            
+            bReturn = false;
+            
+            [~,iMS] = size(obj.MSData.Data);
+            for m=1:iMS
+                if strcmp(obj.MSData.Data(m).Type, sType) && strcmp(obj.MSData.Data(m).Set, sSet) && strcmp(obj.MSData.Data(m).Species, sSpecies)
+                    bReturn = true;
+                    return;
+                end % if
+            end % for
+            
+        end % function
+
         function stReturn = ExportTags(obj, sTime, sSpecies, varargin)
             
             stReturn = {};
@@ -655,20 +658,6 @@ classdef OsirisData
             stReturn.Selection = aRaw;
             stReturn.File      = sFile;
 
-        end % function
-        
-        function bReturn = DataSetExists(obj, sType, sSet, sSpecies)
-            
-            bReturn = false;
-            
-            [~,iMS] = size(obj.MSData.Data);
-            for m=1:iMS
-                if strcmp(obj.MSData.Data(m).Type, sType) && strcmp(obj.MSData.Data(m).Set, sSet) && strcmp(obj.MSData.Data(m).Species, sSpecies)
-                    bReturn = true;
-                    break;
-                end % if
-            end % for
-            
         end % function
         
         function stReturn = Timings(obj, bPrint)
@@ -774,9 +763,9 @@ classdef OsirisData
             end % if
 
             if strcmpi(sString, 'PStart')
-                dPStart   = obj.Config.Variables.Plasma.PlasmaStart;
-                dTimeStep = obj.Config.Variables.Simulation.TimeStep;
-                iNDump    = obj.Config.Variables.Simulation.NDump;
+                dPStart   = obj.Config.Simulation.PlasmaStart;
+                dTimeStep = obj.Config.Simulation.TimeStep;
+                iNDump    = obj.Config.Simulation.NDump;
                 iReturn   = round(dPStart/(dTimeStep*iNDump));
                 if iReturn > obj.MSData.MinFiles - 1
                     iReturn = obj.MSData.MinFiles - 1;
@@ -788,9 +777,9 @@ classdef OsirisData
             end % if
 
             if strcmpi(sString, 'PEnd')
-                dPEnd     = obj.Config.Variables.Plasma.PlasmaEnd;
-                dTimeStep = obj.Config.Variables.Simulation.TimeStep;
-                iNDump    = obj.Config.Variables.Simulation.NDump;
+                dPEnd     = obj.Config.Simulation.PlasmaEnd;
+                dTimeStep = obj.Config.Simulation.TimeStep;
+                iNDump    = obj.Config.Simulation.NDump;
                 iReturn   = round(dPEnd/(dTimeStep*iNDump));
                 if iReturn > obj.MSData.MinFiles - 1
                     iReturn = obj.MSData.MinFiles - 1;
@@ -974,7 +963,7 @@ classdef OsirisData
             stReturn.MaxFiles = iMax;
             
         end % function
-        
+
     end % methods
 
     %

@@ -74,8 +74,7 @@ classdef BField < OsirisType
             stReturn = {};
 
             % Get simulation variables
-            sCoords = obj.Data.Config.Variables.Simulation.Coordinates;
-            dB0     = obj.Data.Config.Variables.Convert.SI.B0;
+            dB0 = obj.Data.Config.Convert.SI.B0;
             
             % Get data and axes
             aData   = obj.Data.Data(obj.Time, 'FLD', obj.Field.Name, '');
@@ -83,7 +82,7 @@ classdef BField < OsirisType
             aX2Axis = obj.fGetBoxAxis('x2');
 
             % Check if cylindrical
-            if strcmpi(sCoords, 'cylindrical')
+            if obj.Cylindrical
                 if strcmpi(obj.Field.Name,'b3')
                     aData = transpose([-fliplr(aData),aData]);
                 else

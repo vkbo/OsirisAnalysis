@@ -77,8 +77,7 @@ classdef EField < OsirisType
             stReturn = {};
 
             % Get simulation variables
-            sCoords = obj.Data.Config.Variables.Simulation.Coordinates;
-            dE0     = obj.Data.Config.Variables.Convert.SI.E0;
+            dE0 = obj.Data.Config.Convert.SI.E0;
             
             % Get data and axes
             aData   = obj.Data.Data(obj.Time, 'FLD', obj.Field.Name, '');
@@ -86,7 +85,7 @@ classdef EField < OsirisType
             aX2Axis = obj.fGetBoxAxis('x2');
 
             % Check if cylindrical
-            if strcmpi(sCoords, 'cylindrical')
+            if obj.Cylindrical
                 if strcmpi(obj.Field.Name,'e3')
                     aData = transpose([-fliplr(aData),aData]);
                 else
@@ -129,7 +128,7 @@ classdef EField < OsirisType
             end % if
             
             % Get simulation variables
-            dE0     = obj.Data.Config.Variables.Convert.SI.E0;
+            dE0 = obj.Data.Config.Convert.SI.E0;
             
             % Get data and axes
             aData   = obj.Data.Data(obj.Time, 'FLD', obj.Field.Name, '');
@@ -174,9 +173,9 @@ classdef EField < OsirisType
             iStop  = obj.Data.StringToDump(sStop);
 
             % Get simulation variables
-            dE0   = obj.Data.Config.Variables.Convert.SI.E0;
-            dTFac = obj.Data.Config.Variables.Convert.SI.TimeFac;
-            dLFac = obj.Data.Config.Variables.Convert.SI.LengthFac;
+            dE0   = obj.Data.Config.Convert.SI.E0;
+            dTFac = obj.Data.Config.Convert.SI.TimeFac;
+            dLFac = obj.Data.Config.Convert.SI.LengthFac;
             
             % Set axes
             aVAxis = [];

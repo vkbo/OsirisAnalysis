@@ -551,15 +551,16 @@ function Analyse2D
 
         X.Data.Name       = oData.Config.Name;
         X.Data.Path       = oData.Config.Path;
-        X.Data.Beam       = oData.Config.Variables.Species.Beam;
-        X.Data.Plasma     = oData.Config.Variables.Species.Plasma;
-        X.Data.Species    = [X.Data.Beam; X.Data.Plasma];
-        X.Data.Field      = oData.Config.Variables.Fields.Field;
-        X.Data.Completed  = oData.Config.Completed;
-        X.Data.HasData    = oData.Config.HasData;
-        X.Data.HasTracks  = oData.Config.HasTracks;
-        X.Data.Consistent = oData.Config.Consistent;
-        X.Data.Coords     = oData.Config.Variables.Simulation.Coordinates;
+        X.Data.Beam       = oData.Config.Particles.Beams;
+        X.Data.Plasma     = oData.Config.Particles.Plasma;
+        X.Data.Species    = [X.Data.Beam X.Data.Plasma];
+        X.Data.Field      = oData.Config.EMFields.Reports;
+        X.Data.Completed  = oData.Completed;
+        X.Data.HasData    = oData.HasData;
+        X.Data.HasTracks  = oData.HasTracks;
+        X.Data.Consistent = oData.Consistent;
+        X.Data.Coords     = oData.Config.Simulation.Coordinates;
+        X.Data.Cyl        = oData.Config.Simulation.Cylindrical;
         
         % Reload Variables class
         oVar = Variables(X.Data.Coords);
@@ -579,8 +580,8 @@ function Analyse2D
         end % if
         
         % Beams
-        X.Data.Witness = oData.Config.Variables.Species.WitnessBeam;
-        X.Data.Drive   = oData.Config.Variables.Species.DriveBeam;
+        X.Data.Witness = oData.Config.Particles.WitnessBeam;
+        X.Data.Drive   = oData.Config.Particles.DriveBeam;
 
         % Index Beams
         X.Data.WitnessIdx = 1;
@@ -596,7 +597,7 @@ function Analyse2D
         end % for
 
         % Translate Densities
-        X.Data.Density = oData.Config.Variables.Density.(X.Data.Species{1}).Density;
+        X.Data.Density = oData.Config.Particles.Species.(X.Data.Species{1}).DiagReports;
         for i=1:length(X.Data.Density)
             X.Data.Density{i} = oVar.Lookup(X.Data.Density{i}).Full;
         end % for
@@ -871,8 +872,8 @@ function Analyse2D
 
                 case 'Plasma Density'
                     X.Plot(f).Data       = X.Data.Plasma{1};
-                    X.Plot(f).ScatterOpt = ['Off'; X.Data.Beam];
-                    X.Plot(f).Scatter    = {'',''};
+                    X.Plot(f).ScatterOpt = ['Off' X.Data.Beam];
+                    X.Plot(f).Scatter    = {'' ''};
                     X.Plot(f).ScatterNum = [2000 2000];
                     X.Plot(f).Sample     = [3 3];
                     X.Plot(f).Settings   = [0 0];
