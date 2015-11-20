@@ -513,7 +513,7 @@ classdef OsirisConfig
             
             % Coordinates
             try
-                aGrid = int64(cell2mat(obj.Input.simulation.grid.nx_p));
+                aGrid = cell2mat(obj.Input.simulation.grid.nx_p);
             catch
                 aGrid = 1;
             end % try
@@ -537,7 +537,7 @@ classdef OsirisConfig
 
             % NDump
             try
-                iNDump = int64(obj.Input.simulation.time_step.ndump{1});
+                iNDump = obj.Input.simulation.time_step.ndump{1};
             catch
                 iNDump = 0;
             end % try
@@ -560,7 +560,7 @@ classdef OsirisConfig
             try
                 aXMin = double(cell2mat(obj.Input.simulation.space.xmin));
             catch
-                aXMin = [0.0];
+                aXMin = 0.0;
             end % try
             aXMin = obj.fArrayPad(aXMin, [0.0 0.0 0.0]);
 
@@ -568,7 +568,7 @@ classdef OsirisConfig
             try
                 aXMax = double(cell2mat(obj.Input.simulation.space.xmax));
             catch
-                aXMax = [0.0];
+                aXMax = 0.0;
             end % try
             aXMax = obj.fArrayPad(aXMax, [0.0 0.0 0.0]);
 
@@ -616,7 +616,7 @@ classdef OsirisConfig
             obj.Convert.SI.E0        = dSIE0;
             obj.Convert.SI.B0        = dSIB0;
             obj.Convert.SI.LengthFac = dLFactor;
-            obj.Convert.SI.TimeFac   = double(dTimeStep*iNDump);
+            obj.Convert.SI.TimeFac   = dTimeStep*iNDump;
             
             
             %
