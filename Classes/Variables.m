@@ -117,24 +117,28 @@ classdef Variables
             stMap.Translate.Beam(1).Full   = {'Electron Beam','Electron Beam'};
             stMap.Translate.Beam(1).Short  = {'EB','EB'};
             stMap.Translate.Beam(1).Tex    = {'e-','e-'};
+            stMap.Translate.Beam(1).Dim    = 0;
 
             stMap.Translate.Beam(2).Name   = 'PositronBeam';
             stMap.Translate.Beam(2).Alt    = horzcat({'e+b','e+'},stMap.Deck.Species.PositronBeam);
             stMap.Translate.Beam(2).Full   = {'Positron Beam','Positron Beam'};
             stMap.Translate.Beam(2).Short  = {'E+B','E+B'};
             stMap.Translate.Beam(2).Tex    = {'e+','e+'};
+            stMap.Translate.Beam(2).Dim    = 0;
 
             stMap.Translate.Beam(3).Name   = 'ProtonBeam';
             stMap.Translate.Beam(3).Alt    = horzcat({'pb','p+'},stMap.Deck.Species.ProtonBeam);
             stMap.Translate.Beam(3).Full   = {'Proton Beam','Proton Beam'};
             stMap.Translate.Beam(3).Short  = {'PB','PB'};
             stMap.Translate.Beam(3).Tex    = {'p+','p+'};
+            stMap.Translate.Beam(3).Dim    = 0;
 
             stMap.Translate.Beam(4).Name   = 'IonBeam';
             stMap.Translate.Beam(4).Alt    = horzcat({'ib','i+'},stMap.Deck.Species.IonBeam);
             stMap.Translate.Beam(4).Full   = {'Ion Beam','Ion Beam'};
             stMap.Translate.Beam(4).Short  = {'IB','IB'};
             stMap.Translate.Beam(4).Tex    = {'i+','i+'};
+            stMap.Translate.Beam(4).Dim    = 0;
 
             % Plasma
 
@@ -143,18 +147,21 @@ classdef Variables
             stMap.Translate.Plasma(1).Full   = {'Plasma Electron','Plasma Electron'};
             stMap.Translate.Plasma(1).Short  = {'PE','PE'};
             stMap.Translate.Plasma(1).Tex    = {'e-','e-'};
+            stMap.Translate.Plasma(1).Dim    = 0;
 
             stMap.Translate.Plasma(2).Name   = 'PlasmaProtons';
             stMap.Translate.Plasma(2).Alt    = horzcat({'pp','pp+'},stMap.Deck.Species.PlasmaProtons);
             stMap.Translate.Plasma(2).Full   = {'Plasma Proton','Plasma Proton'};
             stMap.Translate.Plasma(2).Short  = {'PP','PP'};
             stMap.Translate.Plasma(2).Tex    = {'p+','p+'};
+            stMap.Translate.Plasma(2).Dim    = 0;
 
             stMap.Translate.Plasma(3).Name   = 'PlasmaIons';
             stMap.Translate.Plasma(3).Alt    = horzcat({'pi','pi+','ion'},stMap.Deck.Species.PlasmaIons);
             stMap.Translate.Plasma(3).Full   = {'Plasma Ion','Plasma Ion'};
             stMap.Translate.Plasma(3).Short  = {'Ion','Ion'};
             stMap.Translate.Plasma(3).Tex    = {'i+','i+'};
+            stMap.Translate.Plasma(3).Dim    = 0;
 
             % Species
 
@@ -167,24 +174,28 @@ classdef Variables
             stMap.Translate.Axis(1).Full  = {'Longitudinal Axis','Longitudinal Axis'};
             stMap.Translate.Axis(1).Short = {'z','z'};
             stMap.Translate.Axis(1).Tex   = {'z','z'};
+            stMap.Translate.Axis(1).Dim   = 1;
 
             stMap.Translate.Axis(2).Name  = 'x2';
             stMap.Translate.Axis(2).Alt   = {'r','x'};
             stMap.Translate.Axis(2).Full  = {'Radial Axis','Horizontal Axis'};
             stMap.Translate.Axis(2).Short = {'r','x'};
             stMap.Translate.Axis(2).Tex   = {'r','x'};
+            stMap.Translate.Axis(2).Dim   = 2;
 
             stMap.Translate.Axis(3).Name  = 'x3';
             stMap.Translate.Axis(3).Alt   = {'th','y'};
             stMap.Translate.Axis(3).Full  = {'Azimuthal Axis','Vertical Axis'};
             stMap.Translate.Axis(3).Short = {'th','y'};
             stMap.Translate.Axis(3).Tex   = {'\theta','y'};
+            stMap.Translate.Axis(3).Dim   = 3;
 
             stMap.Translate.Axis(4).Name  = 'xi';
             stMap.Translate.Axis(4).Alt   = {};
             stMap.Translate.Axis(4).Full  = {'Longitudinal Axis','Longitudinal Axis'};
             stMap.Translate.Axis(4).Short = {'xi','xi'};
             stMap.Translate.Axis(4).Tex   = {'\xi','\xi'};
+            stMap.Translate.Axis(4).Dim   = 1;
 
             % Momentum
 
@@ -193,18 +204,21 @@ classdef Variables
             stMap.Translate.Momentum(1).Full  = {'Longitudinal Momentum','Longitudinal Momentum'};
             stMap.Translate.Momentum(1).Short = {'Pz','Pz'};
             stMap.Translate.Momentum(1).Tex   = {'p_{z}','p_{z}'};
+            stMap.Translate.Momentum(1).Dim   = 1;
 
             stMap.Translate.Momentum(2).Name  = 'p2';
             stMap.Translate.Momentum(2).Alt   = {'px','p_x','pr','p_r'};
             stMap.Translate.Momentum(2).Full  = {'Radial Momentum','Horizontal Momentum'};
             stMap.Translate.Momentum(2).Short = {'Pr','Px'};
             stMap.Translate.Momentum(2).Tex   = {'p_{r}','p_{x}'};
+            stMap.Translate.Momentum(2).Dim   = 2;
 
             stMap.Translate.Momentum(3).Name  = 'p3';
             stMap.Translate.Momentum(3).Alt   = {'py','p_y','pth','p_th'};
             stMap.Translate.Momentum(3).Full  = {'Azimuthal Momentum','Vertical Momentum'};
             stMap.Translate.Momentum(3).Short = {'Pth','Py'};
             stMap.Translate.Momentum(3).Tex   = {'p_{\theta}','p_{y}'};
+            stMap.Translate.Momentum(3).Dim   = 3;
 
             % Angular Momentum
 
@@ -213,18 +227,21 @@ classdef Variables
             stMap.Translate.Angular(1).Full  = {'Longitudinal Angular Momentum','Longitudinal Angular Momentum'};
             stMap.Translate.Angular(1).Short = {'Lz','Lz'};
             stMap.Translate.Angular(1).Tex   = {'l_{z}','l_{z}'};
+            stMap.Translate.Angular(1).Dim   = 1;
 
             stMap.Translate.Angular(2).Name  = 'l2';
             stMap.Translate.Angular(2).Alt   = {'lx','l_x','lr','l_r'};
             stMap.Translate.Angular(2).Full  = {'Radial Angular Momentum','Horizontal Angular Momentum'};
             stMap.Translate.Angular(2).Short = {'Pr','Px'};
             stMap.Translate.Angular(2).Tex   = {'p_{r}','p_{x}'};
+            stMap.Translate.Angular(2).Dim   = 2;
 
             stMap.Translate.Angular(3).Name  = 'l3';
             stMap.Translate.Angular(3).Alt   = {'ly','l_y','lth','l_th'};
             stMap.Translate.Angular(3).Full  = {'Azimuthal Angular Momentum','Vertical Angular Momentum'};
             stMap.Translate.Angular(3).Short = {'Lth','Ly'};
             stMap.Translate.Angular(3).Tex   = {'l_{\theta}','l_{y}'};
+            stMap.Translate.Angular(3).Dim   = 3;
 
             % Current
 
@@ -233,18 +250,21 @@ classdef Variables
             stMap.Translate.Current(1).Full  = {'Longitudinal Current','Longitudinal Current'};
             stMap.Translate.Current(1).Short = {'Jz','Jz'};
             stMap.Translate.Current(1).Tex   = {'j_{z}','j_{z}'};
+            stMap.Translate.Current(1).Dim   = 1;
 
             stMap.Translate.Current(2).Name  = 'j2';
             stMap.Translate.Current(2).Alt   = {'jx','j_x','jr','j_r'};
             stMap.Translate.Current(2).Full  = {'Radial Current','Horizontal Current'};
             stMap.Translate.Current(2).Short = {'Jr','Jx'};
             stMap.Translate.Current(2).Tex   = {'j_{r}','j_{x}'};
+            stMap.Translate.Current(2).Dim   = 2;
 
             stMap.Translate.Current(3).Name  = 'j3';
             stMap.Translate.Current(3).Alt   = {'jy','j_y','jth','j_th'};
             stMap.Translate.Current(3).Full  = {'Azimuthal Current','Vertical Current'};
             stMap.Translate.Current(3).Short = {'Jth','Jy'};
             stMap.Translate.Current(3).Tex   = {'j_{\theta}','j_{y}'};
+            stMap.Translate.Current(3).Dim   = 3;
 
             % Electric Field
 
@@ -253,24 +273,28 @@ classdef Variables
             stMap.Translate.EField(1).Full  = {'Longitudinal E-Field','Longitudinal E-Field'};
             stMap.Translate.EField(1).Short = {'Ez','Ez'};
             stMap.Translate.EField(1).Tex   = {'E_{z}','E_{z}'};
+            stMap.Translate.EField(1).Dim   = 1;
 
             stMap.Translate.EField(2).Name  = 'e2';
             stMap.Translate.EField(2).Alt   = {'ex','e_x','er','e_r'};
             stMap.Translate.EField(2).Full  = {'Radial E-Field','Horizontal E-Field'};
             stMap.Translate.EField(2).Short = {'Er','Ex'};
             stMap.Translate.EField(2).Tex   = {'E_{r}','E_{x}'};
+            stMap.Translate.EField(2).Dim   = 2;
 
             stMap.Translate.EField(3).Name  = 'e3';
             stMap.Translate.EField(3).Alt   = {'ey','e_y','eth','e_th'};
             stMap.Translate.EField(3).Full  = {'Azimuthal E-Field','Vertical E-Field'};
             stMap.Translate.EField(3).Short = {'Eth','Ey'};
             stMap.Translate.EField(3).Tex   = {'E_{\theta}','E_{y}'};
+            stMap.Translate.EField(3).Dim   = 3;
 
             stMap.Translate.EField(4).Name  = 'e';
             stMap.Translate.EField(4).Alt   = {};
             stMap.Translate.EField(4).Full  = {'Electric Field','Electric Field'};
             stMap.Translate.EField(4).Short = {'|E|','|E|'};
             stMap.Translate.EField(4).Tex   = {'|E|','|E|'};
+            stMap.Translate.EField(4).Dim   = 0;
 
             % Magnetic Field
 
@@ -279,24 +303,28 @@ classdef Variables
             stMap.Translate.BField(1).Full  = {'Longitudinal B-Field','Longitudinal B-Field'};
             stMap.Translate.BField(1).Short = {'Bz','Bz'};
             stMap.Translate.BField(1).Tex   = {'B_{z}','B_{z}'};
+            stMap.Translate.BField(1).Dim   = 1;
 
             stMap.Translate.BField(2).Name  = 'b2';
             stMap.Translate.BField(2).Alt   = {'bx','b_x','br','b_r'};
             stMap.Translate.BField(2).Full  = {'Radial B-Field','Horizontal B-Field'};
             stMap.Translate.BField(2).Short = {'Br','Bx'};
             stMap.Translate.BField(2).Tex   = {'B_{r}','B_{x}'};
+            stMap.Translate.BField(2).Dim   = 2;
 
             stMap.Translate.BField(3).Name  = 'b3';
             stMap.Translate.BField(3).Alt   = {'by','b_y','bth','b_th'};
             stMap.Translate.BField(3).Full  = {'Azimuthal B-Field','Vertical B-Field'};
             stMap.Translate.BField(3).Short = {'Bth','By'};
             stMap.Translate.BField(3).Tex   = {'B_{\theta}','B_{y}'};
+            stMap.Translate.BField(3).Dim   = 3;
 
             stMap.Translate.BField(4).Name  = 'b';
             stMap.Translate.BField(4).Alt   = {};
             stMap.Translate.BField(4).Full  = {'Magnetic Field','Magnetic Field'};
             stMap.Translate.BField(4).Short = {'|B|','|B|'};
             stMap.Translate.BField(4).Tex   = {'|B|','|B|'};
+            stMap.Translate.BField(4).Dim   = 0;
 
             % External Electric Field
 
@@ -305,18 +333,21 @@ classdef Variables
             stMap.Translate.EFieldExt(1).Full  = {'External Longitudinal E-Field','External Longitudinal E-Field'};
             stMap.Translate.EFieldExt(1).Short = {'Ext. Ez','Ext. Ez'};
             stMap.Translate.EFieldExt(1).Tex   = {'E_{z}^{ext}','E_{z}^{ext}'};
+            stMap.Translate.EFieldExt(1).Dim   = 1;
 
             stMap.Translate.EFieldExt(2).Name  = 'ext_e2';
             stMap.Translate.EFieldExt(2).Alt   = {'ext_ex','ext_e_x','ext_er','ext_e_r'};
             stMap.Translate.EFieldExt(2).Full  = {'External Radial E-Field','External Horizontal E-Field'};
             stMap.Translate.EFieldExt(2).Short = {'Ext. Er','Ext. Ex'};
             stMap.Translate.EFieldExt(2).Tex   = {'E_{r}^{ext}','E_{x}^{ext}'};
+            stMap.Translate.EFieldExt(2).Dim   = 2;
 
             stMap.Translate.EFieldExt(3).Name  = 'ext_e3';
             stMap.Translate.EFieldExt(3).Alt   = {'ext_ey','ext_e_y','ext_eth','ext_e_th'};
             stMap.Translate.EFieldExt(3).Full  = {'External Azimuthal E-Field','External Vertical E-Field'};
             stMap.Translate.EFieldExt(3).Short = {'Ext. Eth','Ext. Ey'};
             stMap.Translate.EFieldExt(3).Tex   = {'E_{\theta}^{ext}','E_{y}^{ext}'};
+            stMap.Translate.EFieldExt(3).Dim   = 3;
 
             % External Magnetic Field
 
@@ -325,18 +356,21 @@ classdef Variables
             stMap.Translate.BFieldExt(1).Full  = {'External Longitudinal B-Field','External Longitudinal B-Field'};
             stMap.Translate.BFieldExt(1).Short = {'Ext. Bz','Ext. Bz'};
             stMap.Translate.BFieldExt(1).Tex   = {'B_{z}^{ext}','B_{z}^{ext}'};
+            stMap.Translate.BFieldExt(1).Dim   = 1;
 
             stMap.Translate.BFieldExt(2).Name  = 'ext_b2';
             stMap.Translate.BFieldExt(2).Alt   = {'ext_bx','ext_b_x','ext_br','ext_b_r'};
             stMap.Translate.BFieldExt(2).Full  = {'External Radial B-Field','External Horizontal B-Field'};
             stMap.Translate.BFieldExt(2).Short = {'Ext. Br','Ext. Bx'};
             stMap.Translate.BFieldExt(2).Tex   = {'B_{r}^{ext}','B_{x}^{ext}'};
+            stMap.Translate.BFieldExt(2).Dim   = 2;
 
             stMap.Translate.BFieldExt(3).Name  = 'ext_b3';
             stMap.Translate.BFieldExt(3).Alt   = {'ext_by','ext_b_y','ext_bth','ext_b_th'};
             stMap.Translate.BFieldExt(3).Full  = {'External Azimuthal B-Field','External Vertical B-Field'};
             stMap.Translate.BFieldExt(3).Short = {'Ext. Bth','Ext. By'};
             stMap.Translate.BFieldExt(3).Tex   = {'B_{\theta}^{ext}','B_{y}^{ext}'};
+            stMap.Translate.BFieldExt(3).Dim   = 3;
 
             % Particle Electric Field
 
@@ -345,18 +379,21 @@ classdef Variables
             stMap.Translate.EFieldPart(1).Full  = {'Particle Longitudinal E-Field','Particle Longitudinal E-Field'};
             stMap.Translate.EFieldPart(1).Short = {'Part. Ez','Part. Ez'};
             stMap.Translate.EFieldPart(1).Tex   = {'E_{z}^{part}','E_{z}^{part}'};
+            stMap.Translate.EFieldPart(1).Dim   = 1;
 
             stMap.Translate.EFieldPart(2).Name  = 'part_e2';
             stMap.Translate.EFieldPart(2).Alt   = {'part_ex','part_e_x','part_er','part_e_r'};
             stMap.Translate.EFieldPart(2).Full  = {'Particle Radial E-Field','Particle Horizontal E-Field'};
             stMap.Translate.EFieldPart(2).Short = {'Part. Er','Part. Ex'};
             stMap.Translate.EFieldPart(2).Tex   = {'E_{r}^{part}','E_{x}^{part}'};
+            stMap.Translate.EFieldPart(2).Dim   = 2;
 
             stMap.Translate.EFieldPart(3).Name  = 'part_e3';
             stMap.Translate.EFieldPart(3).Alt   = {'part_ey','part_e_y','part_eth','part_e_th'};
             stMap.Translate.EFieldPart(3).Full  = {'Particle Azimuthal E-Field','Particle Vertical E-Field'};
             stMap.Translate.EFieldPart(3).Short = {'Part. Eth','Part. Ey'};
             stMap.Translate.EFieldPart(3).Tex   = {'E_{\theta}^{part}','E_{y}^{part}'};
+            stMap.Translate.EFieldPart(3).Dim   = 3;
 
             % Particle Magnetic Field
 
@@ -365,18 +402,21 @@ classdef Variables
             stMap.Translate.BFieldPart(1).Full  = {'Particle Longitudinal B-Field','Particle Longitudinal B-Field'};
             stMap.Translate.BFieldPart(1).Short = {'Part. Bz','Part. Bz'};
             stMap.Translate.BFieldPart(1).Tex   = {'B_{z}^{part}','B_{z}^{part}'};
+            stMap.Translate.BFieldPart(1).Dim   = 1;
 
             stMap.Translate.BFieldPart(2).Name  = 'part_b2';
             stMap.Translate.BFieldPart(2).Alt   = {'part_bx','part_b_x','part_br','part_b_r'};
             stMap.Translate.BFieldPart(2).Full  = {'Particle Radial B-Field','Particle Horizontal B-Field'};
             stMap.Translate.BFieldPart(2).Short = {'Part. Br','Part. Bx'};
             stMap.Translate.BFieldPart(2).Tex   = {'B_{r}^{part}','B_{x}^{part}'};
+            stMap.Translate.BFieldPart(2).Dim   = 2;
 
             stMap.Translate.BFieldPart(3).Name  = 'part_b3';
             stMap.Translate.BFieldPart(3).Alt   = {'part_by','part_b_y','part_bth','part_b_th'};
             stMap.Translate.BFieldPart(3).Full  = {'Particle Azimuthal B-Field','Particle Vertical B-Field'};
             stMap.Translate.BFieldPart(3).Short = {'Part. Bth','Part. By'};
             stMap.Translate.BFieldPart(3).Tex   = {'B_{\theta}^{part}','B_{y}^{part}'};
+            stMap.Translate.BFieldPart(3).Dim   = 3;
 
             % Electric Field Energy
 
@@ -385,24 +425,28 @@ classdef Variables
             stMap.Translate.EFieldEnergy(1).Full  = {'Energy in Longitudinal E-Field','Energy in Longitudinal E-Field'};
             stMap.Translate.EFieldEnergy(1).Short = {'E²z','E²z'};
             stMap.Translate.EFieldEnergy(1).Tex   = {'E_{z}^{2}','E_{z}^{2}'};
+            stMap.Translate.EFieldEnergy(1).Dim   = 1;
 
             stMap.Translate.EFieldEnergy(2).Name  = 'ene_e2';
             stMap.Translate.EFieldEnergy(2).Alt   = {'ene_ex','ene_e_x','ene_er','ene_e_r'};
             stMap.Translate.EFieldEnergy(2).Full  = {'Energy in Radial E-Field','Energy in Horizontal E-Field'};
             stMap.Translate.EFieldEnergy(2).Short = {'E²r','E²x'};
             stMap.Translate.EFieldEnergy(2).Tex   = {'E_{r}^{2}','E_{x}^{2}'};
+            stMap.Translate.EFieldEnergy(2).Dim   = 2;
 
             stMap.Translate.EFieldEnergy(3).Name  = 'ene_e3';
             stMap.Translate.EFieldEnergy(3).Alt   = {'ene_ey','ene_e_y','ene_eth','ene_e_th'};
             stMap.Translate.EFieldEnergy(3).Full  = {'Energy in Azimuthal E-Field','Energy in Vertical E-Field'};
             stMap.Translate.EFieldEnergy(3).Short = {'E²th','E²y'};
             stMap.Translate.EFieldEnergy(3).Tex   = {'E_{\theta}^{2}','E_{y}^{2}'};
+            stMap.Translate.EFieldEnergy(3).Dim   = 3;
 
             stMap.Translate.EFieldEnergy(4).Name  = 'ene_e';
             stMap.Translate.EFieldEnergy(4).Alt   = {};
             stMap.Translate.EFieldEnergy(4).Full  = {'Energy in Electric Field','Energy in Electric Field'};
             stMap.Translate.EFieldEnergy(4).Short = {'E²','E²'};
             stMap.Translate.EFieldEnergy(4).Tex   = {'\sum E_{i}^{2}','\sum E_{i}^{2}'};
+            stMap.Translate.EFieldEnergy(4).Dim   = 0;
 
             % Magnetic Field Energy
 
@@ -411,24 +455,28 @@ classdef Variables
             stMap.Translate.BFieldEnergy(1).Full  = {'Energy in Longitudinal B-Field','Energy in Longitudinal B-Field'};
             stMap.Translate.BFieldEnergy(1).Short = {'B²z','B²z'};
             stMap.Translate.BFieldEnergy(1).Tex   = {'B_{z}^{2}','B_{z}^{2}'};
+            stMap.Translate.BFieldEnergy(1).Dim   = 1;
 
             stMap.Translate.BFieldEnergy(2).Name  = 'ene_b2';
             stMap.Translate.BFieldEnergy(2).Alt   = {'ene_bx','ene_b_x','ene_br','ene_b_r'};
             stMap.Translate.BFieldEnergy(2).Full  = {'Energy in Radial B-Field','Energy in Horizontal B-Field'};
             stMap.Translate.BFieldEnergy(2).Short = {'B²r','B²x'};
             stMap.Translate.BFieldEnergy(2).Tex   = {'B_{r}^{2}','B_{x}^{2}'};
+            stMap.Translate.BFieldEnergy(2).Dim   = 2;
 
             stMap.Translate.BFieldEnergy(3).Name  = 'ene_b3';
             stMap.Translate.BFieldEnergy(3).Alt   = {'ene_by','ene_b_y','ene_bth','ene_b_th'};
             stMap.Translate.BFieldEnergy(3).Full  = {'Energy in Azimuthal B-Field','Energy in Vertical B-Field'};
             stMap.Translate.BFieldEnergy(3).Short = {'B²th','B²y'};
             stMap.Translate.BFieldEnergy(3).Tex   = {'B_{\theta}^{2}','B_{y}^{2}'};
+            stMap.Translate.BFieldEnergy(3).Dim   = 3;
 
             stMap.Translate.BFieldEnergy(4).Name  = 'ene_b';
             stMap.Translate.BFieldEnergy(4).Alt   = {};
             stMap.Translate.BFieldEnergy(4).Full  = {'Energy in Magnetic Field','Energy in Magnetic Field'};
             stMap.Translate.BFieldEnergy(4).Short = {'B²','B²'};
             stMap.Translate.BFieldEnergy(4).Tex   = {'\sum B_{i}^{2}','\sum B_{i}^{2}'};
+            stMap.Translate.BFieldEnergy(4).Dim   = 0;
 
             % EM Field Energy
 
@@ -440,6 +488,7 @@ classdef Variables
             stMap.Translate.FieldEnergy(9).Full  = {'Energy in Electromagnetic Field','Energy in Electromagnetic Field'};
             stMap.Translate.FieldEnergy(9).Short = {'E²+B²','E²+B²'};
             stMap.Translate.FieldEnergy(9).Tex   = {'E^{2}+B^{2}','E^{2}+B^{2}'};
+            stMap.Translate.FieldEnergy(9).Dim   = 0;
 
             % Field Divergence
 
@@ -448,12 +497,14 @@ classdef Variables
             stMap.Translate.FieldDiv(1).Full  = {'E-Field Divergence','E-Field Divergence'};
             stMap.Translate.FieldDiv(1).Short = {'Div. E²','Div. E'};
             stMap.Translate.FieldDiv(1).Tex   = {'\Nabla \cdot E','\Nabla \cdot E'};
+            stMap.Translate.FieldDiv(1).Dim   = 0;
 
             stMap.Translate.FieldDiv(2).Name  = 'div_b';
             stMap.Translate.FieldDiv(2).Alt   = {};
             stMap.Translate.FieldDiv(2).Full  = {'B-Field Divergence','B-Field Divergence'};
             stMap.Translate.FieldDiv(2).Short = {'Div. B²','Div. B'};
             stMap.Translate.FieldDiv(2).Tex   = {'\Nabla \cdot B','\Nabla \cdot B'};
+            stMap.Translate.FieldDiv(2).Dim   = 0;
 
             % Quantity
 
@@ -462,54 +513,63 @@ classdef Variables
             stMap.Translate.Quantity(1).Full  = {'Charge','Charge'};
             stMap.Translate.Quantity(1).Short = {'Q','Q'};
             stMap.Translate.Quantity(1).Tex   = {'q','q'};
+            stMap.Translate.Quantity(1).Dim   = 0;
 
             stMap.Translate.Quantity(2).Name  = '|charge|';
             stMap.Translate.Quantity(2).Alt   = {'|q|'};
             stMap.Translate.Quantity(2).Full  = {'Absolute Charge','Absolute Charge'};
             stMap.Translate.Quantity(2).Short = {'|Q|','|Q|'};
             stMap.Translate.Quantity(2).Tex   = {'|q|','|q|'};
+            stMap.Translate.Quantity(2).Dim   = 0;
 
             stMap.Translate.Quantity(3).Name  = 'chargecons';
             stMap.Translate.Quantity(3).Alt   = {'qcons'};
             stMap.Translate.Quantity(3).Full  = {'Charge Conservation','Charge Conservation'};
             stMap.Translate.Quantity(3).Short = {'QCons','QCons'};
             stMap.Translate.Quantity(3).Tex   = {'q_{cons}','q_{cons}'};
+            stMap.Translate.Quantity(3).Dim   = 0;
 
             stMap.Translate.Quantity(4).Name  = 'm';
             stMap.Translate.Quantity(4).Alt   = {'mass'};
             stMap.Translate.Quantity(4).Full  = {'Mass','Mass'};
             stMap.Translate.Quantity(4).Short = {'Mass','Mass'};
             stMap.Translate.Quantity(4).Tex   = {'m','m'};
+            stMap.Translate.Quantity(4).Dim   = 0;
 
             stMap.Translate.Quantity(5).Name  = 'ene';
             stMap.Translate.Quantity(5).Alt   = {'energy','e_k'};
             stMap.Translate.Quantity(5).Full  = {'Kinetic Energy','Kinetic Energy'};
             stMap.Translate.Quantity(5).Short = {'Ek','Ek'};
             stMap.Translate.Quantity(5).Tex   = {'E_{k}','E_{k}'};
+            stMap.Translate.Quantity(5).Dim   = 0;
 
             stMap.Translate.Quantity(6).Name  = 'g';
             stMap.Translate.Quantity(6).Alt   = {'gamma'};
             stMap.Translate.Quantity(6).Full  = {'Lorentz Factor','Lorentz Factor'};
             stMap.Translate.Quantity(6).Short = {'Gamma','Gamma'};
             stMap.Translate.Quantity(6).Tex   = {'\gamma','\gamma'};
+            stMap.Translate.Quantity(6).Dim   = 0;
 
             stMap.Translate.Quantity(7).Name  = 'gl';
             stMap.Translate.Quantity(7).Alt   = {'log_gamma'};
             stMap.Translate.Quantity(7).Full  = {'Lorentz Factor','Lorentz Factor'};
             stMap.Translate.Quantity(7).Short = {'Log(Gamma)','Log(Gamma)'};
             stMap.Translate.Quantity(7).Tex   = {'\log(\gamma)','\log(\gamma)'};
+            stMap.Translate.Quantity(7).Dim   = 0;
 
             stMap.Translate.Quantity(8).Name  = 'psi';
             stMap.Translate.Quantity(8).Alt   = {};
             stMap.Translate.Quantity(8).Full  = {'Pseudopotential','Pseudopotential'};
             stMap.Translate.Quantity(8).Short = {'Psi','Psi'};
             stMap.Translate.Quantity(8).Tex   = {'\Psi_{x}','\Psi_{x}'};
+            stMap.Translate.Quantity(8).Dim   = 0;
 
             stMap.Translate.Quantity(9).Name  = 't';
             stMap.Translate.Quantity(9).Alt   = {};
             stMap.Translate.Quantity(9).Full  = {'Time','Time'};
             stMap.Translate.Quantity(9).Short = {'Time','Time'};
             stMap.Translate.Quantity(9).Tex   = {'t','t'};
+            stMap.Translate.Quantity(9).Dim   = 4;
 
             % Flux
 
@@ -518,18 +578,21 @@ classdef Variables
             stMap.Translate.Flux(1).Full  = {'Longitudinal Flux','Longitudinal Flux'};
             stMap.Translate.Flux(1).Short = {'Qz','Qz'};
             stMap.Translate.Flux(1).Tex   = {'q_{z}','q_{z}'};
+            stMap.Translate.Flux(1).Dim   = 1;
 
             stMap.Translate.Flux(2).Name  = 'q2';
             stMap.Translate.Flux(2).Alt   = {'qr','q_r','qx','q_x'};
             stMap.Translate.Flux(2).Full  = {'Radial Flux','Horizontal Flux'};
             stMap.Translate.Flux(2).Short = {'Qr','Qx'};
             stMap.Translate.Flux(2).Tex   = {'q_{r}','q_{x}'};
+            stMap.Translate.Flux(2).Dim   = 2;
 
             stMap.Translate.Flux(3).Name  = 'q3';
             stMap.Translate.Flux(3).Alt   = {'qth','q_th','qy','q_y'};
             stMap.Translate.Flux(3).Full  = {'Azimuthal Flux','Vertical Flux'};
             stMap.Translate.Flux(3).Short = {'Qth','Qy'};
             stMap.Translate.Flux(3).Tex   = {'q_{\theta}','q_{y}'};
+            stMap.Translate.Flux(3).Dim   = 3;
 
             % Poynting Flux
 
@@ -538,18 +601,21 @@ classdef Variables
             stMap.Translate.Poynting(1).Full  = {'Longitudinal Poynting Flux','Longitudinal Poynting Flux'};
             stMap.Translate.Poynting(1).Short = {'Sz','Sz'};
             stMap.Translate.Poynting(1).Tex   = {'s_{z}','s_{z}'};
+            stMap.Translate.Poynting(1).Dim   = 1;
 
             stMap.Translate.Poynting(2).Name  = 's2';
             stMap.Translate.Poynting(2).Alt   = {'sr','s_r','sx','s_x'};
             stMap.Translate.Poynting(2).Full  = {'Radial Poynting Flux','Horizontal Poynting Flux'};
             stMap.Translate.Poynting(2).Short = {'Sr','Sx'};
             stMap.Translate.Poynting(2).Tex   = {'s_{r}','s_{x}'};
+            stMap.Translate.Poynting(2).Dim   = 2;
 
             stMap.Translate.Poynting(3).Name  = 's3';
             stMap.Translate.Poynting(3).Alt   = {'sth','s_th','sy','s_y'};
             stMap.Translate.Poynting(3).Full  = {'Azimuthal Poynting Flux','Vertical Poynting Flux'};
             stMap.Translate.Poynting(3).Short = {'Sth','Sy'};
             stMap.Translate.Poynting(3).Tex   = {'s_{\theta}','s_{y}'};
+            stMap.Translate.Poynting(3).Dim   = 3;
 
             % Save map
             obj.Map = stMap;
@@ -572,6 +638,7 @@ classdef Variables
             stReturn.Full     = '';
             stReturn.Short    = '';
             stReturn.Tex      = '';
+            stReturn.Dim      = 0;
             stReturn.Type     = '';
 
             %
@@ -624,6 +691,7 @@ classdef Variables
                         stReturn.Full  = stItem.Full{obj.Coords};
                         stReturn.Short = stItem.Short{obj.Coords};
                         stReturn.Tex   = stItem.Tex{obj.Coords};
+                        stReturn.Dim   = stItem.Dim;
                         stReturn.Type  = sType;
                         bFound         = 1;
                         break;
