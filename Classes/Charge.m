@@ -47,7 +47,7 @@ classdef Charge < OsirisType
         function obj = Charge(oData, sSpecies, varargin)
             
             % Call OsirisType constructor
-            obj@OsirisType(oData, sSpecies, '', varargin{:});
+            obj@OsirisType(oData, sSpecies, varargin{:});
 
         end % function
 

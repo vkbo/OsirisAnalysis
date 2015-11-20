@@ -38,7 +38,7 @@ classdef Phase < OsirisType
     % Properties
     %
 
-    properties(GetAccess = 'public', SetAccess = 'public')
+    properties(GetAccess='public', SetAccess='public')
         
         % None
 
@@ -53,7 +53,7 @@ classdef Phase < OsirisType
         function obj = Phase(oData, sSpecies, varargin)
             
             % Call OsirisType constructor
-            obj@OsirisType(oData, sSpecies, '', varargin{:});
+            obj@OsirisType(oData, sSpecies, varargin{:});
             
         end % function
         
@@ -63,7 +63,7 @@ classdef Phase < OsirisType
     % Public Methods
     %
     
-    methods(Access = 'public')
+    methods(Access='public')
 
         function stReturn = Phase1D(obj, sAxis, varargin)
             

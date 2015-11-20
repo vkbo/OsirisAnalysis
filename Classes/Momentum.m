@@ -39,7 +39,7 @@ classdef Momentum < OsirisType
     % Properties
     %
 
-    properties(GetAccess = 'public', SetAccess = 'public')
+    properties(GetAccess='public', SetAccess='public')
         
         % None
 
@@ -54,7 +54,7 @@ classdef Momentum < OsirisType
         function obj = Momentum(oData, sSpecies, varargin)
             
             % Call OsirisType constructor
-            obj@OsirisType(oData, sSpecies, '', varargin{:});
+            obj@OsirisType(oData, sSpecies, varargin{:});
 
         end % function
         
@@ -64,7 +64,7 @@ classdef Momentum < OsirisType
     % Public Methods
     %
     
-    methods(Access = 'public')
+    methods(Access='public')
         
         function stReturn = SigmaEToEMean(obj, sStart, sStop)
 

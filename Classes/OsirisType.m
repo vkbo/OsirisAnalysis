@@ -23,7 +23,6 @@ classdef OsirisType
         
         Data        = [];                        % OsirisData dataset
         Species     = [];                        % Holds species information
-        Field       = [];                        % Holds field information
         Units       = 'N';                       % Units of axes
         AxisUnits   = {'N' 'N' 'N'};             % Units of axes
         AxisScale   = {'Auto' 'Auto' 'Auto'};    % Scale of axes
@@ -50,7 +49,7 @@ classdef OsirisType
 
     methods
         
-        function obj = OsirisType(oData, sSpecies, sField, varargin)
+        function obj = OsirisType(oData, sSpecies, varargin)
             
             % Set Data
             obj.Data = oData;
@@ -82,17 +81,6 @@ classdef OsirisType
                 end % if
             end % if
             
-            % Set Field
-            if ~isempty(sField)
-                stField = obj.Translate.Lookup(sField);
-                if stField.isValidEMFDiag
-                    obj.Field.Var = stField;
-                else
-                    fprintf(2, 'Error: ''%s'' is not a recognised field. Using ''e1'' instead.\n', sField);
-                    obj.Field = obj.Translate.Lookup('e1');
-                end % if
-            end % if
-
             % Read Input Parameters
             oOpt = inputParser;
             addParameter(oOpt, 'Units',   'N');
@@ -195,7 +183,7 @@ classdef OsirisType
             else
                 
                 obj.Time      = obj.Data.StringToDump(sTime);
-                obj.BoxOffset = obj.Time*obj.Data.Config.Variables.Convert.SI.TimeFac;
+                obj.BoxOffset = obj.Time*obj.Data.Config.Convert.SI.TimeFac;
 
             end % if
             
