@@ -21,8 +21,9 @@ classdef OsirisType
 
     properties(GetAccess='public', SetAccess='private')
         
-        Data        = [];                        % OsirisData dataset
-        Species     = [];                        % Holds species information
+        Data        = {};                        % OsirisData dataset
+        Species     = {};                        % Holds species information
+        Config      = {};                        % Holds relevant OsirisConfig data
         Units       = 'N';                       % Units of axes
         AxisUnits   = {'N' 'N' 'N'};             % Units of axes
         AxisScale   = {'Auto' 'Auto' 'Auto'};    % Scale of axes
@@ -72,8 +73,8 @@ classdef OsirisType
             if ~isempty(sSpecies)
                 stSpecies = obj.Translate.Lookup(sSpecies);
                 if stSpecies.isSpecies
-                    obj.Species.Var    = stSpecies;
-                    obj.Species.Config = obj.Data.Config.Particles.Species.(stSpecies.Name);
+                    obj.Species = stSpecies;
+                    obj.Config  = obj.Data.Config.Particles.Species.(stSpecies.Name);
                 else
                     sDefault = obj.Data.Config.Particles.WitnessBeam{1};
                     fprintf(2, 'Error: ''%s'' is not a recognised species name. Using ''%s'' instead.\n', sSpecies, sDefault);

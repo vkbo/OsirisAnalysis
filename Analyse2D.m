@@ -1428,7 +1428,7 @@ function Analyse2D
                 X.Plot(f).Scale  = [1.0 1.0];
         end % switch
         
-        X.Data.Density = oData.Config.Variables.Density.(sSpecies).Density;
+        X.Data.Density = oData.Config.Particles.Species.(X.Data.Species{1}).DiagReports;
         for i=1:length(X.Data.Density)
             X.Data.Density{i} = oVar.Lookup(X.Data.Density{i}).Full;
         end % for
