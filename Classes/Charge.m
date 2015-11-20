@@ -608,7 +608,7 @@ classdef Charge < OsirisType
                     iCount = length(aRaw(:,1));
                 end % if
 
-                if strcmpi(sCoords, 'cylindrical') && strcmpi(stOpt.Mirror, 'yes')
+                if obj.Cylindrical && strcmpi(stOpt.Mirror, 'yes')
                     aRaw = [aRaw; aRaw(:,1) -aRaw(:,2) aRaw(:,3:end)];
                 end % if
 

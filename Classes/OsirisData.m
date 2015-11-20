@@ -15,6 +15,7 @@ classdef OsirisData
 
         Path        = '';    % Path to dataset
         PathID      = '';    % Path as ID instead of free text input
+        Config      = [];    % Content of the config files and extraction of all runtime variables
         Silent      = 0;     % Set to 1 to disable command window output
 
     end % properties
@@ -23,7 +24,6 @@ classdef OsirisData
 
         Elements    = {};    % Struct of all datafiles in dataset ('MS/' subfolder)
         MSData      = {};    % Struct of all MS data
-        Config      = [];    % Content of the config files and extraction of all runtime variables
         DataSets    = {};    % Available datasets in folders indicated by LocalConfig.m
         DefaultPath = {};    % Default data folder
         Temp        = '';    % Temp folder (set in LocalConfig.m)
@@ -479,7 +479,7 @@ classdef OsirisData
             % Species translated to standard format, and then to actual file name used
             sSpecies  = obj.Translate.Lookup(sSpecies).Name;
             if ~isempty(sSpecies)
-                sSpecies  = obj.Config.Variables.Simulation.FileNames.(sSpecies);
+                sSpecies  = obj.Config.Particles.Species.(sSpecies).Name;
             end % if
 
             if isempty(sType)

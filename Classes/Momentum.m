@@ -321,7 +321,7 @@ classdef Momentum < OsirisType
  
                 aGamma    = obj.MomentumToEnergy(aPz);
                 aXPrime   = sin(aPx./aP)*1e3;
-                aCharge   = aRaw(:,8)*obj.Data.Config.Variables.Convert.SI.ChargeFac;
+                aCharge   = aRaw(:,8)*obj.Data.Config.Convert.SI.ChargeFac;
                 aCov      = wcov([aX, aXPrime], abs(aCharge));
                 dGamma    = wmean(aGamma, abs(aCharge));
                 dBeta     = sqrt(1 - 1/dGamma^2);

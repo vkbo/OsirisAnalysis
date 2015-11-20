@@ -12,29 +12,31 @@ classdef OsirisConfig
     
     properties(GetAccess='public', SetAccess='public')
 
-        Path       = '';    % Path to data directory
-        File       = '';    % Config file within data directory
-        Silent     = false; % Set to true to disable command window output
+        Path       = '';     % Path to data directory
+        File       = '';     % Config file within data directory
+        SimN0      = 1.0e20; % Plasma density for simulation
+        PhysN0     = 0.0;    % Plasma density for physics
+        Silent     = false;  % Set to true to disable command window output
 
     end % properties
 
     properties(GetAccess='public', SetAccess='private')
     
-        Name       = ''; % Name of the loaded dataset
-        Input      = {}; % Parsed input file
-        Constants  = {}; % Constants
-        Convert    = {}; % Unit conversion factors
-        Simulation = {}; % Simulation variables
-        EMFields   = {}; % Electro-magnetic field variables
-        Particles  = {}; % Particle variables
+        Name       = '';     % Name of the loaded dataset
+        Input      = {};     % Parsed input file
+        Constants  = {};     % Constants
+        Convert    = {};     % Unit conversion factors
+        Simulation = {};     % Simulation variables
+        EMFields   = {};     % Electro-magnetic field variables
+        Particles  = {};     % Particle variables
 
     end % properties
 
     properties(GetAccess='private', SetAccess='private')
 
-        Files      = {}; % Holds possible config files
-        Translate  = {}; % Container for Variables class
-        NameLists  = {}; % Container for Fortran namelists
+        Files      = {};     % Holds possible config files
+        Translate  = {};     % Container for Variables class
+        NameLists  = {};     % Container for Fortran namelists
         
     end % properties
 
@@ -46,9 +48,7 @@ classdef OsirisConfig
         
         function obj = OsirisConfig()
             
-            % Constants
-            
-            % SI
+            % SI Constants
             obj.Constants.SpeedOfLight        =  2.99792458e8;    % m/s (exact)
             obj.Constants.ElectronMass        =  9.10938291e-31;  % kg
             obj.Constants.ElectronMassMeV     =  5.109989282e-1;  % MeV/c^2
@@ -56,7 +56,7 @@ classdef OsirisConfig
             obj.Constants.VacuumPermitivity   =  8.854187817e-12; % F/m 
             obj.Constants.VacuumPermeability  =  1.2566370614e-6; % N/A^2
 
-            % CGS
+            % CGS Constants
             obj.Constants.ElementaryChargeCGS =  4.80320425e-10;  % statC
 
             % Translae Class for Variables
@@ -139,7 +139,41 @@ classdef OsirisConfig
                 obj = obj.fGetEMFVariables();
                 obj = obj.fGetParticleVariables();
                 
+                % Set N0Sim and N0Phys
+                obj.SimN0  = obj.Simulation.N0;
+                obj.PhysN0 = obj.Simulation.PhysN0;
+                
             end % if
+
+        end % function
+        
+        function obj = set.SimN0(obj, dValue)
+            
+            % If N0 is defined in the input file, this value cannot be overridden!
+            
+            obj.SimN0         = abs(double(dValue));
+            obj.Simulation.N0 = obj.SimN0;
+
+            obj = obj.fGetSimulationVariables();
+            
+            dPlasmaFac                 = obj.Simulation.MaxPlasmaFac;
+            obj.Simulation.PhysN0      = obj.SimN0 * dPlasmaFac;
+            obj.Simulation.PhysOmegaP  = obj.Simulation.OmegaP * sqrt(dPlasmaFac);
+            obj.Simulation.PhysLambdaP = obj.Simulation.LambdaP / sqrt(dPlasmaFac);
+            
+        end % function
+
+        function obj = set.PhysN0(obj, dValue)
+            
+            % This Value does not affect any calculations in OsirisConfig,
+            % but the chosen value is set to maximum plasma density.
+            
+            obj.PhysN0 = abs(double(dValue));
+
+            dPlasmaFac                 = obj.PhysN0 / obj.SimN0;
+            obj.Simulation.PhysN0      = obj.PhysN0;
+            obj.Simulation.PhysOmegaP  = obj.Simulation.OmegaP * sqrt(dPlasmaFac);
+            obj.Simulation.PhysLambdaP = obj.Simulation.LambdaP / sqrt(dPlasmaFac);
 
         end % function
         
@@ -460,10 +494,11 @@ classdef OsirisConfig
             %
             
             % Plasma Density
+            % If this is defined, setting obj.SimN0 will not change anything!
             try
                 dN0 = double(obj.Input.simulation.simulation.n0{1})*1.0e6;
             catch
-                dN0 = 1.0e20;
+                dN0 = obj.SimN0;
             end % try
             
             % Plasma Frequency
@@ -480,7 +515,7 @@ classdef OsirisConfig
             try
                 aGrid = int64(cell2mat(obj.Input.simulation.grid.nx_p));
             catch
-                aGrid = [1];
+                aGrid = 1;
             end % try
             iDim  = length(aGrid);
             aGrid = obj.fArrayPad(aGrid, [0 0 0]);
@@ -543,6 +578,8 @@ classdef OsirisConfig
             obj.Simulation.LambdaP     = dLambdaP;
 
             % Save Plasma Variables for Physics
+            % By default simulation values are used
+            % These are later recalculated if a plasma species is found
             obj.Simulation.PhysN0      = dN0;
             obj.Simulation.PhysOmegaP  = dOmegaP;
             obj.Simulation.PhysLambdaP = dLambdaP;
@@ -579,7 +616,7 @@ classdef OsirisConfig
             obj.Convert.SI.E0        = dSIE0;
             obj.Convert.SI.B0        = dSIB0;
             obj.Convert.SI.LengthFac = dLFactor;
-            obj.Convert.SI.TimeFac   = dTimeStep*iNDump;
+            obj.Convert.SI.TimeFac   = double(dTimeStep*iNDump);
             
             
             %
@@ -718,12 +755,10 @@ classdef OsirisConfig
             cPlasma = {};
             for p=1:length(cPart)
 
-                sType = cType{aType(p)};
-
                 if aType(p) < 4
                 
                     stData = obj.fGetParticleSpecies(cPart{p}, obj.Input.particles.(cPart{p}), aType(p));
-                    obj.Particles.(sType).(stData.Name) = stData.Data;
+                    obj.Particles.Species.(stData.Name) = stData.Data;
                     if strcmpi(stData.Data.Type,'Beam')
                         cBeams = [cBeams {stData.Name}];
                     end % if
@@ -734,7 +769,7 @@ classdef OsirisConfig
                 else
                     
                     stData = obj.fGetParticleSpecies(cPart{p}, obj.Input.particles.(cPart{p}).species_1, aType(p));
-                    obj.Particles.(sType).(stData.Name) = stData.Data;
+                    obj.Particles.Species.(stData.Name) = stData.Data;
                     if strcmpi(stData.Data.Type,'Beam')
                         cBeams = [cBeams {stData.Name}];
                     end % if
@@ -743,7 +778,7 @@ classdef OsirisConfig
                     end % if
 
                     stData = obj.fGetParticleSpecies(cPart{p}, obj.Input.particles.(cPart{p}).species_2, aType(p));
-                    obj.Particles.(sType).(stData.Name) = stData.Data;
+                    obj.Particles.Species.(stData.Name) = stData.Data;
                     if strcmpi(stData.Data.Type,'Beam')
                         cBeams = [cBeams {stData.Name}];
                     end % if
@@ -787,21 +822,20 @@ classdef OsirisConfig
             if ~isempty(cPlasma)
 
                 sPlasma    = cPlasma{1};
-                aProfile   = obj.Particles.Species.(sPlasma).Profile.ProfileX1;
+                stProfile  = obj.Particles.Species.(sPlasma).Profile.ProfileX1;
                 dPlasmaMax = obj.Particles.Species.(sPlasma).Profile.PeakDensity;
                 
                 dStart = 0.0;
                 dStop  = 0.0;
-                dMax   = max(aProfile(:,2));
-                for x=1:length(aProfile(:,1))
-                    if aProfile(x,2) > 0.5*dMax
-                        dStart = aProfile(x,1);
+                for x=1:stProfile.Length
+                    if stProfile.Value(x) > 0.5*dPlasmaMax
+                        dStart = stProfile.Axis(x);
                         break;
                     end % if
                 end % for
-                for x=length(aProfile(:,1)):-1:1
-                    if aProfile(x,2) > 0.5*dMax
-                        dStop = aProfile(x,1);
+                for x=stProfile.Length:-1:1
+                    if stProfile.Value(x) > 0.5*dPlasmaMax
+                        dStop = stProfile.Axis(x);
                         break;
                     end % if
                 end % for
@@ -830,6 +864,7 @@ classdef OsirisConfig
             
             stReturn = {};
             iMoving  = 0; % 1 for moving particles in x1 direction
+            cType    = {'Species','Cathode','Neutral','NeutralMovIons'};
 
             % Species Name
             try
@@ -860,10 +895,11 @@ classdef OsirisConfig
             end % try
 
             % Return Variables
-            stReturn.Name      = sPName;
-            stReturn.Data.Name = sName;
-            stReturn.Data.Type = sSpeciesType;
-            stReturn.Data.RQM  = dRQM;
+            stReturn.Name       = sPName;
+            stReturn.Data.Name  = sName;
+            stReturn.Data.Type  = sSpeciesType;
+            stReturn.Data.Class = cType{iType};
+            stReturn.Data.RQM   = dRQM;
             
 
             %
@@ -1047,6 +1083,15 @@ classdef OsirisConfig
                 
             end % if
             
+            % Set Species Type if Still Unknown
+            if strcmpi(sSpeciesType,'Unknown')
+                if iMoving
+                    stReturn.Data.Type = 'Beam';
+                else
+                    stReturn.Data.Type = 'Plasma';
+                end % if
+            end % if
+            
         end % function
         
         function stReturn = fGetSpeciesProfile(obj, stData, iMov)
@@ -1123,21 +1168,13 @@ classdef OsirisConfig
             % Calculate Profile Slice for Each Dimension
             %
             
-            aProfileX1 = [0,0];
-            aProfileX2 = [0,0];
-            aProfileX3 = [0,0];
-            oMathFunc  = {};
-            dPeak      = dDensity;
-
+            stProfile(3).Axis   = [];
+            stProfile(3).Value  = [];
+            stProfile(3).Delta  = [];
+            stProfile(3).Length = [];
+            
             for d=1:iDim
-
-                % Determine Type
-                switch(d)
-                    case 1; sType = sTypeX1;
-                    case 2; sType = sTypeX2;
-                    case 3; sType = sTypeX3;
-                end % switch
-
+            
                 % Determine Limits
                 if iMov || d > 1
                     dMin = aXMin(d);
@@ -1155,16 +1192,27 @@ classdef OsirisConfig
                 end % if
 
                 % Make Profile Array
-                aProfile      = [];
-                aProfile(:,1) = linspace(dMin,dMax,iN+1);
-                aProfile(:,2) = zeros(1,iN+1);
-                dDelta        = (dMax-dMin)/iN;
+                stProfile(d).Axis   = linspace(dMin,dMax,iN+1);
+                stProfile(d).Value  = zeros(1,iN+1);
+                stProfile(d).Delta  = (dMax-dMin)/iN;
+                stProfile(d).Length = iN+1;
+
+            end % for
+
+            dPeak = dDensity;
             
-                if isempty(sTypeAll)
-                    
-                    %
-                    % Individual Profile Types
-                    %
+            % With Type Set for Each Dimension
+
+            if isempty(sTypeAll)
+
+                for d=1:iDim
+
+                    % Determine Type
+                    switch(d)
+                        case 1; sType = sTypeX1;
+                        case 2; sType = sTypeX2;
+                        case 3; sType = sTypeX3;
+                    end % switch
 
                     % Make Profiles
                     switch(sType)
@@ -1196,87 +1244,71 @@ classdef OsirisConfig
                                 continue;
                             end % if
                             
-                            aX = floor(aX/dDelta);
+                            aX = floor(aX/stProfile(d).Delta);
                             for n=1:iNumX-1
                                 iA = aX(n)+1; iB = aX(n+1)+1; iC = iB-iA+1;
-                                aProfile(iA:iB,2) = linspace(aFX(n),aFX(n+1),iC);
+                                stProfile(d).Value(iA:iB) = linspace(aFX(n),aFX(n+1),iC);
                             end % for
                             
-                            dPeak = dPeak * max(aProfile(:,2));
+                            dPeak = dPeak * max(stProfile(d).Value);
 
                     end % switch
 
-                else
-                    
-                    %
-                    % Common Profile Types
-                    %
-
-                    switch(sTypeAll)
-
-                        case 'uniform'
-                            aProfile = aProfile + 1;
-
-                        case 'channel'
-                            fprintf(2,'Channel particle profile calculations not implemented.+n');
-
-                        case 'sphere'
-                            fprintf(2,'Spherical particle profile calculations not implemented.+n');
-
-                        case 'math func'
-
-                            if isempty(oMathFunc)
-                            
-                                % Get Math Function
-                                try
-                                    sFunction = stData.profile.math_func_expr{1};
-                                catch
-                                    sFunction = '';
-                                end % try
-
-                                if ~isempty(sFunction)
-                                    oMathFunc = MathFunc(sFunction);
-                                end % if
-
-                            end % if
-
-                    end % switch
-                    
                 end % if
-                
-                % Save Results
-                switch(d)
-                    case 1; aProfileX1 = aProfile;
-                    case 2; aProfileX2 = aProfile;
-                    case 3; aProfileX3 = aProfile;
-                end % switch
 
             end % for
+                    
+            % Common Profile Types
 
-            % If Was Math Function, Eval
-            if ~isempty(oMathFunc)
+            switch(sTypeAll)
 
-                if iDim > 2
-                    mTemp = oMathFunc.Eval(aProfileX1(:,1),aProfileX2(:,1),aProfileX3(:,1));
-                    mTemp = mTemp.*(mTemp > 0);
-                    aProfileX1(:,2) = sum(mTemp,1);
-                    aProfileX2(:,2) = sum(mTemp,2);
-                    aProfileX3(:,3) = sum(mTemp,3);
-                else
-                    mTemp = oMathFunc.Eval(aProfileX1(:,1),aProfileX2(:,1),[0]);
-                    mTemp = mTemp.*(mTemp > 0);
-                    aProfileX1(:,2) = sum(mTemp,1);
-                    aProfileX2(:,2) = sum(mTemp,2);
-                end % if
-                
-                dPeak = dPeak * max(mTemp(:));
+                case 'uniform'
+                    stProfile(1).Value = ones(1,stProfile(1).Length);
+                    stProfile(2).Value = ones(1,stProfile(2).Length);
+                    stProfile(3).Value = ones(1,stProfile(3).Length);
 
-            end % if
+                case 'channel'
+                    fprintf(2,'Channel particle profile calculations not implemented.+n');
+
+                case 'sphere'
+                    fprintf(2,'Spherical particle profile calculations not implemented.+n');
+
+                case 'math func'
+
+                    % Get Math Function
+                    try
+                        sFunction = stData.profile.math_func_expr{1};
+                    catch
+                        sFunction = '';
+                    end % try
+
+                    if ~isempty(sFunction)
+
+                        oMathFunc = MathFunc(sFunction);
+
+                        if iDim > 2
+                            mTemp = oMathFunc.Eval(stProfile(1).Axis,stProfile(2).stProfile(3).Axis);
+                            mTemp = mTemp.*(mTemp > 0);
+                            stProfile(1).Value = sum(mTemp,1);
+                            stProfile(2).Value = sum(mTemp,2);
+                            stProfile(3).Value = sum(mTemp,3);
+                        else
+                            mTemp = oMathFunc.Eval(stProfile(1).Axis,stProfile(2).Axis,[0]);
+                            mTemp = mTemp.*(mTemp > 0);
+                            stProfile(1).Value = sum(mTemp,1);
+                            stProfile(2).Value = sum(mTemp,2);
+                        end % if
+
+                        dPeak = dPeak * max(mTemp(:));
+
+                    end % if
+
+            end % switch
 
             % Save Profile Lineouts
-            stReturn.ProfileX1   = aProfileX1;
-            stReturn.ProfileX2   = aProfileX2;
-            stReturn.ProfileX3   = aProfileX3;
+            stReturn.ProfileX1   = stProfile(1);
+            stReturn.ProfileX2   = stProfile(2);
+            stReturn.ProfileX3   = stProfile(3);
             stReturn.PeakDensity = dPeak;
             
         end % function
