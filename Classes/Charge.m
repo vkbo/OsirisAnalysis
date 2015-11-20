@@ -54,7 +54,7 @@ classdef Charge < OsirisType
             if stSpecies.isSpecies
                 obj.Species = stSpecies;
             else
-                sDefault = obj.Data.Config.Variables.Species.WitnessBeam{1};
+                sDefault = obj.Data.Config.Particles.WitnessBeam{1};
                 fprintf(2, 'Error: ''%s'' is not a recognised species name. Using ''%s'' instead.\n', sSpecies, sDefault);
                 obj.Species = obj.Translate.Lookup(sDefault);
             end % if
@@ -75,7 +75,7 @@ classdef Charge < OsirisType
             stReturn = {};
 
             % Get simulation variables
-            dNMax = obj.Data.Config.Variables.Plasma.MaxPlasmaFac;
+            dNMax = obj.Data.Config.Simulation.MaxPlasmaFac;
             
             % Get data and axes
             aData   = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species.Name);
@@ -122,7 +122,7 @@ classdef Charge < OsirisType
             end % if
             
             % Get simulation variables
-            dE0     = obj.Data.Config.Variables.Convert.SI.E0;
+            dE0 = obj.Data.Config.Convert.SI.E0;
             
             % Get data and axes
             aData   = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species.Name);
@@ -157,9 +157,6 @@ classdef Charge < OsirisType
                 return;
             end % if
 
-            % Get simulation variables
-            sCoords = obj.Data.Config.Variables.Simulation.Coordinates;
-            
             if strcmpi(obj.Units, 'SI')
                 switch(sAxis)
                     case 'j1'
@@ -179,7 +176,7 @@ classdef Charge < OsirisType
             aX2Axis = obj.fGetBoxAxis('x2');
 
             % Check if cylindrical
-            if strcmpi(sCoords, 'cylindrical')
+            if obj.Cylindrical
                 aData   = transpose([fliplr(aData),aData]);
                 aX2Axis = [-fliplr(aX2Axis), aX2Axis];
             else
@@ -212,9 +209,9 @@ classdef Charge < OsirisType
                 aRange = [];
             end % if
             
-            dPlasmaFac = obj.Data.Config.Variables.Plasma.MaxPlasmaFac;
-            dXMin      = obj.Data.Config.Variables.Simulation.BoxX1Min;
-            dXMax      = obj.Data.Config.Variables.Simulation.BoxX1Max;
+            dPlasmaFac = obj.Data.Config.Simulation.MaxPlasmaFac;
+            dXMin      = obj.Data.Config.Simulation.XMin(1);
+            dXMax      = obj.Data.Config.Simulation.XMax(1);
             dBoxSize   = dXMax-dXMin;
             
             h5Data = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species.Name);
@@ -255,10 +252,10 @@ classdef Charge < OsirisType
             stOpt = oOpt.Results;
 
             % Simulation parameters
-            dPlasmaFac = obj.Data.Config.Variables.Plasma.MaxPlasmaFac;
-            iBoxNX     = obj.Data.Config.Variables.Simulation.BoxNX1;
-            dXMin      = obj.Data.Config.Variables.Simulation.BoxX1Min;
-            dXMax      = obj.Data.Config.Variables.Simulation.BoxX1Max;
+            dPlasmaFac = obj.Data.Config.Simulation.MaxPlasmaFac;
+            dXMin      = obj.Data.Config.Simulation.XMin(1);
+            dXMax      = obj.Data.Config.Simulation.XMax(1);
+            iBoxNX     = obj.Data.Config.Simulation.Grid(1);
             dBoxSize   = dXMax-dXMin;
 
             % Get dataset
@@ -320,10 +317,9 @@ classdef Charge < OsirisType
                 return;
             end % if
             
-            
-            dRAWFrac  = obj.Data.Config.Variables.Beam.(obj.Species.Name).RAWFraction;
-            dTFactor  = obj.Data.Config.Variables.Convert.SI.TimeFac;
-            dRQM      = obj.Data.Config.Variables.Beam.(obj.Species.Name).RQM;
+            dRawFrac  = obj.Data.Config.Particles.Species.(obj.Species.Name).RawFraction;
+            dTFactor  = obj.Data.Config.Convert.SI.TimeFac;
+            dRQM      = obj.Data.Config.Particles.Species.(obj.Species.Name).RQM;
             dSign     = dRQM/abs(dRQM);
             
             aRaw      = obj.Data.Data(obj.Time, 'RAW', '', obj.Species.Name);
@@ -351,22 +347,22 @@ classdef Charge < OsirisType
             
             % Total charge
             
-            dQ = sum(aRaw(:,8))/dRAWFrac; % Sum of RAW field q
+            dQ = sum(aRaw(:,8))/dRawFrac; % Sum of RAW field q
             dP = dQ*obj.ParticleFac;
             dQ = dQ*obj.ChargeFac;
             
             % Meta data
             
             iSCount  = nnz(aRaw(:,8));
-            dExact   = dQ/sqrt(iCount/dRAWFrac);
-            dSErrorQ = abs(dQ/(dRAWFrac*sqrt(iSCount))-dExact);
-            dSErrorP = abs(dP/(dRAWFrac*sqrt(iSCount))-dExact);
+            dExact   = dQ/sqrt(iCount/dRawFrac);
+            dSErrorQ = abs(dQ/(dRawFrac*sqrt(iSCount))-dExact);
+            dSErrorP = abs(dP/(dRawFrac*sqrt(iSCount))-dExact);
             
             % Return data
             
             stReturn.QTotal              = dQ;
             stReturn.Particles           = dP*dSign;
-            stReturn.RAWFraction         = dRAWFrac;
+            stReturn.RAWFraction         = dRawFrac;
             stReturn.RAWCount            = iCount;
             stReturn.SampleCount         = iSCount;
             stReturn.ChargeSampleError   = dSErrorQ;
@@ -380,11 +376,10 @@ classdef Charge < OsirisType
             stReturn = {};
 
             % Values
-            dMaxPlasma = obj.Data.Config.Variables.Plasma.MaxPlasmaFac;
-            sCoords    = obj.Data.Config.Variables.Simulation.Coordinates;
-            dRAWFrac   = obj.Data.Config.Variables.Beam.(obj.Species.Name).RAWFraction;
-            dTFactor   = obj.Data.Config.Variables.Convert.SI.TimeFac;
-            dRQM       = obj.Data.Config.Variables.Beam.(obj.Species.Name).RQM;
+            dMaxPlasma = obj.Data.Config.Simulation.MaxPlasmaFac;
+            dRawFrac   = obj.Data.Config.Particles.Species.(obj.Species.Name).RawFraction;
+            dRQM       = obj.Data.Config.Particles.Species.(obj.Species.Name).RQM;
+            dTFactor   = obj.Data.Config.Convert.SI.TimeFac;
 
             % Read input parameters
             oOpt = inputParser;
@@ -410,7 +405,7 @@ classdef Charge < OsirisType
             % Get axes
             aX1Axis = obj.fGetBoxAxis('x1');
             aX2Axis = obj.fGetBoxAxis('x2');
-            if strcmpi(sCoords, 'Cylindrical')
+            if obj.Cylindrical
                 aX2Axis = [-fliplr(aX2Axis) aX2Axis];
             end % if
 
@@ -544,7 +539,7 @@ classdef Charge < OsirisType
                 stBeamlets(i).Charge = sum(aRaw(:,8).*( ...
                                            aRaw(:,1) >= aX1Axis(aSpan(1,i)) & ...
                                            aRaw(:,1) <= aX1Axis(aSpan(2,i))   ...
-                                          ))*obj.ChargeFac/dRAWFrac;
+                                          ))*obj.ChargeFac/dRawFrac;
             end % for
             
             % Return data
@@ -557,7 +552,7 @@ classdef Charge < OsirisType
             stReturn.Prominence  = transpose(aProms);
             stReturn.Span        = aSpan;
             stReturn.Beamlets    = stBeamlets;
-            stReturn.TotalCharge = sum(aRaw(:,8))*obj.ChargeFac/dRAWFrac;
+            stReturn.TotalCharge = sum(aRaw(:,8))*obj.ChargeFac/dRawFrac;
             
         end % function
         
@@ -578,15 +573,14 @@ classdef Charge < OsirisType
             stOpt = oOpt.Results;
 
             % Read variables
-            sCoords   = obj.Data.Config.Variables.Simulation.Coordinates;
-            dTFactor  = obj.Data.Config.Variables.Convert.SI.TimeFac;
-            dEMass    = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
-            dRQM      = obj.Data.Config.Variables.Beam.(obj.Species.Name).RQM;
+            dTFactor  = obj.Data.Config.Convert.SI.TimeFac;
+            dEMass    = obj.Data.Config.Constants.ElectronMassMeV*1e6;
+            dRQM      = obj.Data.Config.Particles.Species.(obj.Species.Name).RQM;
             dSign     = dRQM/abs(dRQM);
             
             aRaw      = obj.Data.Data(stOpt.Time, 'RAW', '', obj.Species.Name);
             aRaw(:,1) = aRaw(:,1) - dTFactor*stOpt.Time;
-            if strcmpi(sCoords, 'cylindrical')
+            if obj.Cylindrical
                 aRaw(:,8) = aRaw(:,8)./aRaw(:,2);
             end % if
             
@@ -614,7 +608,7 @@ classdef Charge < OsirisType
                     iCount = length(aRaw(:,1));
                 end % if
 
-                if strcmpi(sCoords, 'cylindrical') && strcmpi(stOpt.Mirror, 'yes')
+                if obj.Cylindrical && strcmpi(stOpt.Mirror, 'yes')
                     aRaw = [aRaw; aRaw(:,1) -aRaw(:,2) aRaw(:,3:end)];
                 end % if
 
@@ -760,4 +754,3 @@ classdef Charge < OsirisType
     end % methods
     
 end % classdef
-

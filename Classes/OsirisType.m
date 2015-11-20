@@ -30,7 +30,7 @@ classdef OsirisType
         ParticleFac = 1.0;                       % Q-to-particles factor
         ChargeFac   = 1.0;                       % Q-to-charge factor
         Coords      = '';                        % Coordinates
-        Cylindrical = 0;                         % Is cylindrical, true/false
+        Cylindrical = false;                     % Is cylindrical, true/false
         Dim         = 0;                         % Dimensions
         BoxOffset   = 0.0;                       % Start of the box in simulation
 
@@ -63,24 +63,19 @@ classdef OsirisType
             stOpt = oOpt.Results;
 
             % Read config
-            dBoxX1Min = obj.Data.Config.Variables.Simulation.BoxX1Min;
-            dBoxX1Max = obj.Data.Config.Variables.Simulation.BoxX1Max;
-            dBoxX2Min = obj.Data.Config.Variables.Simulation.BoxX2Min;
-            dBoxX2Max = obj.Data.Config.Variables.Simulation.BoxX2Max;
-            dBoxX3Min = obj.Data.Config.Variables.Simulation.BoxX3Min;
-            dBoxX3Max = obj.Data.Config.Variables.Simulation.BoxX3Max;
-            sCoords   = obj.Data.Config.Variables.Simulation.Coordinates;
-            dLFactor  = obj.Data.Config.Variables.Convert.SI.LengthFac;
-            iDim      = obj.Data.Config.Variables.Simulation.Dimensions;
+            aXMin    = obj.Data.Config.Simulation.XMin;
+            aXMax    = obj.Data.Config.Simulation.XMax;
+            sCoords  = obj.Data.Config.Simulation.Coordinates;
+            bCyl     = obj.Data.Config.Simulation.Cylindrical;
+            dLFactor = obj.Data.Config.Convert.SI.LengthFac;
+            iDim     = obj.Data.Config.Simulation.Dimensions;
 
             % Set Scale and Units
-            obj.AxisScale = {stOpt.X1Scale, stOpt.X2Scale, stOpt.X3Scale};
-            obj.Dim       = iDim;
-            obj.Coords    = sCoords;
-            obj.Translate = Variables(sCoords);
-            if strcmpi(sCoords, 'cylindrical')
-                obj.Cylindrical = 1; % true
-            end % if
+            obj.AxisScale   = {stOpt.X1Scale, stOpt.X2Scale, stOpt.X3Scale};
+            obj.Dim         = iDim;
+            obj.Coords      = sCoords;
+            obj.Cylindrical = bCyl;
+            obj.Translate   = Variables(sCoords);
 
             % Evaluate units
             switch(lower(stOpt.Units))
@@ -93,12 +88,12 @@ classdef OsirisType
                     [dX3Fac, sX3Unit]  = obj.fLengthScale(obj.AxisScale{3}, 'm');
                     obj.AxisFac        = [dLFactor*dX1Fac, dLFactor*dX2Fac, dLFactor*dX3Fac];
                     obj.AxisUnits      = {sX1Unit, sX2Unit, sX3Unit};
-                    obj.AxisRange(1:2) = [dBoxX1Min dBoxX1Max]*obj.AxisFac(1);
-                    obj.AxisRange(3:4) = [dBoxX2Min dBoxX2Max]*obj.AxisFac(2);
-                    obj.AxisRange(5:6) = [dBoxX3Min dBoxX3Max]*obj.AxisFac(3);
+                    obj.AxisRange(1:2) = [aXMin(1) aXMax(1)]*obj.AxisFac(1);
+                    obj.AxisRange(3:4) = [aXMin(2) aXMax(2)]*obj.AxisFac(2);
+                    obj.AxisRange(5:6) = [aXMin(3) aXMax(3)]*obj.AxisFac(3);
                     
-                    obj.ParticleFac    = obj.Data.Config.Variables.Convert.SI.ParticleFac;
-                    obj.ChargeFac      = obj.Data.Config.Variables.Convert.SI.ChargeFac;
+                    obj.ParticleFac    = obj.Data.Config.Convert.SI.ParticleFac;
+                    obj.ChargeFac      = obj.Data.Config.Convert.SI.ChargeFac;
 
                 case 'cgs'
                     obj.Units = 'CGS';
@@ -108,12 +103,12 @@ classdef OsirisType
                     [dX3Fac, sX3Unit]  = obj.fLengthScale(obj.AxisScale{3}, 'cm');
                     obj.AxisFac        = [dLFactor*dX1Fac, dLFactor*dX2Fac, dLFactor*dX3Fac];
                     obj.AxisUnits      = {sX1Unit, sX2Unit, sX3Unit};
-                    obj.AxisRange(1:2) = [dBoxX1Min dBoxX1Max]*obj.AxisFac(1);
-                    obj.AxisRange(3:4) = [dBoxX2Min dBoxX2Max]*obj.AxisFac(2);
-                    obj.AxisRange(5:6) = [dBoxX3Min dBoxX3Max]*obj.AxisFac(3);
+                    obj.AxisRange(1:2) = [aXMin(1) aXMax(1)]*obj.AxisFac(1);
+                    obj.AxisRange(3:4) = [aXMin(2) aXMax(2)]*obj.AxisFac(2);
+                    obj.AxisRange(5:6) = [aXMin(3) aXMax(3)]*obj.AxisFac(3);
                     
-                    obj.ParticleFac    = obj.Data.Config.Variables.Convert.CGS.ParticleFac;
-                    obj.ChargeFac      = obj.Data.Config.Variables.Convert.CGS.ChargeFac;
+                    obj.ParticleFac    = obj.Data.Config.Convert.CGS.ParticleFac;
+                    obj.ChargeFac      = obj.Data.Config.Convert.CGS.ChargeFac;
 
                 otherwise
                     obj.Units = 'N';
@@ -124,21 +119,21 @@ classdef OsirisType
                     else
                         obj.AxisUnits = {'c/\omega_p', 'c_/\omega_p', 'c/\omega_p'};
                     end % if
-                    obj.AxisRange   = [dBoxX1Min dBoxX1Max dBoxX2Min dBoxX2Max dBoxX3Min dBoxX3Max];
+                    obj.AxisRange   = [aXMin(1) aXMax(1) aXMin(2) aXMax(2) aXMin(3) aXMax(3)];
 
-                    obj.ParticleFac = obj.Data.Config.Variables.Convert.Norm.ParticleFac;
-                    obj.ChargeFac   = obj.Data.Config.Variables.Convert.Norm.ChargeFac;
+                    obj.ParticleFac = obj.Data.Config.Convert.Norm.ParticleFac;
+                    obj.ChargeFac   = obj.Data.Config.Convert.Norm.ChargeFac;
 
             end % switch
 
             % Set defult axis limits
-            obj.X1Lim = [dBoxX1Min, dBoxX1Max]*obj.AxisFac(1);
+            obj.X1Lim = [aXMin(1) aXMax(1)]*obj.AxisFac(1);
             if obj.Cylindrical
-                obj.X2Lim = [-dBoxX2Max, dBoxX2Max]*obj.AxisFac(2);
+                obj.X2Lim = [-aXMax(2) aXMax(2)]*obj.AxisFac(2);
             else
-                obj.X2Lim = [ dBoxX2Min, dBoxX2Max]*obj.AxisFac(2);
+                obj.X2Lim = [ aXMin(2) aXMax(2)]*obj.AxisFac(2);
             end % if
-            obj.X3Lim = [dBoxX3Min, dBoxX3Max]*obj.AxisFac(3);
+            obj.X3Lim = [aXMin(3) aXMax(3)]*obj.AxisFac(3);
 
         end % function
 
@@ -180,8 +175,8 @@ classdef OsirisType
         
         function obj = set.X1Lim(obj, aX1Lim)
 
-            dBoxX1Min = obj.Data.Config.Variables.Simulation.BoxX1Min;
-            dBoxX1Max = obj.Data.Config.Variables.Simulation.BoxX1Max;
+            dX1Min = obj.Data.Config.Simulation.XMin(1);
+            dX1Max = obj.Data.Config.Simulation.XMax(1);
 
             if length(aX1Lim) ~= 2
                 fprintf(2, 'Error: x1 limit needs to be a vector of dimension 2.\n');
@@ -193,10 +188,10 @@ classdef OsirisType
                 return;
             end % if
 
-            if aX1Lim(1)/obj.AxisFac(1) < dBoxX1Min || aX1Lim(1)/obj.AxisFac(1) > dBoxX1Max ...
-            || aX1Lim(2)/obj.AxisFac(1) < dBoxX1Min || aX1Lim(2)/obj.AxisFac(1) > dBoxX1Max
-                fprintf('Warning: X1Lim input is out of range. Range is %.2f–%.2f %s.\n', dBoxX1Min*obj.AxisFac(1), dBoxX1Max*obj.AxisFac(1), obj.AxisUnits{1});
-                aX1Lim(1) = dBoxX1Min*obj.AxisFac(1);
+            if aX1Lim(1)/obj.AxisFac(1) < dX1Min || aX1Lim(1)/obj.AxisFac(1) > dX1Max ...
+            || aX1Lim(2)/obj.AxisFac(1) < dX1Min || aX1Lim(2)/obj.AxisFac(1) > dX1Max
+                fprintf('Warning: X1Lim input is out of range. Range is %.2f–%.2f %s.\n', dX1Min*obj.AxisFac(1), dX1Max*obj.AxisFac(1), obj.AxisUnits{1});
+                aX1Lim(1) = dX1Min*obj.AxisFac(1);
             end % if
 
             obj.X1Lim = aX1Lim/obj.AxisFac(1);
@@ -205,9 +200,8 @@ classdef OsirisType
          
         function obj = set.X2Lim(obj, aX2Lim)
  
-            dBoxX2Min = obj.Data.Config.Variables.Simulation.BoxX2Min;
-            dBoxX2Max = obj.Data.Config.Variables.Simulation.BoxX2Max;
-            sCoords   = obj.Data.Config.Variables.Simulation.Coordinates;
+            dX2Min = obj.Data.Config.Simulation.XMin(2);
+            dX2Max = obj.Data.Config.Simulation.XMax(2);
 
             if length(aX2Lim) ~= 2
                 fprintf(2, 'Error: x2 limit needs to be a vector of dimension 2.\n');
@@ -219,22 +213,22 @@ classdef OsirisType
                 return;
             end % if
             
-            if strcmpi(sCoords, 'cylindrical')
+            if obj.Cylindrical
 
-                if aX2Lim(1)/obj.AxisFac(2) < -dBoxX2Max || aX2Lim(1)/obj.AxisFac(2) > dBoxX2Max ...
-                || aX2Lim(2)/obj.AxisFac(2) < -dBoxX2Max || aX2Lim(2)/obj.AxisFac(2) > dBoxX2Max
+                if aX2Lim(1)/obj.AxisFac(2) < -dX2Max || aX2Lim(1)/obj.AxisFac(2) > dX2Max ...
+                || aX2Lim(2)/obj.AxisFac(2) < -dX2Max || aX2Lim(2)/obj.AxisFac(2) > dX2Max
                     fprintf('Warning: X2Lim input is out of range. Range is %.2f–%.2f %s.\n', ...
-                            -dBoxX2Max*obj.AxisFac(2), dBoxX2Max*obj.AxisFac(2), obj.AxisUnits{2});
-                    aX2Lim = [-dBoxX2Max*obj.AxisFac(2) dBoxX2Max*obj.AxisFac(2)];
+                            -dX2Max*obj.AxisFac(2), dX2Max*obj.AxisFac(2), obj.AxisUnits{2});
+                    aX2Lim = [-dX2Max*obj.AxisFac(2) dX2Max*obj.AxisFac(2)];
                 end % if
 
             else
                 
-                if aX2Lim(1)/obj.AxisFac(2) < dBoxX2Min || aX2Lim(1)/obj.AxisFac(2) > dBoxX2Max ...
-                || aX2Lim(2)/obj.AxisFac(2) < dBoxX2Min || aX2Lim(2)/obj.AxisFac(2) > dBoxX2Max
+                if aX2Lim(1)/obj.AxisFac(2) < dX2Min || aX2Lim(1)/obj.AxisFac(2) > dX2Max ...
+                || aX2Lim(2)/obj.AxisFac(2) < dX2Min || aX2Lim(2)/obj.AxisFac(2) > dX2Max
                     fprintf('Warning: X2Lim input is out of range. Range is %.2f–%.2f %s.\n', ...
-                            dBoxX2Min*obj.AxisFac(2), dBoxX2Max*obj.AxisFac(2), obj.AxisUnits{2});
-                    aX2Lim = [dBoxX2Min*obj.AxisFac(2) dBoxX2Max*obj.AxisFac(2)];
+                            dX2Min*obj.AxisFac(2), dX2Max*obj.AxisFac(2), obj.AxisUnits{2});
+                    aX2Lim = [dX2Min*obj.AxisFac(2) dX2Max*obj.AxisFac(2)];
                 end % if
 
             end % if
@@ -245,8 +239,8 @@ classdef OsirisType
  
         function obj = set.X3Lim(obj, aX3Lim)
 
-            dBoxX3Min = obj.Data.Config.Variables.Simulation.BoxX3Min;
-            dBoxX3Max = obj.Data.Config.Variables.Simulation.BoxX3Max;
+            dX3Min = obj.Data.Config.Simulation.XMin(3);
+            dX3Max = obj.Data.Config.Simulation.XMax(3);
 
             if length(aX3Lim) ~= 2
                 fprintf(2, 'Error: x3 limit needs to be a vector of dimension 2.\n');
@@ -258,11 +252,11 @@ classdef OsirisType
                 return;
             end % if
 
-            if aX3Lim(1)/obj.AxisFac(3) < dBoxX3Min || aX3Lim(1)/obj.AxisFac(3) > dBoxX3Max ...
-            || aX3Lim(2)/obj.AxisFac(3) < dBoxX3Min || aX3Lim(2)/obj.AxisFac(3) > dBoxX3Max
+            if aX3Lim(1)/obj.AxisFac(3) < dX3Min || aX3Lim(1)/obj.AxisFac(3) > dX3Max ...
+            || aX3Lim(2)/obj.AxisFac(3) < dX3Min || aX3Lim(2)/obj.AxisFac(3) > dX3Max
                 fprintf('Warning: X3Lim input is out of range. Range is %.2f–%.2f %s.\n', ...
-                        dBoxX3Min*obj.AxisFac(3), dBoxX3Max*obj.AxisFac(3), obj.AxisUnits{3});
-                aX3Lim = [dBoxX3Min*obj.AxisFac(3) dBoxX3Max*obj.AxisFac(3)];
+                        dX3Min*obj.AxisFac(3), dX3Max*obj.AxisFac(3), obj.AxisUnits{3});
+                aX3Lim = [dX3Min*obj.AxisFac(3) dX3Max*obj.AxisFac(3)];
             end % if
 
             obj.X3Lim = aX3Lim/obj.AxisFac(3);
@@ -281,8 +275,8 @@ classdef OsirisType
 
             sReturn = 'Unknown Position';
 
-            dLFactor = obj.Data.Config.Variables.Convert.SI.LengthFac;
-            dTFactor = obj.Data.Config.Variables.Convert.SI.TimeFac;
+            dLFactor = obj.Data.Config.Convert.SI.LengthFac;
+            dTFactor = obj.Data.Config.Convert.SI.TimeFac;
             iPStart  = obj.Data.StringToDump('PStart');
             iPEnd    = obj.Data.StringToDump('PEnd');
 
@@ -382,9 +376,9 @@ classdef OsirisType
             
             iDumps  = obj.Data.MSData.MaxFiles-1;
             
-            dPStart = obj.Data.Config.Variables.Plasma.PlasmaStart;
-            dTFac   = obj.Data.Config.Variables.Convert.SI.TimeFac;
-            dLFac   = obj.Data.Config.Variables.Convert.SI.LengthFac;
+            dPStart = obj.Data.Config.Simulation.PlasmaStart;
+            dTFac   = obj.Data.Config.Convert.SI.TimeFac;
+            dLFac   = obj.Data.Config.Convert.SI.LengthFac;
             
             aReturn = (linspace(0.0, dTFac*iDumps, iDumps+1)-dPStart)*dLFac;
             
@@ -394,19 +388,19 @@ classdef OsirisType
             
             switch sAxis
                 case 'x1'
-                    dXMin = obj.Data.Config.Variables.Simulation.BoxX1Min;
-                    dXMax = obj.Data.Config.Variables.Simulation.BoxX1Max;
-                    iNX   = obj.Data.Config.Variables.Simulation.BoxNX1;
+                    dXMin = obj.Data.Config.Simulation.XMin(1);
+                    dXMax = obj.Data.Config.Simulation.XMax(1);
+                    iNX   = obj.Data.Config.Simulation.Grid(1);
                     dLFac = obj.AxisFac(1);
                 case 'x2'
-                    dXMin = obj.Data.Config.Variables.Simulation.BoxX2Min;
-                    dXMax = obj.Data.Config.Variables.Simulation.BoxX2Max;
-                    iNX   = obj.Data.Config.Variables.Simulation.BoxNX2;
+                    dXMin = obj.Data.Config.Simulation.XMin(2);
+                    dXMax = obj.Data.Config.Simulation.XMax(2);
+                    iNX   = obj.Data.Config.Simulation.Grid(2);
                     dLFac = obj.AxisFac(2);
                 case 'x3'
-                    dXMin = obj.Data.Config.Variables.Simulation.BoxX3Min;
-                    dXMax = obj.Data.Config.Variables.Simulation.BoxX3Max;
-                    iNX   = obj.Data.Config.Variables.Simulation.BoxNX3;
+                    dXMin = obj.Data.Config.Simulation.XMin(3);
+                    dXMax = obj.Data.Config.Simulation.XMax(3);
+                    iNX   = obj.Data.Config.Simulation.Grid(3);
                     dLFac = obj.AxisFac(3);
             end % switch
 
@@ -416,9 +410,9 @@ classdef OsirisType
         
         function dReturn = fGetZPos(obj)
             
-            dLFactor = obj.Data.Config.Variables.Convert.SI.LengthFac;
-            dTFactor = obj.Data.Config.Variables.Convert.SI.TimeFac;
-            dPStart  = obj.Data.Config.Variables.Plasma.PlasmaStart;
+            dLFactor = obj.Data.Config.Convert.SI.LengthFac;
+            dTFactor = obj.Data.Config.Convert.SI.TimeFac;
+            dPStart  = obj.Data.Config.Simulation.PlasmaStart;
             
             dReturn  = (obj.Time*dTFactor - dPStart)*dLFactor;
             
@@ -427,4 +421,3 @@ classdef OsirisType
     end % methods
     
 end % classdef
-
