@@ -150,11 +150,11 @@ classdef Charge < OsirisType
             if strcmpi(obj.Units, 'SI')
                 switch(sAxis)
                     case 'j1'
-                        dJFac = obj.Data.Config.Variables.Convert.SI.J1Fac;
+                        dJFac = obj.Data.Config.Convert.SI.JFac(1);
                     case 'j2'
-                        dJFac = obj.Data.Config.Variables.Convert.SI.J2Fac;
+                        dJFac = obj.Data.Config.Convert.SI.JFac(2);
                     case 'j3'
-                        dJFac = obj.Data.Config.Variables.Convert.SI.J3Fac;
+                        dJFac = obj.Data.Config.Convert.SI.JFac(3);
                 end % switch
             else
                 dJFac = 1.0;
