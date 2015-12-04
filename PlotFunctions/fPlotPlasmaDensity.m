@@ -304,17 +304,18 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
             iA = 3;
         end % if
         
-        oEF = EField(oData,stField(i).Name,'Units','SI','X1Scale',oCH.AxisScale{1},'X2Scale','m');
-        oEF.Time = iTime;
+        oFLD = Field(oData,stField(i).Name,'Units','SI','X1Scale',oCH.AxisScale{1},'X2Scale','m');
+        oFLD.Time = iTime;
+        sFUnit   = oFLD.FieldUnit;
         
         if length(stOpt.Limits) == 4
-            oEF.X1Lim = stOpt.Limits(1:2);
+            oFLD.X1Lim = stOpt.Limits(1:2);
         end % if
 
-        stEF    = oEF.Lineout(iS,iA);
+        stEF    = oFLD.Lineout(iS,iA);
         aEFData = 0.15*(aRAxis(end)-aRAxis(1))*stEF.Data/max(abs(stEF.Data));
 
-        [dEne,  sEne]  = fAutoScale(max(abs(stEF.Data)), 'eV');
+        [dEne,  sEne]  = fAutoScale(max(abs(stEF.Data)), sFUnit);
         [dEVal, sUnit] = fAutoScale(stEF.X2Range(2), 'm');
         dSVal          = stEF.X2Range(1)*dEVal/stEF.X2Range(2);
         

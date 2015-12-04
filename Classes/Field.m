@@ -1,7 +1,7 @@
 
 %
-%  Class Object :: Analyse E-fields
-% **********************************
+%  Class Object :: Analyse Fields
+% ********************************
 %  SubClass of OsirisType
 %
 %  Description:
@@ -29,15 +29,17 @@
 %               of time dumps.
 %
 
-classdef EField < OsirisType
+classdef Field < OsirisType
 
     %
     % Properties
     %
 
-    properties(GetAccess = 'public', SetAccess = 'public')
+    properties(GetAccess='public', SetAccess='private')
         
-        Field = ''; % Field to analyse
+        FieldVar  = {};  % Holds field information
+        FieldFac  = 1.0; % Field scale factor
+        FieldUnit = 'N'; % Field base unit
         
     end % properties
 
@@ -47,18 +49,29 @@ classdef EField < OsirisType
 
     methods
         
-        function obj = EField(oData, sField, varargin)
+        function obj = Field(oData, sField, varargin)
             
             % Call OsirisType constructor
-            obj@OsirisType(oData, varargin{:});
+            obj@OsirisType(oData, '', varargin{:});
 
-            % Set field
+            % Set Field
             stField = obj.Translate.Lookup(sField);
-            if stField.isEField
-                obj.Field = stField;
+            if stField.isValidEMFDiag
+                obj.FieldVar = stField;
             else
-                fprintf(2, 'Error: ''%s'' is not a recognised electric field. Using ''e1'' instead.\n', sField);
-                obj.Field = obj.Translate.Lookup('e1');
+                fprintf(2, 'Error: ''%s'' is not a recognised field. Using ''e1'' instead.\n', sField);
+                obj.FieldVar = obj.Translate.Lookup('e1');
+            end % if
+            
+            if strcmpi(obj.Units,'SI')
+                if obj.FieldVar.isEField
+                    obj.FieldFac  = obj.Data.Config.Convert.SI.E0;
+                    obj.FieldUnit = 'eV';
+                end % if
+                if obj.FieldVar.isBField
+                    obj.FieldFac  = obj.Data.Config.Convert.SI.B0;
+                    obj.FieldUnit = 'T';
+                end % if
             end % if
             
         end % function
@@ -76,24 +89,21 @@ classdef EField < OsirisType
             % Input/Output
             stReturn = {};
 
-            % Get simulation variables
-            dE0 = obj.Data.Config.Convert.SI.E0;
-            
             % Get data and axes
-            aData   = obj.Data.Data(obj.Time, 'FLD', obj.Field.Name, '');
+            aData   = obj.Data.Data(obj.Time, 'FLD', obj.FieldVar.Name, '');
             aX1Axis = obj.fGetBoxAxis('x1');
             aX2Axis = obj.fGetBoxAxis('x2');
 
             % Check if cylindrical
             if obj.Cylindrical
-                if strcmpi(obj.Field.Name,'e3')
+                if obj.FieldVar.Dim == 3
                     aData = transpose([-fliplr(aData),aData]);
                 else
                     aData = transpose([fliplr(aData),aData]);
                 end % if
                 aX2Axis = [-fliplr(aX2Axis), aX2Axis];
             else
-                aData   = transpose(aData);
+                aData = transpose(aData);
             end % if
             
             iX1Min = fGetIndex(aX1Axis, obj.X1Lim(1)*obj.AxisFac(1));
@@ -102,7 +112,7 @@ classdef EField < OsirisType
             iX2Max = fGetIndex(aX2Axis, obj.X2Lim(2)*obj.AxisFac(2));
             
             % Crop and scale dataset
-            aData   = aData(iX2Min:iX2Max,iX1Min:iX1Max)*dE0;
+            aData   = aData(iX2Min:iX2Max,iX1Min:iX1Max)*obj.FieldFac;
             aX1Axis = aX1Axis(iX1Min:iX1Max);
             aX2Axis = aX2Axis(iX2Min:iX2Max);
             
@@ -127,11 +137,8 @@ classdef EField < OsirisType
                 iStart = 3;
             end % if
             
-            % Get simulation variables
-            dE0 = obj.Data.Config.Convert.SI.E0;
-            
             % Get data and axes
-            aData   = obj.Data.Data(obj.Time, 'FLD', obj.Field.Name, '');
+            aData   = obj.Data.Data(obj.Time, 'FLD', obj.FieldVar.Name, '');
             aX1Axis = obj.fGetBoxAxis('x1');
             aX2Axis = obj.fGetBoxAxis('x2');
             
@@ -140,7 +147,7 @@ classdef EField < OsirisType
             
             % Crop and scale dataset
             iEnd    = iStart+iAverage-1;
-            aData   = transpose(mean(aData(iX1Min:iX1Max,iStart:iEnd),2))*dE0;
+            aData   = transpose(mean(aData(iX1Min:iX1Max,iStart:iEnd),2))*obj.FieldFac;
             aX1Axis = aX1Axis(iX1Min:iX1Max);
             
             % Return data
@@ -173,7 +180,6 @@ classdef EField < OsirisType
             iStop  = obj.Data.StringToDump(sStop);
 
             % Get simulation variables
-            dE0   = obj.Data.Config.Convert.SI.E0;
             dTFac = obj.Data.Config.Convert.SI.TimeFac;
             dLFac = obj.Data.Config.Convert.SI.LengthFac;
             
@@ -184,9 +190,9 @@ classdef EField < OsirisType
             sVUnit = 'N';
             sTUnit = 'm';
 
-            switch(obj.Field.Name)
+            switch(obj.FieldVar.Dim)
 
-                case 'e1'
+                case 1
                     dVFac  = obj.AxisFac(1);
                     sVUnit = obj.AxisUnits{1};
                     aVAxis = obj.fGetBoxAxis('x1');
@@ -205,7 +211,7 @@ classdef EField < OsirisType
                         end % if
                     end % if
 
-                case 'e2'
+                case 2
                     dVFac  = obj.AxisFac(2);
                     sVUnit = obj.AxisUnits{2};
                     aVAxis = obj.fGetBoxAxis('x2');
@@ -224,7 +230,7 @@ classdef EField < OsirisType
                         end % if
                     end % if
                     
-                case 'e3'
+                case 3
                     return;
 
             end % switch
@@ -239,8 +245,8 @@ classdef EField < OsirisType
             aEnergy = zeros(length(aVAxis),length(aTAxis));
             for t=iStart:iStop
                 
-                aData = obj.Data.Data(t,'FLD',obj.Field.Name,'');
-                switch(obj.Field.Name)
+                aData = obj.Data.Data(t,'FLD',obj.FieldVar.Name,'');
+                switch(obj.FieldVar.Name)
                     case 'e1'
                         aEnergy(:,t-iStart+1) = mean(aData(aVLim(1):aVLim(2),aRange(1):aRange(2)),2);
                     case 'e2'
@@ -250,8 +256,8 @@ classdef EField < OsirisType
             end % for
 
             % Return data
-            stReturn.Energy    = aEnergy*dE0;
-            stReturn.Integral  = cumtrapz(aEnergy,2)*dE0*dTFac*dLFac;
+            stReturn.Energy    = aEnergy*obj.FieldFac;
+            stReturn.Integral  = cumtrapz(aEnergy,2)*obj.FieldFac*dTFac*dLFac;
             stReturn.GainFac   = 1/dTDiff;
             stReturn.VAxis     = aVAxis;
             stReturn.TAxis     = aTAxis;
