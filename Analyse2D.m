@@ -1100,14 +1100,10 @@ function Analyse2D
                     
                     case 'Beam Density'
                         figure(X.Plot(f).Figure); clf;
-                        if strcmpi(X.Plot(f).Density,'charge')
-                            sCurrent = '';
-                        else
-                            sCurrent = oVar.Reverse(X.Plot(f).Density,'Full');
-                        end % if
+                        sData = oVar.Reverse(X.Plot(f).Density,'Full');
                         iMakeSym = 1;
 
-                        X.Plot(f).Return = fPlotBeamDensity(oData,X.Time.Dump,X.Plot(f).Data,'Current',sCurrent, ...
+                        X.Plot(f).Return = fPlotBeamDensity(oData,X.Time.Dump,X.Plot(f).Data,'Data',sData, ...
                             'IsSubPlot','No','AutoResize','Off','HideDump','Yes','Absolute','Yes','ShowOverlay','Yes', ...
                             'Limits',[aHLim aVLim],'CAxis',X.Plot(f).CAxis);
 
