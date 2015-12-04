@@ -1554,6 +1554,10 @@ function Analyse2D
         sValue = strtrim(uiSrc.String);
         cValue = strsplit(sValue,' ');
         
+        if isempty(sValue)
+            cValue = {'0','1'};
+        end % if
+        
         if numel(cValue) == 1
             if iSym
                 aCAxis(1) = -abs(str2double(cValue{1}));
