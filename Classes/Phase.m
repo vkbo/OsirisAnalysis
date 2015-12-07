@@ -405,13 +405,15 @@ classdef Phase < OsirisType
                 dFac  = obj.AxisFac(iAxis);
                 sUnit = obj.AxisUnits{iAxis};
             elseif iAxis == 4 || iAxis == 5 || iAxis == 6
-                dFac  = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
+                dFac  = obj.Data.Config.Constants.ElectronMassMeV*1e6;
+                dFac  = dFac*obj.Config.RQM;
                 sUnit = 'eV/c';
             elseif iAxis == 7
-                dFac  = obj.Data.Config.Variables.Constants.ElectronMassMeV*1e6;
+                dFac  = obj.Data.Config.Constants.ElectronMassMeV*1e6;
+                dFac  = dFac*obj.Config.RQM;
                 sUnit = 'eV/c^2';
             elseif iAxis == 8
-                dFac  = obj.Data.Config.Variables.Convert.SI.ChargeFac;
+                dFac  = obj.Data.Config.Convert.SI.ChargeFac;
                 sUnit = 'C';
             end % if
 
@@ -461,7 +463,7 @@ classdef Phase < OsirisType
                 iDim = obj.Dim;
             end % if
             
-            stMap = obj.Data.Config.PhaseSpaces.Details;
+            stMap = obj.Config.PhaseSpaces.Details;
             
             [~,iN] = size(stMap);
             

@@ -926,9 +926,10 @@ function Analyse2D
             
             btnFig(f).BackgroundColor = cButtonOff;
             
-            X.Figure(f) = 0;
-            X.X1Link(f) = 0;
-            X.X2Sym(f)  = 0;
+            X.Plot(f).Enabled = 0;
+            X.Figure(f)       = 0;
+            X.X1Link(f)       = 0;
+            X.X2Sym(f)        = 0;
             X.Plot(f).MaxLim  = [0.0 0.0 0.0 0.0];
             X.Plot(f).Limits  = [0.0 0.0 0.0 0.0];
             X.Plot(f).LimPres = [2   2   2   2];

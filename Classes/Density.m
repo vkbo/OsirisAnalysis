@@ -64,6 +64,10 @@ classdef Density < OsirisType
             % Input/Output
             stReturn = {};
             
+            if nargin < 2
+                sDensity = 'charge';
+            end % if
+            
             % Density Diag
             vDensity = obj.Translate.Lookup(sDensity);
             if ~vDensity.isValidSpeciesDiag
@@ -104,7 +108,8 @@ classdef Density < OsirisType
                         sUnit  = 'n/n_0';
                         sLabel = '\rho';
                     case 'm'
-                        dScale = 1.0; % Not implemented
+                        dScale = 1/obj.Data.Config.Simulation.MaxPlasmaFac;
+                        sUnit  = 'n/n_0';
                     case 'ene'
                         dScale = 1.0; % Not implemented
                     case 'q1'
