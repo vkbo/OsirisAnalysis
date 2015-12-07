@@ -137,7 +137,7 @@ classdef Momentum < OsirisType
             stOpt = oOpt.Results;
             
             % Read simulation data
-            dEMass = obj.Data.Config.Constants.ElectronMassMeV*1e6;
+            dEMass = obj.Data.Config.Constants.EV.ElectronMass;
 
             % Calculate axes
             aTAxis = obj.fGetTimeAxis;
@@ -378,7 +378,7 @@ classdef Momentum < OsirisType
         function aReturn = MomentumToEnergy(obj, aMomentum)
             
             dRQM    = obj.Data.Config.Particles.Species.(obj.Species.Name).RQM;
-            dEMass  = obj.Data.Config.Constants.ElectronMassMeV*1e6;
+            dEMass  = obj.Data.Config.Constants.EV.ElectronMass;
             dPFac   = abs(dRQM)*dEMass;
             aReturn = sqrt(aMomentum.^2 + 1)*dPFac;
             

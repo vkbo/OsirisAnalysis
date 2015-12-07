@@ -606,7 +606,7 @@ classdef Density < OsirisType
 
             % Read variables
             dTFactor  = obj.Data.Config.Convert.SI.TimeFac;
-            dEMass    = obj.Data.Config.Constants.ElectronMassMeV*1e6;
+            dEMass    = obj.Data.Config.Constants.EV.ElectronMass;
             dRQM      = obj.Data.Config.Particles.Species.(obj.Species.Name).RQM;
             dSign     = dRQM/abs(dRQM);
             

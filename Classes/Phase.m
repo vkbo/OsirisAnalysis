@@ -246,7 +246,7 @@ classdef Phase < OsirisType
             stOpt = oOpt.Results;
             
             % Get dataset values
-            dEMass = obj.Data.Config.Constants.ElectronMassMeV*1e6;
+            dEMass = obj.Data.Config.Constants.EV.ElectronMass;
             dTFac  = obj.Data.Config.Convert.SI.TimeFac;
             dQFac  = obj.Data.Config.Convert.SI.ChargeFac;
             
@@ -405,11 +405,11 @@ classdef Phase < OsirisType
                 dFac  = obj.AxisFac(iAxis);
                 sUnit = obj.AxisUnits{iAxis};
             elseif iAxis == 4 || iAxis == 5 || iAxis == 6
-                dFac  = obj.Data.Config.Constants.ElectronMassMeV*1e6;
+                dFac  = obj.Data.Config.Constants.EV.ElectronMass;
                 dFac  = dFac*obj.Config.RQM;
                 sUnit = 'eV/c';
             elseif iAxis == 7
-                dFac  = obj.Data.Config.Constants.ElectronMassMeV*1e6;
+                dFac  = obj.Data.Config.Constants.EV.ElectronMass;
                 dFac  = dFac*obj.Config.RQM;
                 sUnit = 'eV/c^2';
             elseif iAxis == 8
@@ -568,7 +568,7 @@ classdef Phase < OsirisType
 
                 % Momentum
                 if vAxis.isMomentum || vAxis.isAngular
-                    stReturn.Fac  = obj.Data.Config.Constants.ElectronMassMeV*1e6;
+                    stReturn.Fac  = obj.Data.Config.Constants.EV.ElectronMass;
                     stReturn.Unit = 'eV/c';
                 end % if
                 
@@ -614,7 +614,7 @@ classdef Phase < OsirisType
                 % Energy Deposit
                 % Not checked for sanity
                 if strcmpi(vDeposit.Name, 'ene')
-                    stReturn.Fac  = obj.Data.Config.Constants.ElectronMassMeV*1e6;
+                    stReturn.Fac  = obj.Data.Config.Constants.EV.ElectronMass;
                     stReturn.Unit = 'eV/c^2';
                 end % if
 

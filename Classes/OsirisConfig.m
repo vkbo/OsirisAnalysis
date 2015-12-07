@@ -49,15 +49,20 @@ classdef OsirisConfig
         function obj = OsirisConfig()
             
             % SI Constants
-            obj.Constants.SpeedOfLight        =  2.99792458e8;    % m/s (exact)
-            obj.Constants.ElectronMass        =  9.10938291e-31;  % kg
-            obj.Constants.ElectronMassMeV     =  5.109989282e-1;  % MeV/c^2
-            obj.Constants.ElementaryCharge    =  1.602176565e-19; % C
-            obj.Constants.VacuumPermitivity   =  8.854187817e-12; % F/m 
-            obj.Constants.VacuumPermeability  =  1.2566370614e-6; % N/A^2
+            obj.Constants.SI.SpeedOfLight       =  2.99792458e8;    % m/s (exact)
+            obj.Constants.SI.ElectronMass       =  9.10938291e-31;  % kg
+            obj.Constants.SI.ElementaryCharge   =  1.602176565e-19; % C
+            obj.Constants.SI.VacuumPermitivity  =  8.854187817e-12; % F/m 
+            obj.Constants.SI.VacuumPermeability =  1.2566370614e-6; % N/A^2
+            obj.Constants.SI.Boltzmann          =  1.38064852e-23;  % J/K
+            
+            % Electron Volts
+            obj.Constants.EV.ElectronMass       =  5.109989282e5;   % eV/c^2
+            obj.Constants.EV.Boltzmann          =  8.6173324e-5;    % eV/K
 
             % CGS Constants
-            obj.Constants.ElementaryChargeCGS =  4.80320425e-10;  % statC
+            obj.Constants.CGS.ElementaryCharge  =  4.80320425e-10;  % statC
+            obj.Constants.CGS.Boltzmann         =  1.38064852e-16;  % erg/K
 
             % Translae Class for Variables
             obj.Translate = Variables();
@@ -485,7 +490,7 @@ classdef OsirisConfig
             dC          = obj.Constants.SpeedOfLight;
             dECharge    = obj.Constants.ElementaryCharge;
             dEChargeCGS = obj.Constants.ElementaryChargeCGS;
-            dEMass      = obj.Constants.ElectronMass;
+            dEMass      = obj.Constants.SI.ElectronMass;
             dEpsilon0   = obj.Constants.VacuumPermitivity;
             dMu0        = obj.Constants.VacuumPermeability;
 
