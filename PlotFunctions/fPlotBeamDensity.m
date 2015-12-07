@@ -62,7 +62,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     iTime = oData.StringToDump(num2str(sTime));
 
     oOpt = inputParser;
-    addParameter(oOpt, 'Current',     '');
+    addParameter(oOpt, 'Data',        'charge');
     addParameter(oOpt, 'Limits',      []);
     addParameter(oOpt, 'Charge',      []);
     addParameter(oOpt, 'FigureSize',  [900 500]);
@@ -86,25 +86,18 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
         return;
     end % if
 
-    
     % Prepare Data
     
-    oCH      = Charge(oData, vBeam.Name, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
-    oCH.Time = iTime;
+    oDN      = Density(oData, vBeam.Name, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
+    oDN.Time = iTime;
 
     if length(stOpt.Limits) == 4
-        oCH.X1Lim = stOpt.Limits(1:2);
-        oCH.X2Lim = stOpt.Limits(3:4);
+        oDN.X1Lim = stOpt.Limits(1:2);
+        oDN.X2Lim = stOpt.Limits(3:4);
     end % if
     
-    if isempty(stOpt.Current)
-        stData = oCH.Density;
-        vData  = oData.Translate.Lookup('charge','Quantity');
-    else
-        stData = oCH.Current(stOpt.Current);
-        vData  = oData.Translate.Lookup(stOpt.Current,'Current');
-    end % if
-    
+    vData  = oData.Translate.Lookup(stOpt.Data);
+    stData = oDN.Density2D(vData.Name);
     
     if isempty(stData)
         fprintf(2, 'Error: No data.\n');
@@ -113,21 +106,21 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     end % if
 
     aData  = stData.Data;
+    sUnit  = stData.Unit;
+    sLabel = stData.Label;
     aZAxis = stData.X1Axis;
     aRAxis = stData.X2Axis;
     dZPos  = stData.ZPos;
     
-    if ~isempty(stOpt.Current)
-        dMax  = max(abs(aData(:)));
-        [dCMax,dCUnit] = fAutoScale(dMax,'A');
-        aData = aData*dCMax/dMax;
-    end % if
+    dMax  = max(abs(aData(:)));
+    [dSMax,sSUnit] = fAutoScale(dMax,sUnit);
+    aData = aData*dSMax/dMax;
 
     stReturn.X1Axis    = stData.X1Axis;
     stReturn.X2Axis    = stData.X2Axis;
     stReturn.ZPos      = stData.ZPos;
-    stReturn.AxisFac   = oCH.AxisFac;
-    stReturn.AxisRange = oCH.AxisRange;
+    stReturn.AxisFac   = oDN.AxisFac;
+    stReturn.AxisRange = oDN.AxisRange;
     
     if strcmpi(stOpt.Absolute, 'Yes')
         aData = abs(aData);
@@ -139,11 +132,11 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     if length(stOpt.Charge) == 2
         [~,iZPeak] = max(sum(abs(aData),1));
         [~,iRPeak] = max(sum(abs(aData),2));
-        stQTot = oCH.BeamCharge('Ellipse', [aZAxis(iZPeak), 0, stOpt.Charge(1), stOpt.Charge(2)]);
+        stQTot = oDN.BeamCharge('Ellipse', [aZAxis(iZPeak), 0, stOpt.Charge(1), stOpt.Charge(2)]);
     elseif length(stOpt.Charge) == 4
-        stQTot = oCH.BeamCharge('Ellipse', [stOpt.Charge(1), stOpt.Charge(2), stOpt.Charge(3), stOpt.Charge(4)]);
+        stQTot = oDN.BeamCharge('Ellipse', [stOpt.Charge(1), stOpt.Charge(2), stOpt.Charge(3), stOpt.Charge(4)]);
     else
-        stQTot = oCH.BeamCharge;
+        stQTot = oDN.BeamCharge;
     end % if
     [dQ, sQUnit] = fAutoScale(stQTot.QTotal,'C');
     sBeamCharge  = sprintf('Q_{tot} = %.2f %s', dQ, sQUnit);
@@ -190,19 +183,15 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     end % if
 
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s %s Density %s (%s #%d)',vBeam.Full,vData.Full,oCH.PlasmaPosition,oData.Config.Name,iTime);
+        sTitle = sprintf('%s %s Density %s (%s #%d)',vBeam.Full,vData.Full,oDN.PlasmaPosition,oData.Config.Name,iTime);
     else
-        sTitle = sprintf('%s %s Density %s',vBeam.Full,vData.Full,oCH.PlasmaPosition);
+        sTitle = sprintf('%s %s Density %s',vBeam.Full,vData.Full,oDN.PlasmaPosition);
     end % if
 
     title(sTitle);
     xlabel('\xi [mm]');
     ylabel('r [mm]');
-    if isempty(stOpt.Current)
-        title(hCol,'n_{pe}/n_0');
-    else
-        title(hCol,sprintf('%s %s',vData.Tex,dCUnit));
-    end % if
+    title(hCol,sprintf('%s [%s]',sLabel,sSUnit));
     
     hold off;
     
@@ -214,4 +203,4 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     stReturn.YLim  = ylim;
     stReturn.CLim  = caxis;
     
-end
+end % function

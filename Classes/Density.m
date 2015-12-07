@@ -1,7 +1,7 @@
 
 %
-%  Class Object :: Analyse Charge
-% ********************************
+%  Class Object :: Analyse Density
+% *********************************
 %  SubClass of OsirisType
 %
 %  Description:
@@ -26,7 +26,7 @@
 %  Public Methods:
 %
 
-classdef Charge < OsirisType
+classdef Density < OsirisType
 
     %
     % Properties
@@ -44,7 +44,7 @@ classdef Charge < OsirisType
 
     methods
         
-        function obj = Charge(oData, sSpecies, varargin)
+        function obj = Density(oData, sSpecies, varargin)
             
             % Call OsirisType constructor
             obj@OsirisType(oData, sSpecies, varargin{:});
@@ -59,16 +59,24 @@ classdef Charge < OsirisType
     
     methods(Access = 'public')
         
-        function stReturn = Density(obj)
+        function stReturn = Density2D(obj, sDensity)
             
             % Input/Output
             stReturn = {};
-
-            % Get simulation variables
-            dNMax = obj.Data.Config.Simulation.MaxPlasmaFac;
             
+            if nargin < 2
+                sDensity = 'charge';
+            end % if
+            
+            % Density Diag
+            vDensity = obj.Translate.Lookup(sDensity);
+            if ~vDensity.isValidSpeciesDiag
+                fprintf(2,'Error: Not a valid density diagnostics.\n');
+                return;
+            end % if
+
             % Get data and axes
-            aData   = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species.Name);
+            aData   = obj.Data.Data(obj.Time, 'DENSITY', vDensity.Name, obj.Species.Name);
             aX1Axis = obj.fGetBoxAxis('x1');
             aX2Axis = obj.fGetBoxAxis('x2');
 
@@ -85,13 +93,47 @@ classdef Charge < OsirisType
             iX2Min = fGetIndex(aX2Axis, obj.X2Lim(1)*obj.AxisFac(2));
             iX2Max = fGetIndex(aX2Axis, obj.X2Lim(2)*obj.AxisFac(2));
 
-            % Crop and scale dataset
-            aData   = aData(iX2Min:iX2Max,iX1Min:iX1Max)/dNMax;
+            % Crop dataset
+            aData   = aData(iX2Min:iX2Max,iX1Min:iX1Max);
             aX1Axis = aX1Axis(iX1Min:iX1Max);
             aX2Axis = aX2Axis(iX2Min:iX2Max);
             
+            % Scale dataset
+            if strcmpi(obj.Units, 'SI')
+                sUnit  = vDensity.Unit;
+                sLabel = vDensity.Tex;
+                switch(vDensity.Name)
+                    case 'charge'
+                        dScale = 1/obj.Data.Config.Simulation.MaxPlasmaFac;
+                        sUnit  = 'n/n_0';
+                        sLabel = '\rho';
+                    case 'm'
+                        dScale = 1/obj.Data.Config.Simulation.MaxPlasmaFac;
+                        sUnit  = 'n/n_0';
+                    case 'ene'
+                        dScale = 1.0; % Not implemented
+                    case 'q1'
+                        dScale = 1.0; % Not implemented
+                    case 'q2'
+                        dScale = 1.0; % Not implemented
+                    case 'q3'
+                        dScale = 1.0; % Not implemented
+                    case 'j1'
+                        dScale = obj.Data.Config.Convert.SI.JFac(1);
+                    case 'j2'
+                        dScale = obj.Data.Config.Convert.SI.JFac(2);
+                    case 'j3'
+                        dScale = obj.Data.Config.Convert.SI.JFac(3);
+                end % switch
+            else
+                dScale = 1.0;
+                sUnit  = '';
+            end % if
+            
             % Return data
-            stReturn.Data   = aData;
+            stReturn.Data   = aData*dScale;
+            stReturn.Unit   = sUnit;
+            stReturn.Label  = sLabel;
             stReturn.X1Axis = aX1Axis;
             stReturn.X2Axis = aX2Axis;
             stReturn.ZPos   = obj.fGetZPos();

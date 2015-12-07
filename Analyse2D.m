@@ -926,9 +926,10 @@ function Analyse2D
             
             btnFig(f).BackgroundColor = cButtonOff;
             
-            X.Figure(f) = 0;
-            X.X1Link(f) = 0;
-            X.X2Sym(f)  = 0;
+            X.Plot(f).Enabled = 0;
+            X.Figure(f)       = 0;
+            X.X1Link(f)       = 0;
+            X.X2Sym(f)        = 0;
             X.Plot(f).MaxLim  = [0.0 0.0 0.0 0.0];
             X.Plot(f).Limits  = [0.0 0.0 0.0 0.0];
             X.Plot(f).LimPres = [2   2   2   2];
@@ -1100,14 +1101,10 @@ function Analyse2D
                     
                     case 'Beam Density'
                         figure(X.Plot(f).Figure); clf;
-                        if strcmpi(X.Plot(f).Density,'charge')
-                            sCurrent = '';
-                        else
-                            sCurrent = oVar.Reverse(X.Plot(f).Density,'Full');
-                        end % if
+                        sData = oVar.Reverse(X.Plot(f).Density,'Full');
                         iMakeSym = 1;
 
-                        X.Plot(f).Return = fPlotBeamDensity(oData,X.Time.Dump,X.Plot(f).Data,'Current',sCurrent, ...
+                        X.Plot(f).Return = fPlotBeamDensity(oData,X.Time.Dump,X.Plot(f).Data,'Data',sData, ...
                             'IsSubPlot','No','AutoResize','Off','HideDump','Yes','Absolute','Yes','ShowOverlay','Yes', ...
                             'Limits',[aHLim aVLim],'CAxis',X.Plot(f).CAxis);
 

@@ -74,11 +74,12 @@ classdef OsirisType
                 stSpecies = obj.Translate.Lookup(sSpecies);
                 if stSpecies.isSpecies
                     obj.Species = stSpecies;
-                    obj.Config  = obj.Data.Config.Particles.Species.(stSpecies.Name);
+                    obj.Config  = obj.Data.Config.Particles.Species.(obj.Species.Name);
                 else
                     sDefault = obj.Data.Config.Particles.WitnessBeam{1};
                     fprintf(2, 'Error: ''%s'' is not a recognised species name. Using ''%s'' instead.\n', sSpecies, sDefault);
                     obj.Species = obj.Translate.Lookup(sDefault);
+                    obj.Config  = obj.Data.Config.Particles.Species.(obj.Species.Name);
                 end % if
             end % if
             

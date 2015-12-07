@@ -1218,7 +1218,7 @@ classdef OsirisConfig
                     switch(sType)
 
                         case 'gaussian'
-                            fprintf(2,'Gaussian particle profile calculations not implemented.+n');
+                            fprintf(2,'Gaussian particle profile calculations not implemented.\n');
 
                         case 'piecewise-linear'
                             
@@ -1268,10 +1268,10 @@ classdef OsirisConfig
                     stProfile(3).Value = ones(1,stProfile(3).Length);
 
                 case 'channel'
-                    fprintf(2,'Channel particle profile calculations not implemented.+n');
+                    fprintf(2,'Channel particle profile calculations not implemented.\n');
 
                 case 'sphere'
-                    fprintf(2,'Spherical particle profile calculations not implemented.+n');
+                    fprintf(2,'Spherical particle profile calculations not implemented.\n');
 
                 case 'math func'
 

@@ -87,7 +87,7 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
         oFLD.X2Lim = stOpt.Limits(3:4);
     end % if
     
-    stData = oFLD.Density;
+    stData = oFLD.Density2D;
 
     aData  = stData.Data;
     aZAxis = stData.X1Axis;

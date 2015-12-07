@@ -84,7 +84,7 @@ classdef Field < OsirisType
     
     methods(Access = 'public')
         
-        function stReturn = Density(obj)
+        function stReturn = Density2D(obj)
 
             % Input/Output
             stReturn = {};

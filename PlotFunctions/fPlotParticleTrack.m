@@ -81,13 +81,13 @@ function stReturn = fPlotParticleTrack(oData, sSpecies, sTrack, varargin)
 
     
     % Data
-    oCH = Charge(oData,vSpecies.Name,'Units','SI','X1Scale','mm','X2Scale','mm');
+    oDN = Density(oData,vSpecies.Name,'Units','SI','X1Scale','mm','X2Scale','mm');
     if length(stOpt.Limits) == 4
-        oCH.X1Lim = stOpt.Limits(1:2);
-        oCH.X2Lim = stOpt.Limits(3:4);
+        oDN.X1Lim = stOpt.Limits(1:2);
+        oDN.X2Lim = stOpt.Limits(3:4);
     end % if
 
-    stData = oCH.Tracking(stOpt.Start,stOpt.End,'Sample',stOpt.Sample,'Filter',stOpt.Filter,'Weights',stOpt.Weights);
+    stData = oDN.Tracking(stOpt.Start,stOpt.End,'Sample',stOpt.Sample,'Filter',stOpt.Filter,'Weights',stOpt.Weights);
 
     if isempty(stData)
         fprintf(2, 'Error: No data.\n');
@@ -118,7 +118,7 @@ function stReturn = fPlotParticleTrack(oData, sSpecies, sTrack, varargin)
 
     dScale = 1.0;
     if iTrack < 4
-        sUnit = oCH.AxisUnits{iTrack};
+        sUnit = oDN.AxisUnits{iTrack};
     else
         sUnit = 'eV/c';
         [dTemp,sUnit] = fAutoScale(dMax,sUnit);
