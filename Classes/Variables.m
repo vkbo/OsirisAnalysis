@@ -16,7 +16,7 @@ classdef Variables
 
     end % properties
 
-    properties(GetAccess='public', SetAccess='private')
+    properties(GetAccess='private', SetAccess='private')
 
         Types = {};
         Map   = {};
@@ -30,6 +30,12 @@ classdef Variables
     methods
 
         function obj = Variables(vCoords)
+            
+            %
+            %  Variables :: Constructor
+            % **************************
+            %  The constructor generates the full translation map on the fly.
+            %
 
             %
             % Check Inputs
@@ -632,6 +638,18 @@ classdef Variables
         
         function stReturn = Lookup(obj, sVar, vType)
             
+            %
+            %  Variables :: Lookup
+            % *********************
+            %  Lookup a variable and extract its type, full name, units, etc.
+            %
+            %  Input
+            % =======
+            %  sVar  :: Variable name. Required.
+            %  vType :: String or cell array of types to scan.
+            %           Default: Scans all types.
+            %
+            
             % Return
             stReturn.Original = sVar;
             stReturn.Name     = sVar;
@@ -733,6 +751,18 @@ classdef Variables
 
         function sReturn = Reverse(obj, sVar, sFrom)
             
+            %
+            %  Variables :: Reverse
+            % **********************
+            %  Reverse lookup of an output variable type to find the variable name
+            %
+            %  Input
+            % =======
+            %  sVar  :: Variable to lookup. Required.
+            %  sFrom :: Variable output type to do reverse lookup on.
+            %           Default: 'Full'
+            %
+            
             sReturn = '';
             
             if nargin < 3
@@ -763,6 +793,18 @@ classdef Variables
         end % function
         
         function stReturn = EvalPhaseSpace(obj, vVar)
+            
+            %
+            %  Variables :: EvalPhaseSpace
+            % *****************************
+            %  Analyses PhaseSpace diagnostics and extract the various variables
+            %  used and sets up a break down of these in a table.
+            %
+            %  Input
+            % =======
+            %  vVar :: String or cell array of phasespace variables.
+            %          Compatible with data from OsirisConfig class.
+            %
             
             % Output
             stReturn.Details = {};

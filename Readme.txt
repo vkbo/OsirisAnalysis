@@ -16,10 +16,23 @@
  =====================
 
   Version 1.3
-  - Current
+  - Bug fixes.
+  - OsirisConfig input deck parser has been completely rewritten to parse all types of input decks, in
+    principle, and now stores the raw input deck as a struct. The relevant variables are then extracted and
+    stored in appropriate places. This makes it much easier to implement analysis that needs settings not
+    used before.
+  - OsirisConfig now has the option to set a simulation N0 and a physics N0 that overrides whatever is
+    extracted from the input deck. They are called SimN0 and PhysN0 respectively.
+  - Merged BField and EField into single class Field.
+  - Renamed Charge class to Density, as it now handles all types of densities. This involved renaming the
+    Density method to Density2D. The corresponding method in Phase class was also renamed.
+  - Added RawHist1D method to Phase class to analyse the various columns in raw data (macro particles).
+    This involved adding the function fAccu1D to generate histograms of weighted data.
+  - Various updates to the Variables class. Added fields for standard unit and the number of the dimension
+    the variable belongs to. E.g.: x1 -> Dim = 1, p2 -> Dim = 2, etc.
 
   Version 1.2.1
-  - Bug fixes
+  - Bug fixes.
   - More code cleanup. Including removing fExtractEQ that has been replaced by class MathFunc.
   - Added CAxis as an option to all five standard plots.
   - Fixed reloading of vriables when switching datasets for all plots.
