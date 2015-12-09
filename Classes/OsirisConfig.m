@@ -1205,6 +1205,7 @@ classdef OsirisConfig
             end % for
 
             dPeak = dDensity;
+            dVol  = 0.0;
             
             % With Type Set for Each Dimension
 
@@ -1297,6 +1298,8 @@ classdef OsirisConfig
                             stProfile(1).Value = sum(mTemp,1);
                             stProfile(2).Value = sum(mTemp,2);
                             stProfile(3).Value = sum(mTemp,3);
+                            if obj.Simulation.Cylindrical
+                            end % if
                         else
                             mTemp = oMathFunc.Eval(stProfile(1).Axis,stProfile(2).Axis,[0]);
                             mTemp = mTemp.*(mTemp > 0);

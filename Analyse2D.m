@@ -1257,13 +1257,13 @@ function Analyse2D
                         sStart = get(edtT9(1),'String');
                         sEnd   = get(edtT9(2),'String');
                         figure(X.Plot(f).Figure); clf;
-                        fPlotESigmaMeanRatio(oData,X.Data.Witness{1},'Start',sStart,'End',sEnd,'HideDump','Yes','IsSubPlot','No','AutoResize','Off');
+                        fPlotESigmaMeanRatio(oData,X.Plot(f).Data,'Start',sStart,'End',sEnd,'HideDump','Yes','IsSubPlot','No','AutoResize','Off');
 
                     case 9
                         sStart = get(edtT10(1),'String');
                         sEnd   = get(edtT10(2),'String');
                         figure(X.Plot(f).Figure); clf;
-                        fPlotBeamSlip(oData,X.Data.Witness{1},'Start',sStart,'End',sEnd,'HideDump','Yes','IsSubPlot','No','AutoResize','Off');
+                        fPlotBeamSlip(oData,X.Plot(f).Data,'Start',sStart,'End',sEnd,'HideDump','Yes','IsSubPlot','No','AutoResize','Off');
 
                     case 10
                         figure(X.Plot(f).Figure); clf;
