@@ -1305,9 +1305,9 @@ classdef OsirisConfig
                             mTemp = oMathFunc.Eval(stProfile(1).Axis,stProfile(2).Axis,[0]);
                             mTemp = mTemp.*(mTemp > 0);
                             stProfile(1).Value = sum(mTemp,1);
-                            stProfile(2).Value = sum(mTemp,2);
+                            stProfile(2).Value = sum(mTemp,2)';
                             if obj.Simulation.Cylindrical
-                                aRVec   = stProfile(2).Axis + 0.5*stProfile(2).Delta;
+                                aRVec   = stProfile(2).Axis; % + 0.5*stProfile(2).Delta;
                                 aTemp   = bsxfun(@times,mTemp,aRVec');
                                 dCharge = sum(aTemp(:))*dDeltaCorr;
                             else
@@ -1329,7 +1329,7 @@ classdef OsirisConfig
             stReturn.ProfileX2   = stProfile(2);
             stReturn.ProfileX3   = stProfile(3);
             stReturn.PeakDensity = dPeak;
-            stReturn.Charge      = dCharge;
+            stReturn.Charge      = dCharge*dDensity;
             
         end % function
 
