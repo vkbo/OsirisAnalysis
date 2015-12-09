@@ -25,11 +25,13 @@
     extracted from the input deck. They are called SimN0 and PhysN0 respectively.
   - Merged BField and EField into single class Field.
   - Renamed Charge class to Density, as it now handles all types of densities. This involved renaming the
-    Density method to Density2D. The corresponding method in Phase class was also renamed.
+    Density method to Density2D. The corresponding method in Phase class was also renamed for consistency.
   - Added RawHist1D method to Phase class to analyse the various columns in raw data (macro particles).
     This involved adding the function fAccu1D to generate histograms of weighted data.
   - Various updates to the Variables class. Added fields for standard unit and the number of the dimension
     the variable belongs to. E.g.: x1 -> Dim = 1, p2 -> Dim = 2, etc.
+  - OsirisConfig now calculates total charge for all species, and this is used in OsirisData.BeamInfo().
+  - OsirisData.BeamInfo() now calculates mean and sigma for gaussian beams again.
 
   Version 1.2.1
   - Bug fixes.
