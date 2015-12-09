@@ -1177,6 +1177,7 @@ classdef OsirisConfig
             stProfile(3).Value  = [];
             stProfile(3).Delta  = [];
             stProfile(3).Length = [];
+            dDeltaCorr          = 1.0;
             
             for d=1:iDim
             
@@ -1193,6 +1194,7 @@ classdef OsirisConfig
 
                 % Set Minimum Resolution
                 if iN < 1000
+                    dDeltaCorr = dDeltaCorr * iN/1000;
                     iN = 1000;
                 end % if
 
@@ -1204,8 +1206,8 @@ classdef OsirisConfig
 
             end % for
 
-            dPeak = dDensity;
-            dVol  = 0.0;
+            dPeak   = dDensity;
+            dCharge = 0.0;
             
             % With Type Set for Each Dimension
 
@@ -1298,13 +1300,22 @@ classdef OsirisConfig
                             stProfile(1).Value = sum(mTemp,1);
                             stProfile(2).Value = sum(mTemp,2);
                             stProfile(3).Value = sum(mTemp,3);
-                            if obj.Simulation.Cylindrical
-                            end % if
+                            dCharge = sum(mTemp(:))*dDeltaCorr;
                         else
                             mTemp = oMathFunc.Eval(stProfile(1).Axis,stProfile(2).Axis,[0]);
                             mTemp = mTemp.*(mTemp > 0);
                             stProfile(1).Value = sum(mTemp,1);
                             stProfile(2).Value = sum(mTemp,2);
+                            if obj.Simulation.Cylindrical
+                                aRVec   = stProfile(2).Axis + 0.5*stProfile(2).Delta;
+                                aTemp   = bsxfun(@times,mTemp,aRVec');
+                                dCharge = sum(aTemp(:))*dDeltaCorr;
+                            else
+                                % This calculation has not been checked, but it sums all elements
+                                % down on x1 axis and squares them before doing another sum.
+                                aTemp   = sum(mTemp,1).^2;
+                                dCharge = sum(aTemp(:))*dDeltaCorr;
+                            end % if
                         end % if
 
                         dPeak = dPeak * max(mTemp(:));
@@ -1318,6 +1329,7 @@ classdef OsirisConfig
             stReturn.ProfileX2   = stProfile(2);
             stReturn.ProfileX3   = stProfile(3);
             stReturn.PeakDensity = dPeak;
+            stReturn.Charge      = dCharge;
             
         end % function
 
