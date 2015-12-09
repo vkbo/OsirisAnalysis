@@ -313,8 +313,8 @@ classdef OsirisData
             stReturn  = {};
             sSpecies  = obj.Translate.Lookup(sSpecies,'Beam').Name;
             
-            dC        = obj.Config.Constants.SpeedOfLight;
-            dE        = obj.Config.Constants.ElementaryCharge;
+            dC        = obj.Config.Constants.SI.SpeedOfLight;
+            dE        = obj.Config.Constants.SI.ElementaryCharge;
             dLFac     = obj.Config.Convert.SI.LengthFac;
             dT        = obj.Config.Simulation.TimeStep*2;
             
@@ -322,7 +322,7 @@ classdef OsirisData
             dNOmegaP  = obj.Config.Simulation.OmegaP;
             dMOmegaP  = obj.Config.Simulation.PhysOmegaP;
             dPMax     = obj.Config.Simulation.MaxPlasmaFac;
-            dDensity  = obj.Config.Particles.Species.(sSpecies).Density;
+            dDensity  = obj.Config.Particles.Species.(sSpecies).Profile.Density;
             
             sMathFunc = obj.Config.Variables.Beam.(sSpecies).ProfileFunction;
             iDim      = obj.Config.Variables.Simulation.Dimensions;

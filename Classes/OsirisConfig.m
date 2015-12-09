@@ -487,12 +487,12 @@ classdef OsirisConfig
         function obj = fGetSimulationVariables(obj)
             
             % Constants
-            dC          = obj.Constants.SpeedOfLight;
-            dECharge    = obj.Constants.ElementaryCharge;
-            dEChargeCGS = obj.Constants.ElementaryChargeCGS;
+            dC          = obj.Constants.SI.SpeedOfLight;
+            dECharge    = obj.Constants.SI.ElementaryCharge;
+            dEChargeCGS = obj.Constants.CGS.ElementaryCharge;
             dEMass      = obj.Constants.SI.ElectronMass;
-            dEpsilon0   = obj.Constants.VacuumPermitivity;
-            dMu0        = obj.Constants.VacuumPermeability;
+            dEpsilon0   = obj.Constants.SI.VacuumPermitivity;
+            dMu0        = obj.Constants.SI.VacuumPermeability;
 
             %
             % Main Simulation Variables
