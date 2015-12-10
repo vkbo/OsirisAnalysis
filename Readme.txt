@@ -2,7 +2,7 @@
   Osiris Analysis Toolbox
  ******************************************
   MATLAB package for analysing Osiris data
-  Current version: Dev1.3
+  Current version: 1.3
  
 
   Developed by:
