@@ -2,7 +2,7 @@
 %
 %  Class Object :: Wrapper for Osiris data sets
 % **********************************************
-%  Version 1.3
+%  Version Dev1.4
 %
 
 classdef OsirisData
@@ -227,7 +227,7 @@ classdef OsirisData
         
         function Version(~)
             
-            fprintf('OsirisAnalysis Version 1.3\n');
+            fprintf('OsirisAnalysis Version Dev1.4\n');
             
         end % function
         

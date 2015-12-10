@@ -2,7 +2,7 @@
   Osiris Analysis Toolbox
  ******************************************
   MATLAB package for analysing Osiris data
-  Current version: 1.3
+  Current version: Dev1.4
  
 
   Developed by:
@@ -15,6 +15,9 @@
   Development History
  =====================
 
+  Version 1.4
+  - None
+  
   Version 1.3
   - Bug fixes.
   - OsirisConfig input deck parser has been completely rewritten to parse all types of input decks, in
