@@ -16,7 +16,7 @@ classdef OsirisData
         Path        = '';    % Path to dataset
         PathID      = '';    % Path as ID instead of free text input
         Config      = [];    % Content of the config files and extraction of all runtime variables
-        Silent      = 0;     % Set to 1 to disable command window output
+        Silent      = false; % Set to 1 to disable command window output
 
     end % properties
 
@@ -56,7 +56,7 @@ classdef OsirisData
             stOpt = oOpt.Results;
             
             if strcmpi(stOpt.Silent, 'Yes')
-                obj.Silent = 1;
+                obj.Silent = true;
             end % if
 
             % Initiate OsirisData
@@ -192,6 +192,22 @@ classdef OsirisData
             end % if
             
             obj.Translate = Variables(obj.Config.Simulation.Coordinates);
+            
+            % Output Dataset Info
+            if ~obj.Silent
+                if obj.HasData
+                    fprintf('Folder contains simulation data.\n');
+                end % if
+                if obj.HasTracks
+                    fprintf('Folder contains tracking data.\n');
+                end % if
+                if ~obj.Completed
+                    fprintf('Simulation is incomplete.\n');
+                end % if
+                if ~obj.Consistent
+                    fprintf('Simulation has varying number of time dumps.\n');
+                end % if
+            end % if
 
         end % function
         
