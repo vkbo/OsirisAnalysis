@@ -177,6 +177,120 @@ classdef Density < OsirisType
             stReturn.ZPos    = obj.fGetZPos();        
         
         end % function
+        
+        function stReturn = EvolveRaw(obj, varargin)
+        
+            % Input/Output
+            stReturn = {};
+            
+            oOpt = inputParser;
+            addParameter(oOpt, 'Start',  'Start');
+            addParameter(oOpt, 'End',    'End');
+            addParameter(oOpt, 'Value',  'Charge');
+            addParameter(oOpt, 'Method', 'Sum');
+            addParameter(oOpt, 'Save',   'No');
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
+
+            iStart  = obj.Data.StringToDump(stOpt.Start);
+            iEnd    = obj.Data.StringToDump(stOpt.End);
+            iValue  = obj.Data.RawToIndex(stOpt.Value);
+            sMethod = lower(stOpt.Method);
+            
+            % Read variables
+            dTFac = obj.Data.Config.Convert.SI.TimeFac;
+            dQFac = obj.Data.Config.Convert.SI.ChargeFac;
+            
+            aX1Lim = obj.X1Lim;
+            aX2Lim = obj.X2Lim;
+            if obj.Cylindrical
+                aX2Lim(1) = 0.0;
+            end % if
+            
+            aData = zeros(1,iEnd-iStart+1);
+            aStd  = zeros(1,iEnd-iStart+1);
+            aNumA = zeros(1,iEnd-iStart+1);
+            aNumB = zeros(1,iEnd-iStart+1);
+
+            % Time Loop
+            for t=iStart:iEnd
+                
+                i = t-iStart+1;
+                
+                aRaw      = obj.Data.Data(t,'RAW','',obj.Species.Name);
+                aRaw(:,1) = aRaw(:,1) - t*dTFac;
+                aNumA(i)  = size(aRaw,1);
+                
+                % Removing elements outside box
+                aRaw(:,8) = aRaw(:,8).*(aRaw(:,1) >= aX1Lim(1) & aRaw(:,1) <= aX1Lim(2));
+                aRaw(:,8) = aRaw(:,8).*(aRaw(:,2) >= aX2Lim(1) & aRaw(:,2) <= aX2Lim(2));
+                aRaw      = aRaw(aRaw(:,8)~=0,:);
+                aNumB(i)  = size(aRaw,1);
+                
+                switch(sMethod)
+                    case 'sum'
+                        aData(i) = sum(aRaw(:,iValue));
+                    case 'mean'
+                        aData(i) = wmean(aRaw(:,iValue),aRaw(:,8));
+                    case 'max'
+                        aData(i) = max(abs(aRaw(:,iValue)));
+                    case 'min'
+                        aData(i) = min(abs(aRaw(:,iValue)));
+                end % switch
+                
+                aStd(i) = wstd(aRaw(:,iValue),aRaw(:,8));
+
+            end % for
+            
+            sUnit = 'N';
+            if strcmpi(obj.Units,'SI')
+                if     iValue == 1 || iValue == 2 || iValue == 3
+                    aData = aData*obj.AxisFac(iValue);
+                    aStd  = aStd*obj.AxisFac(iValue);
+                    sUnit = obj.AxisUnits{iValue};
+                elseif iValue == 4 || iValue == 5 || iValue == 6
+                    aData = obj.MomentumToEnergy(aData);
+                    aStd  = obj.MomentumToEnergy(aStd);
+                    sUnit = 'eV/c';
+                elseif iValue == 7
+                    dFac  = obj.Data.Config.Constants.EV.ElectronMass;
+                    dFac  = dFac*obj.Config.RQM;
+                    aData = aData*dFac;
+                    aStd  = aStd*dFac;
+                    sUnit = 'eV/c^2';
+                elseif iValue == 8
+                    dFac  = obj.Data.Config.Convert.SI.ChargeFac;
+                    aData = aData*dFac;
+                    aStd  = aStd*dFac;
+                    sUnit = 'C';
+                end % if
+            end % if
+            
+            aAxis = obj.fGetTimeAxis;
+            aAxis = aAxis(iStart+1:iEnd+1);
+            
+            % Return Data
+            stReturn.Data   = aData;
+            stReturn.Sigma  = aStd;
+            stReturn.Axis   = aAxis;
+            stReturn.Unit   = sUnit;
+            stReturn.Count  = aNumA;
+            stReturn.Sample = aNumB;
+            
+            % Save Data
+            if ~strcmpi(stOpt.Save, 'No')
+                
+                stSave.Data  = stReturn;
+                stSave.Start = iStart;
+                stSave.End   = iEnd;
+                
+                cData = {'x1','x2','x3','p1','p2','p3','ene','charge','tag1','tag2'};
+                sData = sprintf('%s_%s',sMethod,cData{iValue});
+                obj.Data.SaveAnalysis(stSave,'Density','EvolveRaw',obj.Species.Name,sData,-1,stOpt.Save);
+                
+            end % if
+
+        end % function
 
         function stReturn = Fourier(obj, aRange)
             

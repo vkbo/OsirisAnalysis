@@ -66,7 +66,7 @@ classdef Momentum < OsirisType
     
     methods(Access='public')
         
-        function stReturn = SigmaEToEMean(obj, sStart, sStop)
+        function stReturn = SigmaEToEMean(obj, sStart, sEnd)
 
             stReturn = {};
 
@@ -75,22 +75,22 @@ classdef Momentum < OsirisType
             end % if
 
             if nargin < 3
-                sStop = 'End';
+                sEnd = 'End';
             end % if
             
             % Calculate range
             iStart = obj.Data.StringToDump(sStart);
-            iStop  = obj.Data.StringToDump(sStop);
+            iEnd   = obj.Data.StringToDump(sEnd);
 
             % Calculate axes
             aTAxis = obj.fGetTimeAxis;
-            aTAxis = aTAxis(iStart+1:iStop+1);
+            aTAxis = aTAxis(iStart+1:iEnd+1);
             
             aMean  = zeros(1, length(aTAxis));
             aSigma = zeros(1, length(aTAxis));
             aData  = zeros(1, length(aTAxis));
             
-            for i=iStart:iStop
+            for i=iStart:iEnd
                 
                 k = i-iStart+1;
                 
@@ -116,7 +116,7 @@ classdef Momentum < OsirisType
 
         end % function
 
-        function stReturn = Evolution(obj, sAxis, sStart, sStop, varargin)
+        function stReturn = Evolution(obj, sAxis, sStart, sEnd, varargin)
 
             stReturn = {};
             
@@ -125,11 +125,11 @@ classdef Momentum < OsirisType
             end % if
 
             if nargin < 4
-                sStop = 'End';
+                sEnd = 'End';
             end % if
             
             iStart = obj.Data.StringToDump(sStart);
-            iStop  = obj.Data.StringToDump(sStop);
+            iEnd   = obj.Data.StringToDump(sEnd);
 
             oOpt = inputParser;
             addParameter(oOpt, 'Percentile', []);
@@ -141,7 +141,7 @@ classdef Momentum < OsirisType
 
             % Calculate axes
             aTAxis = obj.fGetTimeAxis;
-            aTAxis = aTAxis(iStart+1:iStop+1);
+            aTAxis = aTAxis(iStart+1:iEnd+1);
 
             stReturn.TimeAxis = aTAxis;
 
@@ -154,7 +154,7 @@ classdef Momentum < OsirisType
                     iAxis = 6;
             end % switch
             
-            for i=iStart:iStop
+            for i=iStart:iEnd
                 
                 k = i-iStart+1;
 
@@ -178,7 +178,7 @@ classdef Momentum < OsirisType
     
         end % function
 
-        function stReturn = BeamSlip(obj, sStart, sStop, dAdd)
+        function stReturn = BeamSlip(obj, sStart, sEnd, dAdd)
 
             stReturn = {};
 
@@ -187,7 +187,7 @@ classdef Momentum < OsirisType
             end % if
 
             if nargin < 3
-                sStop = 'End';
+                sEnd = 'End';
             end % if
 
             if nargin < 4
@@ -195,7 +195,7 @@ classdef Momentum < OsirisType
             end % if
             
             iStart = obj.Data.StringToDump(sStart);
-            iStop  = obj.Data.StringToDump(sStop);
+            iEnd   = obj.Data.StringToDump(sEnd);
             
             % Variables
             dLFac     = obj.AxisFac(1);
@@ -203,7 +203,7 @@ classdef Momentum < OsirisType
             iNDump    = obj.Data.Config.Simulation.NDump;
             dDeltaZ   = dTimeStep*iNDump;
             
-            for i=iStart:iStop
+            for i=iStart:iEnd
                 
                 k = i-iStart+1;
 
@@ -255,7 +255,7 @@ classdef Momentum < OsirisType
             aTAxis = obj.fGetTimeAxis;
             
             stReturn.DeltaZ = dDeltaZ;
-            stReturn.TAxis  = aTAxis(iStart+1:iStop+1);
+            stReturn.TAxis  = aTAxis(iStart+1:iEnd+1);
     
         end % function
 
@@ -375,15 +375,6 @@ classdef Momentum < OsirisType
             
         end % function
     
-        function aReturn = MomentumToEnergy(obj, aMomentum)
-            
-            dRQM    = obj.Data.Config.Particles.Species.(obj.Species.Name).RQM;
-            dEMass  = obj.Data.Config.Constants.EV.ElectronMass;
-            dPFac   = abs(dRQM)*dEMass;
-            aReturn = sqrt(aMomentum.^2 + 1)*dPFac;
-            
-        end % function
-
     end % methods
 
 end % classdef

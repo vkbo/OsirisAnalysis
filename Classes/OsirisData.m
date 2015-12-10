@@ -554,6 +554,68 @@ classdef OsirisData
             end % for
             
         end % function
+        
+        function bReturn = SaveAnalysis(obj, stData, sClass, sMethod, sSubject, sData, iTime, sReplace)
+            
+            bReturn = false;
+            sPath   = obj.Path;
+            
+            % Check if Analysis folder exists
+            sPath = [sPath, '/AN'];
+            if ~isdir(sPath)
+                try
+                    mkdir(sPath);
+                catch
+                    fprint('Failed to make directory %s\n',sPath);
+                    return;
+                end % try
+            end % if
+            
+            % Check if class folder exists
+            sPath = [sPath, '/', sClass];
+            if ~isdir(sPath)
+                try
+                    mkdir(sPath);
+                catch
+                    fprint('Failed to make directory %s\n',sPath);
+                    return;
+                end % try
+            end % if
+
+            % Check if method folder exists
+            sPath = [sPath, '/', sMethod];
+            if ~isdir(sPath)
+                try
+                    mkdir(sPath);
+                catch
+                    fprint('Failed to make directory %s\n',sPath);
+                    return;
+                end % try
+            end % if
+            
+            if iTime < 0
+                sTime = 'RANGE';
+            else
+                sTime = sprintf('%05d',iTime);
+            end % if
+            
+            if strcmpi(sReplace, 'Replace')
+                sFile = sprintf('%s-%s-%s-000.mat',sSubject,sData,sTime);
+            else
+                for i=1:100
+                    sFile = sprintf('%s-%s-%s-%03d.mat',sSubject,sData,sTime,i);
+                    if ~exist([sPath, '/', sFile],'file')
+                        break;
+                    end % if
+                end % for
+            end % if
+
+            stSave.Save = stData;
+            save([sPath, '/', sFile],'-struct','stSave');
+            
+            bReturn = true;
+            
+        end % function
 
         function stReturn = ExportTags(obj, sTime, sSpecies, varargin)
             
@@ -943,7 +1005,7 @@ classdef OsirisData
 
         function iReturn = RawToIndex(sAxis)
 
-            switch(sAxis)
+            switch(lower(sAxis))
                 case 'x1'
                     iReturn = 1;
                 case 'x2'
