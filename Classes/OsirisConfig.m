@@ -49,15 +49,20 @@ classdef OsirisConfig
         function obj = OsirisConfig()
             
             % SI Constants
-            obj.Constants.SpeedOfLight        =  2.99792458e8;    % m/s (exact)
-            obj.Constants.ElectronMass        =  9.10938291e-31;  % kg
-            obj.Constants.ElectronMassMeV     =  5.109989282e-1;  % MeV/c^2
-            obj.Constants.ElementaryCharge    =  1.602176565e-19; % C
-            obj.Constants.VacuumPermitivity   =  8.854187817e-12; % F/m 
-            obj.Constants.VacuumPermeability  =  1.2566370614e-6; % N/A^2
+            obj.Constants.SI.SpeedOfLight       =  2.99792458e8;    % m/s (exact)
+            obj.Constants.SI.ElectronMass       =  9.10938291e-31;  % kg
+            obj.Constants.SI.ElementaryCharge   =  1.602176565e-19; % C
+            obj.Constants.SI.VacuumPermitivity  =  8.854187817e-12; % F/m 
+            obj.Constants.SI.VacuumPermeability =  1.2566370614e-6; % N/A^2
+            obj.Constants.SI.Boltzmann          =  1.38064852e-23;  % J/K
+            
+            % Electron Volts
+            obj.Constants.EV.ElectronMass       =  5.109989282e5;   % eV/c^2
+            obj.Constants.EV.Boltzmann          =  8.6173324e-5;    % eV/K
 
             % CGS Constants
-            obj.Constants.ElementaryChargeCGS =  4.80320425e-10;  % statC
+            obj.Constants.CGS.ElementaryCharge  =  4.80320425e-10;  % statC
+            obj.Constants.CGS.Boltzmann         =  1.38064852e-16;  % erg/K
 
             % Translae Class for Variables
             obj.Translate = Variables();
@@ -482,12 +487,12 @@ classdef OsirisConfig
         function obj = fGetSimulationVariables(obj)
             
             % Constants
-            dC          = obj.Constants.SpeedOfLight;
-            dECharge    = obj.Constants.ElementaryCharge;
-            dEChargeCGS = obj.Constants.ElementaryChargeCGS;
-            dEMass      = obj.Constants.ElectronMass;
-            dEpsilon0   = obj.Constants.VacuumPermitivity;
-            dMu0        = obj.Constants.VacuumPermeability;
+            dC          = obj.Constants.SI.SpeedOfLight;
+            dECharge    = obj.Constants.SI.ElementaryCharge;
+            dEChargeCGS = obj.Constants.CGS.ElementaryCharge;
+            dEMass      = obj.Constants.SI.ElectronMass;
+            dEpsilon0   = obj.Constants.SI.VacuumPermitivity;
+            dMu0        = obj.Constants.SI.VacuumPermeability;
 
             %
             % Main Simulation Variables
@@ -1172,6 +1177,7 @@ classdef OsirisConfig
             stProfile(3).Value  = [];
             stProfile(3).Delta  = [];
             stProfile(3).Length = [];
+            dDeltaCorr          = 1.0;
             
             for d=1:iDim
             
@@ -1188,6 +1194,7 @@ classdef OsirisConfig
 
                 % Set Minimum Resolution
                 if iN < 1000
+                    dDeltaCorr = dDeltaCorr * iN/1000;
                     iN = 1000;
                 end % if
 
@@ -1199,7 +1206,8 @@ classdef OsirisConfig
 
             end % for
 
-            dPeak = dDensity;
+            dPeak   = dDensity;
+            dCharge = 0.0;
             
             % With Type Set for Each Dimension
 
@@ -1218,7 +1226,7 @@ classdef OsirisConfig
                     switch(sType)
 
                         case 'gaussian'
-                            fprintf(2,'Gaussian particle profile calculations not implemented.+n');
+                            fprintf(2,'Gaussian particle profile calculations not implemented.\n');
 
                         case 'piecewise-linear'
                             
@@ -1268,10 +1276,10 @@ classdef OsirisConfig
                     stProfile(3).Value = ones(1,stProfile(3).Length);
 
                 case 'channel'
-                    fprintf(2,'Channel particle profile calculations not implemented.+n');
+                    fprintf(2,'Channel particle profile calculations not implemented.\n');
 
                 case 'sphere'
-                    fprintf(2,'Spherical particle profile calculations not implemented.+n');
+                    fprintf(2,'Spherical particle profile calculations not implemented.\n');
 
                 case 'math func'
 
@@ -1292,11 +1300,22 @@ classdef OsirisConfig
                             stProfile(1).Value = sum(mTemp,1);
                             stProfile(2).Value = sum(mTemp,2);
                             stProfile(3).Value = sum(mTemp,3);
+                            dCharge = sum(mTemp(:))*dDeltaCorr;
                         else
                             mTemp = oMathFunc.Eval(stProfile(1).Axis,stProfile(2).Axis,[0]);
                             mTemp = mTemp.*(mTemp > 0);
                             stProfile(1).Value = sum(mTemp,1);
-                            stProfile(2).Value = sum(mTemp,2);
+                            stProfile(2).Value = sum(mTemp,2)';
+                            if obj.Simulation.Cylindrical
+                                aRVec   = stProfile(2).Axis; % + 0.5*stProfile(2).Delta;
+                                aTemp   = bsxfun(@times,mTemp,aRVec');
+                                dCharge = sum(aTemp(:))*dDeltaCorr;
+                            else
+                                % This calculation has not been checked, but it sums all elements
+                                % down on x1 axis and squares them before doing another sum.
+                                aTemp   = sum(mTemp,1).^2;
+                                dCharge = sum(aTemp(:))*dDeltaCorr;
+                            end % if
                         end % if
 
                         dPeak = dPeak * max(mTemp(:));
@@ -1310,6 +1329,7 @@ classdef OsirisConfig
             stReturn.ProfileX2   = stProfile(2);
             stReturn.ProfileX3   = stProfile(3);
             stReturn.PeakDensity = dPeak;
+            stReturn.Charge      = dCharge*dDensity;
             
         end % function
 

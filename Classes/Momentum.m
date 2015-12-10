@@ -39,9 +39,9 @@ classdef Momentum < OsirisType
     % Properties
     %
 
-    properties(GetAccess = 'public', SetAccess = 'public')
+    properties(GetAccess='public', SetAccess='public')
         
-        Species = ''; % Species to analyse
+        % None
 
     end % properties
 
@@ -54,17 +54,7 @@ classdef Momentum < OsirisType
         function obj = Momentum(oData, sSpecies, varargin)
             
             % Call OsirisType constructor
-            obj@OsirisType(oData, varargin{:});
-            
-            % Set species
-            stSpecies = obj.Translate.Lookup(sSpecies);
-            if stSpecies.isSpecies
-                obj.Species = stSpecies;
-            else
-                sDefault = obj.Data.Config.Particles.WitnessBeam{1};
-                fprintf(2, 'Error: ''%s'' is not a recognised species name. Using ''%s'' instead.\n', sSpecies, sDefault);
-                obj.Species = obj.Translate.Lookup(sDefault);
-            end % if
+            obj@OsirisType(oData, sSpecies, varargin{:});
 
         end % function
         
@@ -74,7 +64,7 @@ classdef Momentum < OsirisType
     % Public Methods
     %
     
-    methods(Access = 'public')
+    methods(Access='public')
         
         function stReturn = SigmaEToEMean(obj, sStart, sStop)
 
@@ -147,7 +137,7 @@ classdef Momentum < OsirisType
             stOpt = oOpt.Results;
             
             % Read simulation data
-            dEMass = obj.Data.Config.Constants.ElectronMassMeV*1e6;
+            dEMass = obj.Data.Config.Constants.EV.ElectronMass;
 
             % Calculate axes
             aTAxis = obj.fGetTimeAxis;
@@ -388,7 +378,7 @@ classdef Momentum < OsirisType
         function aReturn = MomentumToEnergy(obj, aMomentum)
             
             dRQM    = obj.Data.Config.Particles.Species.(obj.Species.Name).RQM;
-            dEMass  = obj.Data.Config.Constants.ElectronMassMeV*1e6;
+            dEMass  = obj.Data.Config.Constants.EV.ElectronMass;
             dPFac   = abs(dRQM)*dEMass;
             aReturn = sqrt(aMomentum.^2 + 1)*dPFac;
             

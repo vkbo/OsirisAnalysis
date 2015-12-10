@@ -88,7 +88,8 @@ function stReturn = fPlotPhase2D(oData, sTime, sSpecies, sAxis, varargin)
     stData    = oPha.Phase2D(sAxis,'HLim',stOpt.HLim,'VLim',stOpt.VLim);
     
     if isempty(stData)
-        fprintf(2, 'Error: No data.\n');
+        fprintf(2, 'PlotPhase2D: No data.\n');
+        stReturn.Error = 'No data';
         return;
     end % if
 
@@ -119,7 +120,7 @@ function stReturn = fPlotPhase2D(oData, sTime, sSpecies, sAxis, varargin)
         if strcmpi(stOpt.AutoResize, 'On')
             fFigureSize(gcf, stOpt.FigureSize);
         end % if
-        set(gcf,'Name',sprintf('Beam Density (%s #%d)',oData.Config.Name,iTime))
+        set(gcf,'Name',sprintf('PhaseSpace 2D (%s #%d)',oData.Config.Name,iTime))
     else
         cla;
     end % if

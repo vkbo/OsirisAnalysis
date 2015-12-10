@@ -157,15 +157,15 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     
     % Prepare Data
 
-    oCH      = Charge(oData, vPlasma.Name, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
-    oCH.Time = iTime;
+    oDN      = Density(oData, vPlasma.Name, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
+    oDN.Time = iTime;
 
     if length(stOpt.Limits) == 4
-        oCH.X1Lim = stOpt.Limits(1:2);
-        oCH.X2Lim = stOpt.Limits(3:4);
+        oDN.X1Lim = stOpt.Limits(1:2);
+        oDN.X2Lim = stOpt.Limits(3:4);
     end % if
 
-    stData = oCH.Density;
+    stData = oDN.Density2D;
 
     aData  = stData.Data;
     aZAxis = stData.X1Axis;
@@ -175,8 +175,8 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     stReturn.X1Axis    = stData.X1Axis;
     stReturn.X2Axis    = stData.X2Axis;
     stReturn.ZPos      = stData.ZPos;
-    stReturn.AxisFac   = oCH.AxisFac;
-    stReturn.AxisRange = oCH.AxisRange;
+    stReturn.AxisFac   = oDN.AxisFac;
+    stReturn.AxisRange = oDN.AxisRange;
 
     if strcmpi(stOpt.Absolute, 'Yes')
         aData = abs(aData);
@@ -225,7 +225,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
 
         if ~isempty(stSCBeam(i))
 
-            oBeam      = Charge(oData, stSCBeam{i}, 'Units', 'SI', 'X1Scale', oCH.AxisScale{1}, 'X2Scale', oCH.AxisScale{1});
+            oBeam      = Density(oData, stSCBeam{i}, 'Units', 'SI', 'X1Scale', oDN.AxisScale{1}, 'X2Scale', oDN.AxisScale{1});
             oBeam.Time = iTime;
 
             if length(stOpt.Limits) == 4
@@ -266,7 +266,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     
         if ~isempty(stOLBeam(i))
             
-            oBeam      = Charge(oData, stOLBeam{i}, 'Units', 'SI', 'X1Scale', oCH.AxisScale{1}, 'X2Scale', oCH.AxisScale{1});
+            oBeam      = Density(oData, stOLBeam{i}, 'Units', 'SI', 'X1Scale', oDN.AxisScale{1}, 'X2Scale', oDN.AxisScale{1});
             oBeam.Time = iTime;
 
             if length(stOpt.Limits) == 4
@@ -274,7 +274,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
                 oBeam.X2Lim = stOpt.Limits(3:4);
             end % if
         
-            stBeam = oBeam.Density;
+            stBeam = oBeam.Density2D;
             aProjZ = abs(sum(stBeam.Data));
             aProjZ = 0.15*(aRAxis(end)-aRAxis(1))*aProjZ/max(abs(aProjZ))+aRAxis(1);
             stQTot = oBeam.BeamCharge;
@@ -304,17 +304,18 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
             iA = 3;
         end % if
         
-        oEF = EField(oData,stField(i).Name,'Units','SI','X1Scale',oCH.AxisScale{1},'X2Scale','m');
-        oEF.Time = iTime;
+        oFLD = Field(oData,stField(i).Name,'Units','SI','X1Scale',oDN.AxisScale{1},'X2Scale','m');
+        oFLD.Time = iTime;
+        sFUnit   = oFLD.FieldUnit;
         
         if length(stOpt.Limits) == 4
-            oEF.X1Lim = stOpt.Limits(1:2);
+            oFLD.X1Lim = stOpt.Limits(1:2);
         end % if
 
-        stEF    = oEF.Lineout(iS,iA);
+        stEF    = oFLD.Lineout(iS,iA);
         aEFData = 0.15*(aRAxis(end)-aRAxis(1))*stEF.Data/max(abs(stEF.Data));
 
-        [dEne,  sEne]  = fAutoScale(max(abs(stEF.Data)), 'eV');
+        [dEne,  sEne]  = fAutoScale(max(abs(stEF.Data)), sFUnit);
         [dEVal, sUnit] = fAutoScale(stEF.X2Range(2), 'm');
         dSVal          = stEF.X2Range(1)*dEVal/stEF.X2Range(2);
         
@@ -342,9 +343,9 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     end % if
     
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s Density %s (%s #%d)', vPlasma.Full, oCH.PlasmaPosition, oData.Config.Name, iTime);
+        sTitle = sprintf('%s Density %s (%s #%d)', vPlasma.Full, oDN.PlasmaPosition, oData.Config.Name, iTime);
     else
-        sTitle = sprintf('%s Density %s', vPlasma.Full, oCH.PlasmaPosition);
+        sTitle = sprintf('%s Density %s', vPlasma.Full, oDN.PlasmaPosition);
     end % if
 
     title(sTitle);
@@ -365,4 +366,4 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     stReturn.YLim   = ylim;
     stReturn.CLim   = caxis;
     
-end
+end % function

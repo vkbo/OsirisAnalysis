@@ -10,7 +10,7 @@ classdef OsirisType
     % Properties
     %
     
-    properties(GetAccess = 'public', SetAccess = 'public')
+    properties(GetAccess='public', SetAccess='public')
         
         Time        = 0;                         % Current time (dumb number)
         X1Lim       = [];                        % Axes limits x1
@@ -19,9 +19,11 @@ classdef OsirisType
 
     end % properties
 
-    properties(GetAccess = 'public', SetAccess = 'private')
+    properties(GetAccess='public', SetAccess='private')
         
-        Data        = [];                        % OsirisData dataset
+        Data        = {};                        % OsirisData dataset
+        Species     = {};                        % Holds species information
+        Config      = {};                        % Holds relevant OsirisConfig data
         Units       = 'N';                       % Units of axes
         AxisUnits   = {'N' 'N' 'N'};             % Units of axes
         AxisScale   = {'Auto' 'Auto' 'Auto'};    % Scale of axes
@@ -32,10 +34,11 @@ classdef OsirisType
         Coords      = '';                        % Coordinates
         Cylindrical = false;                     % Is cylindrical, true/false
         Dim         = 0;                         % Dimensions
+        BoxOffset   = 0.0;                       % Start of the box in simulation
 
     end % properties
     
-    properties(GetAccess = 'protected', SetAccess = 'protected')
+    properties(GetAccess='protected', SetAccess='protected')
         
         Translate   = {};                        % Lookup class for variables
         
@@ -47,19 +50,10 @@ classdef OsirisType
 
     methods
         
-        function obj = OsirisType(oData, varargin)
+        function obj = OsirisType(oData, sSpecies, varargin)
             
-            % Set data
+            % Set Data
             obj.Data = oData;
-
-            % Read input parameters
-            oOpt = inputParser;
-            addParameter(oOpt, 'Units',   'N');
-            addParameter(oOpt, 'X1Scale', 'Auto');
-            addParameter(oOpt, 'X2Scale', 'Auto');
-            addParameter(oOpt, 'X3Scale', 'Auto');
-            parse(oOpt, varargin{:});
-            stOpt = oOpt.Results;
 
             % Read config
             aXMin    = obj.Data.Config.Simulation.XMin;
@@ -69,14 +63,39 @@ classdef OsirisType
             dLFactor = obj.Data.Config.Convert.SI.LengthFac;
             iDim     = obj.Data.Config.Simulation.Dimensions;
 
-            % Set Scale and Units
-            obj.AxisScale   = {stOpt.X1Scale, stOpt.X2Scale, stOpt.X3Scale};
+            % Set Variables
             obj.Dim         = iDim;
             obj.Coords      = sCoords;
             obj.Cylindrical = bCyl;
             obj.Translate   = Variables(sCoords);
+            
+            % Set Species
+            if ~isempty(sSpecies)
+                stSpecies = obj.Translate.Lookup(sSpecies);
+                if stSpecies.isSpecies
+                    obj.Species = stSpecies;
+                    obj.Config  = obj.Data.Config.Particles.Species.(obj.Species.Name);
+                else
+                    sDefault = obj.Data.Config.Particles.WitnessBeam{1};
+                    fprintf(2, 'Error: ''%s'' is not a recognised species name. Using ''%s'' instead.\n', sSpecies, sDefault);
+                    obj.Species = obj.Translate.Lookup(sDefault);
+                    obj.Config  = obj.Data.Config.Particles.Species.(obj.Species.Name);
+                end % if
+            end % if
+            
+            % Read Input Parameters
+            oOpt = inputParser;
+            addParameter(oOpt, 'Units',   'N');
+            addParameter(oOpt, 'X1Scale', 'Auto');
+            addParameter(oOpt, 'X2Scale', 'Auto');
+            addParameter(oOpt, 'X3Scale', 'Auto');
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
 
-            % Evaluate units
+            % Set Scale
+            obj.AxisScale = {stOpt.X1Scale, stOpt.X2Scale, stOpt.X3Scale};
+
+            % Evaluate Units
             switch(lower(stOpt.Units))
 
                 case 'si'
@@ -165,7 +184,8 @@ classdef OsirisType
 
             else
                 
-                obj.Time = obj.Data.StringToDump(sTime);
+                obj.Time      = obj.Data.StringToDump(sTime);
+                obj.BoxOffset = obj.Time*obj.Data.Config.Convert.SI.TimeFac;
 
             end % if
             
@@ -267,7 +287,7 @@ classdef OsirisType
     % Public Methods
     %
     
-    methods(Access = 'public')
+    methods(Access='public')
 
         function sReturn = PlasmaPosition(obj)
 
@@ -298,7 +318,7 @@ classdef OsirisType
     % Private Methods
     %
     
-    methods(Access = 'private')
+    methods(Access='private')
         
         function [dScale, sUnit] = fLengthScale(~, sToUnit, sFromUnit)
 
@@ -368,7 +388,7 @@ classdef OsirisType
     % Protected Methods
     %
     
-    methods(Access = 'protected')
+    methods(Access='protected')
         
         function aReturn = fGetTimeAxis(obj)
             

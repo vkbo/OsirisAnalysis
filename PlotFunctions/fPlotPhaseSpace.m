@@ -145,5 +145,4 @@ function stReturn = fPlotPhaseSpace(oData, sTime, sSpecies, varargin)
     stReturn.YLim  = ylim;
     stReturn.CLim  = caxis;
 
-end
-
+end % function

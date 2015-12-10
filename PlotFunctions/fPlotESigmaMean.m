@@ -67,6 +67,7 @@ function stReturn = fPlotESigmaMean(oData, sSpecies, varargin)
 
     if isempty(stData)
         fprintf(2, 'Error: No data.\n');
+        stReturn.Error = 'No data';
         return;
     end % if
     
@@ -111,5 +112,4 @@ function stReturn = fPlotESigmaMean(oData, sSpecies, varargin)
     stReturn.XLim  = get(gca, 'XLim');
     stReturn.YLim  = get(gca, 'YLim');
     
-end
-
+end % function

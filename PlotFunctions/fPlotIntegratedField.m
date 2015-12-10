@@ -81,8 +81,8 @@ function stReturn = fPlotIntegratedField(oData, sField, varargin)
     
     % Prepare Data
 
-    if vField.isEField
-        oFLD = EField(oData, vField.Name, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
+    if vField.isField
+        oFLD = Field(oData, vField.Name, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
     else
         fprintf(2, 'Error: Only E-fields are supported.\n');
         return;

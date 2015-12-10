@@ -143,5 +143,4 @@ function stReturn = fPlotBeamSlip(oData, sBeam, varargin)
     stReturn.XLim  = get(gca, 'XLim');
     stReturn.YLim  = get(gca, 'YLim');
 
-end
-
+end % functions

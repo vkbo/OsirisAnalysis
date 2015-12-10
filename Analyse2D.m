@@ -56,8 +56,10 @@ function Analyse2D
     X.Plots{1} = 'Beam Density';
     X.Plots{2} = 'Plasma Density';
     X.Plots{3} = 'Field Density';
-    X.Plots{4} = 'Phase 2D';
-    X.Plots{5} = 'XX'' Phase Space';
+    X.Plots{4} = 'Phase 1D';
+    X.Plots{5} = 'Phase 2D';
+    X.Plots{6} = 'XX'' Phase Space';
+    X.Plots{7} = 'Raw 1D';
     
     X.Opt.Sample = {'Random','WRandom','W2Random','Top','Bottom'};
 
@@ -92,8 +94,8 @@ function Analyse2D
     % Set figure properties
     fMain.Units        = 'Pixels';
     fMain.MenuBar      = 'None';
-    fMain.Position     = [aFPos(1:2) 560 640];
-    fMain.Name         = 'OsirisAnalysis Version Dev1.3 - GUI';
+    fMain.Position     = [aFPos(1:2) 550 640];
+    fMain.Name         = 'OsirisAnalysis Version Dev1.4 - GUI';
     fMain.NumberTitle  = 'Off';
     fMain.DockControls = 'Off';
     fMain.Tag          = 'uiOA-Main';
@@ -212,7 +214,7 @@ function Analyse2D
     uicontrol(bgFigs,'Style','Text','String','Y-Max',    'Position',[454 160  55 15],'HorizontalAlignment','Center');
 
     aY = [135 110 85 60 35 10];
-    aP = [1 2 3 4 5 1];
+    aP = [1 2 3 5 6 7];
     for f=1:6
         uicontrol(bgFigs,'Style','Text','String',sprintf('#%d',f),'Position',[9 aY(f)+1 25 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         
@@ -429,23 +431,21 @@ function Analyse2D
             X.Plot(t).Data = X.Data.Species{1};
             iVal = 1;
         end % if
+        
+        X.Plot(t).Phase2D = oData.Config.Particles.Species.(X.Data.Species{iVal}).PhaseSpaces.Dim2;
+        if numel(X.Plot(t).Phase2D) > 0
+            iPS = 1;
+            X.Plot(t).Axis = X.Plot(t).Phase2D{1};
+        end % if
+        
         uicontrol(bgTab(t),'Style','Text','String','Species','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Species,'Value',iVal,'Position',[115 iY 150 20],'Callback',{@fPlotSetSpecies,t});
         uicontrol(bgTab(t),'Style','Text','String','CAxis','Position',[305 iY+1 60 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','Edit','String','','Position',[350 iY 100 20],'Callback',{@fPlotSetCAxis,t,0});
 
         iY = iY - 25;
-        uicontrol(bgTab(t),'Style','Text','String','Horizontal Axis','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Axis,'Value',1,'Position',[115 iY 180 20],'Callback',{@fPlotSetPhase,1,t});
-        uicontrol(bgTab(t),'Style','Checkbox','String','Auto Scale','Value',X.Plot(t).Settings(2),'Position',[305 iY 150 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,2});
-
-        iY = iY - 25;
-        uicontrol(bgTab(t),'Style','Text','String','Vertical Axis','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Axis,'Value',3,'Position',[115 iY 180 20],'Callback',{@fPlotSetPhase,2,t});
-        uicontrol(bgTab(t),'Style','Checkbox','String','Auto Scale','Value',X.Plot(t).Settings(3),'Position',[305 iY 150 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,3});
-
-        iY = iY - 25;
-        uicontrol(bgTab(t),'Style','Checkbox','String','Use Raw Data','Value',X.Plot(t).Settings(1),'Position',[115 iY 150 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,1});
+        uicontrol(bgTab(t),'Style','Text','String','Phase Space','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Plot(t).Phase2D,'Position',[115 iY 150 20],'Callback',{@fPlotSetAxis,t});
         
     end % function
 
@@ -473,6 +473,31 @@ function Analyse2D
         uicontrol(bgTab(t),'Style','Text','String','Min. Part.','Position',[10 iY+1 65 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','Edit','String',sprintf('%d',X.Plot(t).Count),'Position',[85 iY 80 20],'Callback',{@fPlotSetCount,t});
 
+    end % function
+
+    function fCtrlRaw1D(t)
+        
+        % Clear panel
+        delete(bgTab(t));
+        bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 514 120],'BackgroundColor',cBackGround);
+        
+        % Create Controls
+        iY = 115;
+        
+        iY = iY - 25;
+        [~,iVal] = incellarray(X.Plot(t).Data, X.Data.Species);
+        if iVal == 0
+            X.Plot(t).Data = X.Data.Species{1};
+            iVal = 1;
+        end % if
+        uicontrol(bgTab(t),'Style','Text','String','Species','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Species,'Value',iVal,'Position',[115 iY 150 20],'Callback',{@fPlotSetSpecies,t});
+
+        iY = iY - 25;
+        uicontrol(bgTab(t),'Style','Text','String','Horizontal Axis','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.RawAxis,'Value',1,'Position',[115 iY 180 20],'Callback',{@fPlotSetRawAxis,1,t});
+        uicontrol(bgTab(t),'Style','Checkbox','String','Fit Gaussian','Value',X.Plot(t).Settings(1),'Position',[305 iY 150 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,1});
+        
     end % function
 
 
@@ -579,6 +604,12 @@ function Analyse2D
         X.Data.Axis = {'x1','x2','p1','p2'};
         for i=1:length(X.Data.Axis)
             X.Data.Axis{i} = oVar.Lookup(X.Data.Axis{i}).Full;
+        end % for
+
+        % Translate Raw Axes
+        X.Data.RawAxis = {'x1','x2','x3','p1','p2','p3','ene','charge'};
+        for i=1:length(X.Data.RawAxis)
+            X.Data.RawAxis{i} = oVar.Lookup(X.Data.RawAxis{i}).Full;
         end % for
         
         % Simulation Status
@@ -854,11 +885,13 @@ function Analyse2D
                     fCtrlFieldDensity(f);
                     aFigSize = [900 500];
 
+                case 'Phase 1D'
+                    
                 case 'Phase 2D'
-                    X.Plot(f).Data     = X.Data.Species{1};
-                    X.Plot(f).Axis     = {X.Data.Axis{1},X.Data.Axis{3}};
-                    X.Plot(f).Settings = [0 0 0];
-                    X.Plot(f).CAxis    = [];
+                    X.Plot(f).Data    = X.Data.Species{1};
+                    X.Plot(f).Axis    = '';
+                    X.Plot(f).Phase2D = {};
+                    X.Plot(f).CAxis   = [];
                     fCtrlPhase2D(f);
                     aFigSize = [700 500];
                     
@@ -867,6 +900,13 @@ function Analyse2D
                     X.Plot(f).Count = 500000;
                     X.Plot(f).CAxis = [];
                     fCtrlPhaseSpace(f);
+                    aFigSize = [700 500];
+
+                case 'Raw 1D'
+                    X.Plot(f).Data     = X.Data.Species{1};
+                    X.Plot(f).Axis     = {X.Data.Axis{1}};
+                    X.Plot(f).Settings = [0];
+                    fCtrlRaw1D(f);
                     aFigSize = [700 500];
 
             end % switch
@@ -884,9 +924,10 @@ function Analyse2D
             
             btnFig(f).BackgroundColor = cButtonOff;
             
-            X.Figure(f) = 0;
-            X.X1Link(f) = 0;
-            X.X2Sym(f)  = 0;
+            X.Plot(f).Enabled = 0;
+            X.Figure(f)       = 0;
+            X.X1Link(f)       = 0;
+            X.X2Sym(f)        = 0;
             X.Plot(f).MaxLim  = [0.0 0.0 0.0 0.0];
             X.Plot(f).Limits  = [0.0 0.0 0.0 0.0];
             X.Plot(f).LimPres = [2   2   2   2];
@@ -998,6 +1039,8 @@ function Analyse2D
                     fResetTab(f);
                     fCtrlFieldDensity(f);
 
+                case 'Phase 1D'
+
                 case 'Phase 2D'
                     fResetTab(f);
                     fCtrlPhase2D(f);
@@ -1005,6 +1048,10 @@ function Analyse2D
                 case 'XX'' Phase Space'
                     fResetTab(f);
                     fCtrlPhaseSpace(f);
+
+                case 'Raw 1D'
+                    fResetTab(f);
+                    fCtrlRaw1D(f);
 
             end % switch
             
@@ -1052,14 +1099,10 @@ function Analyse2D
                     
                     case 'Beam Density'
                         figure(X.Plot(f).Figure); clf;
-                        if strcmpi(X.Plot(f).Density,'charge')
-                            sCurrent = '';
-                        else
-                            sCurrent = oVar.Reverse(X.Plot(f).Density,'Full');
-                        end % if
+                        sData = oVar.Reverse(X.Plot(f).Density,'Full');
                         iMakeSym = 1;
 
-                        X.Plot(f).Return = fPlotBeamDensity(oData,X.Time.Dump,X.Plot(f).Data,'Current',sCurrent, ...
+                        X.Plot(f).Return = fPlotBeamDensity(oData,X.Time.Dump,X.Plot(f).Data,'Data',sData, ...
                             'IsSubPlot','No','AutoResize','Off','HideDump','Yes','Absolute','Yes','ShowOverlay','Yes', ...
                             'Limits',[aHLim aVLim],'CAxis',X.Plot(f).CAxis);
 
@@ -1090,21 +1133,17 @@ function Analyse2D
                             'IsSubPlot','No','AutoResize','Off','HideDump','Yes','Limits',[aHLim aVLim], ...
                             'CAxis',X.Plot(f).CAxis);
 
+                    case 'Phase 1D'
+
                     case 'Phase 2D'
                         iMakeSym = 0;
-                        if X.Plot(f).Settings(1) == 1
-                            sUseRaw = 'Yes';
-                        else
-                            sUseRaw = 'No';
-                        end % if
                         figure(X.Plot(f).Figure); clf;
-                        X.Plot(f).Return = fPlotPhase2D(oData,X.Time.Dump,X.Plot(f).Data, ...
-                            oVar.Reverse(X.Plot(f).Axis{1},'Full'), ...
-                            oVar.Reverse(X.Plot(f).Axis{2},'Full'), ...
-                            'HLim',aHLim,'VLim',aVLim,'UseRaw',sUseRaw, ...
+                        X.Plot(f).Return = fPlotPhase2D(oData,X.Time.Dump,X.Plot(f).Data,X.Plot(f).Axis, ...
+                            'HLim',aHLim,'VLim',aVLim, ...
                             'IsSubPlot','No','AutoResize','Off','HideDump','Yes', ...
                             'CAxis',X.Plot(f).CAxis);
-                        if isempty(X.Plot(f).Return)
+                        if isfield(X.Plot(f).Return,'Error')
+                            fOut(X.Plot(f).Return.Error,3);
                             return;
                         end % if
                         X.Plot(f).Scale = X.Plot(f).Return.AxisScale(1:2);
@@ -1122,6 +1161,22 @@ function Analyse2D
                             'CAxis',X.Plot(f).CAxis);
                         fOut(sprintf('Sampled %d particles, Erms: %.3f mm·mrad',X.Plot(f).Return.Count,X.Plot(f).Return.ERMS),1);
 
+                    case 'Raw 1D'
+                        if X.Plot(f).Settings(1) == 1
+                            sGaussFit = 'Yes';
+                        else
+                            sGaussFit = 'No';
+                        end % if
+                        figure(X.Plot(f).Figure); clf;
+                        X.Plot(f).Return = fPlotRaw1D(oData,X.Time.Dump,X.Plot(f).Data, ...
+                            oVar.Reverse(X.Plot(f).Axis{1},'Full'), ...
+                            'GaussFit',sGaussFit, ...
+                            'IsSubPlot','No','AutoResize','Off','HideDump','Yes');
+                        if isempty(X.Plot(f).Return)
+                            return;
+                        end % if
+                        X.Plot(f).Scale = X.Plot(f).Return.AxisScale*[1 1];
+
                     otherwise
                         return;
                                                                        
@@ -1130,11 +1185,21 @@ function Analyse2D
                 if isempty(X.Plot(f).Return)
                     return;
                 end % if
+                
+                if isfield(X.Plot(f).Return, 'Error')
+                    if ~isempty(X.Plot(f).Return.Error)
+                        fOut(X.Plot(f).Return.Error,3);
+                    end % if
+                end % if
 
                 % Set default zoom levels
                 if sum(X.Plot(f).MaxLim) == 0.0
 
-                    X.Plot(f).MaxLim = X.Plot(f).Return.AxisRange(1:4);
+                    if length(X.Plot(f).Return.AxisRange) >= 4
+                        X.Plot(f).MaxLim = X.Plot(f).Return.AxisRange(1:4);
+                    else
+                        X.Plot(f).MaxLim = [X.Plot(f).Return.AxisRange(1:2) 0 0];
+                    end % if
                     
                     if strcmpi(X.Data.Coords,'cylindrical') && iMakeSym
                         X.Plot(f).MaxLim(3) = -X.Plot(f).MaxLim(4);
@@ -1190,13 +1255,13 @@ function Analyse2D
                         sStart = get(edtT9(1),'String');
                         sEnd   = get(edtT9(2),'String');
                         figure(X.Plot(f).Figure); clf;
-                        fPlotESigmaMeanRatio(oData,X.Data.Witness{1},'Start',sStart,'End',sEnd,'HideDump','Yes','IsSubPlot','No','AutoResize','Off');
+                        fPlotESigmaMeanRatio(oData,X.Plot(f).Data,'Start',sStart,'End',sEnd,'HideDump','Yes','IsSubPlot','No','AutoResize','Off');
 
                     case 9
                         sStart = get(edtT10(1),'String');
                         sEnd   = get(edtT10(2),'String');
                         figure(X.Plot(f).Figure); clf;
-                        fPlotBeamSlip(oData,X.Data.Witness{1},'Start',sStart,'End',sEnd,'HideDump','Yes','IsSubPlot','No','AutoResize','Off');
+                        fPlotBeamSlip(oData,X.Plot(f).Data,'Start',sStart,'End',sEnd,'HideDump','Yes','IsSubPlot','No','AutoResize','Off');
 
                     case 10
                         figure(X.Plot(f).Figure); clf;
@@ -1356,9 +1421,10 @@ function Analyse2D
                 X.Plot(f).MaxLim = [0.0 0.0 0.0 0.0];
                 X.Plot(f).Limits = [0.0 0.0 0.0 0.0];
                 X.Plot(f).Scale  = [1.0 1.0];
+                fCtrlPhase2D(f);
         end % switch
         
-        X.Data.Density = oData.Config.Variables.Density.(sSpecies).Density;
+        X.Data.Density = oData.Config.Particles.Species.(X.Data.Species{1}).DiagReports;
         for i=1:length(X.Data.Density)
             X.Data.Density{i} = oVar.Lookup(X.Data.Density{i}).Full;
         end % for
@@ -1415,14 +1481,30 @@ function Analyse2D
         
     end % function
 
-    function fPlotSetPhase(uiSrc,~,a,f)
+    function fPlotSetAxis(uiSrc,~,f)
         
         iAxis = uiSrc.Value;
-        sAxis = X.Data.Axis{iAxis};
+        sAxis = X.Plot(f).Phase2D{iAxis};
+        
+        X.Plot(f).Axis = sAxis;
+        switch(X.Plots{X.Figure(f)})
+            case 'Phase 2D'
+                X.Plot(f).MaxLim = [0.0 0.0 0.0 0.0];
+                X.Plot(f).Limits = [0.0 0.0 0.0 0.0];
+                X.Plot(f).Scale  = [1.0 1.0];
+        end % switch
+        fRefresh(f);
+        
+    end % function
+
+    function fPlotSetRawAxis(uiSrc,~,a,f)
+        
+        iAxis = uiSrc.Value;
+        sAxis = X.Data.RawAxis{iAxis};
         
         X.Plot(f).Axis{a} = sAxis;
         switch(X.Plots{X.Figure(f)})
-            case 'Phase 2D'
+            case 'Raw 1D'
                 X.Plot(f).MaxLim = [0.0 0.0 0.0 0.0];
                 X.Plot(f).Limits = [0.0 0.0 0.0 0.0];
                 X.Plot(f).Scale  = [1.0 1.0];
@@ -1468,6 +1550,10 @@ function Analyse2D
         sValue = strtrim(uiSrc.String);
         cValue = strsplit(sValue,' ');
         
+        if isempty(sValue)
+            cValue = {'0','1'};
+        end % if
+        
         if numel(cValue) == 1
             if iSym
                 aCAxis(1) = -abs(str2double(cValue{1}));
@@ -1500,4 +1586,4 @@ function Analyse2D
    
 end % function
 
-% End
+% End Analyse2D

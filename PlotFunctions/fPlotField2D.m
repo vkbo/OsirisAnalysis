@@ -78,24 +78,16 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
     
     % Prepare Data
 
-    if vField.isEField
-        oFLD = EField(oData, vField.Name, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
-        sBaseUnit = 'eV';
-    elseif vField.isBField
-        oFLD = BField(oData, vField.Name, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
-        sBaseUnit = 'T';
-    else
-        fprintf(2, 'Error: Non-existent field specified.\n');
-        return;
-    end % if
+    oFLD = Field(oData, vField.Name, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
     oFLD.Time = iTime;
+    sBaseUnit = oFLD.FieldUnit;
 
     if length(stOpt.Limits) == 4
         oFLD.X1Lim = stOpt.Limits(1:2);
         oFLD.X2Lim = stOpt.Limits(3:4);
     end % if
     
-    stData = oFLD.Density;
+    stData = oFLD.Density2D;
 
     aData  = stData.Data;
     aZAxis = stData.X1Axis;
@@ -164,5 +156,4 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
     stReturn.YLim  = ylim;
     stReturn.CLim  = caxis;
 
-end
-
+end % function

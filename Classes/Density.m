@@ -1,7 +1,7 @@
 
 %
-%  Class Object :: Analyse Charge
-% ********************************
+%  Class Object :: Analyse Density
+% *********************************
 %  SubClass of OsirisType
 %
 %  Description:
@@ -26,7 +26,7 @@
 %  Public Methods:
 %
 
-classdef Charge < OsirisType
+classdef Density < OsirisType
 
     %
     % Properties
@@ -34,7 +34,7 @@ classdef Charge < OsirisType
 
     properties(GetAccess = 'public', SetAccess = 'public')
         
-        Species = ''; % Species to analyse
+        % None
 
     end % properties
 
@@ -44,20 +44,10 @@ classdef Charge < OsirisType
 
     methods
         
-        function obj = Charge(oData, sSpecies, varargin)
+        function obj = Density(oData, sSpecies, varargin)
             
             % Call OsirisType constructor
-            obj@OsirisType(oData, varargin{:});
-            
-            % Set species
-            stSpecies = obj.Translate.Lookup(sSpecies);
-            if stSpecies.isSpecies
-                obj.Species = stSpecies;
-            else
-                sDefault = obj.Data.Config.Particles.WitnessBeam{1};
-                fprintf(2, 'Error: ''%s'' is not a recognised species name. Using ''%s'' instead.\n', sSpecies, sDefault);
-                obj.Species = obj.Translate.Lookup(sDefault);
-            end % if
+            obj@OsirisType(oData, sSpecies, varargin{:});
 
         end % function
 
@@ -69,16 +59,24 @@ classdef Charge < OsirisType
     
     methods(Access = 'public')
         
-        function stReturn = Density(obj)
+        function stReturn = Density2D(obj, sDensity)
             
             % Input/Output
             stReturn = {};
-
-            % Get simulation variables
-            dNMax = obj.Data.Config.Simulation.MaxPlasmaFac;
             
+            if nargin < 2
+                sDensity = 'charge';
+            end % if
+            
+            % Density Diag
+            vDensity = obj.Translate.Lookup(sDensity);
+            if ~vDensity.isValidSpeciesDiag
+                fprintf(2,'Error: Not a valid density diagnostics.\n');
+                return;
+            end % if
+
             % Get data and axes
-            aData   = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species.Name);
+            aData   = obj.Data.Data(obj.Time, 'DENSITY', vDensity.Name, obj.Species.Name);
             aX1Axis = obj.fGetBoxAxis('x1');
             aX2Axis = obj.fGetBoxAxis('x2');
 
@@ -95,13 +93,47 @@ classdef Charge < OsirisType
             iX2Min = fGetIndex(aX2Axis, obj.X2Lim(1)*obj.AxisFac(2));
             iX2Max = fGetIndex(aX2Axis, obj.X2Lim(2)*obj.AxisFac(2));
 
-            % Crop and scale dataset
-            aData   = aData(iX2Min:iX2Max,iX1Min:iX1Max)/dNMax;
+            % Crop dataset
+            aData   = aData(iX2Min:iX2Max,iX1Min:iX1Max);
             aX1Axis = aX1Axis(iX1Min:iX1Max);
             aX2Axis = aX2Axis(iX2Min:iX2Max);
             
+            % Scale dataset
+            if strcmpi(obj.Units, 'SI')
+                sUnit  = vDensity.Unit;
+                sLabel = vDensity.Tex;
+                switch(vDensity.Name)
+                    case 'charge'
+                        dScale = 1/obj.Data.Config.Simulation.MaxPlasmaFac;
+                        sUnit  = 'n/n_0';
+                        sLabel = '\rho';
+                    case 'm'
+                        dScale = 1/obj.Data.Config.Simulation.MaxPlasmaFac;
+                        sUnit  = 'n/n_0';
+                    case 'ene'
+                        dScale = 1.0; % Not implemented
+                    case 'q1'
+                        dScale = 1.0; % Not implemented
+                    case 'q2'
+                        dScale = 1.0; % Not implemented
+                    case 'q3'
+                        dScale = 1.0; % Not implemented
+                    case 'j1'
+                        dScale = obj.Data.Config.Convert.SI.JFac(1);
+                    case 'j2'
+                        dScale = obj.Data.Config.Convert.SI.JFac(2);
+                    case 'j3'
+                        dScale = obj.Data.Config.Convert.SI.JFac(3);
+                end % switch
+            else
+                dScale = 1.0;
+                sUnit  = '';
+            end % if
+            
             % Return data
-            stReturn.Data   = aData;
+            stReturn.Data   = aData*dScale;
+            stReturn.Unit   = sUnit;
+            stReturn.Label  = sLabel;
             stReturn.X1Axis = aX1Axis;
             stReturn.X2Axis = aX2Axis;
             stReturn.ZPos   = obj.fGetZPos();
@@ -160,11 +192,11 @@ classdef Charge < OsirisType
             if strcmpi(obj.Units, 'SI')
                 switch(sAxis)
                     case 'j1'
-                        dJFac = obj.Data.Config.Variables.Convert.SI.J1Fac;
+                        dJFac = obj.Data.Config.Convert.SI.JFac(1);
                     case 'j2'
-                        dJFac = obj.Data.Config.Variables.Convert.SI.J2Fac;
+                        dJFac = obj.Data.Config.Convert.SI.JFac(2);
                     case 'j3'
-                        dJFac = obj.Data.Config.Variables.Convert.SI.J3Fac;
+                        dJFac = obj.Data.Config.Convert.SI.JFac(3);
                 end % switch
             else
                 dJFac = 1.0;
@@ -574,7 +606,7 @@ classdef Charge < OsirisType
 
             % Read variables
             dTFactor  = obj.Data.Config.Convert.SI.TimeFac;
-            dEMass    = obj.Data.Config.Constants.ElectronMassMeV*1e6;
+            dEMass    = obj.Data.Config.Constants.EV.ElectronMass;
             dRQM      = obj.Data.Config.Particles.Species.(obj.Species.Name).RQM;
             dSign     = dRQM/abs(dRQM);
             
