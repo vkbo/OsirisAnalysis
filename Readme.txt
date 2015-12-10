@@ -30,6 +30,7 @@
     This involved adding the function fAccu1D to generate histograms of weighted data.
   - Various updates to the Variables class. Added fields for standard unit and the number of the dimension
     the variable belongs to. E.g.: x1 -> Dim = 1, p2 -> Dim = 2, etc.
+  - Added AddPaths.m script that adds the relevant folders to Matlab path.
 
   Version 1.2.1
   - Bug fixes.
