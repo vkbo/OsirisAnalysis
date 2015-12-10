@@ -326,35 +326,13 @@ classdef OsirisData
             % *********************************
             %
             
-            stReturn  = {};
-            sSpecies  = obj.Translate.Lookup(sSpecies,'Beam').Name;
+            stReturn = {};
+            sSpecies = obj.Translate.Lookup(sSpecies,'Beam').Name;
             
-            dC        = obj.Config.Constants.SI.SpeedOfLight;
-            dE        = obj.Config.Constants.SI.ElementaryCharge;
-            dLFac     = obj.Config.Convert.SI.LengthFac;
-            dT        = obj.Config.Simulation.TimeStep*2;
-            
-            dN0       = obj.Config.Simulation.N0;
-            dNOmegaP  = obj.Config.Simulation.OmegaP;
-            dMOmegaP  = obj.Config.Simulation.PhysOmegaP;
-            dPMax     = obj.Config.Simulation.MaxPlasmaFac;
-            dDensity  = obj.Config.Particles.Species.(sSpecies).Profile.Density;
-            
-            sMathFunc = obj.Config.Variables.Beam.(sSpecies).ProfileFunction;
-            iDim      = obj.Config.Variables.Simulation.Dimensions;
-            sCoords   = obj.Config.Variables.Simulation.Coordinates;
-
-            dX1Min    = obj.Config.Variables.Simulation.BoxX1Min;
-            dX1Max    = obj.Config.Variables.Simulation.BoxX1Max;
-            dX2Min    = obj.Config.Variables.Simulation.BoxX2Min;
-            dX2Max    = obj.Config.Variables.Simulation.BoxX2Max;
-            dX3Min    = obj.Config.Variables.Simulation.BoxX3Min;
-            dX3Max    = obj.Config.Variables.Simulation.BoxX3Max;
-
-            %dMeanX1   = obj.Config.Variables.Beam.(sSpecies).MeanX1;
-            %dMeanX2   = obj.Config.Variables.Beam.(sSpecies).MeanX2;
-            %dSigmaX1  = obj.Config.Variables.Beam.(sSpecies).SigmaX1;
-            %dSigmaX2  = obj.Config.Variables.Beam.(sSpecies).SigmaX2;
+            dLFac    = obj.Config.Convert.SI.LengthFac;
+            dQFac    = obj.Config.Convert.SI.ChargeFac;
+            dPFac    = obj.Config.Convert.SI.ParticleFac;
+            dCharge  = obj.Config.Particles.Species.(sSpecies).Profile.Charge;
             
             if ~obj.Silent
                 fprintf('\n');
@@ -363,89 +341,65 @@ classdef OsirisData
                 fprintf('\n');
             end % if
 
-            % Beam Integral
-            
-            oMF  = MathFunc(sMathFunc);
-            aX1  = dX1Min:dT:dX1Max;
-            aX2  = dX2Min:dT:dX2Max;
-            aX3  = dX3Min:dT:dX3Max;
-            mMat = oMF.Eval(aX1,aX2,aX3);
-            
-            if strcmpi(sCoords, 'cylindrical')
-                for r=1:length(aX2)
-                    mMat(r,:) = aX2(r)*mMat(r,:);
-                end % for
-                if iDim == 2
-                    dBeamInt = 2*pi*sum(mMat(:))*dT^2;
-                else
-                    dBeamInt = sum(mMat(:))*dT^3;
-                end % if
-            else
-                if iDim == 3
-                    dBeamInt = sum(mMat(:))*dT^3;
-                end % if
-            end % if
 
             %
-            % Output
+            % Sigma and Mean
             %
 
-            %dSIMeanX1  = dMeanX1*dLFac;
-            %dSIMeanX2  = dMeanX2*dLFac;
-            %dSISigmaX1 = dSigmaX1*dLFac;
-            %dSISigmaX2 = dSigmaX2*dLFac;
+            try
+                aAxis    = obj.Config.Particles.Species.(sSpecies).Profile.ProfileX1.Axis;
+                aData    = obj.Config.Particles.Species.(sSpecies).Profile.ProfileX1.Value;
+                oFit     = fit(double(aAxis)',double(aData)','Gauss1');
+                dMeanX1  = oFit.b1;
+                dSigmaX1 = oFit.c1/sqrt(2);
+            catch
+                dMeanX1  = 0.0;
+                dSigmaX1 = 0.0;
+            end % try
 
-            stReturn.Equation = sMathFunc;
-            %stReturn.X1Mean   = dSIMeanX1;
-            %stReturn.X2Mean   = dSIMeanX2;
-            %stReturn.X1Sigma  = dSISigmaX1;
-            %stReturn.X2Sigma  = dSISigmaX2;
+            try
+                aAxis    = obj.Config.Particles.Species.(sSpecies).Profile.ProfileX2.Axis;
+                aData    = obj.Config.Particles.Species.(sSpecies).Profile.ProfileX2.Value;
+                oFit     = fit(double(aAxis)',double(aData)','Gauss1');
+                dMeanX2  = oFit.b1;
+                dSigmaX2 = oFit.c1/sqrt(2);
+            catch
+                dMeanX2  = 0.0;
+                dSigmaX2 = 0.0;
+            end % try
 
-            %[dSIMeanX1,  sUnitM1] = fAutoScale(dSIMeanX1, 'm');
-            %[dSIMeanX2,  sUnitM2] = fAutoScale(dSIMeanX2, 'm');
-            %[dSISigmaX1, sUnitS1] = fAutoScale(dSISigmaX1, 'm');
-            %[dSISigmaX2, sUnitS2] = fAutoScale(dSISigmaX2, 'm');
+            dSIMeanX1  = dMeanX1*dLFac;
+            dSIMeanX2  = dMeanX2*dLFac;
+            dSISigmaX1 = dSigmaX1*dLFac;
+            dSISigmaX2 = dSigmaX2*dLFac;
 
+            stReturn.X1Mean   = dSIMeanX1;
+            stReturn.X2Mean   = dSIMeanX2;
+            stReturn.X1Sigma  = dSISigmaX1;
+            stReturn.X2Sigma  = dSISigmaX2;
+
+            [dSIMeanX1,  sUnitM1] = fAutoScale(dSIMeanX1,'m');
+            [dSIMeanX2,  sUnitM2] = fAutoScale(dSIMeanX2,'m');
+            [dSISigmaX1, sUnitS1] = fAutoScale(dSISigmaX1,'m');
+            [dSISigmaX2, sUnitS2] = fAutoScale(dSISigmaX2,'m');
+            
             if ~obj.Silent
-                fprintf(' Density Function:       %s\n', sMathFunc);
-                %fprintf(' X1 Mean, Sigma:         %7.2f, %9.4f [%7.2f %s, %7.2f %s]\n', dMeanX1, dSigmaX1, dSIMeanX1, sUnitM1, dSISigmaX1, sUnitS1);
-                %fprintf(' X2 Mean, Sigma:         %7.2f, %9.4f [%7.2f %s, %7.2f %s]\n', dMeanX2, dSigmaX2, dSIMeanX2, sUnitM2, dSISigmaX2, sUnitS2);
+                fprintf(' X1 Mean, Sigma: %7.2f, %9.4f [%7.2f %2s, %7.2f %2s]\n',dMeanX1,dSigmaX1,dSIMeanX1,sUnitM1,dSISigmaX1,sUnitS1);
+                fprintf(' X2 Mean, Sigma: %7.2f, %9.4f [%7.2f %2s, %7.2f %2s]\n',dMeanX2,dSigmaX2,dSIMeanX2,sUnitM2,dSISigmaX2,sUnitS2);
                 fprintf('\n');
             end % if
 
-            dBeamVol     = dBeamInt * dC^3/dNOmegaP^3;
-            dBeamNum     = dBeamVol * dDensity * dN0;
-            dBeamCharge  = dBeamNum * dE;
-            dBeamDensity = dBeamNum/dBeamVol;
-            dBeamPlasma  = dBeamDensity/(dN0*dPMax);
-            %dPeakCurrent = dBeamCharge*dC / sqrt(2*pi*(dSigmaX1*dLFac)^2);
+            dBeamCharge  = dCharge*dQFac;
+            dBeamNum     = dCharge*dPFac;
 
-            stReturn.Volume    = dBeamVol;
             stReturn.Particles = dBeamNum;
             stReturn.Charge    = dBeamCharge;
-            stReturn.Density   = dBeamDensity;
-            stReturn.Ratio     = dBeamPlasma;
-            %stReturn.Current   = dPeakCurrent;
 
-            %[dPeakCurrent, dCurrentUnit] = fAutoScale(dPeakCurrent, 'A');
-            [dBeamCharge,  sChargeUnit]  = fAutoScale(dBeamCharge,  'C');
+            [dBeamCharge, sChargeUnit] = fAutoScale(dBeamCharge,'C');
 
             if ~obj.Silent
-                fprintf(' Max Plasma Density:     %0.3e m^-3\n', dN0*dPMax);
-                fprintf(' Max Plasma Frequency:   %0.3e s^-1\n', dMOmegaP);
-                fprintf('\n');
-                fprintf(' Beam Integral:          %0.3f \n',     dBeamInt);
-                fprintf(' Beam Volume:            %0.3e m^3\n',  dBeamVol);
-                fprintf(' Beam Charge:            %0.3f %s\n',   dBeamCharge, sChargeUnit);
-                fprintf(' Beam Particle Count:    %0.3e \n',     dBeamNum);
-                fprintf(' Beam Density:           %0.3e M^-3\n', dBeamDensity);
-                fprintf('\n');
-                fprintf(' Beam/Plasma Ratio:      %0.3e \n',     dBeamPlasma);
-                %fprintf('\n');
-                %fprintf(' Beam Peak Current:      %0.3f %s\n',    dPeakCurrent, dCurrentUnit);
-            end % if
-            
-            if ~obj.Silent
+                fprintf(' Total Charge:      %0.3f %s\n', dBeamCharge, sChargeUnit);
+                fprintf(' Particle Count:    %0.3e \n',   dBeamNum);
                 fprintf('\n');
             end % if
             
