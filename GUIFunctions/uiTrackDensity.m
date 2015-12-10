@@ -384,19 +384,19 @@ function uiTrackDensity(oData)
     
     function fLoadField()
         
-        oFieldE1 = EField(oData, 'e1', 'Units', 'SI', 'X1Scale', 'mm');
+        oFieldE1 = Field(oData, 'e1', 'Units', 'SI', 'X1Scale', 'mm');
         oFieldE1.Time = X.Dump;
         X.Field.E1 = oFieldE1.Lineout(3,3);
 
-        oFieldE2 = EField(oData, 'e2', 'Units', 'SI', 'X1Scale', 'mm');
+        oFieldE2 = Field(oData, 'e2', 'Units', 'SI', 'X1Scale', 'mm');
         oFieldE2.Time = X.Dump;
         X.Field.E2 = oFieldE2.Lineout(3,3);
         
-        oDensEB = Charge(oData, 'EB', 'Units', 'SI', 'X1Scale', 'mm');
+        oDensEB = Density(oData, 'EB', 'Units', 'SI', 'X1Scale', 'mm');
         oDensEB.Time = X.Dump;
         X.Field.EB = oDensEB.Lineout(3,3);
 
-        oDensPB = Charge(oData, 'PB', 'Units', 'SI', 'X1Scale', 'mm');
+        oDensPB = Density(oData, 'PB', 'Units', 'SI', 'X1Scale', 'mm');
         oDensPB.Time = X.Dump;
         X.Field.PB = oDensPB.Lineout(3,3);
 

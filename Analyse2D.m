@@ -94,7 +94,7 @@ function Analyse2D
     % Set figure properties
     fMain.Units        = 'Pixels';
     fMain.MenuBar      = 'None';
-    fMain.Position     = [aFPos(1:2) 560 640];
+    fMain.Position     = [aFPos(1:2) 550 640];
     fMain.Name         = 'OsirisAnalysis Version 1.3 - GUI';
     fMain.NumberTitle  = 'Off';
     fMain.DockControls = 'Off';
@@ -432,7 +432,11 @@ function Analyse2D
             iVal = 1;
         end % if
         
-        X.Plot(t).Phase2D = oData.Config.Particles.Species.(X.Plot(t).Data).PhaseSpaces.Dim2;
+        X.Plot(t).Phase2D = oData.Config.Particles.Species.(X.Data.Species{iVal}).PhaseSpaces.Dim2;
+        if numel(X.Plot(t).Phase2D) > 0
+            iPS = 1;
+            X.Plot(t).Axis = X.Plot(t).Phase2D{1};
+        end % if
         
         uicontrol(bgTab(t),'Style','Text','String','Species','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Species,'Value',iVal,'Position',[115 iY 150 20],'Callback',{@fPlotSetSpecies,t});
@@ -441,7 +445,7 @@ function Analyse2D
 
         iY = iY - 25;
         uicontrol(bgTab(t),'Style','Text','String','Phase Space','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Plot(t).Phase2D,'Value',1,'Position',[115 iY 150 20],'Callback',{@fPlotSetAxis,t});
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Plot(t).Phase2D,'Position',[115 iY 150 20],'Callback',{@fPlotSetAxis,t});
         
     end % function
 
