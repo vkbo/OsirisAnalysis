@@ -20,7 +20,12 @@ stFolders.Archive  = struct('Path', '/data/OsirisArchive',           'Depth', 2,
 stFolders.Data     = struct('Path', '/data/OsirisData',              'Depth', 2, 'Name', 'Local: Data');
 
 %
-% Translation Matrix for Species Names
+%  Translation Matrix for Species Names
+% **************************************
+%  This is a lookup struct do determine what type of species the particles
+%  in the input deck are. OsirisAnalysis uses the fieldnames after stInput
+%  internally, and all other names used must be specified in the corresponding
+%  cell array.
 %
 
 stInput.ElectronBeam    = {'eb','e-b','electron_beam'};
