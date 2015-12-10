@@ -431,23 +431,17 @@ function Analyse2D
             X.Plot(t).Data = X.Data.Species{1};
             iVal = 1;
         end % if
+        
+        X.Plot(t).Phase2D = oData.Config.Particles.Species.(X.Plot(t).Data).PhaseSpaces.Dim2;
+        
         uicontrol(bgTab(t),'Style','Text','String','Species','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Species,'Value',iVal,'Position',[115 iY 150 20],'Callback',{@fPlotSetSpecies,t});
         uicontrol(bgTab(t),'Style','Text','String','CAxis','Position',[305 iY+1 60 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','Edit','String','','Position',[350 iY 100 20],'Callback',{@fPlotSetCAxis,t,0});
 
         iY = iY - 25;
-        uicontrol(bgTab(t),'Style','Text','String','Horizontal Axis','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Axis,'Value',1,'Position',[115 iY 180 20],'Callback',{@fPlotSetAxis,1,t});
-        uicontrol(bgTab(t),'Style','Checkbox','String','Auto Scale','Value',X.Plot(t).Settings(2),'Position',[305 iY 150 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,2});
-
-        iY = iY - 25;
-        uicontrol(bgTab(t),'Style','Text','String','Vertical Axis','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Axis,'Value',3,'Position',[115 iY 180 20],'Callback',{@fPlotSetAxis,2,t});
-        uicontrol(bgTab(t),'Style','Checkbox','String','Auto Scale','Value',X.Plot(t).Settings(3),'Position',[305 iY 150 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,3});
-
-        iY = iY - 25;
-        uicontrol(bgTab(t),'Style','Checkbox','String','Use Raw Data','Value',X.Plot(t).Settings(1),'Position',[115 iY 150 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,1});
+        uicontrol(bgTab(t),'Style','Text','String','Phase Space','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Plot(t).Phase2D,'Value',1,'Position',[115 iY 150 20],'Callback',{@fPlotSetAxis,t});
         
     end % function
 
@@ -890,10 +884,10 @@ function Analyse2D
                 case 'Phase 1D'
                     
                 case 'Phase 2D'
-                    X.Plot(f).Data     = X.Data.Species{1};
-                    X.Plot(f).Axis     = {X.Data.Axis{1},X.Data.Axis{3}};
-                    X.Plot(f).Settings = [0 0 0];
-                    X.Plot(f).CAxis    = [];
+                    X.Plot(f).Data    = X.Data.Species{1};
+                    X.Plot(f).Axis    = '';
+                    X.Plot(f).Phase2D = {};
+                    X.Plot(f).CAxis   = [];
                     fCtrlPhase2D(f);
                     aFigSize = [700 500];
                     
@@ -1140,12 +1134,12 @@ function Analyse2D
                     case 'Phase 2D'
                         iMakeSym = 0;
                         figure(X.Plot(f).Figure); clf;
-                        X.Plot(f).Return = fPlotPhase2D(oData,X.Time.Dump,X.Plot(f).Data, ...
-                            [oVar.Reverse(X.Plot(f).Axis{1},'Full') oVar.Reverse(X.Plot(f).Axis{2},'Full')], ...
+                        X.Plot(f).Return = fPlotPhase2D(oData,X.Time.Dump,X.Plot(f).Data,X.Plot(f).Axis, ...
                             'HLim',aHLim,'VLim',aVLim, ...
                             'IsSubPlot','No','AutoResize','Off','HideDump','Yes', ...
                             'CAxis',X.Plot(f).CAxis);
-                        if isempty(X.Plot(f).Return)
+                        if isfield(X.Plot(f).Return,'Error')
+                            fOut(X.Plot(f).Return.Error,3);
                             return;
                         end % if
                         X.Plot(f).Scale = X.Plot(f).Return.AxisScale(1:2);
@@ -1423,6 +1417,7 @@ function Analyse2D
                 X.Plot(f).MaxLim = [0.0 0.0 0.0 0.0];
                 X.Plot(f).Limits = [0.0 0.0 0.0 0.0];
                 X.Plot(f).Scale  = [1.0 1.0];
+                fCtrlPhase2D(f);
         end % switch
         
         X.Data.Density = oData.Config.Particles.Species.(X.Data.Species{1}).DiagReports;
@@ -1482,18 +1477,18 @@ function Analyse2D
         
     end % function
 
-    function fPlotSetAxis(uiSrc,~,a,f)
+    function fPlotSetAxis(uiSrc,~,f)
         
         iAxis = uiSrc.Value;
-        sAxis = X.Data.Axis{iAxis};
+        sAxis = X.Plot(f).Phase2D{iAxis};
         
-        X.Plot(f).Axis{a} = sAxis;
+        X.Plot(f).Axis = sAxis;
         switch(X.Plots{X.Figure(f)})
             case 'Phase 2D'
                 X.Plot(f).MaxLim = [0.0 0.0 0.0 0.0];
                 X.Plot(f).Limits = [0.0 0.0 0.0 0.0];
                 X.Plot(f).Scale  = [1.0 1.0];
-        end % switch        
+        end % switch
         fRefresh(f);
         
     end % function
@@ -1587,4 +1582,4 @@ function Analyse2D
    
 end % function
 
-% End
+% End Analyse2D
