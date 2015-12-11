@@ -198,8 +198,8 @@ classdef Density < OsirisType
             sMethod = lower(stOpt.Method);
             
             % Read variables
-            dTFac = obj.Data.Config.Convert.SI.TimeFac;
-            dQFac = obj.Data.Config.Convert.SI.ChargeFac;
+            dTFac  = obj.Data.Config.Convert.SI.TimeFac;
+            dRFrac = obj.Data.Config.Particles.Species.(obj.Species.Name).RawFraction;
             
             aX1Lim = obj.X1Lim;
             aX2Lim = obj.X2Lim;
@@ -229,7 +229,7 @@ classdef Density < OsirisType
                 
                 switch(sMethod)
                     case 'sum'
-                        aData(i) = sum(aRaw(:,iValue));
+                        aData(i) = sum(aRaw(:,iValue))/dRFrac;
                     case 'mean'
                         aData(i) = wmean(aRaw(:,iValue),aRaw(:,8));
                     case 'max'
@@ -249,12 +249,14 @@ classdef Density < OsirisType
                     aStd  = aStd*obj.AxisFac(iValue);
                     sUnit = obj.AxisUnits{iValue};
                 elseif iValue == 4 || iValue == 5 || iValue == 6
-                    aData = obj.MomentumToEnergy(aData);
-                    aStd  = obj.MomentumToEnergy(aStd);
+                    dFac  = obj.Data.Config.Constants.EV.ElectronMass;
+                    dFac  = dFac*abs(obj.Config.RQM);
+                    aData = aData*dFac;
+                    aStd  = aStd*dFac;
                     sUnit = 'eV/c';
                 elseif iValue == 7
                     dFac  = obj.Data.Config.Constants.EV.ElectronMass;
-                    dFac  = dFac*obj.Config.RQM;
+                    dFac  = dFac*abs(obj.Config.RQM);
                     aData = aData*dFac;
                     aStd  = aStd*dFac;
                     sUnit = 'eV/c^2';

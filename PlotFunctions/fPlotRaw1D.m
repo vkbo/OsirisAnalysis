@@ -121,8 +121,8 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
     if strcmpi(stOpt.GaussFit,'Yes')
     
         try
-            oFit = fit(double(aAxis)',double(aData)','Gauss1');
-            aFit = feval(oFit,aAxis);
+            oFit   = fit(double(aAxis)',double(aData)','Gauss1');
+            aFit   = feval(oFit,aAxis);
             dAmp   = oFit.a1;
             dMu    = oFit.b1;
             dSigma = oFit.c1/sqrt(2);
