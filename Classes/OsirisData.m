@@ -560,13 +560,13 @@ classdef OsirisData
             bReturn = false;
             sPath   = obj.Path;
             
-            % Check if Analysis folder exists
+            % Check if analysis folder exists
             sPath = [sPath, '/AN'];
             if ~isdir(sPath)
                 try
                     mkdir(sPath);
                 catch
-                    fprint('Failed to make directory %s\n',sPath);
+                    fprint('Failed to create folder %s\n',sPath);
                     return;
                 end % try
             end % if
@@ -577,7 +577,7 @@ classdef OsirisData
                 try
                     mkdir(sPath);
                 catch
-                    fprint('Failed to make directory %s\n',sPath);
+                    fprint('Failed to create folder %s\n',sPath);
                     return;
                 end % try
             end % if
@@ -588,11 +588,12 @@ classdef OsirisData
                 try
                     mkdir(sPath);
                 catch
-                    fprint('Failed to make directory %s\n',sPath);
+                    fprint('Failed to create folder %s\n',sPath);
                     return;
                 end % try
             end % if
             
+            % Generate FileName
             if iTime < 0
                 sTime = 'RANGE';
             else
@@ -610,7 +611,14 @@ classdef OsirisData
                 end % for
             end % if
 
-            stSave.Save = stData;
+            % TimeStamp
+            aTime      = clock;
+            aTime(6)   = round(aTime(6));
+            sTimeStamp = sprintf('%04.0f-%02.0f-%02.0f %02.0f:%02.0f:%02.0f', aTime);
+
+            % Save File
+            stSave.Save           = stData;
+            stSave.Save.TimeStamp = sTimeStamp;
             save([sPath, '/', sFile],'-struct','stSave');
             
             bReturn = true;
