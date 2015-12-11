@@ -555,6 +555,76 @@ classdef OsirisData
             
         end % function
 
+        function bReturn = SaveAnalysis(obj, stData, sClass, sMethod, sSubject, sData, iTime, sReplace)
+            
+            bReturn = false;
+            sPath   = obj.Path;
+            
+            % Check if analysis folder exists
+            sPath = [sPath, '/AN'];
+            if ~isdir(sPath)
+                try
+                    mkdir(sPath);
+                catch
+                    fprint('Failed to create folder %s\n',sPath);
+                    return;
+                end % try
+            end % if
+            
+            % Check if class folder exists
+            sPath = [sPath, '/', sClass];
+            if ~isdir(sPath)
+                try
+                    mkdir(sPath);
+                catch
+                    fprint('Failed to create folder %s\n',sPath);
+                    return;
+                end % try
+            end % if
+
+            % Check if method folder exists
+            sPath = [sPath, '/', sMethod];
+            if ~isdir(sPath)
+                try
+                    mkdir(sPath);
+                catch
+                    fprint('Failed to create folder %s\n',sPath);
+                    return;
+                end % try
+            end % if
+            
+            % Generate FileName
+            if iTime < 0
+                sTime = 'RANGE';
+            else
+                sTime = sprintf('%05d',iTime);
+            end % if
+            
+            if strcmpi(sReplace, 'Replace')
+                sFile = sprintf('%s-%s-%s-000.mat',sSubject,sData,sTime);
+            else
+                for i=1:100
+                    sFile = sprintf('%s-%s-%s-%03d.mat',sSubject,sData,sTime,i);
+                    if ~exist([sPath, '/', sFile],'file')
+                        break;
+                    end % if
+                end % for
+            end % if
+
+            % TimeStamp
+            aTime      = clock;
+            aTime(6)   = round(aTime(6));
+            sTimeStamp = sprintf('%04.0f-%02.0f-%02.0f %02.0f:%02.0f:%02.0f', aTime);
+
+            % Save File
+            stSave.Save           = stData;
+            stSave.Save.TimeStamp = sTimeStamp;
+            save([sPath, '/', sFile],'-struct','stSave');
+            
+            bReturn = true;
+            
+        end % function
+
         function stReturn = ExportTags(obj, sTime, sSpecies, varargin)
             
             stReturn = {};
