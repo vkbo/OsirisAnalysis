@@ -120,7 +120,7 @@ function stReturn = fPlotPhaseSpace(oData, sTime, sSpecies, varargin)
         cla;
     end % if
 
-    imagesc(stData.X1Axis, stData.X2Axis, aData);
+    imagesc(stData.HAxis, stData.VAxis, aData);
     set(gca,'YDir','Normal');
     colormap('hot');
     hCol = colorbar();

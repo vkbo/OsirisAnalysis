@@ -92,7 +92,7 @@ function stReturn = fPlotESigmaMean(oData, sSpecies, varargin)
     H(1) = shadedErrorBar(stData.TAxis, stData.Mean*dScale, stData.Sigma*dScale, {'-b', 'LineWidth', 2});
     
     legend([H(1).mainLine, H.patch], '<E>', '\sigma_E', 'Location', 'SouthEast');
-    xlim([stData.TimeAxis(1), stData.TimeAxis(end)]);
+    xlim([stData.TAxis(1), stData.TAxis(end)]);
 
     if strcmpi(stOpt.HideDump, 'No')
         sTitle = sprintf('%s Mean Energy (%s #%d)',vSpecies.Full,oData.Config.Name,iTime);
