@@ -12,7 +12,8 @@ classdef Variables
 
     properties(GetAccess='public', SetAccess='private')
         
-        Coords = 1;  % 0 = cylindrical, 1 = cartesian
+        Coords  = 1;    % 0 = cylindrical, 1 = cartesian
+        Running = true; % 0 = returns z, 1 = return \xi
 
     end % properties
 
@@ -29,7 +30,7 @@ classdef Variables
 
     methods
 
-        function obj = Variables(vCoords)
+        function obj = Variables(vCoords, bRunning)
             
             %
             %  Variables :: Constructor
@@ -41,9 +42,14 @@ classdef Variables
             % Check Inputs
             %
 
+            if nargin < 2
+                bRunning = true;
+            end % if
             if nargin < 1
                 vCoords = 'cylindrical';
             end % if
+            
+            obj.Running = bRunning;
 
             % Coordinates
             switch lower(vCoords)
@@ -731,6 +737,10 @@ classdef Variables
             
             % Variable
             sVar = lower(sVar);
+            
+            if obj.Running
+                sVar = strrep(sVar,'x1','xi');
+            end % if
 
             % Search
             if nargin < 3

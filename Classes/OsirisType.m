@@ -88,6 +88,7 @@ classdef OsirisType
             % Read Input Parameters
             oOpt = inputParser;
             addParameter(oOpt, 'Units',   'N');
+            addParameter(oOpt, 'Scale',   '');
             addParameter(oOpt, 'X1Scale', 'Auto');
             addParameter(oOpt, 'X2Scale', 'Auto');
             addParameter(oOpt, 'X3Scale', 'Auto');
@@ -95,7 +96,11 @@ classdef OsirisType
             stOpt = oOpt.Results;
 
             % Set Scale
-            obj.AxisScale = {stOpt.X1Scale, stOpt.X2Scale, stOpt.X3Scale};
+            if isempty(stOpt.Scale)
+                obj.AxisScale = {stOpt.X1Scale, stOpt.X2Scale, stOpt.X3Scale};
+            else
+                obj.AxisScale = {stOpt.Scale, stOpt.Scale, stOpt.Scale};
+            end % if
 
             % Evaluate Units
             switch(lower(stOpt.Units))
@@ -158,6 +163,7 @@ classdef OsirisType
             % Set default slice for 3D
             if obj.Dim == 3
                 obj.SliceAxis = 3;
+                obj.Slice     = 0.0;
             end % if
 
         end % function
@@ -303,7 +309,7 @@ classdef OsirisType
         end % function
 
         function obj = set.Slice(obj, dSlice)
-            
+
             aAxis     = obj.fGetBoxAxis(sprintf('x%d',obj.SliceAxis));
             obj.Slice = fGetIndex(aAxis,dSlice);
             
@@ -417,6 +423,163 @@ classdef OsirisType
     %
     
     methods(Access='protected')
+        
+        function stReturn = fParseGridData1D(obj, aData, iStart, iAverage)
+
+            % Input/Output
+            stReturn = {};
+            
+            if ndims(aData) ~= obj.Dim
+                return;
+            end % if
+
+            % Dimensions
+
+            if obj.Dim == 1
+                return;
+            end % if
+            
+            if obj.Dim == 2
+                sHAxis = 'x1';
+                sVAxis = 'x2';
+                aHAxis = obj.fGetBoxAxis('x1');
+                aVAxis = obj.fGetBoxAxis('x2');
+                aHLim  = [obj.X1Lim(1)*obj.AxisFac(1), obj.X1Lim(2)*obj.AxisFac(1)];
+            end % if
+
+            if obj.Dim == 3
+                switch obj.SliceAxis
+                    case 1
+                        sHAxis = 'x2';
+                        sVAxis = 'x3';
+                        aHAxis = obj.fGetBoxAxis('x2');
+                        aVAxis = obj.fGetBoxAxis('x3');
+                        aData  = squeeze(aData(obj.Slice,:,:));
+                        aHLim  = [obj.X2Lim(1)*obj.AxisFac(2), obj.X2Lim(2)*obj.AxisFac(2)];
+                    case 2
+                        sHAxis = 'x1';
+                        sVAxis = 'x3';
+                        aHAxis = obj.fGetBoxAxis('x1');
+                        aVAxis = obj.fGetBoxAxis('x3');
+                        aData  = squeeze(aData(:,obj.Slice,:));
+                        aHLim  = [obj.X1Lim(1)*obj.AxisFac(1), obj.X1Lim(2)*obj.AxisFac(1)];
+                    case 3
+                        sHAxis = 'x1';
+                        sVAxis = 'x2';
+                        aHAxis = obj.fGetBoxAxis('x1');
+                        aVAxis = obj.fGetBoxAxis('x2');
+                        aData  = squeeze(aData(:,:,obj.Slice));
+                        aHLim  = [obj.X1Lim(1)*obj.AxisFac(1), obj.X1Lim(2)*obj.AxisFac(1)];
+                end % switch
+            end % if
+            
+            % Get Limits
+            iHMin = fGetIndex(aHAxis, aHLim(1));
+            iHMax = fGetIndex(aHAxis, aHLim(2));
+
+            % Crop Dataset
+            iEnd   = iStart+iAverage-1;
+            aData  = transpose(mean(aData(iHMin:iHMax,iStart:iEnd),2));
+            aHAxis = aHAxis(iHMin:iHMax);
+            
+            % Return Data
+            stReturn.Data  = aData;
+            stReturn.HAxis = aHAxis;
+            stReturn.HLim  = [iHMin iHMax];
+            stReturn.VLim  = [aHAxis(iStart) aHAxis(iEnd+1)];
+            stReturn.Axes  = {sHAxis,sVAxis};
+
+        end % function
+        
+        function stReturn = fParseGridData2D(obj, aData, bAzimuthal)
+            
+            % Input/Output
+            stReturn = {};
+            
+            if nargin < 3
+                bAzimuthal = false;
+            end % if
+
+            if ndims(aData) ~= obj.Dim
+                return;
+            end % if
+            
+            % Dimensions
+
+            if obj.Dim == 1
+                return;
+            end % if
+            
+            if obj.Dim == 2
+                sHAxis = 'x1';
+                sVAxis = 'x2';
+                aHAxis = obj.fGetBoxAxis('x1');
+                aVAxis = obj.fGetBoxAxis('x2');
+                aHLim  = [obj.X1Lim(1)*obj.AxisFac(1), obj.X1Lim(2)*obj.AxisFac(1)];
+                aVLim  = [obj.X2Lim(1)*obj.AxisFac(2), obj.X2Lim(2)*obj.AxisFac(2)];
+            end % if
+
+            if obj.Dim == 3
+                switch obj.SliceAxis
+                    case 1
+                        sHAxis = 'x2';
+                        sVAxis = 'x3';
+                        aHAxis = obj.fGetBoxAxis('x2');
+                        aVAxis = obj.fGetBoxAxis('x3');
+                        aData  = squeeze(aData(obj.Slice,:,:));
+                        aHLim  = [obj.X2Lim(1)*obj.AxisFac(2), obj.X2Lim(2)*obj.AxisFac(2)];
+                        aVLim  = [obj.X3Lim(1)*obj.AxisFac(3), obj.X3Lim(2)*obj.AxisFac(3)];
+                    case 2
+                        sHAxis = 'x1';
+                        sVAxis = 'x3';
+                        aHAxis = obj.fGetBoxAxis('x1');
+                        aVAxis = obj.fGetBoxAxis('x3');
+                        aData  = squeeze(aData(:,obj.Slice,:));
+                        aHLim  = [obj.X1Lim(1)*obj.AxisFac(1), obj.X1Lim(2)*obj.AxisFac(1)];
+                        aVLim  = [obj.X3Lim(1)*obj.AxisFac(3), obj.X3Lim(2)*obj.AxisFac(3)];
+                    case 3
+                        sHAxis = 'x1';
+                        sVAxis = 'x2';
+                        aHAxis = obj.fGetBoxAxis('x1');
+                        aVAxis = obj.fGetBoxAxis('x2');
+                        aData  = squeeze(aData(:,:,obj.Slice));
+                        aHLim  = [obj.X1Lim(1)*obj.AxisFac(1), obj.X1Lim(2)*obj.AxisFac(1)];
+                        aVLim  = [obj.X2Lim(1)*obj.AxisFac(2), obj.X2Lim(2)*obj.AxisFac(2)];
+                end % switch
+            end % if
+
+            % Check if cylindrical
+            if obj.Cylindrical
+                if bAzimuthal
+                    aData = transpose([-fliplr(aData),aData]);
+                else
+                    aData = transpose([ fliplr(aData),aData]);
+                end % if
+                aVAxis = [-fliplr(aVAxis), aVAxis];
+            else
+                aData  = transpose(aData);
+            end % if
+            
+            % Get Limits
+            iHMin = fGetIndex(aHAxis, aHLim(1));
+            iHMax = fGetIndex(aHAxis, aHLim(2));
+            iVMin = fGetIndex(aVAxis, aVLim(1));
+            iVMax = fGetIndex(aVAxis, aVLim(2));
+
+            % Crop Dataset
+            aData  = aData(iVMin:iVMax,iHMin:iHMax);
+            aHAxis = aHAxis(iHMin:iHMax);
+            aVAxis = aVAxis(iVMin:iVMax);
+            
+            % Return Data
+            stReturn.Data  = aData;
+            stReturn.HAxis = aHAxis;
+            stReturn.VAxis = aVAxis;
+            stReturn.HLim  = [iHMin iHMax];
+            stReturn.VLim  = [iVMin iVMax];
+            stReturn.Axes  = {sHAxis,sVAxis};
+
+        end % function
         
         function aReturn = fGetTimeAxis(obj)
             

@@ -15,6 +15,8 @@
 %  Current     :: Optional current instead of charge
 %  Limits      :: Axis limits
 %  Charge      :: Calculate charge in ellipse. Two inputs for peak
+%  Slice       :: 2D slice coordinate for 3D data
+%  SliceAxis   :: 2D slice axis for 3D data
 %  FigureSize  :: Default [900 500]
 %  HideDump    :: Default No
 %  IsSubplot   :: Default No
@@ -47,6 +49,8 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
         fprintf('  Current     :: Optional current instead of charge\n');
         fprintf('  Limits      :: Axis limits\n');
         fprintf('  Charge      :: Calculate charge in ellipse. Two inputs for peak\n');
+        fprintf('  Slice       :: 2D slice coordinate for 3D data\n');
+        fprintf('  SliceAxis   :: 2D slice axis for 3D data\n');
         fprintf('  FigureSize  :: Default [900 500]\n');
         fprintf('  HideDump    :: Default No\n');
         fprintf('  IsSubplot   :: Default No\n');
@@ -65,6 +69,8 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     addParameter(oOpt, 'Data',        'charge');
     addParameter(oOpt, 'Limits',      []);
     addParameter(oOpt, 'Charge',      []);
+    addParameter(oOpt, 'Slice',       0.0);
+    addParameter(oOpt, 'SliceAxis',   3);
     addParameter(oOpt, 'FigureSize',  [900 500]);
     addParameter(oOpt, 'HideDump',    'No');
     addParameter(oOpt, 'IsSubPlot',   'No');
@@ -88,12 +94,17 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
 
     % Prepare Data
     
-    oDN      = Density(oData, vBeam.Name, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
+    oDN      = Density(oData,vBeam.Name,'Units','SI','Scale','mm');
     oDN.Time = iTime;
 
     if length(stOpt.Limits) == 4
         oDN.X1Lim = stOpt.Limits(1:2);
         oDN.X2Lim = stOpt.Limits(3:4);
+    end % if
+    
+    if oData.Config.Simulation.Dimensions == 3
+        oDN.SliceAxis = stOpt.SliceAxis;
+        oDN.Slice     = stOpt.Slice;
     end % if
     
     vData  = oData.Translate.Lookup(stOpt.Data);
@@ -108,26 +119,21 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     aData  = stData.Data;
     sUnit  = stData.Unit;
     sLabel = stData.Label;
-<<<<<<< HEAD
-    aXAxis = stData.XAxis;
-    aYAxis = stData.YAxis;
-=======
-    aZAxis = stData.HAxis;
-    aRAxis = stData.VAxis;
->>>>>>> fHVAxes
+    aHAxis = stData.HAxis;
+    aVAxis = stData.VAxis;
+    sHAxis = stData.Axes{1};
+    sVAxis = stData.Axes{2};
     dZPos  = stData.ZPos;
+    
+    vHAxis = oData.Translate.Lookup(sHAxis);
+    vVAxis = oData.Translate.Lookup(sVAxis);
     
     dMax  = max(abs(aData(:)));
     [dSMax,sSUnit] = fAutoScale(dMax,sUnit);
     aData = aData*dSMax/dMax;
 
-<<<<<<< HEAD
-    stReturn.XAxis     = stData.XAxis;
-    stReturn.YAxis     = stData.YAxis;
-=======
-    stReturn.HAxis     = stData.HAxis;
-    stReturn.VAxis     = stData.VAxis;
->>>>>>> fHVAxes
+    stReturn.XAxis     = stData.HAxis;
+    stReturn.YAxis     = stData.VAxis;
     stReturn.ZPos      = stData.ZPos;
     stReturn.AxisFac   = oDN.AxisFac;
     stReturn.AxisRange = oDN.AxisRange;
@@ -137,12 +143,12 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     end % if
     
     aProjZ = abs(sum(aData));
-    aProjZ = 0.15*(aYAxis(end)-aYAxis(1))*aProjZ/max(abs(aProjZ))+aYAxis(1);
+    aProjZ = 0.15*(aVAxis(end)-aVAxis(1))*aProjZ/max(abs(aProjZ))+aVAxis(1);
 
     if length(stOpt.Charge) == 2
         [~,iZPeak] = max(sum(abs(aData),1));
         [~,iRPeak] = max(sum(abs(aData),2));
-        stQTot = oDN.BeamCharge('Ellipse', [aXAxis(iZPeak), 0, stOpt.Charge(1), stOpt.Charge(2)]);
+        stQTot = oDN.BeamCharge('Ellipse', [aHAxis(iZPeak), 0, stOpt.Charge(1), stOpt.Charge(2)]);
     elseif length(stOpt.Charge) == 4
         stQTot = oDN.BeamCharge('Ellipse', [stOpt.Charge(1), stOpt.Charge(2), stOpt.Charge(3), stOpt.Charge(4)]);
     else
@@ -164,7 +170,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
         cla;
     end % if
     
-    imagesc(aXAxis, aYAxis, aData);
+    imagesc(aHAxis, aVAxis, aData);
     set(gca,'YDir','Normal');
     colormap('hot');
     hCol = colorbar();
@@ -175,7 +181,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     hold on;
 
     if strcmpi(stOpt.ShowOverlay, 'Yes')
-        plot(aXAxis, aProjZ, 'White');
+        plot(aHAxis, aProjZ, 'White');
         h = legend(sBeamCharge, 'Location', 'NE');
         set(h,'Box','Off');
         set(h,'TextColor', [1 1 1]);
@@ -183,8 +189,8 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     end % if
 
     if length(stOpt.Charge) == 2
-        dRX = aXAxis(iZPeak)-stOpt.Charge(1);
-        dRY = aYAxis(iRPeak)-stOpt.Charge(2);
+        dRX = aHAxis(iZPeak)-stOpt.Charge(1);
+        dRY = aVAxis(iRPeak)-stOpt.Charge(2);
         rectangle('Position',[dRX,dRY,2*stOpt.Charge(1),2*stOpt.Charge(2)],'Curvature',[1,1],'EdgeColor','White','LineStyle','--');
     elseif length(stOpt.Charge) == 4
         dRX = aCharge(1)-stOpt.Charge(3);
@@ -199,8 +205,8 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     end % if
 
     title(sTitle);
-    xlabel('\xi [mm]');
-    ylabel('r [mm]');
+    xlabel(sprintf('%s [mm]',vHAxis.Tex));
+    ylabel(sprintf('%s [mm]',vVAxis.Tex));
     title(hCol,sprintf('%s [%s]',sLabel,sSUnit));
     
     hold off;

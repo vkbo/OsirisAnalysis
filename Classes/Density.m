@@ -16,12 +16,15 @@
 %      X1Scale : Unit scale on x1 axis. 'Auto', or specify metric unit
 %      X2Scale : Unit scale on x2 axis. 'Auto', or specify metric unit
 %      X3Scale : Unit scale on x3 axis. 'Auto', or specify metric unit
+%      Scale   : Unit scale on all axes. 'Auto', or specify metric unit
 %
 %  Set Methods:
-%    Time  : Set time dump for dataset. Default is 0.
-%    X1Lim : 2D array of limits for x1 axis. Default is full box.
-%    X2Lim : 2D array of limits for x2 axis. Default is full box.
-%    X3Lim : 2D array of limits for x3 axis. Default is full box.
+%    Time      : Set time dump for dataset. Default is 0.
+%    X1Lim     : 2D array of limits for x1 axis. Default is full box.
+%    X2Lim     : 2D array of limits for x2 axis. Default is full box.
+%    X3Lim     : 2D array of limits for x3 axis. Default is full box.
+%    SliceAxis : 2D slice axis for 3D data
+%    Slice     : 2D slice coordinate for 3D data
 %
 %  Public Methods:
 %
@@ -75,55 +78,15 @@ classdef Density < OsirisType
                 return;
             end % if
 
-            % Get data and axes
-            aData = obj.Data.Data(obj.Time, 'DENSITY', vDensity.Name, obj.Species.Name);
-            if obj.Dim < 3
-                aHAxis = obj.fGetBoxAxis('x1');
-                aVAxis = obj.fGetBoxAxis('x2');
-                aHLim  = [obj.X1Lim(1)*obj.AxisFac(1), obj.X1Lim(2)*obj.AxisFac(1)];
-                aVLim  = [obj.X1Lim(1)*obj.AxisFac(2), obj.X1Lim(2)*obj.AxisFac(2)];
-            else
-                switch obj.SliceAxis
-                    case 1
-                        aHAxis = obj.fGetBoxAxis('x2');
-                        aVAxis = obj.fGetBoxAxis('x3');
-                        aData  = squeeze(aData(obj.Slice,:,:));
-                        aHLim  = [obj.X2Lim(1)*obj.AxisFac(2), obj.X2Lim(2)*obj.AxisFac(2)];
-                        aVLim  = [obj.X3Lim(1)*obj.AxisFac(3), obj.X3Lim(2)*obj.AxisFac(3)];
-                    case 2
-                        aHAxis = obj.fGetBoxAxis('x1');
-                        aVAxis = obj.fGetBoxAxis('x3');
-                        aData  = squeeze(aData(:,obj.Slice,:));
-                        aHLim  = [obj.X1Lim(1)*obj.AxisFac(1), obj.X1Lim(2)*obj.AxisFac(1)];
-                        aVLim  = [obj.X3Lim(1)*obj.AxisFac(3), obj.X3Lim(2)*obj.AxisFac(3)];
-                    case 3
-                        aHAxis = obj.fGetBoxAxis('x1');
-                        aVAxis = obj.fGetBoxAxis('x2');
-                        aData  = squeeze(aData(:,:,obj.Slice));
-                        aHLim  = [obj.X1Lim(1)*obj.AxisFac(1), obj.X1Lim(2)*obj.AxisFac(1)];
-                        aVLim  = [obj.X2Lim(1)*obj.AxisFac(2), obj.X2Lim(2)*obj.AxisFac(2)];
-                end % switch
-            end % if
+            % Get Data and Parse it
+            aData  = obj.Data.Data(obj.Time, 'DENSITY', vDensity.Name, obj.Species.Name);
+            stData = obj.fParseGridData2D(aData);
 
-            % Check if cylindrical
-            if obj.Cylindrical
-                aData  = transpose([fliplr(aData),aData]);
-                aVAxis = [-fliplr(aVAxis), aVAxis];
-            else
-                aData  = transpose(aData);
+            if isempty(stData)
+                return;
             end % if
             
-            iXMin = fGetIndex(aHAxis, aHLim(1));
-            iXMax = fGetIndex(aHAxis, aHLim(2));
-            iYMin = fGetIndex(aVAxis, aVLim(1));
-            iYMax = fGetIndex(aVAxis, aVLim(2));
-
-            % Crop dataset
-            aData  = aData(iYMin:iYMax,iXMin:iXMax);
-            aHAxis = aHAxis(iXMin:iXMax);
-            aVAxis = aVAxis(iYMin:iYMax);
-            
-            % Scale dataset
+            % Scale Dataset
             if strcmpi(obj.Units, 'SI')
                 sUnit  = vDensity.Unit;
                 sLabel = vDensity.Tex;
@@ -155,12 +118,13 @@ classdef Density < OsirisType
                 sUnit  = '';
             end % if
             
-            % Return data
-            stReturn.Data  = aData*dScale;
+            % Return Data
+            stReturn.Data  = stData.Data*dScale;
             stReturn.Unit  = sUnit;
             stReturn.Label = sLabel;
-            stReturn.HAxis = aHAxis;
-            stReturn.VAxis = aVAxis;
+            stReturn.Axes  = stData.Axes;
+            stReturn.HAxis = stData.HAxis;
+            stReturn.VAxis = stData.VAxis;
             stReturn.ZPos  = obj.fGetZPos();
             
         end % function
@@ -178,84 +142,21 @@ classdef Density < OsirisType
                 iStart = 3;
             end % if
             
-            % Get simulation variables
-            dE0 = obj.Data.Config.Convert.SI.E0;
-            
-            % Get data and axes
-            aData   = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species.Name);
-            aX1Axis = obj.fGetBoxAxis('x1');
-            aX2Axis = obj.fGetBoxAxis('x2');
-            
-            iX1Min = fGetIndex(aX1Axis, obj.X1Lim(1)*obj.AxisFac(1));
-            iX1Max = fGetIndex(aX1Axis, obj.X1Lim(2)*obj.AxisFac(1));
-            
-            % Crop and scale dataset
-            iEnd    = iStart+iAverage-1;
-            aData   = transpose(mean(aData(iX1Min:iX1Max,iStart:iEnd),2))*dE0;
-            aX1Axis = aX1Axis(iX1Min:iX1Max);
-            
-            % Return data
-            stReturn.Data   = aData;
-            stReturn.HAxis  = aX1Axis;
-            stReturn.HRange = obj.AxisRange(1:2);
-            stReturn.VRange = [aX2Axis(iStart) aX2Axis(iEnd+1)];
-            stReturn.ZPos   = obj.fGetZPos();        
-        
-        end % function
+            % Get Data and Parse it
+            aData  = obj.Data.Data(obj.Time,'DENSITY','charge',obj.Species.Name);
+            stData = fParseGridData1D(aData,iStart,iAverage);
 
-        function stReturn = Current(obj, sAxis)
-            
-            % Input/Output
-            stReturn = {};
-            
-            sAxis = lower(sAxis);
-            if ~ismember(sAxis, {'j1','j2','j3'}) || ~obj.Data.DataSetExists('DENSITY',sAxis,obj.Species.Name)
-                fprintf(2, 'Error: Current %s does not exist in dataset.\n', sAxis);
+            if isempty(stData)
                 return;
             end % if
-
-            if strcmpi(obj.Units, 'SI')
-                switch(sAxis)
-                    case 'j1'
-                        dJFac = obj.Data.Config.Convert.SI.JFac(1);
-                    case 'j2'
-                        dJFac = obj.Data.Config.Convert.SI.JFac(2);
-                    case 'j3'
-                        dJFac = obj.Data.Config.Convert.SI.JFac(3);
-                end % switch
-            else
-                dJFac = 1.0;
-            end % if
-            
-            % Get data and axes
-            aData   = obj.Data.Data(obj.Time, 'DENSITY', sAxis, obj.Species.Name);
-            aX1Axis = obj.fGetBoxAxis('x1');
-            aX2Axis = obj.fGetBoxAxis('x2');
-
-            % Check if cylindrical
-            if obj.Cylindrical
-                aData   = transpose([fliplr(aData),aData]);
-                aX2Axis = [-fliplr(aX2Axis), aX2Axis];
-            else
-                aData   = transpose(aData);
-            end % if
-            
-            iX1Min = fGetIndex(aX1Axis, obj.X1Lim(1)*obj.AxisFac(1));
-            iX1Max = fGetIndex(aX1Axis, obj.X1Lim(2)*obj.AxisFac(1));
-            iX2Min = fGetIndex(aX2Axis, obj.X2Lim(1)*obj.AxisFac(2));
-            iX2Max = fGetIndex(aX2Axis, obj.X2Lim(2)*obj.AxisFac(2));
-
-            % Crop and scale dataset
-            aData   = aData(iX2Min:iX2Max,iX1Min:iX1Max)*dJFac;
-            aX1Axis = aX1Axis(iX1Min:iX1Max);
-            aX2Axis = aX2Axis(iX2Min:iX2Max);
             
             % Return data
-            stReturn.Data  = aData;
-            stReturn.HAxis = aX1Axis;
-            stReturn.VAxis = aX2Axis;
-            stReturn.ZPos  = obj.fGetZPos();
-            
+            stReturn.Data   = stData.Data;
+            stReturn.HAxis  = stData.HAxis;
+            stReturn.HRange = stData.HLim;
+            stReturn.VRange = stData.VLim;
+            stReturn.ZPos   = obj.fGetZPos();        
+        
         end % function
 
         function stReturn = Fourier(obj, aRange)

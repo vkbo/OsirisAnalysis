@@ -15,12 +15,15 @@
 %      X1Scale : Unit scale on x1 axis. 'Auto', or specify metric unit
 %      X2Scale : Unit scale on x2 axis. 'Auto', or specify metric unit
 %      X3Scale : Unit scale on x3 axis. 'Auto', or specify metric unit
+%      Scale   : Unit scale on all axes. 'Auto', or specify metric unit
 %
 %  Set Methods:
-%    Time  : Set time dump for dataset. Default is 0.
-%    X1Lim : 2D array of limits for x1 axis. Default is full box.
-%    X2Lim : 2D array of limits for x2 axis. Default is full box.
-%    X3Lim : 2D array of limits for x3 axis. Default is full box.
+%    Time      : Set time dump for dataset. Default is 0.
+%    X1Lim     : 2D array of limits for x1 axis. Default is full box.
+%    X2Lim     : 2D array of limits for x2 axis. Default is full box.
+%    X3Lim     : 2D array of limits for x3 axis. Default is full box.
+%    SliceAxis : 2D slice axis for 3D data
+%    Slice     : 2D slice coordinate for 3D data
 %
 %  Public Methods:
 %    Density  : Returns a dataset with a 2D matrix of the density of the field.
@@ -88,38 +91,20 @@ classdef Field < OsirisType
 
             % Input/Output
             stReturn = {};
-
-            % Get data and axes
-            aData   = obj.Data.Data(obj.Time, 'FLD', obj.FieldVar.Name, '');
-            aX1Axis = obj.fGetBoxAxis('x1');
-            aX2Axis = obj.fGetBoxAxis('x2');
-
-            % Check if cylindrical
-            if obj.Cylindrical
-                if obj.FieldVar.Dim == 3
-                    aData = transpose([-fliplr(aData),aData]);
-                else
-                    aData = transpose([fliplr(aData),aData]);
-                end % if
-                aX2Axis = [-fliplr(aX2Axis), aX2Axis];
-            else
-                aData = transpose(aData);
+            
+            % Get Data and Parse it
+            aData  = obj.Data.Data(obj.Time, 'FLD', obj.FieldVar.Name, '');
+            stData = obj.fParseGridData2D(aData,(obj.FieldVar.Dim == 3));
+            
+            if isempty(stData)
+                return;
             end % if
-            
-            iX1Min = fGetIndex(aX1Axis, obj.X1Lim(1)*obj.AxisFac(1));
-            iX1Max = fGetIndex(aX1Axis, obj.X1Lim(2)*obj.AxisFac(1));
-            iX2Min = fGetIndex(aX2Axis, obj.X2Lim(1)*obj.AxisFac(2));
-            iX2Max = fGetIndex(aX2Axis, obj.X2Lim(2)*obj.AxisFac(2));
-            
-            % Crop and scale dataset
-            aData   = aData(iX2Min:iX2Max,iX1Min:iX1Max)*obj.FieldFac;
-            aX1Axis = aX1Axis(iX1Min:iX1Max);
-            aX2Axis = aX2Axis(iX2Min:iX2Max);
-            
-            % Return data
-            stReturn.Data  = aData;
-            stReturn.HAxis = aX1Axis;
-            stReturn.VAxis = aX2Axis;
+
+            % Return Data
+            stReturn.Data  = stData.Data*obj.FieldFac;
+            stReturn.HAxis = stData.HAxis;
+            stReturn.VAxis = stData.VAxis;
+            stReturn.Axes  = stData.Axes;
             stReturn.ZPos  = obj.fGetZPos();        
         
         end % function
@@ -137,24 +122,19 @@ classdef Field < OsirisType
                 iStart = 3;
             end % if
             
-            % Get data and axes
-            aData   = obj.Data.Data(obj.Time, 'FLD', obj.FieldVar.Name, '');
-            aX1Axis = obj.fGetBoxAxis('x1');
-            aX2Axis = obj.fGetBoxAxis('x2');
-            
-            iX1Min = fGetIndex(aX1Axis, obj.X1Lim(1)*obj.AxisFac(1));
-            iX1Max = fGetIndex(aX1Axis, obj.X1Lim(2)*obj.AxisFac(1));
-            
-            % Crop and scale dataset
-            iEnd    = iStart+iAverage-1;
-            aData   = transpose(mean(aData(iX1Min:iX1Max,iStart:iEnd),2))*obj.FieldFac;
-            aX1Axis = aX1Axis(iX1Min:iX1Max);
-            
-            % Return data
-            stReturn.Data   = aData;
-            stReturn.HAxis  = aX1Axis;
-            stReturn.HRange = obj.AxisRange(1:2);
-            stReturn.VRange = [aX2Axis(iStart) aX2Axis(iEnd+1)];
+            % Get Data and Parse it
+            aData  = obj.Data.Data(obj.Time,'FLD',obj.FieldVar.Name,'');
+            stData = fParseGridData1D(aData,iStart,iAverage);
+
+            if isempty(stData)
+                return;
+            end % if
+
+            % Return Data
+            stReturn.Data   = stData.Data*obj.FieldFac;
+            stReturn.HAxis  = stData.HAxis;
+            stReturn.HRange = stData.HLim;
+            stReturn.VRange = stData.VLim;
             stReturn.ZPos   = obj.fGetZPos();        
         
         end % function

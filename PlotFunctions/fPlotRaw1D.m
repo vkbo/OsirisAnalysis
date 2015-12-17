@@ -83,7 +83,7 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
 
     aData = stData.Data*100;
     aAxis = stData.Axis;
-    vAxis = oData.Translate.Lookup(strrep(sAxis,'x1','xi'));
+    vAxis = oData.Translate.Lookup(sAxis);
 
     dAMax = max(abs(aAxis));
     [dAVal,sAUnit] = fAutoScale(dAMax,stData.AxisUnit);

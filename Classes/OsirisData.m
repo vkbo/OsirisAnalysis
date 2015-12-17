@@ -17,6 +17,7 @@ classdef OsirisData
         PathID      = '';    % Path as ID instead of free text input
         Config      = [];    % Content of the config files and extraction of all runtime variables
         Silent      = false; % Set to 1 to disable command window output
+        RunningZ   = true;   % Uses box coordinates instead of simulation coordinates
 
     end % properties
 
@@ -191,7 +192,7 @@ classdef OsirisData
                obj.Consistent = false;
             end % if
             
-            obj.Translate = Variables(obj.Config.Simulation.Coordinates);
+            obj.Translate = Variables(obj.Config.Simulation.Coordinates, obj.RunningZ);
             
             % Output Dataset Info
             if ~obj.Silent
@@ -552,11 +553,11 @@ classdef OsirisData
                     aCol9 = h5read(sLoad, [sGroup, 'n']);
                     aCol9 = double(aCol9);
                 end % if
-                aReturn = [aCol1 aCol2 aCol3 aCol4 aCol5 aCol6 aCol7 aCol8 aCol9];
+                aReturn = double([aCol1 aCol2 aCol3 aCol4 aCol5 aCol6 aCol7 aCol8 aCol9]);
 
             else
 
-                aReturn = h5read(sLoad, ['/',sSet]);
+                aReturn = double(h5read(sLoad, ['/',sSet]));
             
             end % if
             
