@@ -329,6 +329,7 @@ classdef OsirisData
             stReturn = {};
             sSpecies = obj.Translate.Lookup(sSpecies,'Beam').Name;
             
+            iDim     = obj.Config.Simulation.Dimensions;
             dLFac    = obj.Config.Convert.SI.LengthFac;
             dQFac    = obj.Config.Convert.SI.ChargeFac;
             dPFac    = obj.Config.Convert.SI.ParticleFac;
@@ -367,24 +368,44 @@ classdef OsirisData
                 dSigmaX2 = 0.0;
             end % try
 
+            try
+                aAxis    = obj.Config.Particles.Species.(sSpecies).Profile.ProfileX3.Axis;
+                aData    = obj.Config.Particles.Species.(sSpecies).Profile.ProfileX3.Value;
+                oFit     = fit(double(aAxis)',double(aData)','Gauss1');
+                dMeanX3  = oFit.b1;
+                dSigmaX3 = oFit.c1/sqrt(2);
+            catch
+                dMeanX3  = 0.0;
+                dSigmaX3 = 0.0;
+            end % try
+
             dSIMeanX1  = dMeanX1*dLFac;
             dSIMeanX2  = dMeanX2*dLFac;
+            dSIMeanX3  = dMeanX3*dLFac;
             dSISigmaX1 = dSigmaX1*dLFac;
             dSISigmaX2 = dSigmaX2*dLFac;
+            dSISigmaX3 = dSigmaX3*dLFac;
 
             stReturn.X1Mean   = dSIMeanX1;
             stReturn.X2Mean   = dSIMeanX2;
+            stReturn.X3Mean   = dSIMeanX3;
             stReturn.X1Sigma  = dSISigmaX1;
             stReturn.X2Sigma  = dSISigmaX2;
+            stReturn.X3Sigma  = dSISigmaX3;
 
             [dSIMeanX1,  sUnitM1] = fAutoScale(dSIMeanX1,'m');
             [dSIMeanX2,  sUnitM2] = fAutoScale(dSIMeanX2,'m');
+            [dSIMeanX3,  sUnitM3] = fAutoScale(dSIMeanX3,'m');
             [dSISigmaX1, sUnitS1] = fAutoScale(dSISigmaX1,'m');
             [dSISigmaX2, sUnitS2] = fAutoScale(dSISigmaX2,'m');
+            [dSISigmaX3, sUnitS3] = fAutoScale(dSISigmaX3,'m');
             
             if ~obj.Silent
                 fprintf(' X1 Mean, Sigma: %7.2f, %9.4f [%7.2f %2s, %7.2f %2s]\n',dMeanX1,dSigmaX1,dSIMeanX1,sUnitM1,dSISigmaX1,sUnitS1);
                 fprintf(' X2 Mean, Sigma: %7.2f, %9.4f [%7.2f %2s, %7.2f %2s]\n',dMeanX2,dSigmaX2,dSIMeanX2,sUnitM2,dSISigmaX2,sUnitS2);
+                if iDim > 2
+                    fprintf(' X3 Mean, Sigma: %7.2f, %9.4f [%7.2f %2s, %7.2f %2s]\n',dMeanX3,dSigmaX3,dSIMeanX3,sUnitM3,dSISigmaX3,sUnitS3);
+                end % if
                 fprintf('\n');
             end % if
 

@@ -1193,10 +1193,10 @@ classdef OsirisConfig
                 end % if
 
                 % Set Minimum Resolution
-                if iN < 1000
-                    dDeltaCorr = dDeltaCorr * iN/1000;
-                    iN = 1000;
-                end % if
+                %if iN < 1000
+                %    dDeltaCorr = dDeltaCorr * iN/1000;
+                %    iN = 1000;
+                %end % if
 
                 % Make Profile Array
                 stProfile(d).Axis   = linspace(dMin,dMax,iN+1);
@@ -1295,11 +1295,11 @@ classdef OsirisConfig
                         oMathFunc = MathFunc(sFunction);
 
                         if iDim > 2
-                            mTemp = oMathFunc.Eval(stProfile(1).Axis,stProfile(2).stProfile(3).Axis);
+                            mTemp = oMathFunc.Eval(stProfile(1).Axis,stProfile(2).Axis,stProfile(3).Axis);
                             mTemp = mTemp.*(mTemp > 0);
-                            stProfile(1).Value = sum(mTemp,1);
-                            stProfile(2).Value = sum(mTemp,2);
-                            stProfile(3).Value = sum(mTemp,3);
+                            stProfile(1).Value = sum(sum(mTemp,1),3);
+                            stProfile(2).Value = sum(sum(mTemp,2),3)';
+                            stProfile(3).Value = sum(sum(mTemp,3),2)';
                             dCharge = sum(mTemp(:))*dDeltaCorr;
                         else
                             mTemp = oMathFunc.Eval(stProfile(1).Axis,stProfile(2).Axis,[0]);
