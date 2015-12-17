@@ -106,7 +106,7 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
     else
         cla;
     end % if
-
+    
     stairs(aAxis, aData, 'Color', [0.0 0.0 0.6], 'LineWidth', 1.5);
 
     dYMax = max(aData);
@@ -121,8 +121,8 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
     if strcmpi(stOpt.GaussFit,'Yes')
     
         try
-            oFit = fit(double(aAxis)',double(aData)','Gauss1');
-            aFit = feval(oFit,aAxis);
+            oFit   = fit(aAxis',aData','Gauss1');
+            aFit   = feval(oFit,aAxis);
             dAmp   = oFit.a1;
             dMu    = oFit.b1;
             dSigma = oFit.c1/sqrt(2);
