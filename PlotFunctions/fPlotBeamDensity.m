@@ -108,16 +108,16 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     aData  = stData.Data;
     sUnit  = stData.Unit;
     sLabel = stData.Label;
-    aZAxis = stData.X1Axis;
-    aRAxis = stData.X2Axis;
+    aXAxis = stData.XAxis;
+    aYAxis = stData.YAxis;
     dZPos  = stData.ZPos;
     
     dMax  = max(abs(aData(:)));
     [dSMax,sSUnit] = fAutoScale(dMax,sUnit);
     aData = aData*dSMax/dMax;
 
-    stReturn.X1Axis    = stData.X1Axis;
-    stReturn.X2Axis    = stData.X2Axis;
+    stReturn.XAxis     = stData.XAxis;
+    stReturn.YAxis     = stData.YAxis;
     stReturn.ZPos      = stData.ZPos;
     stReturn.AxisFac   = oDN.AxisFac;
     stReturn.AxisRange = oDN.AxisRange;
@@ -127,12 +127,12 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     end % if
     
     aProjZ = abs(sum(aData));
-    aProjZ = 0.15*(aRAxis(end)-aRAxis(1))*aProjZ/max(abs(aProjZ))+aRAxis(1);
+    aProjZ = 0.15*(aYAxis(end)-aYAxis(1))*aProjZ/max(abs(aProjZ))+aYAxis(1);
 
     if length(stOpt.Charge) == 2
         [~,iZPeak] = max(sum(abs(aData),1));
         [~,iRPeak] = max(sum(abs(aData),2));
-        stQTot = oDN.BeamCharge('Ellipse', [aZAxis(iZPeak), 0, stOpt.Charge(1), stOpt.Charge(2)]);
+        stQTot = oDN.BeamCharge('Ellipse', [aXAxis(iZPeak), 0, stOpt.Charge(1), stOpt.Charge(2)]);
     elseif length(stOpt.Charge) == 4
         stQTot = oDN.BeamCharge('Ellipse', [stOpt.Charge(1), stOpt.Charge(2), stOpt.Charge(3), stOpt.Charge(4)]);
     else
@@ -154,7 +154,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
         cla;
     end % if
     
-    imagesc(aZAxis, aRAxis, aData);
+    imagesc(aXAxis, aYAxis, aData);
     set(gca,'YDir','Normal');
     colormap('hot');
     hCol = colorbar();
@@ -165,7 +165,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     hold on;
 
     if strcmpi(stOpt.ShowOverlay, 'Yes')
-        plot(aZAxis, aProjZ, 'White');
+        plot(aXAxis, aProjZ, 'White');
         h = legend(sBeamCharge, 'Location', 'NE');
         set(h,'Box','Off');
         set(h,'TextColor', [1 1 1]);
@@ -173,8 +173,8 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     end % if
 
     if length(stOpt.Charge) == 2
-        dRX = aZAxis(iZPeak)-stOpt.Charge(1);
-        dRY = aRAxis(iRPeak)-stOpt.Charge(2);
+        dRX = aXAxis(iZPeak)-stOpt.Charge(1);
+        dRY = aYAxis(iRPeak)-stOpt.Charge(2);
         rectangle('Position',[dRX,dRY,2*stOpt.Charge(1),2*stOpt.Charge(2)],'Curvature',[1,1],'EdgeColor','White','LineStyle','--');
     elseif length(stOpt.Charge) == 4
         dRX = aCharge(1)-stOpt.Charge(3);

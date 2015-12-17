@@ -76,27 +76,52 @@ classdef Density < OsirisType
             end % if
 
             % Get data and axes
-            aData   = obj.Data.Data(obj.Time, 'DENSITY', vDensity.Name, obj.Species.Name);
-            aX1Axis = obj.fGetBoxAxis('x1');
-            aX2Axis = obj.fGetBoxAxis('x2');
+            aData = obj.Data.Data(obj.Time, 'DENSITY', vDensity.Name, obj.Species.Name);
+            if obj.Dim < 3
+                aHAxis = obj.fGetBoxAxis('x1');
+                aVAxis = obj.fGetBoxAxis('x2');
+                aHLim  = [obj.X1Lim(1)*obj.AxisFac(1), obj.X1Lim(2)*obj.AxisFac(1)];
+                aVLim  = [obj.X1Lim(1)*obj.AxisFac(2), obj.X1Lim(2)*obj.AxisFac(2)];
+            else
+                switch obj.SliceAxis
+                    case 1
+                        aHAxis = obj.fGetBoxAxis('x2');
+                        aVAxis = obj.fGetBoxAxis('x3');
+                        aData  = squeeze(aData(obj.Slice,:,:));
+                        aHLim  = [obj.X2Lim(1)*obj.AxisFac(2), obj.X2Lim(2)*obj.AxisFac(2)];
+                        aVLim  = [obj.X3Lim(1)*obj.AxisFac(3), obj.X3Lim(2)*obj.AxisFac(3)];
+                    case 2
+                        aHAxis = obj.fGetBoxAxis('x1');
+                        aVAxis = obj.fGetBoxAxis('x3');
+                        aData  = squeeze(aData(:,obj.Slice,:));
+                        aHLim  = [obj.X1Lim(1)*obj.AxisFac(1), obj.X1Lim(2)*obj.AxisFac(1)];
+                        aVLim  = [obj.X3Lim(1)*obj.AxisFac(3), obj.X3Lim(2)*obj.AxisFac(3)];
+                    case 3
+                        aHAxis = obj.fGetBoxAxis('x1');
+                        aVAxis = obj.fGetBoxAxis('x2');
+                        aData  = squeeze(aData(:,:,obj.Slice));
+                        aHLim  = [obj.X1Lim(1)*obj.AxisFac(1), obj.X1Lim(2)*obj.AxisFac(1)];
+                        aVLim  = [obj.X2Lim(1)*obj.AxisFac(2), obj.X2Lim(2)*obj.AxisFac(2)];
+                end % switch
+            end % if
 
             % Check if cylindrical
             if obj.Cylindrical
-                aData   = transpose([fliplr(aData),aData]);
-                aX2Axis = [-fliplr(aX2Axis), aX2Axis];
+                aData  = transpose([fliplr(aData),aData]);
+                aVAxis = [-fliplr(aVAxis), aVAxis];
             else
-                aData   = transpose(aData);
+                aData  = transpose(aData);
             end % if
             
-            iX1Min = fGetIndex(aX1Axis, obj.X1Lim(1)*obj.AxisFac(1));
-            iX1Max = fGetIndex(aX1Axis, obj.X1Lim(2)*obj.AxisFac(1));
-            iX2Min = fGetIndex(aX2Axis, obj.X2Lim(1)*obj.AxisFac(2));
-            iX2Max = fGetIndex(aX2Axis, obj.X2Lim(2)*obj.AxisFac(2));
+            iXMin = fGetIndex(aHAxis, aHLim(1));
+            iXMax = fGetIndex(aHAxis, aHLim(2));
+            iYMin = fGetIndex(aVAxis, aVLim(1));
+            iYMax = fGetIndex(aVAxis, aVLim(2));
 
             % Crop dataset
-            aData   = aData(iX2Min:iX2Max,iX1Min:iX1Max);
-            aX1Axis = aX1Axis(iX1Min:iX1Max);
-            aX2Axis = aX2Axis(iX2Min:iX2Max);
+            aData  = aData(iYMin:iYMax,iXMin:iXMax);
+            aHAxis = aHAxis(iXMin:iXMax);
+            aVAxis = aVAxis(iYMin:iYMax);
             
             % Scale dataset
             if strcmpi(obj.Units, 'SI')
@@ -131,12 +156,12 @@ classdef Density < OsirisType
             end % if
             
             % Return data
-            stReturn.Data   = aData*dScale;
-            stReturn.Unit   = sUnit;
-            stReturn.Label  = sLabel;
-            stReturn.X1Axis = aX1Axis;
-            stReturn.X2Axis = aX2Axis;
-            stReturn.ZPos   = obj.fGetZPos();
+            stReturn.Data  = aData*dScale;
+            stReturn.Unit  = sUnit;
+            stReturn.Label = sLabel;
+            stReturn.HAxis = aHAxis;
+            stReturn.VAxis = aVAxis;
+            stReturn.ZPos  = obj.fGetZPos();
             
         end % function
 

@@ -16,7 +16,7 @@ classdef OsirisType
         X1Lim       = [];                        % Axes limits x1
         X2Lim       = [];                        % Axes limits x2
         X3Lim       = [];                        % Axes limits x3
-        SliceAxis   = 2;                         % Slice axis (3D)
+        SliceAxis   = 3;                         % Slice axis (3D)
         Slice       = 0;                         % Slice coordinate (3D)
 
     end % properties
@@ -154,6 +154,11 @@ classdef OsirisType
                 obj.X2Lim = [ aXMin(2) aXMax(2)]*obj.AxisFac(2);
             end % if
             obj.X3Lim = [aXMin(3) aXMax(3)]*obj.AxisFac(3);
+            
+            % Set default slice for 3D
+            if obj.Dim == 3
+                obj.SliceAxis = 3;
+            end % if
 
         end % function
 
@@ -293,14 +298,14 @@ classdef OsirisType
                 fprintf(2, 'Error: Not a proper axis.\n');
             end % if
             
+            obj.Slice = 0.0;
+            
         end % function
 
-        function obj = set.Slice(obj, iSlice)
+        function obj = set.Slice(obj, dSlice)
             
-            aAxis  = obj.fGetBoxAxis(sprintf('x%d',obj.SliceAxis);
-            iSlice = floor(iSlice);
-            
-            obj.Slice = fGetIndex(aAxis,iSlice);
+            aAxis     = obj.fGetBoxAxis(sprintf('x%d',obj.SliceAxis));
+            obj.Slice = fGetIndex(aAxis,dSlice);
             
         end % function
 
