@@ -109,10 +109,10 @@ classdef Momentum < OsirisType
             end % for
             
             % Return data
-            stReturn.TimeAxis = aTAxis;
-            stReturn.Mean     = aMean;
-            stReturn.Sigma    = aSigma;
-            stReturn.Data     = aData;
+            stReturn.TAxis = aTAxis;
+            stReturn.Mean  = aMean;
+            stReturn.Sigma = aSigma;
+            stReturn.Data  = aData;
 
         end % function
 
@@ -143,7 +143,7 @@ classdef Momentum < OsirisType
             aTAxis = obj.fGetTimeAxis;
             aTAxis = aTAxis(iStart+1:iStop+1);
 
-            stReturn.TimeAxis = aTAxis;
+            stReturn.TAxis = aTAxis;
 
             switch(fMomentumAxis(sAxis))
                 case 'p1'
@@ -368,10 +368,10 @@ classdef Momentum < OsirisType
                 aHist(aM(i),aN(i)) = aHist(aM(i),aN(i)) + aRQ(i);
             end % for
             
-            stReturn.Hist   = abs(transpose(aHist))*1e9;
-            stReturn.X1Axis = linspace(dXMin,dXMax,stOpt.Grid(1));
-            stReturn.X2Axis = linspace(dXPMin,dXPMax,stOpt.Grid(2));
-            stReturn.Count  = iLen*iMin;
+            stReturn.Hist  = abs(transpose(aHist))*1e9;
+            stReturn.HAxis = linspace(dXMin,dXMax,stOpt.Grid(1));
+            stReturn.VAxis = linspace(dXPMin,dXPMax,stOpt.Grid(2));
+            stReturn.Count = iLen*iMin;
             
         end % function
     
