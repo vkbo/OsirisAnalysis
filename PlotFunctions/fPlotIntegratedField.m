@@ -112,8 +112,8 @@ function stReturn = fPlotIntegratedField(oData, sField, varargin)
     [dTemp, sFUnit] = fAutoScale(dPeak, 'eV');
     dScale = dTemp/dPeak;
 
-    stReturn.X1Axis    = stData.TAxis;
-    stReturn.X2Axis    = stData.VAxis;
+    stReturn.HAxis     = stData.TAxis;
+    stReturn.VAxis     = stData.VAxis;
     stReturn.AxisFac   = stData.AxisFac;
     stReturn.AxisRange = stData.AxisRange;
     

@@ -123,7 +123,7 @@ function stReturn = fPlotPhase1D(oData, sTime, sSpecies, sAxis, varargin)
     % Return
 
     stReturn.Species = vSpecies.Name;
-    stReturn.Axis    = vAxis.Name;
+    stReturn.HAxis   = vAxis.Name;
     stReturn.XLim    = xlim;
     stReturn.YLim    = ylim;
 

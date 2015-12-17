@@ -108,16 +108,26 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     aData  = stData.Data;
     sUnit  = stData.Unit;
     sLabel = stData.Label;
+<<<<<<< HEAD
     aXAxis = stData.XAxis;
     aYAxis = stData.YAxis;
+=======
+    aZAxis = stData.HAxis;
+    aRAxis = stData.VAxis;
+>>>>>>> fHVAxes
     dZPos  = stData.ZPos;
     
     dMax  = max(abs(aData(:)));
     [dSMax,sSUnit] = fAutoScale(dMax,sUnit);
     aData = aData*dSMax/dMax;
 
+<<<<<<< HEAD
     stReturn.XAxis     = stData.XAxis;
     stReturn.YAxis     = stData.YAxis;
+=======
+    stReturn.HAxis     = stData.HAxis;
+    stReturn.VAxis     = stData.VAxis;
+>>>>>>> fHVAxes
     stReturn.ZPos      = stData.ZPos;
     stReturn.AxisFac   = oDN.AxisFac;
     stReturn.AxisRange = oDN.AxisRange;

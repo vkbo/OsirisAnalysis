@@ -195,11 +195,11 @@ classdef Density < OsirisType
             aX1Axis = aX1Axis(iX1Min:iX1Max);
             
             % Return data
-            stReturn.Data    = aData;
-            stReturn.X1Axis  = aX1Axis;
-            stReturn.X1Range = obj.AxisRange(1:2);
-            stReturn.X2Range = [aX2Axis(iStart) aX2Axis(iEnd+1)];
-            stReturn.ZPos    = obj.fGetZPos();        
+            stReturn.Data   = aData;
+            stReturn.HAxis  = aX1Axis;
+            stReturn.HRange = obj.AxisRange(1:2);
+            stReturn.VRange = [aX2Axis(iStart) aX2Axis(iEnd+1)];
+            stReturn.ZPos   = obj.fGetZPos();        
         
         end % function
 
@@ -251,10 +251,10 @@ classdef Density < OsirisType
             aX2Axis = aX2Axis(iX2Min:iX2Max);
             
             % Return data
-            stReturn.Data   = aData;
-            stReturn.X1Axis = aX1Axis;
-            stReturn.X2Axis = aX2Axis;
-            stReturn.ZPos   = obj.fGetZPos();
+            stReturn.Data  = aData;
+            stReturn.HAxis = aX1Axis;
+            stReturn.VAxis = aX2Axis;
+            stReturn.ZPos  = obj.fGetZPos();
             
         end % function
 
@@ -289,7 +289,7 @@ classdef Density < OsirisType
             
             stReturn.Proj  = aProj;
             stReturn.Data  = 2*abs(aFFT(1:iN/2+1));
-            stReturn.XAxis = aXAxis;
+            stReturn.HAxis = aXAxis;
             stReturn.ZPos  = obj.fGetZPos();
             
         end % function
@@ -351,7 +351,7 @@ classdef Density < OsirisType
             stReturn.Period    = aPeriod;
             stReturn.Scale     = aScale;
             stReturn.COI       = aCOI;
-            stReturn.XAxis     = obj.fGetBoxAxis('x1');
+            stReturn.HAxis     = obj.fGetBoxAxis('x1');
             stReturn.ZPos      = obj.fGetZPos();
             
         end % function
@@ -601,8 +601,8 @@ classdef Density < OsirisType
             
             % Return data
             stReturn.RAWData     = h5Data;
-            stReturn.X1Axis      = aX1Axis;
-            stReturn.X2Axis      = aX2Axis;
+            stReturn.HAxis       = aX1Axis;
+            stReturn.VAxis       = aX2Axis;
             stReturn.Projection  = aData';
             stReturn.Smooth      = aSmooth';
             stReturn.Peaks       = iPeaks;
