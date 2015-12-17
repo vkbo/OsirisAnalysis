@@ -553,11 +553,11 @@ classdef OsirisData
                     aCol9 = h5read(sLoad, [sGroup, 'n']);
                     aCol9 = double(aCol9);
                 end % if
-                aReturn = double([aCol1 aCol2 aCol3 aCol4 aCol5 aCol6 aCol7 aCol8 aCol9]);
+                aReturn = [aCol1 aCol2 aCol3 aCol4 aCol5 aCol6 aCol7 aCol8 aCol9];
 
             else
 
-                aReturn = double(h5read(sLoad, ['/',sSet]));
+                aReturn = h5read(sLoad, ['/',sSet]);
             
             end % if
             
