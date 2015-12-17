@@ -124,7 +124,7 @@ classdef Field < OsirisType
             
             % Get Data and Parse it
             aData  = obj.Data.Data(obj.Time,'FLD',obj.FieldVar.Name,'');
-            stData = fParseGridData1D(aData,iStart,iAverage);
+            stData = obj.fParseGridData1D(aData,iStart,iAverage);
 
             if isempty(stData)
                 return;

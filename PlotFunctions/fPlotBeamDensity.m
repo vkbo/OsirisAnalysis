@@ -14,7 +14,6 @@
 % ==========
 %  Current     :: Optional current instead of charge
 %  Limits      :: Axis limits
-%  Charge      :: Calculate charge in ellipse. Two inputs for peak
 %  Slice       :: 2D slice coordinate for 3D data
 %  SliceAxis   :: 2D slice axis for 3D data
 %  FigureSize  :: Default [900 500]
@@ -48,7 +47,6 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
         fprintf(' ==========\n');
         fprintf('  Current     :: Optional current instead of charge\n');
         fprintf('  Limits      :: Axis limits\n');
-        fprintf('  Charge      :: Calculate charge in ellipse. Two inputs for peak\n');
         fprintf('  Slice       :: 2D slice coordinate for 3D data\n');
         fprintf('  SliceAxis   :: 2D slice axis for 3D data\n');
         fprintf('  FigureSize  :: Default [900 500]\n');
@@ -68,7 +66,6 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     oOpt = inputParser;
     addParameter(oOpt, 'Data',        'charge');
     addParameter(oOpt, 'Limits',      []);
-    addParameter(oOpt, 'Charge',      []);
     addParameter(oOpt, 'Slice',       0.0);
     addParameter(oOpt, 'SliceAxis',   3);
     addParameter(oOpt, 'FigureSize',  [900 500]);
@@ -145,15 +142,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     aProjZ = abs(sum(aData));
     aProjZ = 0.15*(aVAxis(end)-aVAxis(1))*aProjZ/max(abs(aProjZ))+aVAxis(1);
 
-    if length(stOpt.Charge) == 2
-        [~,iZPeak] = max(sum(abs(aData),1));
-        [~,iRPeak] = max(sum(abs(aData),2));
-        stQTot = oDN.BeamCharge('Ellipse', [aHAxis(iZPeak), 0, stOpt.Charge(1), stOpt.Charge(2)]);
-    elseif length(stOpt.Charge) == 4
-        stQTot = oDN.BeamCharge('Ellipse', [stOpt.Charge(1), stOpt.Charge(2), stOpt.Charge(3), stOpt.Charge(4)]);
-    else
-        stQTot = oDN.BeamCharge;
-    end % if
+    stQTot       = oDN.BeamCharge;
     [dQ, sQUnit] = fAutoScale(stQTot.QTotal,'C');
     sBeamCharge  = sprintf('Q_{tot} = %.2f %s', dQ, sQUnit);
     
@@ -186,16 +175,6 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
         set(h,'Box','Off');
         set(h,'TextColor', [1 1 1]);
         set(findobj(h, 'type', 'line'), 'visible', 'off')
-    end % if
-
-    if length(stOpt.Charge) == 2
-        dRX = aHAxis(iZPeak)-stOpt.Charge(1);
-        dRY = aVAxis(iRPeak)-stOpt.Charge(2);
-        rectangle('Position',[dRX,dRY,2*stOpt.Charge(1),2*stOpt.Charge(2)],'Curvature',[1,1],'EdgeColor','White','LineStyle','--');
-    elseif length(stOpt.Charge) == 4
-        dRX = aCharge(1)-stOpt.Charge(3);
-        dRY = aCharge(2)-stOpt.Charge(4);
-        rectangle('Position',[dRX,dRY,2*stOpt.Charge(3),2*stOpt.Charge(4)],'Curvature',[1,1],'EdgeColor','White','LineStyle','--');
     end % if
 
     if strcmpi(stOpt.HideDump, 'No')

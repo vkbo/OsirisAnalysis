@@ -559,6 +559,7 @@ function Analyse2D
         X.Data.Consistent = oData.Consistent;
         X.Data.Coords     = oData.Config.Simulation.Coordinates;
         X.Data.Cyl        = oData.Config.Simulation.Cylindrical;
+        X.Data.Dim        = oData.Config.Simulation.Dimensions;
         
         % Reload Variables class
         oVar = Variables(X.Data.Coords);
@@ -567,15 +568,13 @@ function Analyse2D
         fOut(sprintf('Loaded %s',X.Data.Path),1);
         
         % Geometry
-        if strcmpi(X.Data.Coords, 'cylindrical')
-            lblInfo(1).String          = 'Cylindrical';
-            lblInfo(1).BackgroundColor = cInfoGreen;
-            X.Data.CoordsPF            = 'Cyl';
+        if X.Data.Cyl
+            sGeometry = 'Cyl';
         else
-            lblInfo(1).String          = 'Cartesian';
-            lblInfo(1).BackgroundColor = cInfoGreen;
-            X.Data.CoordsPF            = '';
+            sGeometry = 'Cart';
         end % if
+        lblInfo(1).String          = sprintf('%s %dD',sGeometry,X.Data.Dim);
+        lblInfo(1).BackgroundColor = cInfoGreen;
         
         % Beams
         X.Data.Witness = oData.Config.Particles.WitnessBeam;

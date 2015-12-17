@@ -524,22 +524,12 @@ classdef OsirisData
                     sGroup = strcat('/', sSet, '/');
                 end % if
                 
-                h5Info = h5info(sLoad, sGroup);
-
-                % Check if 3rd dimension exists
-                bX3 = false;
-                for i=1:length(h5Info.Datasets)
-                    if strcmp(h5Info.Datasets(i).Name, [sGroup, 'x3'])
-                        bX3 = true;
-                    end % if
-                end % for
-
                 aCol1 = h5read(sLoad, [sGroup, 'x1']);
                 aCol2 = h5read(sLoad, [sGroup, 'x2']);
-                if bX3
+                if obj.Config.Simulation.Dimensions == 3
                     aCol3 = h5read(sLoad, [sGroup, 'x3']);
                 else
-                    aCol3 = zeros(length(aCol1),1);
+                    aCol3 = aCol1*0.0;
                 end % if
                 aCol4 = h5read(sLoad, [sGroup, 'p1']);
                 aCol5 = h5read(sLoad, [sGroup, 'p2']);

@@ -486,7 +486,7 @@ classdef OsirisType
             stReturn.Data  = aData;
             stReturn.HAxis = aHAxis;
             stReturn.HLim  = [iHMin iHMax];
-            stReturn.VLim  = [aHAxis(iStart) aHAxis(iEnd+1)];
+            stReturn.VLim  = [aVAxis(iStart) aVAxis(iEnd+1)];
             stReturn.Axes  = {sHAxis,sVAxis};
 
         end % function

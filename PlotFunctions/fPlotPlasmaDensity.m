@@ -13,6 +13,8 @@
 %  Options:
 % ==========
 %  Limits     :: Axis limits
+%  Slice      :: 2D slice coordinate for 3D data
+%  SliceAxis  :: 2D slice axis for 3D data
 %  FigureSize :: Default [900 500]
 %  HideDump   :: Default No
 %  IsSubplot  :: Default No
@@ -67,6 +69,8 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
 
     oOpt = inputParser;
     addParameter(oOpt, 'Limits',      []);
+    addParameter(oOpt, 'Slice',       0.0);
+    addParameter(oOpt, 'SliceAxis',   3);
     addParameter(oOpt, 'FigureSize',  [900 500]);
     addParameter(oOpt, 'HideDump',    'No');
     addParameter(oOpt, 'IsSubPlot',   'No');
@@ -165,12 +169,22 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         oDN.X2Lim = stOpt.Limits(3:4);
     end % if
 
+    if oData.Config.Simulation.Dimensions == 3
+        oDN.SliceAxis = stOpt.SliceAxis;
+        oDN.Slice     = stOpt.Slice;
+    end % if
+
     stData = oDN.Density2D;
 
     aData  = stData.Data;
-    aZAxis = stData.HAxis;
-    aRAxis = stData.VAxis;
+    aHAxis = stData.HAxis;
+    aVAxis = stData.VAxis;
+    sHAxis = stData.Axes{1};
+    sVAxis = stData.Axes{2};
     dZPos  = stData.ZPos;
+
+    vHAxis = oData.Translate.Lookup(sHAxis);
+    vVAxis = oData.Translate.Lookup(sVAxis);
 
     stReturn.HAxis     = stData.HAxis;
     stReturn.VAxis     = stData.VAxis;
@@ -198,7 +212,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         cla;
     end % if
 
-    imagesc(aZAxis, aRAxis, aData);
+    imagesc(aHAxis, aVAxis, aData);
     set(gca,'YDir','Normal');
     colormap('gray');
     hCol = colorbar();
@@ -276,12 +290,12 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         
             stBeam = oBeam.Density2D;
             aProjZ = abs(sum(stBeam.Data));
-            aProjZ = 0.15*(aRAxis(end)-aRAxis(1))*aProjZ/max(abs(aProjZ))+aRAxis(1);
+            aProjZ = 0.15*(aVAxis(end)-aVAxis(1))*aProjZ/max(abs(aProjZ))+aVAxis(1);
             stQTot = oBeam.BeamCharge;
 
             [dQ, sQUnit] = fAutoScale(stQTot.QTotal,'C');
 
-            plot(aZAxis, aProjZ, 'Color', aCol(i,:));
+            plot(aHAxis, aProjZ, 'Color', aCol(i,:));
             stOLLeg{iOLNum} = sprintf('Q_{tot}^{%s} = %.2f %s', oData.Translate.Lookup(stOLBeam{i}).Short, dQ, sQUnit);
             iOLNum = iOLNum + 1;
 
@@ -304,22 +318,22 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
             iA = 3;
         end % if
         
-        oFLD = Field(oData,stField(i).Name,'Units','SI','X1Scale',oDN.AxisScale{1},'X2Scale','m');
+        oFLD      = Field(oData,stField(i).Name,'Units','SI','X1Scale',oDN.AxisScale{1},'X2Scale','m');
         oFLD.Time = iTime;
-        sFUnit   = oFLD.FieldUnit;
+        sFUnit    = oFLD.FieldUnit;
         
         if length(stOpt.Limits) == 4
             oFLD.X1Lim = stOpt.Limits(1:2);
         end % if
 
         stEF    = oFLD.Lineout(iS,iA);
-        aEFData = 0.15*(aRAxis(end)-aRAxis(1))*stEF.Data/max(abs(stEF.Data));
+        aEFData = 0.15*(aVAxis(end)-aVAxis(1))*stEF.Data/max(abs(stEF.Data));
 
         [dEne,  sEne]  = fAutoScale(max(abs(stEF.Data)), sFUnit);
-        [dEVal, sUnit] = fAutoScale(stEF.X2Range(2), 'm');
-        dSVal          = stEF.X2Range(1)*dEVal/stEF.X2Range(2);
+        [dEVal, sUnit] = fAutoScale(stEF.VRange(2), 'm');
+        dSVal          = stEF.VRange(1)*dEVal/stEF.VRange(2);
         
-        plot(stEF.X1Axis,aEFData,'Color',stField(i).Color);
+        plot(stEF.HAxis,aEFData,'Color',stField(i).Color);
         stOLLeg{iOLNum} = sprintf('%s^{%.0f–%.0f %s} < %.1f %s',oData.Translate.Lookup(stField(i).Name).Tex,dSVal,dEVal,sUnit,dEne,sEne);
         iOLNum = iOLNum + 1;
         

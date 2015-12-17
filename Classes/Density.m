@@ -287,20 +287,8 @@ classdef Density < OsirisType
             % Eliminate charge outside box. In cylindrical X2Lim(1) < 0 is 0
             aRaw(:,8) = aRaw(:,8).*(aRaw(:,1) >= obj.X1Lim(1) & aRaw(:,1) <= obj.X1Lim(2));
             aRaw(:,8) = aRaw(:,8).*(aRaw(:,2) >= obj.X2Lim(1) & aRaw(:,2) <= obj.X2Lim(2));
-            
-            if length(stOpt.Ellipse) == 4
-
-                dXPos = stOpt.Ellipse(1)/obj.AxisFac(1);
-                dRPos = stOpt.Ellipse(2)/obj.AxisFac(2);
-                dZRad = stOpt.Ellipse(3)/obj.AxisFac(1);
-                dRRad = stOpt.Ellipse(4)/obj.AxisFac(2);
-
-                % Applying condition:
-                aRaw(:,8) = aRaw(:,8).*(((aRaw(:,1)-dZPos).^2/dZRad^2 + (aRaw(:,2)-dRPos).^2/dRRad^2) <= 1);
-
-                stReturn.Box    = 'Ellipse';
-                stReturn.Coords = [dZPos, dRPos, dZRad, dRRad];
-
+            if obj.Dim == 3
+                aRaw(:,8) = aRaw(:,8).*(aRaw(:,3) >= obj.X3Lim(1) & aRaw(:,3) <= obj.X2Lim(3));
             end % if
             
             % Total charge
@@ -328,192 +316,6 @@ classdef Density < OsirisType
             
         end % function
 
-        function stReturn = Beamlets(obj, varargin)
-            
-            % Input/Output
-            stReturn = {};
-
-            % Values
-            dMaxPlasma = obj.Data.Config.Simulation.MaxPlasmaFac;
-            dRawFrac   = obj.Data.Config.Particles.Species.(obj.Species.Name).RawFraction;
-            dRQM       = obj.Data.Config.Particles.Species.(obj.Species.Name).RQM;
-            dTFactor   = obj.Data.Config.Convert.SI.TimeFac;
-
-            % Read input parameters
-            oOpt = inputParser;
-            addParameter(oOpt, 'IgnoreLimits',    'No');
-            addParameter(oOpt, 'BeamProminence',  0.5); % In fraction of maximum
-            addParameter(oOpt, 'MinPeakDistance', 0.5); % In units of max(lambda_p)
-            addParameter(oOpt, 'SmoothSpan',      0.5); % In units of max(lambda_p)
-            addParameter(oOpt, 'RadialInclude',   0.9); % How much radial charge to include
-            parse(oOpt, varargin{:});
-            stOpt = oOpt.Results;
-
-            % Species must be a beam
-            if ~obj.Species.isBeam
-                fprintf(2, 'Error: Species %s is not a beam.\n', obj.Species.Name);
-                return;
-            end % if
-
-            % Load charge density data
-            h5Data  = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species.Name);
-            h5Data  = double(abs(h5Data));
-            [nX1,~] = size(h5Data);
-
-            % Get axes
-            aX1Axis = obj.fGetBoxAxis('x1');
-            aX2Axis = obj.fGetBoxAxis('x2');
-            if obj.Cylindrical
-                aX2Axis = [-fliplr(aX2Axis) aX2Axis];
-            end % if
-
-            % Calculate Span value for smooth function and MinPeakDistance for findpeaks
-            dSpan     = stOpt.SmoothSpan * 2*pi/sqrt(dMaxPlasma) * obj.AxisFac(1) / (aX1Axis(2)-aX1Axis(1)) / nX1;
-            dMinPeakD = stOpt.MinPeakDistance * 2*pi/sqrt(dMaxPlasma) * obj.AxisFac(1) / (aX1Axis(2)-aX1Axis(1));
-            
-            % Project data onto x1-axis and smooth
-            aData   = abs(sum(h5Data,2));
-            aSmooth = smooth(aData,dSpan,'loess');
-
-            % Find peaks
-            [aPeaks,aLocs,~,aProms] = findpeaks(aSmooth,'MinPeakDistance',dMinPeakD,'WidthReference','HalfHeight');
-            
-            % Eliminate peaks with prominence below threshold
-            dMax   = max(abs(aSmooth));
-            dMin   = min(abs(aSmooth));
-            dThres = stOpt.BeamProminence*(dMax-dMin)+dMin;
-            aPeaks = aPeaks.*(aProms >= dThres);
-            aProms = aProms.*(aProms >= dThres);
-            aPeaks(aPeaks == 0) = [];
-            aProms(aProms == 0) = [];
-            
-            % Find peak boundaries based on soothed data
-            iPeaks = length(aPeaks);
-            aSpan  = zeros(2,iPeaks);
-            if iPeaks > 0
-                [~,iLoc] = min(flipud(aSmooth(1:aLocs(1))));
-                aSpan(1,1) = aLocs(1)-iLoc;
-                for i=2:iPeaks
-                    [~,iLoc] = min(flipud(aSmooth(aLocs(i-1):aLocs(i))));
-                    aSpan(1,i) = aLocs(i)-iLoc;
-                end % for
-                for i=1:iPeaks-1
-                    [~,iLoc] = min(aSmooth(aLocs(i):aLocs(i+1)));
-                    aSpan(2,i) = aLocs(i)+iLoc;
-                end % for
-                [~,iLoc] = min(aSmooth(aLocs(end):length(aSmooth)));
-                aSpan(2,end) = aLocs(end)+iLoc;
-            end % if
-
-            % Preview plot for test purposes
-            %figure(2);
-            %plot(aData, 'r');
-            %hold on;
-            %plot(aSmooth,'b','LineWidth',2);
-            %scatter(aSpan(1,:), ones(1,length(aSpan(1,:)))*-0.2, 'k+');
-            %scatter(aSpan(2,:), ones(1,length(aSpan(2,:)))*-0.3, 'r+');
-            %hold off;
-            
-            % Get RAW data
-            aRaw      = obj.Data.Data(obj.Time, 'RAW', '', obj.Species.Name);
-            aRaw(:,1) = (aRaw(:,1) - dTFactor*obj.Time)*obj.AxisFac(1);
-            
-            % Create return matrix
-            stBeamlets(iPeaks) = struct();
-            for i=1:iPeaks
-                
-                % X1 Data
-                aProj = aData(aSpan(1,i):aSpan(2,i)).';
-                aAxis = aX1Axis(aSpan(1,i):aSpan(2,i));
-                
-                [dMax,iMax] = max(aProj);
-                dHalfMax    = dMax/2.0;
-                iUpper      = 0;
-                iLower      = 0;
-                for k=iMax:length(aProj)
-                    if aProj(k) <= dHalfMax
-                        iUpper = k;
-                        break;
-                    end % if
-                end % for
-                for k=iMax:-1:1
-                    if aProj(k) <= dHalfMax
-                        iLower = k;
-                        break;
-                    end % if
-                end % for
-
-                stBeamlets(i).X1Start = aAxis(1);
-                stBeamlets(i).X1Stop  = aAxis(end);
-                stBeamlets(i).X1Proj  = aProj;
-                stBeamlets(i).X1Peak  = aAxis(iMax);
-                stBeamlets(i).X1FWHM  = [aAxis(iLower) aAxis(iUpper)];
-                stBeamlets(i).X1Mean  = wmean(aAxis, aProj);
-                stBeamlets(i).X1Std   = wstd(aAxis, aProj);
-                
-                % X2 Data
-                aProj = sum(h5Data(aSpan(1,i):aSpan(2,i),:),1);
-                aAxis = aX2Axis;
-                dAQ     = 0.0;
-                dSum    = sum(aProj);
-                iRLim   = length(aProj);
-                for r=1:length(aProj)
-                    dAQ = dAQ + aProj(r);
-                    if dAQ >= stOpt.RadialInclude*dSum
-                        iRLim = r;
-                        break;
-                    end % if
-                end % for
-                if strcmpi(sCoords, 'Cylindrical')
-                    aProj = [fliplr(aProj) aProj];
-                end % if
-
-                [dMax,iMax] = max(aProj);
-                dHalfMax    = dMax/2.0;
-                iUpper      = 0;
-                iLower      = 0;
-                for k=iMax:length(aProj)
-                    if aProj(k) <= dHalfMax
-                        iUpper = k;
-                        break;
-                    end % if
-                end % for
-                for k=iMax:-1:1
-                    if aProj(k) <= dHalfMax
-                        iLower = k;
-                        break;
-                    end % if
-                end % for
-
-                stBeamlets(i).X2Start = 0.0;
-                stBeamlets(i).X2Stop  = iRLim;
-                stBeamlets(i).X2Proj  = aProj;
-                stBeamlets(i).X2Peak  = aAxis(iMax);
-                stBeamlets(i).X2FWHM  = [aAxis(iLower) aAxis(iUpper)];
-                stBeamlets(i).X2Mean  = wmean(aX2Axis, stBeamlets(i).X2Proj);
-                stBeamlets(i).X2Std   = wstd(aX2Axis, stBeamlets(i).X2Proj);
-
-                % Beamlet Charge
-                stBeamlets(i).Charge = sum(aRaw(:,8).*( ...
-                                           aRaw(:,1) >= aX1Axis(aSpan(1,i)) & ...
-                                           aRaw(:,1) <= aX1Axis(aSpan(2,i))   ...
-                                          ))*obj.ChargeFac/dRawFrac;
-            end % for
-            
-            % Return data
-            stReturn.RAWData     = h5Data;
-            stReturn.HAxis       = aX1Axis;
-            stReturn.VAxis       = aX2Axis;
-            stReturn.Projection  = aData';
-            stReturn.Smooth      = aSmooth';
-            stReturn.Peaks       = iPeaks;
-            stReturn.Prominence  = transpose(aProms);
-            stReturn.Span        = aSpan;
-            stReturn.Beamlets    = stBeamlets;
-            stReturn.TotalCharge = sum(aRaw(:,8))*obj.ChargeFac/dRawFrac;
-            
-        end % function
-        
         function stReturn = ParticleSample(obj, varargin)
         
             % Input/Output
@@ -531,13 +333,12 @@ classdef Density < OsirisType
             stOpt = oOpt.Results;
 
             % Read variables
-            dTFactor  = obj.Data.Config.Convert.SI.TimeFac;
             dEMass    = obj.Data.Config.Constants.EV.ElectronMass;
             dRQM      = obj.Data.Config.Particles.Species.(obj.Species.Name).RQM;
             dSign     = dRQM/abs(dRQM);
             
             aRaw      = obj.Data.Data(stOpt.Time, 'RAW', '', obj.Species.Name);
-            aRaw(:,1) = aRaw(:,1) - dTFactor*stOpt.Time;
+            aRaw(:,1) = aRaw(:,1) - obj.BoxOffset;
             if obj.Cylindrical
                 aRaw(:,8) = aRaw(:,8)./aRaw(:,2);
             end % if
@@ -559,6 +360,9 @@ classdef Density < OsirisType
                 % Removing elements outside box
                 aRaw(:,8) = aRaw(:,8).*(aRaw(:,1) >= obj.X1Lim(1) & aRaw(:,1) <= obj.X1Lim(2));
                 aRaw(:,8) = aRaw(:,8).*(aRaw(:,2) >= obj.X2Lim(1) & aRaw(:,2) <= obj.X2Lim(2));
+                if obj.Dim == 3
+                    aRaw(:,8) = aRaw(:,8).*(aRaw(:,3) >= obj.X3Lim(1) & aRaw(:,3) <= obj.X3Lim(2));
+                end % if
                 aRaw      = aRaw(aRaw(:,8)~=0,:);
 
                 iCount = stOpt.Sample;
@@ -566,7 +370,7 @@ classdef Density < OsirisType
                     iCount = length(aRaw(:,1));
                 end % if
 
-                if obj.Cylindrical && strcmpi(stOpt.Mirror, 'yes')
+                if obj.Cylindrical && strcmpi(stOpt.Mirror, 'Yes')
                     aRaw = [aRaw; aRaw(:,1) -aRaw(:,2) aRaw(:,3:end)];
                 end % if
 
@@ -599,10 +403,10 @@ classdef Density < OsirisType
             stReturn.X1      = aRaw(:,1)*obj.AxisFac(1);
             stReturn.X2      = aRaw(:,2)*obj.AxisFac(2);
             stReturn.X3      = aRaw(:,3)*obj.AxisFac(3);
-            stReturn.P1      = aRaw(:,4)*dEMass;
-            stReturn.P2      = aRaw(:,5)*dEMass;
-            stReturn.P3      = aRaw(:,6)*dEMass;
-            stReturn.Energy  = aRaw(:,7);
+            stReturn.P1      = aRaw(:,4)*dEMass*abs(dRQM);
+            stReturn.P2      = aRaw(:,5)*dEMass*abs(dRQM);
+            stReturn.P3      = aRaw(:,6)*dEMass*abs(dRQM);
+            stReturn.Energy  = aRaw(:,7)*dEMass*abs(dRQM);
             stReturn.Charge  = aRaw(:,8)*obj.ChargeFac;
             stReturn.Tag1    = aRaw(:,9);
             stReturn.Tag2    = aRaw(:,10);
