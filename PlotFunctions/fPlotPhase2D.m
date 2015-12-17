@@ -160,11 +160,11 @@ function stReturn = fPlotPhase2D(oData, sTime, sSpecies, sAxis, varargin)
     
     % Return
 
-    stReturn.Species = vSpecies.Name;
-    stReturn.Axis1   = vHAxis.Name;
-    stReturn.Axis2   = vVAxis.Name;
-    stReturn.XLim    = xlim;
-    stReturn.YLim    = ylim;
-    stReturn.CLim    = caxis;
+    stReturn.SpeciesName = vSpecies.Name;
+    stReturn.HAxisName   = vHAxis.Name;
+    stReturn.VAxisName   = vVAxis.Name;
+    stReturn.XLim        = xlim;
+    stReturn.YLim        = ylim;
+    stReturn.CLim        = caxis;
 
 end % function

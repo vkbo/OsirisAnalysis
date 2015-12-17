@@ -90,16 +90,16 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
     stData = oFLD.Density2D;
 
     aData  = stData.Data;
-    aZAxis = stData.X1Axis;
-    aRAxis = stData.X2Axis;
+    aZAxis = stData.HAxis;
+    aRAxis = stData.VAxis;
     dZPos  = stData.ZPos;
     
     dPeak  = max(abs(aData(:)));
     [dTemp, sFUnit] = fAutoScale(dPeak, sBaseUnit);
     dScale = dTemp/dPeak;
 
-    stReturn.X1Axis    = stData.X1Axis;
-    stReturn.X2Axis    = stData.X2Axis;
+    stReturn.HAxis     = stData.HAxis;
+    stReturn.VAxis     = stData.VAxis;
     stReturn.ZPos      = stData.ZPos;
     stReturn.AxisFac   = oFLD.AxisFac;
     stReturn.AxisRange = oFLD.AxisRange;

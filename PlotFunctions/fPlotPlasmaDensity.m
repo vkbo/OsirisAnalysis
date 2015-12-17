@@ -168,12 +168,12 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     stData = oDN.Density2D;
 
     aData  = stData.Data;
-    aZAxis = stData.X1Axis;
-    aRAxis = stData.X2Axis;
+    aZAxis = stData.HAxis;
+    aRAxis = stData.VAxis;
     dZPos  = stData.ZPos;
 
-    stReturn.X1Axis    = stData.X1Axis;
-    stReturn.X2Axis    = stData.X2Axis;
+    stReturn.HAxis     = stData.HAxis;
+    stReturn.VAxis     = stData.VAxis;
     stReturn.ZPos      = stData.ZPos;
     stReturn.AxisFac   = oDN.AxisFac;
     stReturn.AxisRange = oDN.AxisRange;

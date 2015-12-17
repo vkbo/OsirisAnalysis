@@ -97,11 +97,11 @@ function stReturn = fPlotPhaseSpace(oData, sTime, sSpecies, varargin)
         sUnit = 'Q [nC]';
     end % if
     
-    aX1Axis = stData.X1Axis;
-    aX2Axis = stData.X2Axis;
+    aX1Axis = stData.HAxis;
+    aX2Axis = stData.VAxis;
 
-    stReturn.X1Axis    = aX1Axis;
-    stReturn.X2Axis    = aX2Axis;
+    stReturn.HAxis     = aX1Axis;
+    stReturn.VAxis     = aX2Axis;
     %stReturn.ZPos      = stData.ZPos;
     stReturn.AxisFac   = oM.AxisFac;
     stReturn.AxisRange = [aX1Axis(1) aX1Axis(end) aX2Axis(1) aX2Axis(end) 0.0 0.0];
