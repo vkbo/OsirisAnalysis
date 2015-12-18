@@ -67,13 +67,15 @@ classdef Field < OsirisType
             end % if
             
             if strcmpi(obj.Units,'SI')
-                if obj.FieldVar.isEField
+                if obj.FieldVar.isEField || obj.FieldVar.isEFieldExt || obj.FieldVar.isEFieldPart
                     obj.FieldFac  = obj.Data.Config.Convert.SI.E0;
                     obj.FieldUnit = 'eV';
                 end % if
-                if obj.FieldVar.isBField
+                if obj.FieldVar.isBField || obj.FieldVar.isBFieldExt || obj.FieldVar.isBFieldPart
                     obj.FieldFac  = obj.Data.Config.Convert.SI.B0;
                     obj.FieldUnit = 'T';
+                end % if
+                if strcmpi(obj.FieldVar.Name,'psi')
                 end % if
             end % if
             
