@@ -77,14 +77,14 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
         return;
     end % if
     
-    if ~vField.isField
-        fprintf(2, 'Error: Non-existent field specified.\n');
+    if ~vField.isValidEMFDiag
+        fprintf(2, 'Error: Non-existent field diagnostics specified.\n');
         return;
     end % if
     
     % Prepare Data
 
-    oFLD = Field(oData, vField.Name, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
+    oFLD      = Field(oData,vField.Name,'Units','SI','Scale','mm',);
     oFLD.Time = iTime;
     sBaseUnit = oFLD.FieldUnit;
     
