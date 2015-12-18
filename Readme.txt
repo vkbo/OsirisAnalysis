@@ -16,7 +16,8 @@
  =====================
 
   Version 1.4
-  - None
+  - Classes and tools now support 3D simulations in 2D plots by making slices. A flexible Grid2D and Lineout function
+    has been added to OsirisType.
   
   Version 1.3
   - Bug fixes.
