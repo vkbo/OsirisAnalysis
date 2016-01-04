@@ -476,7 +476,7 @@ classdef Variables
             stMap.Translate.EFieldEnergy(1).Full  = {'Energy in Longitudinal E-Field','Energy in Longitudinal E-Field'};
             stMap.Translate.EFieldEnergy(1).Short = {'E²z','E²z'};
             stMap.Translate.EFieldEnergy(1).Tex   = {'E_{z}^{2}','E_{z}^{2}'};
-            stMap.Translate.EFieldEnergy(1).Unit  = {'J','J'};
+            stMap.Translate.EFieldEnergy(1).Unit  = {'eV','eV'};
             stMap.Translate.EFieldEnergy(1).Dim   = 1;
 
             stMap.Translate.EFieldEnergy(2).Name  = 'ene_e2';
@@ -484,7 +484,7 @@ classdef Variables
             stMap.Translate.EFieldEnergy(2).Full  = {'Energy in Radial E-Field','Energy in Horizontal E-Field'};
             stMap.Translate.EFieldEnergy(2).Short = {'E²r','E²x'};
             stMap.Translate.EFieldEnergy(2).Tex   = {'E_{r}^{2}','E_{x}^{2}'};
-            stMap.Translate.EFieldEnergy(2).Unit  = {'J','J'};
+            stMap.Translate.EFieldEnergy(2).Unit  = {'eV','eV'};
             stMap.Translate.EFieldEnergy(2).Dim   = 2;
 
             stMap.Translate.EFieldEnergy(3).Name  = 'ene_e3';
@@ -492,7 +492,7 @@ classdef Variables
             stMap.Translate.EFieldEnergy(3).Full  = {'Energy in Azimuthal E-Field','Energy in Vertical E-Field'};
             stMap.Translate.EFieldEnergy(3).Short = {'E²th','E²y'};
             stMap.Translate.EFieldEnergy(3).Tex   = {'E_{\theta}^{2}','E_{y}^{2}'};
-            stMap.Translate.EFieldEnergy(3).Unit  = {'J','J'};
+            stMap.Translate.EFieldEnergy(3).Unit  = {'eV','eV'};
             stMap.Translate.EFieldEnergy(3).Dim   = 3;
 
             stMap.Translate.EFieldEnergy(4).Name  = 'ene_e';
@@ -500,7 +500,7 @@ classdef Variables
             stMap.Translate.EFieldEnergy(4).Full  = {'Energy in Electric Field','Energy in Electric Field'};
             stMap.Translate.EFieldEnergy(4).Short = {'E²','E²'};
             stMap.Translate.EFieldEnergy(4).Tex   = {'\sum E_{i}^{2}','\sum E_{i}^{2}'};
-            stMap.Translate.EFieldEnergy(4).Unit  = {'J','J'};
+            stMap.Translate.EFieldEnergy(4).Unit  = {'eV','eV'};
             stMap.Translate.EFieldEnergy(4).Dim   = 0;
 
             % Magnetic Field Energy
@@ -510,7 +510,7 @@ classdef Variables
             stMap.Translate.BFieldEnergy(1).Full  = {'Energy in Longitudinal B-Field','Energy in Longitudinal B-Field'};
             stMap.Translate.BFieldEnergy(1).Short = {'B²z','B²z'};
             stMap.Translate.BFieldEnergy(1).Tex   = {'B_{z}^{2}','B_{z}^{2}'};
-            stMap.Translate.BFieldEnergy(1).Unit  = {'J','J'};
+            stMap.Translate.BFieldEnergy(1).Unit  = {'eV','eV'};
             stMap.Translate.BFieldEnergy(1).Dim   = 1;
 
             stMap.Translate.BFieldEnergy(2).Name  = 'ene_b2';
@@ -518,7 +518,7 @@ classdef Variables
             stMap.Translate.BFieldEnergy(2).Full  = {'Energy in Radial B-Field','Energy in Horizontal B-Field'};
             stMap.Translate.BFieldEnergy(2).Short = {'B²r','B²x'};
             stMap.Translate.BFieldEnergy(2).Tex   = {'B_{r}^{2}','B_{x}^{2}'};
-            stMap.Translate.BFieldEnergy(2).Unit  = {'J','J'};
+            stMap.Translate.BFieldEnergy(2).Unit  = {'eV','eV'};
             stMap.Translate.BFieldEnergy(2).Dim   = 2;
 
             stMap.Translate.BFieldEnergy(3).Name  = 'ene_b3';
@@ -526,7 +526,7 @@ classdef Variables
             stMap.Translate.BFieldEnergy(3).Full  = {'Energy in Azimuthal B-Field','Energy in Vertical B-Field'};
             stMap.Translate.BFieldEnergy(3).Short = {'B²th','B²y'};
             stMap.Translate.BFieldEnergy(3).Tex   = {'B_{\theta}^{2}','B_{y}^{2}'};
-            stMap.Translate.BFieldEnergy(3).Unit  = {'J','J'};
+            stMap.Translate.BFieldEnergy(3).Unit  = {'eV','eV'};
             stMap.Translate.BFieldEnergy(3).Dim   = 3;
 
             stMap.Translate.BFieldEnergy(4).Name  = 'ene_b';
@@ -534,7 +534,7 @@ classdef Variables
             stMap.Translate.BFieldEnergy(4).Full  = {'Energy in Magnetic Field','Energy in Magnetic Field'};
             stMap.Translate.BFieldEnergy(4).Short = {'B²','B²'};
             stMap.Translate.BFieldEnergy(4).Tex   = {'\sum B_{i}^{2}','\sum B_{i}^{2}'};
-            stMap.Translate.BFieldEnergy(4).Unit  = {'J','J'};
+            stMap.Translate.BFieldEnergy(4).Unit  = {'eV','eV'};
             stMap.Translate.BFieldEnergy(4).Dim   = 0;
 
             % EM Field Energy
@@ -547,7 +547,7 @@ classdef Variables
             stMap.Translate.FieldEnergy(9).Full  = {'Energy in Electromagnetic Field','Energy in Electromagnetic Field'};
             stMap.Translate.FieldEnergy(9).Short = {'E²+B²','E²+B²'};
             stMap.Translate.FieldEnergy(9).Tex   = {'E^{2}+B^{2}','E^{2}+B^{2}'};
-            stMap.Translate.FieldEnergy(9).Unit  = {'J','J'};
+            stMap.Translate.FieldEnergy(9).Unit  = {'eV','eV'};
             stMap.Translate.FieldEnergy(9).Dim   = 0;
 
             % Field Divergence
@@ -557,7 +557,7 @@ classdef Variables
             stMap.Translate.FieldDiv(1).Full  = {'E-Field Divergence','E-Field Divergence'};
             stMap.Translate.FieldDiv(1).Short = {'Div. E²','Div. E'};
             stMap.Translate.FieldDiv(1).Tex   = {'\Nabla \cdot E','\Nabla \cdot E'};
-            stMap.Translate.FieldDiv(1).Unit  = {'',''};
+            stMap.Translate.FieldDiv(1).Unit  = {'V/m','V/m'};
             stMap.Translate.FieldDiv(1).Dim   = 0;
 
             stMap.Translate.FieldDiv(2).Name  = 'div_b';
@@ -565,7 +565,7 @@ classdef Variables
             stMap.Translate.FieldDiv(2).Full  = {'B-Field Divergence','B-Field Divergence'};
             stMap.Translate.FieldDiv(2).Short = {'Div. B²','Div. B'};
             stMap.Translate.FieldDiv(2).Tex   = {'\Nabla \cdot B','\Nabla \cdot B'};
-            stMap.Translate.FieldDiv(2).Unit  = {'',''};
+            stMap.Translate.FieldDiv(2).Unit  = {'T','T'};
             stMap.Translate.FieldDiv(2).Dim   = 0;
 
             % Quantity
@@ -590,8 +590,8 @@ classdef Variables
             stMap.Translate.Quantity(3).Alt   = {'qcons'};
             stMap.Translate.Quantity(3).Full  = {'Charge Conservation','Charge Conservation'};
             stMap.Translate.Quantity(3).Short = {'QCons','QCons'};
-            stMap.Translate.Quantity(3).Tex   = {'q_{cons}','q_{cons}'};
-            stMap.Translate.Quantity(3).Unit  = {'C','C'};
+            stMap.Translate.Quantity(3).Tex   = {'\nabla\cdot E - \rho','\nabla\cdot E - \rho'};
+            stMap.Translate.Quantity(3).Unit  = {'V/m','V/m'};
             stMap.Translate.Quantity(3).Dim   = 0;
 
             stMap.Translate.Quantity(4).Name  = 'm';
@@ -607,7 +607,7 @@ classdef Variables
             stMap.Translate.Quantity(5).Full  = {'Kinetic Energy','Kinetic Energy'};
             stMap.Translate.Quantity(5).Short = {'Ek','Ek'};
             stMap.Translate.Quantity(5).Tex   = {'E_{k}','E_{k}'};
-            stMap.Translate.Quantity(5).Unit  = {'J','J'};
+            stMap.Translate.Quantity(5).Unit  = {'eV','eV'};
             stMap.Translate.Quantity(5).Dim   = 0;
 
             stMap.Translate.Quantity(6).Name  = 'g';
@@ -631,7 +631,7 @@ classdef Variables
             stMap.Translate.Quantity(8).Full  = {'Pseudopotential','Pseudopotential'};
             stMap.Translate.Quantity(8).Short = {'Psi','Psi'};
             stMap.Translate.Quantity(8).Tex   = {'\Psi_{x}','\Psi_{x}'};
-            stMap.Translate.Quantity(8).Unit  = {'V','V'};
+            stMap.Translate.Quantity(8).Unit  = {'a.u.','a.u.'};
             stMap.Translate.Quantity(8).Dim   = 0;
 
             stMap.Translate.Quantity(9).Name  = 't';

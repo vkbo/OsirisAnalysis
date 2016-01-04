@@ -56,7 +56,7 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
         return;
     end % if
 
-    vField = oData.Translate.Lookup(sField,'Field');
+    vField = oData.Translate.Lookup(sField);
     iTime  = oData.StringToDump(sTime);
 
     oOpt = inputParser;
@@ -77,14 +77,14 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
         return;
     end % if
     
-    if ~vField.isField
-        fprintf(2, 'Error: Non-existent field specified.\n');
+    if ~vField.isValidEMFDiag
+        fprintf(2, 'Error: Non-existent field diagnostics specified.\n');
         return;
     end % if
     
     % Prepare Data
 
-    oFLD = Field(oData, vField.Name, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
+    oFLD      = Field(oData,vField.Name,'Units','SI','Scale','mm');
     oFLD.Time = iTime;
     sBaseUnit = oFLD.FieldUnit;
     
@@ -158,7 +158,7 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
     title(sTitle);
     xlabel(sprintf('%s [mm]',vHAxis.Tex));
     ylabel(sprintf('%s [mm]',vVAxis.Tex));
-    title(hCol,sFUnit);
+    title(hCol,sprintf('%s [%s]',vField.Tex,sFUnit));
     
     hold off;
     
