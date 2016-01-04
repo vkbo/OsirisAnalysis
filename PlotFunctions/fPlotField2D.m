@@ -84,7 +84,7 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
     
     % Prepare Data
 
-    oFLD = Field(oData, vField.Name, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
+    oFLD = Field(oData,vField.Name,'Units','SI','Scale','mm');
     oFLD.Time = iTime;
     sBaseUnit = oFLD.FieldUnit;
     
