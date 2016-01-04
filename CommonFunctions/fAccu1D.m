@@ -51,7 +51,5 @@ function [aGrid, aAxis] = fAccu1D(aData, aWeights, iGrid, varargin)
             aGrid(end) = sum(aWeights(iFind));
         end % if
     end % if
-    
-    %stairs(aAxis,aGrid);
 
 end % function
