@@ -84,11 +84,6 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
         return;
     end % if
 
-    if ~isempty(stOpt.Charge) && (length(stOpt.Charge) ~= 2 || length(stOpt.Charge) ~= 4)
-        fprintf(2, 'Error: Charge specified, but must be of dimension 2 (follow peak) or 4.\n');
-        return;
-    end % if
-
     % Prepare Data
     
     oDN      = Density(oData,vBeam.Name,'Units','SI','Scale','mm');

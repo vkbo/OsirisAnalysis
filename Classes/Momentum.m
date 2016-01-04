@@ -71,6 +71,7 @@ classdef Momentum < OsirisType
         
         function stReturn = SigmaEToEMean(obj, sStart, sStop)
 
+            % Input/Output
             stReturn = {};
 
             if nargin < 2
@@ -81,6 +82,11 @@ classdef Momentum < OsirisType
                 sStop = 'End';
             end % if
             
+            % Check that the object is initialised
+            if obj.fError
+                return;
+            end % if
+
             % Calculate range
             iStart = obj.Data.StringToDump(sStart);
             iStop  = obj.Data.StringToDump(sStop);
@@ -121,6 +127,7 @@ classdef Momentum < OsirisType
 
         function stReturn = Evolution(obj, sAxis, sStart, sStop, varargin)
 
+            % Input/Output
             stReturn = {};
             
             if nargin < 3
@@ -131,6 +138,11 @@ classdef Momentum < OsirisType
                 sStop = 'End';
             end % if
             
+            % Check that the object is initialised
+            if obj.fError
+                return;
+            end % if
+
             iStart = obj.Data.StringToDump(sStart);
             iStop  = obj.Data.StringToDump(sStop);
 
@@ -183,6 +195,7 @@ classdef Momentum < OsirisType
 
         function stReturn = BeamSlip(obj, sStart, sStop, dAdd)
 
+            % Input/Output
             stReturn = {};
 
             if nargin < 2
@@ -197,6 +210,11 @@ classdef Momentum < OsirisType
                 dAdd = 0.0;
             end % if
             
+            % Check that the object is initialised
+            if obj.fError
+                return;
+            end % if
+
             iStart = obj.Data.StringToDump(sStart);
             iStop  = obj.Data.StringToDump(sStop);
             
@@ -264,7 +282,13 @@ classdef Momentum < OsirisType
 
         function stReturn = PhaseSpace(obj, varargin)
             
+            % Input/Output
             stReturn = {};
+
+            % Check that the object is initialised
+            if obj.fError
+                return;
+            end % if
 
             oOpt = inputParser;
             addParameter(oOpt, 'Samples',      1);

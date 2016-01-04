@@ -71,13 +71,18 @@ classdef Density < OsirisType
                 sDensity = 'charge';
             end % if
             
+            % Check that the object is initialised
+            if obj.fError
+                return;
+            end % if
+            
             % Density Diag
             vDensity = obj.Translate.Lookup(sDensity);
             if ~vDensity.isValidSpeciesDiag
                 fprintf(2,'Error: Not a valid density diagnostics.\n');
                 return;
             end % if
-
+            
             % Get Data and Parse it
             aData  = obj.Data.Data(obj.Time, 'DENSITY', vDensity.Name, obj.Species.Name);
             stData = obj.fParseGridData2D(aData);
@@ -142,6 +147,11 @@ classdef Density < OsirisType
                 iStart = 3;
             end % if
             
+            % Check that the object is initialised
+            if obj.fError
+                return;
+            end % if
+
             % Get Data and Parse it
             aData  = obj.Data.Data(obj.Time,'DENSITY','charge',obj.Species.Name);
             stData = fParseGridData1D(aData,iStart,iAverage);
@@ -161,12 +171,18 @@ classdef Density < OsirisType
 
         function stReturn = Fourier(obj, aRange)
             
+            % Input/Output
             stReturn = {};
             
             if nargin < 2
                 aRange = [];
             end % if
             
+            % Check that the object is initialised
+            if obj.fError
+                return;
+            end % if
+
             dPlasmaFac = obj.Data.Config.Simulation.MaxPlasmaFac;
             dXMin      = obj.Data.Config.Simulation.XMin(1);
             dXMax      = obj.Data.Config.Simulation.XMax(1);
@@ -202,6 +218,11 @@ classdef Density < OsirisType
 
             if nargin < 2
                 aRange = [];
+            end % if
+
+            % Check that the object is initialised
+            if obj.fError
+                return;
             end % if
 
             oOpt = inputParser;
@@ -262,13 +283,17 @@ classdef Density < OsirisType
             % Input/Output
             stReturn = {};
 
+            % Check that the object is initialised
+            if obj.fError
+                return;
+            end % if
+
             % Read input parameters
             oOpt = inputParser;
             addParameter(oOpt, 'Ellipse', []);
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
-            
-            
+
             % Species must be a beam
             if ~obj.Species.isBeam
                 fprintf(2, 'Error: Species %s is not a beam.\n', obj.Species.Name);
@@ -288,7 +313,7 @@ classdef Density < OsirisType
             aRaw(:,8) = aRaw(:,8).*(aRaw(:,1) >= obj.X1Lim(1) & aRaw(:,1) <= obj.X1Lim(2));
             aRaw(:,8) = aRaw(:,8).*(aRaw(:,2) >= obj.X2Lim(1) & aRaw(:,2) <= obj.X2Lim(2));
             if obj.Dim == 3
-                aRaw(:,8) = aRaw(:,8).*(aRaw(:,3) >= obj.X3Lim(1) & aRaw(:,3) <= obj.X2Lim(3));
+                aRaw(:,8) = aRaw(:,8).*(aRaw(:,3) >= obj.X3Lim(1) & aRaw(:,3) <= obj.X3Lim(2));
             end % if
             
             % Total charge
@@ -320,6 +345,11 @@ classdef Density < OsirisType
         
             % Input/Output
             stReturn = {};
+
+            % Check that the object is initialised
+            if obj.fError
+                return;
+            end % if
 
             % Read input parameters
             oOpt = inputParser;
@@ -421,6 +451,11 @@ classdef Density < OsirisType
             
             % Input/Output
             stReturn = {};
+
+            % Check that the object is initialised
+            if obj.fError
+                return;
+            end % if
 
             % Read input parameters
             oOpt = inputParser;

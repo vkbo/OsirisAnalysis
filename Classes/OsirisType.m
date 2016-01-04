@@ -18,6 +18,7 @@ classdef OsirisType
         X3Lim       = [];                        % Axes limits x3
         SliceAxis   = 3;                         % Slice axis (3D)
         Slice       = 0;                         % Slice coordinate (3D)
+        Error       = false;                     % True if object failed to initialise
 
     end % properties
 
@@ -73,16 +74,20 @@ classdef OsirisType
             
             % Set Species
             if ~isempty(sSpecies)
-                stSpecies = obj.Translate.Lookup(sSpecies);
-                if stSpecies.isSpecies
-                    obj.Species = stSpecies;
-                    obj.Config  = obj.Data.Config.Particles.Species.(obj.Species.Name);
-                else
-                    sDefault = obj.Data.Config.Particles.WitnessBeam{1};
-                    fprintf(2, 'Error: ''%s'' is not a recognised species name. Using ''%s'' instead.\n', sSpecies, sDefault);
-                    obj.Species = obj.Translate.Lookup(sDefault);
-                    obj.Config  = obj.Data.Config.Particles.Species.(obj.Species.Name);
+                if ~strcmpi(sSpecies,'None')
+                    stSpecies = obj.Translate.Lookup(sSpecies);
+                    if stSpecies.isSpecies
+                        obj.Species = stSpecies;
+                        obj.Config  = obj.Data.Config.Particles.Species.(obj.Species.Name);
+                    else
+                        sDefault = obj.Data.Config.Particles.WitnessBeam{1};
+                        fprintf(2, 'Error: ''%s'' is not a recognised species name. Using ''%s'' instead.\n', sSpecies, sDefault);
+                        obj.Species = obj.Translate.Lookup(sDefault);
+                        obj.Config  = obj.Data.Config.Particles.Species.(obj.Species.Name);
+                    end % if
                 end % if
+            else
+                obj.Error = true;
             end % if
             
             % Read Input Parameters
@@ -629,6 +634,19 @@ classdef OsirisType
             dPStart  = obj.Data.Config.Simulation.PlasmaStart;
             
             dReturn  = (obj.Time*dTFactor - dPStart)*dLFactor;
+            
+        end % function
+        
+        function bReturn = fError(obj)
+            
+            bReturn = false;
+            
+            if obj.Error
+                
+                fprintf(2, 'OsirisType object not initialised properly.\n');
+                bReturn = true;
+                
+            end % if
             
         end % function
 

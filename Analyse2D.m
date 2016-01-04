@@ -352,6 +352,10 @@ function Analyse2D
 
     function fCtrlPlasmaDensity(t)
         
+        if isempty(X.Data.Plasma)
+            return;
+        end % if
+        
         % Clear panel
         delete(bgTab(t));
         bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 514 120],'BackgroundColor',cBackGround);
@@ -868,7 +872,12 @@ function Analyse2D
                     aFigSize = [900 500];
 
                 case 'Plasma Density'
-                    X.Plot(f).Data       = X.Data.Plasma{1};
+                    if ~isempty(X.Data.Plasma)
+                        X.Plot(f).Data = X.Data.Plasma{1};
+                    else
+                        X.Plot(f).Data = '';
+                        fOut('No plasma in simulation.',2);
+                    end % if
                     X.Plot(f).ScatterOpt = ['Off' X.Data.Beam];
                     X.Plot(f).Scatter    = {'' ''};
                     X.Plot(f).ScatterNum = [2000 2000];
@@ -1124,6 +1133,10 @@ function Analyse2D
                             'Filter1',X.Opt.Sample{X.Plot(f).Sample(1)},'Filter2',X.Opt.Sample{X.Plot(f).Sample(2)}, ...
                             'E1',stEF(1).Range,'E2',stEF(2).Range, ...
                             'Limits',[aHLim aVLim],'CAxis',X.Plot(f).CAxis);
+                        if isfield(X.Plot(f).Return,'Error')
+                            fOut(X.Plot(f).Return.Error,3);
+                            return;
+                        end % if
                         
                     case 'Field Density'
                         iMakeSym = 1;

@@ -176,6 +176,12 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
 
     stData = oDN.Density2D;
 
+    if isempty(stData)
+        fprintf(2, 'Error: No data.\n');
+        stReturn.Error = 'No data';
+        return;
+    end % if
+
     aData  = stData.Data;
     aHAxis = stData.HAxis;
     aVAxis = stData.VAxis;
