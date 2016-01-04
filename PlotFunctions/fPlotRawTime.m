@@ -11,7 +11,7 @@
 %
 %  Options:
 % ==========
-%  Lim        :: Axis limts. Must be 4 columns and either
+%  Lim        :: Axis limits. Must be 4 columns and either
 %                1 row or End-Start+1. Default empty
 %  Start      :: Default first dump
 %  End        :: Default last dump
@@ -42,7 +42,7 @@ function stReturn = fPlotRawTime(oData, sSpecies, varargin)
         fprintf('\n');
         fprintf('  Options:\n');
         fprintf(' ==========\n');
-        fprintf('  Lim        :: Axis limts. Must be 4 columns and either\n');
+        fprintf('  Lim        :: Axis limits. Must be 4 columns and either\n');
         fprintf('                1 row or End-Start+1. Default empty\n');
         fprintf('  Start      :: Default first dump\n');
         fprintf('  End        :: Default last dump\n');
@@ -92,7 +92,7 @@ function stReturn = fPlotRawTime(oData, sSpecies, varargin)
     iLims = size(stOpt.Lim,1);
 
     % Data
-    oDN    = Density(oData,vSpecies.Name,'Units','SI','X1Scale','mm','X2Scale','mm');
+    oDN    = Density(oData,vSpecies.Name,'Units','SI','Scale','mm');
     stData = oDN.EvolveRaw('Start',iStart,'End',iEnd,'Value',vValue.Name,'Method',sMethod);
     
     if isempty(stData)
