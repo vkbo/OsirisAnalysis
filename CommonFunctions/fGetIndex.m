@@ -8,6 +8,10 @@
 function iIndex = fGetIndex(aVector, dValue)
 
     iIndex = 0;
+    
+    if isempty(dValue) || isempty(aVector)
+        return;
+    end % if
 
     for i=1:length(aVector)-1
         if dValue >= aVector(1) && dValue < aVector(i+1)

@@ -301,6 +301,10 @@ classdef OsirisType
         
         function obj = set.SliceAxis(obj, iAxis)
             
+            if isempty(iAxis)
+                return;
+            end % if
+            
             iAxis = floor(iAxis);
             
             if iAxis > 0 && iAxis <= obj.Dim
@@ -314,6 +318,10 @@ classdef OsirisType
         end % function
 
         function obj = set.Slice(obj, dSlice)
+            
+            if isempty(dSlice)
+                return;
+            end % if
 
             aAxis     = obj.fGetBoxAxis(sprintf('x%d',obj.SliceAxis));
             obj.Slice = fGetIndex(aAxis,dSlice);
