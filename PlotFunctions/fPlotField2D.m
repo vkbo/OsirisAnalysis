@@ -56,7 +56,7 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
         return;
     end % if
 
-    vField = oData.Translate.Lookup(sField,'Field');
+    vField = oData.Translate.Lookup(sField);
     iTime  = oData.StringToDump(sTime);
 
     oOpt = inputParser;
@@ -158,7 +158,7 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
     title(sTitle);
     xlabel(sprintf('%s [mm]',vHAxis.Tex));
     ylabel(sprintf('%s [mm]',vVAxis.Tex));
-    title(hCol,sFUnit);
+    title(hCol,sprintf('%s [%s]',vField.Tex,sFUnit));
     
     hold off;
     

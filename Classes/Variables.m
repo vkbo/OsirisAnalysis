@@ -557,7 +557,7 @@ classdef Variables
             stMap.Translate.FieldDiv(1).Full  = {'E-Field Divergence','E-Field Divergence'};
             stMap.Translate.FieldDiv(1).Short = {'Div. E²','Div. E'};
             stMap.Translate.FieldDiv(1).Tex   = {'\Nabla \cdot E','\Nabla \cdot E'};
-            stMap.Translate.FieldDiv(1).Unit  = {'',''};
+            stMap.Translate.FieldDiv(1).Unit  = {'V/m','V/m'};
             stMap.Translate.FieldDiv(1).Dim   = 0;
 
             stMap.Translate.FieldDiv(2).Name  = 'div_b';
@@ -565,7 +565,7 @@ classdef Variables
             stMap.Translate.FieldDiv(2).Full  = {'B-Field Divergence','B-Field Divergence'};
             stMap.Translate.FieldDiv(2).Short = {'Div. B²','Div. B'};
             stMap.Translate.FieldDiv(2).Tex   = {'\Nabla \cdot B','\Nabla \cdot B'};
-            stMap.Translate.FieldDiv(2).Unit  = {'',''};
+            stMap.Translate.FieldDiv(2).Unit  = {'T','T'};
             stMap.Translate.FieldDiv(2).Dim   = 0;
 
             % Quantity
@@ -590,8 +590,8 @@ classdef Variables
             stMap.Translate.Quantity(3).Alt   = {'qcons'};
             stMap.Translate.Quantity(3).Full  = {'Charge Conservation','Charge Conservation'};
             stMap.Translate.Quantity(3).Short = {'QCons','QCons'};
-            stMap.Translate.Quantity(3).Tex   = {'q_{cons}','q_{cons}'};
-            stMap.Translate.Quantity(3).Unit  = {'C','C'};
+            stMap.Translate.Quantity(3).Tex   = {'\nabla\cdot E - \rho','\nabla\cdot E - \rho'};
+            stMap.Translate.Quantity(3).Unit  = {'V/m','V/m'};
             stMap.Translate.Quantity(3).Dim   = 0;
 
             stMap.Translate.Quantity(4).Name  = 'm';
@@ -631,7 +631,7 @@ classdef Variables
             stMap.Translate.Quantity(8).Full  = {'Pseudopotential','Pseudopotential'};
             stMap.Translate.Quantity(8).Short = {'Psi','Psi'};
             stMap.Translate.Quantity(8).Tex   = {'\Psi_{x}','\Psi_{x}'};
-            stMap.Translate.Quantity(8).Unit  = {'V','V'};
+            stMap.Translate.Quantity(8).Unit  = {'a.u.','a.u.'};
             stMap.Translate.Quantity(8).Dim   = 0;
 
             stMap.Translate.Quantity(9).Name  = 't';
