@@ -16,12 +16,15 @@
 %      X1Scale : Unit scale on x1 axis. 'Auto', or specify metric unit
 %      X2Scale : Unit scale on x2 axis. 'Auto', or specify metric unit
 %      X3Scale : Unit scale on x3 axis. 'Auto', or specify metric unit
+%      Scale   : Unit scale on all axes. 'Auto', or specify metric unit
 %
 %  Set Methods:
-%    Time  : Set time dump for dataset. Default is 0.
-%    X1Lim : 2D array of limits for x1 axis. Default is full box.
-%    X2Lim : 2D array of limits for x2 axis. Default is full box.
-%    X3Lim : 2D array of limits for x3 axis. Default is full box.
+%    Time      : Set time dump for dataset. Default is 0.
+%    X1Lim     : 2D array of limits for x1 axis. Default is full box.
+%    X2Lim     : 2D array of limits for x2 axis. Default is full box.
+%    X3Lim     : 2D array of limits for x3 axis. Default is full box.
+%    SliceAxis : 2D slice axis for 3D data
+%    Slice     : 2D slice coordinate for 3D data
 %
 %  Public Methods:
 %    Phase1D   : Returns a dataset with the distribution of a phase-type
@@ -70,6 +73,11 @@ classdef Phase < OsirisType
             % Input/Output
             stReturn = {};
             
+            % Check that the object is initialised
+            if obj.fError
+                return;
+            end % if
+
             % Check Axis input
             cAxis = obj.CheckVariable(sAxis, 1);
             if isempty(cAxis.Input)
@@ -129,6 +137,11 @@ classdef Phase < OsirisType
             % Input/Output
             stReturn = {};
             
+            % Check that the object is initialised
+            if obj.fError
+                return;
+            end % if
+
             % Check Axis input
             cAxis = obj.CheckVariable(sAxis, 2);
             if isempty(cAxis.Input)
@@ -208,6 +221,11 @@ classdef Phase < OsirisType
             % Input/Output
             stReturn = {};
             
+            % Check that the object is initialised
+            if obj.fError
+                return;
+            end % if
+
             vAxis1 = obj.Translate.Lookup(sAxis1);
             vAxis2 = obj.Translate.Lookup(sAxis2);
             
@@ -370,6 +388,11 @@ classdef Phase < OsirisType
             % Input/Output
             stReturn = {};
 
+            % Check that the object is initialised
+            if obj.fError
+                return;
+            end % if
+
             oOpt = inputParser;
             addParameter(oOpt, 'Grid',   100);
             addParameter(oOpt, 'Method', 'Deposit');
@@ -442,6 +465,11 @@ classdef Phase < OsirisType
             % Input/Output
             stReturn = {};
         
+            % Check that the object is initialised
+            if obj.fError
+                return;
+            end % if
+
             oOpt = inputParser;
             addParameter(oOpt, 'Grid', [1000 1000]);
             parse(oOpt, varargin{:});

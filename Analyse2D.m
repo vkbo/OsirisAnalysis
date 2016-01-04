@@ -69,12 +69,14 @@ function Analyse2D
     X.X2Sym  = [0 0 0 0 0 0];
     
     for f=1:6
-        X.Plot(f).Figure  = f;
-        X.Plot(f).Enabled = 0;
-        X.Plot(f).MaxLim  = [0.0 0.0 0.0 0.0];
-        X.Plot(f).Limits  = [0.0 0.0 0.0 0.0];
-        X.Plot(f).Scale   = [1.0 1.0];
-        X.Plot(f).CAxis   = [];
+        X.Plot(f).Figure    = f;
+        X.Plot(f).Enabled   = 0;
+        X.Plot(f).MaxLim    = [0.0 0.0 0.0 0.0];
+        X.Plot(f).Limits    = [0.0 0.0 0.0 0.0];
+        X.Plot(f).Scale     = [1.0 1.0];
+        X.Plot(f).CAxis     = [];
+        X.Plot(f).SliceAxis = 3;
+        X.Plot(f).Slice     = 0.0;
     end % for
     for f=7:iXFig
         X.Plot(f).Figure  = f;
@@ -347,10 +349,21 @@ function Analyse2D
         end % if
         uicontrol(bgTab(t),'Style','Text','String','Density','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Density,'Value',iVal,'Position',[85 iY 150 20],'Callback',{@fPlotSetDensity,t});
+        
+        if X.Data.Dim == 3
+            iY = iY - 25;
+            uicontrol(bgTab(t),'Style','Text','String','3D Slice','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+            uicontrol(bgTab(t),'Style','PopupMenu','String',{'X1','X2','X3'},'Value',X.Plot(t).SliceAxis,'Position',[85 iY 50 20],'Callback',{@fPlotSetSliceAxis,t});
+            uicontrol(bgTab(t),'Style','Edit','String',sprintf('%.2f',X.Plot(t).Slice),'Position',[140 iY 95 20],'Callback',{@fPlotSetSlice,t});
+        end % if
 
     end % function
 
     function fCtrlPlasmaDensity(t)
+        
+        if isempty(X.Data.Plasma)
+            return;
+        end % if
         
         % Clear panel
         delete(bgTab(t));
@@ -395,6 +408,13 @@ function Analyse2D
         uicontrol(bgTab(t),'Style','Checkbox','String',oVar.Lookup('e1').Short,'Value',X.Plot(t).Settings(1),'Position',[ 85 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,1});
         uicontrol(bgTab(t),'Style','Checkbox','String',oVar.Lookup('e2').Short,'Value',X.Plot(t).Settings(2),'Position',[135 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,2});
 
+        if X.Data.Dim == 3
+            iY = iY - 25;
+            uicontrol(bgTab(t),'Style','Text','String','3D Slice','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+            uicontrol(bgTab(t),'Style','PopupMenu','String',{'X1','X2','X3'},'Value',X.Plot(t).SliceAxis,'Position',[85 iY 50 20],'Callback',{@fPlotSetSliceAxis,t});
+            uicontrol(bgTab(t),'Style','Edit','String',sprintf('%.2f',X.Plot(t).Slice),'Position',[140 iY 95 20],'Callback',{@fPlotSetSlice,t});
+        end % if
+
     end % function
     
     function fCtrlFieldDensity(t)
@@ -413,6 +433,13 @@ function Analyse2D
         uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Field,'Value',iVal,'Position',[85 iY 150 20],'Callback',{@fPlotSetField,t});
         uicontrol(bgTab(t),'Style','Text','String','CAxis','Position',[255 iY+1 60 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','Edit','String','','Position',[300 iY 100 20],'Callback',{@fPlotSetCAxis,t,1});
+
+        if X.Data.Dim == 3
+            iY = iY - 25;
+            uicontrol(bgTab(t),'Style','Text','String','3D Slice','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+            uicontrol(bgTab(t),'Style','PopupMenu','String',{'X1','X2','X3'},'Value',X.Plot(t).SliceAxis,'Position',[85 iY 50 20],'Callback',{@fPlotSetSliceAxis,t});
+            uicontrol(bgTab(t),'Style','Edit','String',sprintf('%.2f',X.Plot(t).Slice),'Position',[140 iY 95 20],'Callback',{@fPlotSetSlice,t});
+        end % if
 
     end % function
 
@@ -559,6 +586,7 @@ function Analyse2D
         X.Data.Consistent = oData.Consistent;
         X.Data.Coords     = oData.Config.Simulation.Coordinates;
         X.Data.Cyl        = oData.Config.Simulation.Cylindrical;
+        X.Data.Dim        = oData.Config.Simulation.Dimensions;
         
         % Reload Variables class
         oVar = Variables(X.Data.Coords);
@@ -567,15 +595,13 @@ function Analyse2D
         fOut(sprintf('Loaded %s',X.Data.Path),1);
         
         % Geometry
-        if strcmpi(X.Data.Coords, 'cylindrical')
-            lblInfo(1).String          = 'Cylindrical';
-            lblInfo(1).BackgroundColor = cInfoGreen;
-            X.Data.CoordsPF            = 'Cyl';
+        if X.Data.Cyl
+            sGeometry = 'Cyl';
         else
-            lblInfo(1).String          = 'Cartesian';
-            lblInfo(1).BackgroundColor = cInfoGreen;
-            X.Data.CoordsPF            = '';
+            sGeometry = 'Cart';
         end % if
+        lblInfo(1).String          = sprintf('%s %dD',sGeometry,X.Data.Dim);
+        lblInfo(1).BackgroundColor = cInfoGreen;
         
         % Beams
         X.Data.Witness = oData.Config.Particles.WitnessBeam;
@@ -869,7 +895,12 @@ function Analyse2D
                     aFigSize = [900 500];
 
                 case 'Plasma Density'
-                    X.Plot(f).Data       = X.Data.Plasma{1};
+                    if ~isempty(X.Data.Plasma)
+                        X.Plot(f).Data = X.Data.Plasma{1};
+                    else
+                        X.Plot(f).Data = '';
+                        fOut('No plasma in simulation.',2);
+                    end % if
                     X.Plot(f).ScatterOpt = ['Off' X.Data.Beam];
                     X.Plot(f).Scatter    = {'' ''};
                     X.Plot(f).ScatterNum = [2000 2000];
@@ -1104,7 +1135,8 @@ function Analyse2D
 
                         X.Plot(f).Return = fPlotBeamDensity(oData,X.Time.Dump,X.Plot(f).Data,'Data',sData, ...
                             'IsSubPlot','No','AutoResize','Off','HideDump','Yes','Absolute','Yes','ShowOverlay','Yes', ...
-                            'Limits',[aHLim aVLim],'CAxis',X.Plot(f).CAxis);
+                            'Limits',[aHLim aVLim],'CAxis',X.Plot(f).CAxis, ...
+                            'Slice',X.Plot(f).Slice,'SliceAxis',X.Plot(f).SliceAxis);
 
                     case 'Plasma Density'
                         stEF(2) = struct();
@@ -1124,14 +1156,19 @@ function Analyse2D
                             'Overlay1',X.Plot(f).Scatter{1},'Overlay2',X.Plot(f).Scatter{2}, ...
                             'Filter1',X.Opt.Sample{X.Plot(f).Sample(1)},'Filter2',X.Opt.Sample{X.Plot(f).Sample(2)}, ...
                             'E1',stEF(1).Range,'E2',stEF(2).Range, ...
-                            'Limits',[aHLim aVLim],'CAxis',X.Plot(f).CAxis);
+                            'Limits',[aHLim aVLim],'CAxis',X.Plot(f).CAxis, ...
+                            'Slice',X.Plot(f).Slice,'SliceAxis',X.Plot(f).SliceAxis);
+                        if isfield(X.Plot(f).Return,'Error')
+                            fOut(X.Plot(f).Return.Error,3);
+                            return;
+                        end % if
                         
                     case 'Field Density'
                         iMakeSym = 1;
                         figure(X.Plot(f).Figure); clf;
                         X.Plot(f).Return = fPlotField2D(oData,X.Time.Dump,oVar.Reverse(X.Plot(f).Data,'Full'), ...
                             'IsSubPlot','No','AutoResize','Off','HideDump','Yes','Limits',[aHLim aVLim], ...
-                            'CAxis',X.Plot(f).CAxis);
+                            'CAxis',X.Plot(f).CAxis,'Slice',X.Plot(f).Slice,'SliceAxis',X.Plot(f).SliceAxis);
 
                     case 'Phase 1D'
 
@@ -1582,6 +1619,28 @@ function Analyse2D
         X.Plot(f).CAxis = aCAxis;
         fRefresh(f);
         
+    end % function
+
+    function fPlotSetSliceAxis(uiSrc,~,f)
+    
+        X.Plot(f).SliceAxis = uiSrc.Value;
+        fRefresh(f);
+
+    end % function
+
+    function fPlotSetSlice(uiSrc,~,f)
+    
+        dValue = str2double(uiSrc.String);
+
+        if isempty(dValue)
+            dValue = 0.0;
+        end % if
+        
+        uiSrc.String = sprintf('%.2f', dValue);
+        X.Plot(f).Slice = dValue;
+
+        fRefresh(f);
+
     end % function
    
 end % function

@@ -107,7 +107,7 @@ function stReturn = fPlotBeamFourier(oData, sTime, sBeam, varargin)
 
     iLegend = 1;
     if ~isempty(stOpt.RefData)
-        area(stRefFFT.XAxis, stRefFFT.Data, 'FaceColor', [1.0, 0.8, 0.8], 'EdgeColor', [1.0, 0.0, 0.0]);
+        area(stRefFFT.HAxis, stRefFFT.Data, 'FaceColor', [1.0, 0.8, 0.8], 'EdgeColor', [1.0, 0.0, 0.0]);
         stLegend{iLegend} = stOpt.RefLegend;
         iLegend = iLegend + 1;
     end % if

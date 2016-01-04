@@ -91,16 +91,16 @@ function stReturn = fPlotField1D(oData, sTime, sField, varargin)
     stData = oFLD.Lineout(stOpt.Start,stOpt.Average);
 
     aData  = stData.Data;
-    aXAxis = stData.X1Axis;
-    aRange = stData.X2Range;
+    aXAxis = stData.HAxis;
+    aRange = stData.VRange;
     dZPos  = stData.ZPos;
     
     dPeak  = max(abs(aData(:)));
     [dTemp, sFUnit] = fAutoScale(dPeak, sBaseUnit);
     dScale = dTemp/dPeak;
 
-    stReturn.XAxis     = stData.X1Axis;
-    stReturn.Range     = stData.X2Range;
+    stReturn.HAxis     = stData.HAxis;
+    stReturn.Range     = stData.VRange;
     stReturn.ZPos      = stData.ZPos;
     stReturn.AxisFac   = oFLD.AxisFac;
     stReturn.AxisRange = oFLD.AxisRange;

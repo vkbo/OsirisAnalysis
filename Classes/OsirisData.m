@@ -17,6 +17,7 @@ classdef OsirisData
         PathID      = '';    % Path as ID instead of free text input
         Config      = [];    % Content of the config files and extraction of all runtime variables
         Silent      = false; % Set to 1 to disable command window output
+        RunningZ   = true;   % Uses box coordinates instead of simulation coordinates
 
     end % properties
 
@@ -191,7 +192,7 @@ classdef OsirisData
                obj.Consistent = false;
             end % if
             
-            obj.Translate = Variables(obj.Config.Simulation.Coordinates);
+            obj.Translate = Variables(obj.Config.Simulation.Coordinates, obj.RunningZ);
             
             % Output Dataset Info
             if ~obj.Silent
@@ -329,6 +330,7 @@ classdef OsirisData
             stReturn = {};
             sSpecies = obj.Translate.Lookup(sSpecies,'Beam').Name;
             
+            iDim     = obj.Config.Simulation.Dimensions;
             dLFac    = obj.Config.Convert.SI.LengthFac;
             dQFac    = obj.Config.Convert.SI.ChargeFac;
             dPFac    = obj.Config.Convert.SI.ParticleFac;
@@ -367,24 +369,44 @@ classdef OsirisData
                 dSigmaX2 = 0.0;
             end % try
 
+            try
+                aAxis    = obj.Config.Particles.Species.(sSpecies).Profile.ProfileX3.Axis;
+                aData    = obj.Config.Particles.Species.(sSpecies).Profile.ProfileX3.Value;
+                oFit     = fit(double(aAxis)',double(aData)','Gauss1');
+                dMeanX3  = oFit.b1;
+                dSigmaX3 = oFit.c1/sqrt(2);
+            catch
+                dMeanX3  = 0.0;
+                dSigmaX3 = 0.0;
+            end % try
+
             dSIMeanX1  = dMeanX1*dLFac;
             dSIMeanX2  = dMeanX2*dLFac;
+            dSIMeanX3  = dMeanX3*dLFac;
             dSISigmaX1 = dSigmaX1*dLFac;
             dSISigmaX2 = dSigmaX2*dLFac;
+            dSISigmaX3 = dSigmaX3*dLFac;
 
             stReturn.X1Mean   = dSIMeanX1;
             stReturn.X2Mean   = dSIMeanX2;
+            stReturn.X3Mean   = dSIMeanX3;
             stReturn.X1Sigma  = dSISigmaX1;
             stReturn.X2Sigma  = dSISigmaX2;
+            stReturn.X3Sigma  = dSISigmaX3;
 
             [dSIMeanX1,  sUnitM1] = fAutoScale(dSIMeanX1,'m');
             [dSIMeanX2,  sUnitM2] = fAutoScale(dSIMeanX2,'m');
+            [dSIMeanX3,  sUnitM3] = fAutoScale(dSIMeanX3,'m');
             [dSISigmaX1, sUnitS1] = fAutoScale(dSISigmaX1,'m');
             [dSISigmaX2, sUnitS2] = fAutoScale(dSISigmaX2,'m');
+            [dSISigmaX3, sUnitS3] = fAutoScale(dSISigmaX3,'m');
             
             if ~obj.Silent
                 fprintf(' X1 Mean, Sigma: %7.2f, %9.4f [%7.2f %2s, %7.2f %2s]\n',dMeanX1,dSigmaX1,dSIMeanX1,sUnitM1,dSISigmaX1,sUnitS1);
                 fprintf(' X2 Mean, Sigma: %7.2f, %9.4f [%7.2f %2s, %7.2f %2s]\n',dMeanX2,dSigmaX2,dSIMeanX2,sUnitM2,dSISigmaX2,sUnitS2);
+                if iDim > 2
+                    fprintf(' X3 Mean, Sigma: %7.2f, %9.4f [%7.2f %2s, %7.2f %2s]\n',dMeanX3,dSigmaX3,dSIMeanX3,sUnitM3,dSISigmaX3,sUnitS3);
+                end % if
                 fprintf('\n');
             end % if
 
@@ -502,22 +524,12 @@ classdef OsirisData
                     sGroup = strcat('/', sSet, '/');
                 end % if
                 
-                h5Info = h5info(sLoad, sGroup);
-
-                % Check if 3rd dimension exists
-                bX3 = false;
-                for i=1:length(h5Info.Datasets)
-                    if strcmp(h5Info.Datasets(i).Name, [sGroup, 'x3'])
-                        bX3 = true;
-                    end % if
-                end % for
-
                 aCol1 = h5read(sLoad, [sGroup, 'x1']);
                 aCol2 = h5read(sLoad, [sGroup, 'x2']);
-                if bX3
+                if obj.Config.Simulation.Dimensions == 3
                     aCol3 = h5read(sLoad, [sGroup, 'x3']);
                 else
-                    aCol3 = zeros(length(aCol1),1);
+                    aCol3 = aCol1*0.0;
                 end % if
                 aCol4 = h5read(sLoad, [sGroup, 'p1']);
                 aCol5 = h5read(sLoad, [sGroup, 'p2']);
@@ -555,6 +567,76 @@ classdef OsirisData
             
         end % function
         
+        function bReturn = SaveAnalysis(obj, stData, sClass, sMethod, sSubject, sData, iTime, sReplace)
+            
+            bReturn = false;
+            sPath   = obj.Path;
+            
+            % Check if analysis folder exists
+            sPath = [sPath, '/AN'];
+            if ~isdir(sPath)
+                try
+                    mkdir(sPath);
+                catch
+                    fprint('Failed to create folder %s\n',sPath);
+                    return;
+                end % try
+            end % if
+            
+            % Check if class folder exists
+            sPath = [sPath, '/', sClass];
+            if ~isdir(sPath)
+                try
+                    mkdir(sPath);
+                catch
+                    fprint('Failed to create folder %s\n',sPath);
+                    return;
+                end % try
+            end % if
+
+            % Check if method folder exists
+            sPath = [sPath, '/', sMethod];
+            if ~isdir(sPath)
+                try
+                    mkdir(sPath);
+                catch
+                    fprint('Failed to create folder %s\n',sPath);
+                    return;
+                end % try
+            end % if
+            
+            % Generate FileName
+            if iTime < 0
+                sTime = 'RANGE';
+            else
+                sTime = sprintf('%05d',iTime);
+            end % if
+            
+            if strcmpi(sReplace, 'Replace')
+                sFile = sprintf('%s-%s-%s-000.mat',sSubject,sData,sTime);
+            else
+                for i=1:100
+                    sFile = sprintf('%s-%s-%s-%03d.mat',sSubject,sData,sTime,i);
+                    if ~exist([sPath, '/', sFile],'file')
+                        break;
+                    end % if
+                end % for
+            end % if
+
+            % TimeStamp
+            aTime      = clock;
+            aTime(6)   = round(aTime(6));
+            sTimeStamp = sprintf('%04.0f-%02.0f-%02.0f %02.0f:%02.0f:%02.0f', aTime);
+
+            % Save File
+            stSave.Save           = stData;
+            stSave.Save.TimeStamp = sTimeStamp;
+            save([sPath, '/', sFile],'-struct','stSave');
+            
+            bReturn = true;
+            
+        end % function
+
         function bReturn = SaveAnalysis(obj, stData, sClass, sMethod, sSubject, sData, iTime, sReplace)
             
             bReturn = false;

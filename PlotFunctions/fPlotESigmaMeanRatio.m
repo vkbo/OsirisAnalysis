@@ -85,9 +85,9 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
     
     hold on;
     
-    H(1) = plot(stData.TimeAxis, stData.Data*100, '-b', 'LineWidth', 2);
+    H(1) = plot(stData.TAxis, stData.Data*100, '-b', 'LineWidth', 2);
     
-    xlim([stData.TimeAxis(1),stData.TimeAxis(end)]);
+    xlim([stData.TAxis(1),stData.TAxis(end)]);
 
     if strcmpi(stOpt.HideDump, 'No')
         sTitle = sprintf('%s Energy Sigma to Mean Ratio (%s #%d)',vSpecies.Full,oData.Config.Name,iTime);

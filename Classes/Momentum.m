@@ -16,12 +16,15 @@
 %      X1Scale : Unit scale on x1 axis. 'Auto', or specify metric unit
 %      X2Scale : Unit scale on x2 axis. 'Auto', or specify metric unit
 %      X3Scale : Unit scale on x3 axis. 'Auto', or specify metric unit
+%      Scale   : Unit scale on all axes. 'Auto', or specify metric unit
 %
 %  Set Methods:
-%    Time  : Set time dump for dataset. Default is 0.
-%    X1Lim : 2D array of limits for x1 axis. Default is full box.
-%    X2Lim : 2D array of limits for x2 axis. Default is full box.
-%    X3Lim : 2D array of limits for x3 axis. Default is full box.
+%    Time      : Set time dump for dataset. Default is 0.
+%    X1Lim     : 2D array of limits for x1 axis. Default is full box.
+%    X2Lim     : 2D array of limits for x2 axis. Default is full box.
+%    X3Lim     : 2D array of limits for x3 axis. Default is full box.
+%    SliceAxis : 2D slice axis for 3D data
+%    Slice     : 2D slice coordinate for 3D data
 %
 %  Public Methods:
 %    SigmaEToEMean    : Returns a dataset with mean energy and spread.
@@ -68,6 +71,7 @@ classdef Momentum < OsirisType
         
         function stReturn = SigmaEToEMean(obj, sStart, sEnd)
 
+            % Input/Output
             stReturn = {};
 
             if nargin < 2
@@ -78,6 +82,11 @@ classdef Momentum < OsirisType
                 sEnd = 'End';
             end % if
             
+            % Check that the object is initialised
+            if obj.fError
+                return;
+            end % if
+
             % Calculate range
             iStart = obj.Data.StringToDump(sStart);
             iEnd   = obj.Data.StringToDump(sEnd);
@@ -109,15 +118,16 @@ classdef Momentum < OsirisType
             end % for
             
             % Return data
-            stReturn.TimeAxis = aTAxis;
-            stReturn.Mean     = aMean;
-            stReturn.Sigma    = aSigma;
-            stReturn.Data     = aData;
+            stReturn.TAxis = aTAxis;
+            stReturn.Mean  = aMean;
+            stReturn.Sigma = aSigma;
+            stReturn.Data  = aData;
 
         end % function
 
         function stReturn = Evolution(obj, sAxis, sStart, sEnd, varargin)
 
+            % Input/Output
             stReturn = {};
             
             if nargin < 3
@@ -128,6 +138,11 @@ classdef Momentum < OsirisType
                 sEnd = 'End';
             end % if
             
+            % Check that the object is initialised
+            if obj.fError
+                return;
+            end % if
+
             iStart = obj.Data.StringToDump(sStart);
             iEnd   = obj.Data.StringToDump(sEnd);
 
@@ -143,7 +158,7 @@ classdef Momentum < OsirisType
             aTAxis = obj.fGetTimeAxis;
             aTAxis = aTAxis(iStart+1:iEnd+1);
 
-            stReturn.TimeAxis = aTAxis;
+            stReturn.TAxis = aTAxis;
 
             switch(fMomentumAxis(sAxis))
                 case 'p1'
@@ -180,6 +195,7 @@ classdef Momentum < OsirisType
 
         function stReturn = BeamSlip(obj, sStart, sEnd, dAdd)
 
+            % Input/Output
             stReturn = {};
 
             if nargin < 2
@@ -194,6 +210,11 @@ classdef Momentum < OsirisType
                 dAdd = 0.0;
             end % if
             
+            % Check that the object is initialised
+            if obj.fError
+                return;
+            end % if
+
             iStart = obj.Data.StringToDump(sStart);
             iEnd   = obj.Data.StringToDump(sEnd);
             
@@ -261,7 +282,13 @@ classdef Momentum < OsirisType
 
         function stReturn = PhaseSpace(obj, varargin)
             
+            % Input/Output
             stReturn = {};
+
+            % Check that the object is initialised
+            if obj.fError
+                return;
+            end % if
 
             oOpt = inputParser;
             addParameter(oOpt, 'Samples',      1);
@@ -368,10 +395,10 @@ classdef Momentum < OsirisType
                 aHist(aM(i),aN(i)) = aHist(aM(i),aN(i)) + aRQ(i);
             end % for
             
-            stReturn.Hist   = abs(transpose(aHist))*1e9;
-            stReturn.X1Axis = linspace(dXMin,dXMax,stOpt.Grid(1));
-            stReturn.X2Axis = linspace(dXPMin,dXPMax,stOpt.Grid(2));
-            stReturn.Count  = iLen*iMin;
+            stReturn.Hist  = abs(transpose(aHist))*1e9;
+            stReturn.HAxis = linspace(dXMin,dXMax,stOpt.Grid(1));
+            stReturn.VAxis = linspace(dXPMin,dXPMax,stOpt.Grid(2));
+            stReturn.Count = iLen*iMin;
             
         end % function
     

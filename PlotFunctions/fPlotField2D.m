@@ -13,6 +13,8 @@
 %  Options:
 % ==========
 %  Limits      :: Axis limits
+%  Slice       :: 2D slice coordinate for 3D data
+%  SliceAxis   :: 2D slice axis for 3D data
 %  FigureSize  :: Default [900 500]
 %  HideDump    :: Default No
 %  IsSubplot   :: Default No
@@ -42,6 +44,8 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
         fprintf('  Options:\n');
         fprintf(' ==========\n');
         fprintf('  Limits      :: Axis limits\n');
+        fprintf('  Slice       :: 2D slice coordinate for 3D data\n');
+        fprintf('  SliceAxis   :: 2D slice axis for 3D data\n');
         fprintf('  FigureSize  :: Default [900 500]\n');
         fprintf('  HideDump    :: Default No\n');
         fprintf('  IsSubplot   :: Default No\n');
@@ -52,11 +56,13 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
         return;
     end % if
 
-    vField = oData.Translate.Lookup(sField,'Field');
+    vField = oData.Translate.Lookup(sField);
     iTime  = oData.StringToDump(sTime);
 
     oOpt = inputParser;
     addParameter(oOpt, 'Limits',      []);
+    addParameter(oOpt, 'Slice',       0.0);
+    addParameter(oOpt, 'SliceAxis',   3);
     addParameter(oOpt, 'FigureSize',  [900 500]);
     addParameter(oOpt, 'HideDump',    'No');
     addParameter(oOpt, 'IsSubPlot',   'No');
@@ -71,35 +77,51 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
         return;
     end % if
     
-    if ~vField.isField
-        fprintf(2, 'Error: Non-existent field specified.\n');
+    if ~vField.isValidEMFDiag
+        fprintf(2, 'Error: Non-existent field diagnostics specified.\n');
         return;
     end % if
     
     % Prepare Data
 
-    oFLD = Field(oData, vField.Name, 'Units', 'SI', 'X1Scale', 'mm', 'X2Scale', 'mm');
+    oFLD      = Field(oData,vField.Name,'Units','SI','Scale','mm');
     oFLD.Time = iTime;
     sBaseUnit = oFLD.FieldUnit;
-
+    
     if length(stOpt.Limits) == 4
         oFLD.X1Lim = stOpt.Limits(1:2);
         oFLD.X2Lim = stOpt.Limits(3:4);
     end % if
+
+    if oData.Config.Simulation.Dimensions == 3
+        oFLD.SliceAxis = stOpt.SliceAxis;
+        oFLD.Slice     = stOpt.Slice;
+    end % if
     
     stData = oFLD.Density2D;
 
+    if isempty(stData)
+        fprintf(2, 'Error: No data.\n');
+        stReturn.Error = 'No data';
+        return;
+    end % if
+
     aData  = stData.Data;
-    aZAxis = stData.X1Axis;
-    aRAxis = stData.X2Axis;
+    aHAxis = stData.HAxis;
+    aVAxis = stData.VAxis;
+    sHAxis = stData.Axes{1};
+    sVAxis = stData.Axes{2};
     dZPos  = stData.ZPos;
+
+    vHAxis = oData.Translate.Lookup(sHAxis);
+    vVAxis = oData.Translate.Lookup(sVAxis);
     
     dPeak  = max(abs(aData(:)));
     [dTemp, sFUnit] = fAutoScale(dPeak, sBaseUnit);
     dScale = dTemp/dPeak;
 
-    stReturn.X1Axis    = stData.X1Axis;
-    stReturn.X2Axis    = stData.X2Axis;
+    stReturn.HAxis     = stData.HAxis;
+    stReturn.VAxis     = stData.VAxis;
     stReturn.ZPos      = stData.ZPos;
     stReturn.AxisFac   = oFLD.AxisFac;
     stReturn.AxisRange = oFLD.AxisRange;
@@ -116,7 +138,7 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
         cla;
     end % if
 
-    imagesc(aZAxis, aRAxis, aData*dScale);
+    imagesc(aHAxis, aVAxis, aData*dScale);
     set(gca,'YDir','Normal');
     polarmap(jet,0.5);
     %colormap('jet');
@@ -127,14 +149,6 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
 
     hold on;
 
-    %if strcmpi(stOpt.ShowOverlay, 'Yes')
-    %    plot(aZAxis, aProjZ, 'White');
-    %    h = legend(sBeamCharge, 'Location', 'NE');
-    %    set(h,'Box','Off');
-    %    set(h,'TextColor', [1 1 1]);
-    %    set(findobj(h, 'type', 'line'), 'visible', 'off')
-    %end % if
-
     if strcmpi(stOpt.HideDump, 'No')
         sTitle = sprintf('%s %s (%s #%d)', vField.Full, oFLD.PlasmaPosition, oData.Config.Name, iTime);
     else
@@ -142,9 +156,9 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
     end % if
 
     title(sTitle);
-    xlabel('\xi [mm]');
-    ylabel('r [mm]');
-    title(hCol,sFUnit);
+    xlabel(sprintf('%s [mm]',vHAxis.Tex));
+    ylabel(sprintf('%s [mm]',vVAxis.Tex));
+    title(hCol,sprintf('%s [%s]',vField.Tex,sFUnit));
     
     hold off;
     

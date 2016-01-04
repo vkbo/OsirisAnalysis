@@ -16,7 +16,10 @@
  =====================
 
   Version 1.4
-  - None
+  - Classes and tools now support 3D simulations in 2D plots by making slices. A flexible Grid2D and Lineout function
+    has been added to OsirisType.
+  - Added option to select slices in Analyse2D for the relevant plots.
+  - All classes have better error checking functionality and will report errors rather than fail.
   
   Version 1.3
   - Bug fixes.

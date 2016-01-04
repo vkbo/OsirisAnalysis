@@ -83,7 +83,7 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
 
     aData = stData.Data*100;
     aAxis = stData.Axis;
-    vAxis = oData.Translate.Lookup(strrep(sAxis,'x1','xi'));
+    vAxis = oData.Translate.Lookup(sAxis);
 
     dAMax = max(abs(aAxis));
     [dAVal,sAUnit] = fAutoScale(dAMax,stData.AxisUnit);
@@ -106,7 +106,7 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
     else
         cla;
     end % if
-
+    
     stairs(aAxis, aData, 'Color', [0.0 0.0 0.6], 'LineWidth', 1.5);
 
     dYMax = max(aData);
