@@ -73,6 +73,11 @@ classdef Phase < OsirisType
             % Input/Output
             stReturn = {};
             
+            % Check that the object is initialised
+            if obj.fError
+                return;
+            end % if
+
             % Check Axis input
             cAxis = obj.CheckVariable(sAxis, 1);
             if isempty(cAxis.Input)
@@ -132,6 +137,11 @@ classdef Phase < OsirisType
             % Input/Output
             stReturn = {};
             
+            % Check that the object is initialised
+            if obj.fError
+                return;
+            end % if
+
             % Check Axis input
             cAxis = obj.CheckVariable(sAxis, 2);
             if isempty(cAxis.Input)
@@ -211,6 +221,11 @@ classdef Phase < OsirisType
             % Input/Output
             stReturn = {};
             
+            % Check that the object is initialised
+            if obj.fError
+                return;
+            end % if
+
             vAxis1 = obj.Translate.Lookup(sAxis1);
             vAxis2 = obj.Translate.Lookup(sAxis2);
             
@@ -373,6 +388,11 @@ classdef Phase < OsirisType
             % Input/Output
             stReturn = {};
 
+            % Check that the object is initialised
+            if obj.fError
+                return;
+            end % if
+
             oOpt = inputParser;
             addParameter(oOpt, 'Grid',   100);
             addParameter(oOpt, 'Method', 'Deposit');
@@ -445,6 +465,11 @@ classdef Phase < OsirisType
             % Input/Output
             stReturn = {};
         
+            % Check that the object is initialised
+            if obj.fError
+                return;
+            end % if
+
             oOpt = inputParser;
             addParameter(oOpt, 'Grid', [1000 1000]);
             parse(oOpt, varargin{:});

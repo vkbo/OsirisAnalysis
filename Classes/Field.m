@@ -55,7 +55,7 @@ classdef Field < OsirisType
         function obj = Field(oData, sField, varargin)
             
             % Call OsirisType constructor
-            obj@OsirisType(oData, '', varargin{:});
+            obj@OsirisType(oData, 'None', varargin{:});
 
             % Set Field
             stField = obj.Translate.Lookup(sField);
