@@ -110,11 +110,13 @@ classdef OsirisData
                             sSet = structname(stScan.(sName)(s).Name);
 
                             obj.DataSets.ByName.(sSet).Path      = stScan.(sName)(s).Path;
+                            obj.DataSets.ByName.(sSet).Name      = stScan.(sName)(s).Name;
                             obj.DataSets.ByName.(sSet).HasData   = isdir([stScan.(sName)(s).Path, '/MS']);
                             obj.DataSets.ByName.(sSet).HasTracks = isdir([stScan.(sName)(s).Path, '/MS/TRACKS']);
                             obj.DataSets.ByName.(sSet).Completed = isdir([stScan.(sName)(s).Path, '/TIMINGS']);
 
                             obj.DataSets.ByPath.(sName).(sSet).Path      = stScan.(sName)(s).Path;
+                            obj.DataSets.ByPath.(sName).(sSet).Name      = stScan.(sName)(s).Name;
                             obj.DataSets.ByPath.(sName).(sSet).HasData   = isdir([stScan.(sName)(s).Path, '/MS']);
                             obj.DataSets.ByPath.(sName).(sSet).HasTracks = isdir([stScan.(sName)(s).Path, '/MS/TRACKS']);
                             obj.DataSets.ByPath.(sName).(sSet).Completed = isdir([stScan.(sName)(s).Path, '/TIMINGS']);

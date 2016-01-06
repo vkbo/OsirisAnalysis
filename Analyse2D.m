@@ -36,7 +36,7 @@ function Analyse2D
     oVar  = Variables();
 
     X.DataSet     = 0;
-    X.LoadTo      = 1;
+    %X.LoadTo      = 1;
     X.Time.Dump   = 0;
     X.Time.Limits = [0 0 0 0];
     X.Data.Beam   = {' '};
@@ -116,6 +116,7 @@ function Analyse2D
     mD(1) = uimenu(mData,'Label','Load DataSet 1','Accelerator','1','Callback',{@fLoadSet,1});
     mD(2) = uimenu(mData,'Label','Load DataSet 2','Accelerator','2','Callback',{@fLoadSet,2});
     mD(3) = uimenu(mData,'Label','Load DataSet 3','Accelerator','3','Callback',{@fLoadSet,3});
+            uimenu(mData,'Label','Open DataSet','Accelerator','o','Separator','On','Callback',{@fOpenData});
             uimenu(mData,'Label','Rescan Data Folders','Accelerator','r','Separator','On','Callback',{@fScanData});
 
     mSims = uimenu(fMain,'Label','Simulation');
@@ -124,13 +125,13 @@ function Analyse2D
     mFigs = uimenu(fMain,'Label','Figure');
             uimenu(mFigs,'Label','Focus Figures','Accelerator','f','Callback',{@fFocus});
             
-    mLoad = uimenu(fMain,'Label','Load');
-    mL(1) = uimenu(mLoad,'Label','Load as #1','Callback',{@fSetLoadTo,1});
-    mL(2) = uimenu(mLoad,'Label','Load as #2','Callback',{@fSetLoadTo,2});
-    mL(3) = uimenu(mLoad,'Label','Load as #3','Callback',{@fSetLoadTo,3});
-            uimenu(mLoad,'Label','Select Dataset:','Separator','On');
+    %mLoad = uimenu(fMain,'Label','Load');
+    %mL(1) = uimenu(mLoad,'Label','Load as #1','Callback',{@fSetLoadTo,1});
+    %mL(2) = uimenu(mLoad,'Label','Load as #2','Callback',{@fSetLoadTo,2});
+    %mL(3) = uimenu(mLoad,'Label','Load as #3','Callback',{@fSetLoadTo,3});
+    %        uimenu(mLoad,'Label','Select Dataset:','Separator','On');
     
-    mL(X.LoadTo).Checked = 'On';
+    %mL(X.LoadTo).Checked = 'On';
 
     
     %
@@ -538,20 +539,20 @@ function Analyse2D
     function fScanData(~,~)
         
         oData    = OsirisData('Silent','Yes');
-        stFields = fieldnames(oData.DefaultPath);
-        for f=1:length(stFields)
-            if oData.DefaultPath.(stFields{f}).Available
-                fOut(sprintf('Scanning %s',oData.DefaultPath.(stFields{f}).Path),1);
-                fOut(sprintf('... found %d sets',length(fieldnames(oData.DataSets.ByPath.(stFields{f})))),1);
-                mLd(f) = uimenu(mLoad,'Label',stFields{f});
-                stSets = fieldnames(oData.DataSets.ByPath.(stFields{f}));
-                for s=1:length(stSets)
-                    sSetPath  = oData.DataSets.ByPath.(stFields{f}).(stSets{s}).Path;
-                    stSetPath = strsplit(sSetPath,'/');
-                    uimenu(mLd(f),'Label',stSetPath{end},'Callback',{@fSelectDataSet,stSetPath{end}});
-                end % for
-            end % if
-        end % for
+        %stFields = fieldnames(oData.DefaultPath);
+        %for f=1:length(stFields)
+        %    if oData.DefaultPath.(stFields{f}).Available
+        %        fOut(sprintf('Scanning %s',oData.DefaultPath.(stFields{f}).Path),1);
+        %        fOut(sprintf('... found %d sets',length(fieldnames(oData.DataSets.ByPath.(stFields{f})))),1);
+        %        mLd(f) = uimenu(mLoad,'Label',stFields{f});
+        %        stSets = fieldnames(oData.DataSets.ByPath.(stFields{f}));
+        %        for s=1:length(stSets)
+        %            sSetPath  = oData.DataSets.ByPath.(stFields{f}).(stSets{s}).Path;
+        %            stSetPath = strsplit(sSetPath,'/');
+        %            uimenu(mLd(f),'Label',stSetPath{end},'Callback',{@fSelectDataSet,stSetPath{end}});
+        %        end % for
+        %    end % if
+        %end % for
         
     end % function
     
@@ -735,11 +736,43 @@ function Analyse2D
         
     end % function
 
-    function fSelectDataSet(~,~,sSet)
+    function fOpenData(~,~)
         
-        edtSet(X.LoadTo).String       = sSet;
-        stSettings.LoadPath{X.LoadTo} = '';
-        fLoadSet(0,0,X.LoadTo);
+        % Open Controls
+        fOpen = figure('IntegerHandle', 'Off'); clf;
+
+        % Set Properties
+        fOpen.Units        = 'Pixels';
+        fOpen.MenuBar      = 'None';
+        fOpen.Position     = [fMain.Position(1:2)+[100 250] 300 300];
+        fOpen.Name         = 'Open DataSet';
+        fOpen.NumberTitle  = 'Off';
+        fOpen.DockControls = 'Off';
+        
+        cDataSets = {};
+        cFields   = fieldnames(oData.DefaultPath);
+        for f=1:length(cFields)
+            if oData.DefaultPath.(cFields{f}).Available
+                cSets = fieldnames(oData.DataSets.ByPath.(cFields{f}));
+                for s=1:length(cSets)
+                    cDataSets{end+1} = oData.DataSets.ByPath.(cFields{f}).(cSets{s}).Name;
+                end % for
+            end % if
+        end % for
+
+        lstOpen = uicontrol('Style','Listbox','String',cDataSets,'FontName','FixedWidth','Position',[10 10 210 280],'HorizontalAlignment','Left');
+        uicontrol('Style','PushButton','String','Load #1','Position',[230 10 60 25],'Callback',{@fOpenDataSet,1,cDataSets(lstOpen.Value)});
+        uicontrol('Style','PushButton','String','Load #2','Position',[230 40 60 25],'Callback',{@fOpenDataSet,2,cDataSets(lstOpen.Value)});
+        uicontrol('Style','PushButton','String','Load #3','Position',[230 70 60 25],'Callback',{@fOpenDataSet,3,cDataSets(lstOpen.Value)});
+        
+        
+    end % function
+
+    function fOpenDataSet(~,~,iSet,sSet)
+        
+        edtSet(iSet).String       = sSet;
+        %stSettings.LoadPath{iSet} = '';
+        %fLoadSet(0,0,iSet);
         
     end % function
 
@@ -1406,16 +1439,16 @@ function Analyse2D
         
     end % function
 
-    function fSetLoadTo(~,~,iSet)
-        
-        X.LoadTo = iSet;
-
-        for i=1:3
-            mL(i).Checked = 'Off';
-        end % for
-        mL(iSet).Checked = 'On';
-        
-    end % function
+    %function fSetLoadTo(~,~,iSet)
+    %    
+    %    X.LoadTo = iSet;
+    %
+    %    for i=1:3
+    %        mL(i).Checked = 'Off';
+    %    end % for
+    %    mL(iSet).Checked = 'On';
+    %    
+    %end % function
 
 
     %
