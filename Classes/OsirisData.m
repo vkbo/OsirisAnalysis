@@ -17,7 +17,7 @@ classdef OsirisData
         PathID      = '';    % Path as ID instead of free text input
         Config      = [];    % Content of the config files and extraction of all runtime variables
         Silent      = false; % Set to 1 to disable command window output
-        RunningZ   = true;   % Uses box coordinates instead of simulation coordinates
+        RunningZ    = true;  % Uses box coordinates instead of simulation coordinates
 
     end % properties
 
@@ -1007,6 +1007,10 @@ classdef OsirisData
 
                 end % switch
             end % for
+            
+            if iMin == 1e6
+                iMin = 0;
+            end % if
             
             stReturn.Data     = stData;
             stReturn.Index    = stIndex;
