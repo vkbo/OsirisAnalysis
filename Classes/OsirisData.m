@@ -566,7 +566,7 @@ classdef OsirisData
             end % for
             
         end % function
-
+        
         function bReturn = SaveAnalysis(obj, stData, sClass, sMethod, sSubject, sData, iTime, sReplace)
             
             bReturn = false;
@@ -1029,7 +1029,7 @@ classdef OsirisData
 
         function iReturn = RawToIndex(sAxis)
 
-            switch(sAxis)
+            switch(lower(sAxis))
                 case 'x1'
                     iReturn = 1;
                 case 'x2'

@@ -658,6 +658,15 @@ classdef OsirisType
             
         end % function
 
+        function aReturn = MomentumToEnergy(obj, aMomentum)
+            
+            dRQM    = obj.Config.RQM;
+            dEMass  = obj.Data.Config.Constants.EV.ElectronMass;
+            dPFac   = abs(dRQM)*dEMass;
+            aReturn = sqrt(aMomentum.^2 + 1)*dPFac;
+            
+        end % function
+
     end % methods
     
 end % classdef

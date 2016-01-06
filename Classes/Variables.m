@@ -705,7 +705,7 @@ classdef Variables
     % Public Methods
     %
 
-    methods(Access = 'public')
+    methods(Access='public')
         
         function stReturn = Lookup(obj, sVar, vType)
             
@@ -974,7 +974,7 @@ classdef Variables
             end % for
             
         end % function
-
+        
     end % methods
 
 end % classdef
