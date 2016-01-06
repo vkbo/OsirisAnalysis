@@ -1295,12 +1295,17 @@ classdef OsirisConfig
                         oMathFunc = MathFunc(sFunction);
 
                         if iDim > 2
-                            mTemp = oMathFunc.Eval(stProfile(1).Axis,stProfile(2).Axis,stProfile(3).Axis);
+                            mTemp = oMathFunc.Eval(stProfile(1).Axis,stProfile(2).Axis,[0]);
                             mTemp = mTemp.*(mTemp > 0);
-                            stProfile(1).Value = sum(sum(mTemp,1),3);
-                            stProfile(2).Value = sum(sum(mTemp,2),3)';
-                            stProfile(3).Value = sum(sum(mTemp,3),2)';
-                            dCharge = sum(mTemp(:))*dDeltaCorr;
+                            stProfile(1).Value = sum(mTemp,1);
+                            stProfile(2).Value = sum(mTemp,2)';
+                            aTemp = mTemp;
+
+                            mTemp = oMathFunc.Eval(stProfile(1).Axis,stProfile(3).Axis,[0]);
+                            mTemp = mTemp.*(mTemp > 0);
+                            stProfile(3).Value = sum(mTemp,2)';
+                            aTemp   = sum(mTemp,1).*sum(aTemp,1);
+                            dCharge = sqrt(2)*sum(aTemp(:))*dDeltaCorr;
                         else
                             mTemp = oMathFunc.Eval(stProfile(1).Axis,stProfile(2).Axis,[0]);
                             mTemp = mTemp.*(mTemp > 0);
@@ -1314,7 +1319,7 @@ classdef OsirisConfig
                                 % This calculation has not been checked, but it sums all elements
                                 % down on x1 axis and squares them before doing another sum.
                                 aTemp   = sum(mTemp,1).^2;
-                                dCharge = sum(aTemp(:))*dDeltaCorr;
+                                dCharge = sqrt(2)*sum(aTemp(:))*dDeltaCorr;
                             end % if
                         end % if
 
