@@ -84,7 +84,11 @@ classdef Density < OsirisType
             end % if
             
             % Get Data and Parse it
-            aData  = obj.Data.Data(obj.Time, 'DENSITY', vDensity.Name, obj.Species.Name);
+            aData = obj.Data.Data(obj.Time, 'DENSITY', vDensity.Name, obj.Species.Name);
+            if isempty(aData)
+                return;
+            end % if
+
             stData = obj.fParseGridData2D(aData);
 
             if isempty(stData)
@@ -153,7 +157,11 @@ classdef Density < OsirisType
             end % if
 
             % Get Data and Parse it
-            aData  = obj.Data.Data(obj.Time,'DENSITY','charge',obj.Species.Name);
+            aData = obj.Data.Data(obj.Time,'DENSITY','charge',obj.Species.Name);
+            if isempty(aData)
+                return;
+            end % if
+
             stData = fParseGridData1D(aData,iStart,iAverage);
 
             if isempty(stData)
@@ -208,7 +216,11 @@ classdef Density < OsirisType
                 
                 i = t-iStart+1;
                 
-                aRaw      = obj.Data.Data(t,'RAW','',obj.Species.Name);
+                aRaw = obj.Data.Data(t,'RAW','',obj.Species.Name);
+                if isempty(aRaw)
+                    return;
+                end % if
+
                 aRaw(:,1) = aRaw(:,1) - t*dTFac;
                 aNumA(i)  = size(aRaw,1);
                 
@@ -304,14 +316,18 @@ classdef Density < OsirisType
             dXMax      = obj.Data.Config.Simulation.XMax(1);
             dBoxSize   = dXMax-dXMin;
             
-            h5Data = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species.Name);
+            aData = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species.Name);
+            if isempty(aData)
+                return;
+            end % if
+
             if isempty(aRange)
-                aProj = abs(sum(transpose(h5Data),1));
+                aProj = abs(sum(transpose(aData),1));
             else
                 if length(aRange) == 1
-                    aProj = abs(sum(transpose(h5Data(:,aRange(1))),1));
+                    aProj = abs(sum(transpose(aData(:,aRange(1))),1));
                 else
-                    aProj = abs(sum(transpose(h5Data(:,aRange(1):aRange(1))),1));
+                    aProj = abs(sum(transpose(aData(:,aRange(1):aRange(1))),1));
                 end % if
             end % if
 
@@ -355,6 +371,9 @@ classdef Density < OsirisType
 
             % Get dataset
             aData = obj.Data.Data(obj.Time, 'DENSITY', 'charge', obj.Species.Name);
+            if isempty(aData)
+                return;
+            end % if
 
             if isempty(aRange)
                 aProj = abs(sum(transpose(aData),1));
@@ -422,6 +441,10 @@ classdef Density < OsirisType
             dSign     = dRQM/abs(dRQM);
             
             aRaw      = obj.Data.Data(obj.Time, 'RAW', '', obj.Species.Name);
+            if isempty(aRaw)
+                return;
+            end % if
+
             iCount    = length(aRaw(:,1));
             aRaw(:,1) = aRaw(:,1) - dTFactor*obj.Time;
             
@@ -479,11 +502,15 @@ classdef Density < OsirisType
             stOpt = oOpt.Results;
 
             % Read variables
-            dEMass    = obj.Data.Config.Constants.EV.ElectronMass;
-            dRQM      = obj.Data.Config.Particles.Species.(obj.Species.Name).RQM;
-            dSign     = dRQM/abs(dRQM);
+            dEMass = obj.Data.Config.Constants.EV.ElectronMass;
+            dRQM   = obj.Data.Config.Particles.Species.(obj.Species.Name).RQM;
+            dSign  = dRQM/abs(dRQM);
             
-            aRaw      = obj.Data.Data(stOpt.Time, 'RAW', '', obj.Species.Name);
+            aRaw = obj.Data.Data(stOpt.Time, 'RAW', '', obj.Species.Name);
+            if isempty(aRaw)
+                return;
+            end % if
+
             aRaw(:,1) = aRaw(:,1) - obj.BoxOffset;
             if obj.Cylindrical
                 aRaw(:,8) = aRaw(:,8)./aRaw(:,2);

@@ -92,7 +92,11 @@ classdef Field < OsirisType
             stReturn = {};
             
             % Get Data and Parse it
-            aData  = obj.Data.Data(obj.Time, 'FLD', obj.FieldVar.Name, '');
+            aData = obj.Data.Data(obj.Time, 'FLD', obj.FieldVar.Name, '');
+            if isempty(aData)
+                return;
+            end % if
+
             stData = obj.fParseGridData2D(aData,(obj.FieldVar.Dim == 3));
             
             if isempty(stData)
@@ -136,7 +140,11 @@ classdef Field < OsirisType
             end % if
             
             % Get Data and Parse it
-            aData  = obj.Data.Data(obj.Time,'FLD',obj.FieldVar.Name,'');
+            aData = obj.Data.Data(obj.Time,'FLD',obj.FieldVar.Name,'');
+            if isempty(aData)
+                return;
+            end % if
+
             stData = obj.fParseGridData1D(aData,iStart,iAverage);
 
             if isempty(stData)
@@ -239,6 +247,10 @@ classdef Field < OsirisType
             for t=iStart:iStop
                 
                 aData = obj.Data.Data(t,'FLD',obj.FieldVar.Name,'');
+                if isempty(aData)
+                    return;
+                end % if
+
                 switch(obj.FieldVar.Name)
                     case 'e1'
                         aEnergy(:,t-iStart+1) = mean(aData(aVLim(1):aVLim(2),aRange(1):aRange(2)),2);

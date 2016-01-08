@@ -94,7 +94,12 @@ classdef Phase < OsirisType
             stOpt = oOpt.Results;
             
             % Get data
-            aData     = transpose(obj.Data.Data(obj.Time,'PHA',cAxis.Input,obj.Species.Name));
+            aData = obj.Data.Data(obj.Time,'PHA',cAxis.Input,obj.Species.Name);
+            if isempty(aData)
+                return;
+            end % if
+            aData = aData';
+            
             aAxis     = obj.fGetDiagAxis(sAxis);
             stAxis    = obj.fConvertAxis(cAxis.Input);
             stDeposit = obj.fConvertDeposit(cAxis.Deposit);
@@ -168,7 +173,11 @@ classdef Phase < OsirisType
             end % if
             
             % Get data
-            aData     = obj.Data.Data(obj.Time,'PHA',cAxis.Input,obj.Species.Name);
+            aData = obj.Data.Data(obj.Time,'PHA',cAxis.Input,obj.Species.Name);
+            if isempty(aData)
+                return;
+            end % if
+
             aHAxis    = obj.fGetDiagAxis(sAxis1);
             aVAxis    = obj.fGetDiagAxis(sAxis2);
             stHAxis   = obj.fConvertAxis(sAxis1);
@@ -270,6 +279,9 @@ classdef Phase < OsirisType
             
             % Retrieve data
             aRaw = obj.Data.Data(obj.Time,'RAW','',obj.Species.Name);
+            if isempty(aRaw)
+                return;
+            end % if
             
             % Move x1 to box start
             aRaw(:,1) = aRaw(:,1) - dTFac*obj.Time;
@@ -408,6 +420,9 @@ classdef Phase < OsirisType
             
             % Get data
             aRaw = obj.Data.Data(obj.Time, 'RAW', '', obj.Species.Name);
+            if isempty(aRaw)
+                return;
+            end % if
             aRaw(:,1) = aRaw(:,1) - obj.BoxOffset;
 
             % Prepare data

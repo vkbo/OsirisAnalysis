@@ -103,15 +103,18 @@ classdef Momentum < OsirisType
                 
                 k = i-iStart+1;
                 
-                h5Data = obj.Data.Data(i, 'RAW', '', obj.Species.Name);
+                aData = obj.Data.Data(i, 'RAW', '', obj.Species.Name);
+                if isempty(aData)
+                    return;
+                end % if
                 
-                if length(h5Data(:,8)) == 1 && h5Data(1,8) == 0
+                if length(aData(:,8)) == 1 && aData(1,8) == 0
                     aMean(k)  = 0.0;
                     aSigma(k) = 0.0;
                     aData(k)  = 0.0;
                 else
-                    aMean(k)  = obj.MomentumToEnergy(wmean(h5Data(:,4), abs(h5Data(:,8))));
-                    aSigma(k) = obj.MomentumToEnergy(wstd(h5Data(:,4), abs(h5Data(:,8))));
+                    aMean(k)  = obj.MomentumToEnergy(wmean(aData(:,4), abs(aData(:,8))));
+                    aSigma(k) = obj.MomentumToEnergy(wstd(aData(:,4), abs(aData(:,8))));
                     aData(k)  = aSigma(k)/aMean(k);
                 end % if
                 
@@ -173,10 +176,13 @@ classdef Momentum < OsirisType
                 
                 k = i-iStart+1;
 
-                aRAW = obj.Data.Data(i, 'RAW', '', obj.Species.Name)*dEMass;
+                aRaw = obj.Data.Data(i, 'RAW', '', obj.Species.Name)*dEMass;
+                if isempty(aRaw)
+                    return;
+                end % if
 
-                stReturn.Average(k) = double(wmean(aRAW(:,iAxis),aRAW(:,8)));
-                stReturn.Median(k)  = wprctile(aRAW(:,iAxis),50,abs(aRAW(:,8)));
+                stReturn.Average(k) = double(wmean(aRaw(:,iAxis),aRaw(:,8)));
+                stReturn.Median(k)  = wprctile(aRaw(:,iAxis),50,abs(aRaw(:,8)));
                 
                 if ~isempty(stOpt.Percentile)
                     for p=1:length(stOpt.Percentile)
@@ -185,7 +191,7 @@ classdef Momentum < OsirisType
                             continue;
                         end % if
                         sSet = sprintf('Percentile%d', c);
-                        stReturn.(sSet)(k) = wprctile(aRAW(:,iAxis),c,abs(aRAW(:,8)));
+                        stReturn.(sSet)(k) = wprctile(aRaw(:,iAxis),c,abs(aRaw(:,8)));
                     end % for
                 end % if
 
@@ -229,6 +235,9 @@ classdef Momentum < OsirisType
                 k = i-iStart+1;
 
                 aRaw = obj.Data.Data(i, 'RAW', '', obj.Species.Name);
+                if isempty(aRaw)
+                    return;
+                end % if
 
                 stReturn.Slip.Average(k)           = (dDeltaZ - dDeltaZ*sqrt(1-1/wmean(aRaw(:,4),aRaw(:,8))^2))*dLFac;
                 stReturn.Slip.Median(k)            = (dDeltaZ - dDeltaZ*sqrt(1-1/wprctile(aRaw(:,4),50,abs(aRaw(:,8)))^2))*dLFac;
@@ -298,7 +307,11 @@ classdef Momentum < OsirisType
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
 
-            aRaw   = obj.Data.Data(obj.Time, 'RAW', '', obj.Species.Name);
+            aRaw = obj.Data.Data(obj.Time, 'RAW', '', obj.Species.Name);
+            if isempty(aRaw)
+                return;
+            end % if
+
             aP     = sqrt(aRaw(:,4).^2 + aRaw(:,5).^2 + aRaw(:,6).^2);
             iLen   = length(aP);
             aERMS  = zeros(stOpt.Samples, 1);

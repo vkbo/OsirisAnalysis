@@ -516,40 +516,44 @@ classdef OsirisData
             
             sLoad = [sDataRoot, sFolder, sFile];
             
-            if strcmpi(sType, 'RAW') || strcmpi(sType, 'TRACKS')
+            try
+                if strcmpi(sType, 'RAW') || strcmpi(sType, 'TRACKS')
 
-                if strcmpi(sType, 'RAW')
-                    sGroup = '/';
-                else
-                    sGroup = strcat('/', sSet, '/');
-                end % if
-                
-                aCol1 = h5read(sLoad, [sGroup, 'x1']);
-                aCol2 = h5read(sLoad, [sGroup, 'x2']);
-                if obj.Config.Simulation.Dimensions == 3
-                    aCol3 = h5read(sLoad, [sGroup, 'x3']);
-                else
-                    aCol3 = aCol1*0.0;
-                end % if
-                aCol4 = h5read(sLoad, [sGroup, 'p1']);
-                aCol5 = h5read(sLoad, [sGroup, 'p2']);
-                aCol6 = h5read(sLoad, [sGroup, 'p3']);
-                aCol7 = h5read(sLoad, [sGroup, 'ene']);
-                aCol8 = h5read(sLoad, [sGroup, 'q']);
-                if strcmpi(sType, 'RAW')
-                    aCol9 = h5read(sLoad, [sGroup, 'tag']);
-                    aCol9 = double(transpose(aCol9));
-                else
-                    aCol9 = h5read(sLoad, [sGroup, 'n']);
-                    aCol9 = double(aCol9);
-                end % if
-                aReturn = [aCol1 aCol2 aCol3 aCol4 aCol5 aCol6 aCol7 aCol8 aCol9];
+                    if strcmpi(sType, 'RAW')
+                        sGroup = '/';
+                    else
+                        sGroup = strcat('/', sSet, '/');
+                    end % if
 
-            else
+                    aCol1 = h5read(sLoad, [sGroup, 'x1']);
+                    aCol2 = h5read(sLoad, [sGroup, 'x2']);
+                    if obj.Config.Simulation.Dimensions == 3
+                        aCol3 = h5read(sLoad, [sGroup, 'x3']);
+                    else
+                        aCol3 = aCol1*0.0;
+                    end % if
+                    aCol4 = h5read(sLoad, [sGroup, 'p1']);
+                    aCol5 = h5read(sLoad, [sGroup, 'p2']);
+                    aCol6 = h5read(sLoad, [sGroup, 'p3']);
+                    aCol7 = h5read(sLoad, [sGroup, 'ene']);
+                    aCol8 = h5read(sLoad, [sGroup, 'q']);
+                    if strcmpi(sType, 'RAW')
+                        aCol9 = h5read(sLoad, [sGroup, 'tag']);
+                        aCol9 = double(transpose(aCol9));
+                    else
+                        aCol9 = h5read(sLoad, [sGroup, 'n']);
+                        aCol9 = double(aCol9);
+                    end % if
+                    aReturn = [aCol1 aCol2 aCol3 aCol4 aCol5 aCol6 aCol7 aCol8 aCol9];
 
-                aReturn = h5read(sLoad, ['/',sSet]);
-            
-            end % if
+                else
+
+                    aReturn = h5read(sLoad, ['/',sSet]);
+
+                end % if
+            catch
+                fprintf(2, 'Error reading file %s\n', sLoad);
+            end % try
             
         end % function
         
