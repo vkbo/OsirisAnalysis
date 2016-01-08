@@ -36,7 +36,7 @@ function Analyse2D
     oVar  = Variables();
 
     X.DataSet     = 0;
-    %X.LoadTo      = 1;
+    X.LoadTo      = 1;
     X.Time.Dump   = 0;
     X.Time.Limits = [0 0 0 0];
     X.Data.Beam   = {' '};
@@ -125,13 +125,14 @@ function Analyse2D
     mFigs = uimenu(fMain,'Label','Figure');
             uimenu(mFigs,'Label','Focus Figures','Accelerator','f','Callback',{@fFocus});
             
-    %mLoad = uimenu(fMain,'Label','Load');
-    %mL(1) = uimenu(mLoad,'Label','Load as #1','Callback',{@fSetLoadTo,1});
-    %mL(2) = uimenu(mLoad,'Label','Load as #2','Callback',{@fSetLoadTo,2});
-    %mL(3) = uimenu(mLoad,'Label','Load as #3','Callback',{@fSetLoadTo,3});
-    %        uimenu(mLoad,'Label','Select Dataset:','Separator','On');
+    mLoad = uimenu(fMain,'Label','Load');
+    mL(1) = uimenu(mLoad,'Label','Load as #1','Callback',{@fSetLoadTo,1});
+    mL(2) = uimenu(mLoad,'Label','Load as #2','Callback',{@fSetLoadTo,2});
+    mL(3) = uimenu(mLoad,'Label','Load as #3','Callback',{@fSetLoadTo,3});
+            uimenu(mLoad,'Label','Select Dataset:','Separator','On');
+    mLd   = [];
     
-    %mL(X.LoadTo).Checked = 'On';
+    mL(X.LoadTo).Checked = 'On';
 
     
     %
@@ -539,20 +540,19 @@ function Analyse2D
     function fScanData(~,~)
         
         oData    = OsirisData('Silent','Yes');
-        %stFields = fieldnames(oData.DefaultPath);
-        %for f=1:length(stFields)
-        %    if oData.DefaultPath.(stFields{f}).Available
-        %        fOut(sprintf('Scanning %s',oData.DefaultPath.(stFields{f}).Path),1);
-        %        fOut(sprintf('... found %d sets',length(fieldnames(oData.DataSets.ByPath.(stFields{f})))),1);
-        %        mLd(f) = uimenu(mLoad,'Label',stFields{f});
-        %        stSets = fieldnames(oData.DataSets.ByPath.(stFields{f}));
-        %        for s=1:length(stSets)
-        %            sSetPath  = oData.DataSets.ByPath.(stFields{f}).(stSets{s}).Path;
-        %            stSetPath = strsplit(sSetPath,'/');
-        %            uimenu(mLd(f),'Label',stSetPath{end},'Callback',{@fSelectDataSet,stSetPath{end}});
-        %        end % for
-        %    end % if
-        %end % for
+        if isempty(mLd)
+            stFields = fieldnames(oData.DefaultPath);
+            for f=1:length(stFields)
+                if oData.DefaultPath.(stFields{f}).Available
+                    if isfield(oData.DataSets.ByPath,stFields{f})
+                        fOut(sprintf('Scanning %s (%d)', ...
+                             oData.DefaultPath.(stFields{f}).Name, ...
+                             length(fieldnames(oData.DataSets.ByPath.(stFields{f})))),1);
+                    end % if
+                    mLd(f) = uimenu(mLoad,'Label',oData.DefaultPath.(stFields{f}).Name,'Callback',{@fSelectDataSet,stFields{f}});
+                end % if
+            end % for
+        end % if
         
     end % function
     
