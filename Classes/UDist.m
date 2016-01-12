@@ -98,14 +98,14 @@ classdef UDist < OsirisType
             % Scale Dataset
             if strcmpi(obj.Units, 'SI')
                 sUnit  = vUDist.Unit;
-                aData  = obj.fMomentumToEnergy(stData.Data);
+                dScale = 1.0;
             else
                 sUnit  = 'N';
-                aData  = stData.Data;
+                dScale = 1.0;
             end % if
             
             % Return Data
-            stReturn.Data  = aData;
+            stReturn.Data   = stData.Data*dScale;
             stReturn.Unit  = sUnit;
             stReturn.Label = vUDist.Tex;
             stReturn.Axes  = stData.Axes;
@@ -155,14 +155,14 @@ classdef UDist < OsirisType
             % Scale Dataset
             if strcmpi(obj.Units, 'SI')
                 sUnit  = vUDist.Unit;
-                aData  = obj.fMomentumToEnergy(stData.Data);
+                dScale = 1.0;
             else
                 sUnit  = 'N';
-                aData  = stData.Data;
+                dScale = 1.0;
             end % if
             
             % Return data
-            stReturn.Data   = aData;
+            stReturn.Data   = stData.Data*dScale;
             stReturn.Unit   = sUnit;
             stReturn.Label  = vUDist.Tex;
             stReturn.HAxis  = stData.HAxis;
