@@ -540,19 +540,19 @@ function Analyse2D
     function fScanData(~,~)
         
         oData    = OsirisData('Silent','Yes');
-        if isempty(mLd)
-            cFields = fieldnames(oData.DefaultPath);
-            for f=1:length(cFields)
-                if oData.DefaultPath.(cFields{f}).Available
-                    if isfield(oData.DataSets.ByPath,cFields{f})
-                        fOut(sprintf('Scanning %s (%d)', ...
-                             oData.DefaultPath.(cFields{f}).Name, ...
-                             length(fieldnames(oData.DataSets.ByPath.(cFields{f})))),1);
-                    end % if
+        cFields = fieldnames(oData.DefaultPath);
+        for f=1:length(cFields)
+            if oData.DefaultPath.(cFields{f}).Available
+                if isfield(oData.DataSets.ByPath,cFields{f})
+                    fOut(sprintf('Scanning %s (%d)', ...
+                         oData.DefaultPath.(cFields{f}).Name, ...
+                         length(fieldnames(oData.DataSets.ByPath.(cFields{f})))),1);
+                end % if
+                if isempty(mLd)
                     mLd(f) = uimenu(mLoad,'Label',oData.DefaultPath.(cFields{f}).Name,'Callback',{@fSelectDataSet,cFields{f}});
                 end % if
-            end % for
-        end % if
+            end % if
+        end % for
         
     end % function
     
