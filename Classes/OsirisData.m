@@ -500,6 +500,8 @@ classdef OsirisData
             switch (sType)
                 case 'DENSITY'
                     sFile = ['/',sSet,'-',sSpecies,'-',sTimeNExt,'.h5'];
+                case 'UDIST'
+                    sFile = ['/',sSet,'-',sSpecies,'-',sTimeNExt,'.h5'];
                 case 'FLD'
                     sFile = ['/',sSet,'-',sTimeNExt,'.h5'];
                 case 'PHA'
@@ -911,6 +913,31 @@ classdef OsirisData
                 switch(sType)
 
                     case 'DENSITY'
+                        stSpecies = fieldnames(obj.Elements.(sType));
+                        for j=2:length(stSpecies)
+                            sSpecies = stSpecies{j};
+                            stSet    = fieldnames(obj.Elements.(sType).(sSpecies));
+                            for k=2:length(stSet)
+                                sSet = stSet{k};
+                                stData(iRow).Type    = sType;
+                                stData(iRow).Set     = sSet;
+                                stData(iRow).Species = sSpecies;
+                                stData(iRow).Path    = obj.Elements.(sType).(sSpecies).(sSet).Info.Path;
+                                stData(iRow).Files   = obj.Elements.(sType).(sSpecies).(sSet).Info.Files;
+                                stIndex.(sType).(sSet).(sSpecies) = iRow;
+
+                                iFiles = stData(iRow).Files;
+                                if iFiles > iMax
+                                    iMax = iFiles;
+                                end % if
+                                if iFiles < iMin
+                                    iMin = iFiles;
+                                end % if
+                                iRow = iRow + 1;
+                            end % for
+                        end % for
+                        
+                    case 'UDIST'
                         stSpecies = fieldnames(obj.Elements.(sType));
                         for j=2:length(stSpecies)
                             sSpecies = stSpecies{j};
