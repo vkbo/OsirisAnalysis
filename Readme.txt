@@ -20,6 +20,8 @@
     has been added to OsirisType.
   - Added option to select slices in Analyse2D for the relevant plots.
   - All classes have better error checking functionality and will report errors rather than fail.
+  - Added a listbox to browse/load datasets rather than drobdown menu. The dropdown meny does not handle lists longer
+    than the screen height.
   
   Version 1.3
   - Bug fixes.
