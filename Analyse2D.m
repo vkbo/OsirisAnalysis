@@ -541,15 +541,15 @@ function Analyse2D
         
         oData    = OsirisData('Silent','Yes');
         if isempty(mLd)
-            stFields = fieldnames(oData.DefaultPath);
-            for f=1:length(stFields)
-                if oData.DefaultPath.(stFields{f}).Available
-                    if isfield(oData.DataSets.ByPath,stFields{f})
+            cFields = fieldnames(oData.DefaultPath);
+            for f=1:length(cFields)
+                if oData.DefaultPath.(cFields{f}).Available
+                    if isfield(oData.DataSets.ByPath,cFields{f})
                         fOut(sprintf('Scanning %s (%d)', ...
-                             oData.DefaultPath.(stFields{f}).Name, ...
-                             length(fieldnames(oData.DataSets.ByPath.(stFields{f})))),1);
+                             oData.DefaultPath.(cFields{f}).Name, ...
+                             length(fieldnames(oData.DataSets.ByPath.(cFields{f})))),1);
                     end % if
-                    mLd(f) = uimenu(mLoad,'Label',oData.DefaultPath.(stFields{f}).Name,'Callback',{@fSelectDataSet,stFields{f}});
+                    mLd(f) = uimenu(mLoad,'Label',oData.DefaultPath.(cFields{f}).Name,'Callback',{@fSelectDataSet,cFields{f}});
                 end % if
             end % for
         end % if
@@ -773,6 +773,23 @@ function Analyse2D
         edtSet(iSet).String       = sSet;
         %stSettings.LoadPath{iSet} = '';
         %fLoadSet(0,0,iSet);
+        
+    end % function
+
+    function fSelectDataSet(~,~,sSet)
+        
+        cSets = fieldnames(oData.DataSets.ByPath.(sSet));
+        for s=1:numel(cSets)
+            cSets{s} = oData.DataSets.ByPath.(sSet).(cSets{s}).Name;
+        end % for
+        
+        [iSel,bOK] = listdlg('Name',oData.DefaultPath.(sSet).Name,'ListString',cSets,'SelectionMode','Single','PromptString','Select DataSet');
+        
+        if bOK
+            edtSet(X.LoadTo).String       = cSets{iSel};
+            stSettings.LoadPath{X.LoadTo} = '';
+            fLoadSet(0,0,X.LoadTo);
+        end % if
         
     end % function
 
@@ -1439,16 +1456,16 @@ function Analyse2D
         
     end % function
 
-    %function fSetLoadTo(~,~,iSet)
-    %    
-    %    X.LoadTo = iSet;
-    %
-    %    for i=1:3
-    %        mL(i).Checked = 'Off';
-    %    end % for
-    %    mL(iSet).Checked = 'On';
-    %    
-    %end % function
+    function fSetLoadTo(~,~,iSet)
+        
+        X.LoadTo = iSet;
+    
+        for i=1:3
+            mL(i).Checked = 'Off';
+        end % for
+        mL(iSet).Checked = 'On';
+        
+    end % function
 
 
     %
