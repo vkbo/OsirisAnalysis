@@ -33,7 +33,6 @@
 %    BeamSlip         : Returns a dataset of information on beam slipping.
 %    PhaseSpace       : Returns a dataset with information on beam emittance
 %                       or emittance-like properties.
-%    MomentumToEnergy : Converts a vector of momenta to energy.
 %
 
 classdef Momentum < OsirisType
@@ -113,8 +112,8 @@ classdef Momentum < OsirisType
                     aSigma(k) = 0.0;
                     aData(k)  = 0.0;
                 else
-                    aMean(k)  = obj.MomentumToEnergy(wmean(aData(:,4), abs(aData(:,8))));
-                    aSigma(k) = obj.MomentumToEnergy(wstd(aData(:,4), abs(aData(:,8))));
+                    aMean(k)  = obj.fMomentumToEnergy(wmean(aData(:,4), abs(aData(:,8))));
+                    aSigma(k) = obj.fMomentumToEnergy(wstd(aData(:,4), abs(aData(:,8))));
                     aData(k)  = aSigma(k)/aMean(k);
                 end % if
                 
@@ -349,7 +348,7 @@ classdef Momentum < OsirisType
                     aX   = aRaw(:,2)*obj.AxisFac(2);
                 end % if
  
-                aGamma    = obj.MomentumToEnergy(aPz);
+                aGamma    = obj.fMomentumToEnergy(aPz);
                 aXPrime   = sin(aPx./aP)*1e3;
                 aCharge   = aRaw(:,8)*obj.Data.Config.Convert.SI.ChargeFac;
                 aCov      = wcov([aX, aXPrime], abs(aCharge));
