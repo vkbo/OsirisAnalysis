@@ -736,46 +736,6 @@ function Analyse2D
         
     end % function
 
-    function fOpenData(~,~)
-        
-        % Open Controls
-        fOpen = figure('IntegerHandle', 'Off'); clf;
-
-        % Set Properties
-        fOpen.Units        = 'Pixels';
-        fOpen.MenuBar      = 'None';
-        fOpen.Position     = [fMain.Position(1:2)+[100 250] 300 300];
-        fOpen.Name         = 'Open DataSet';
-        fOpen.NumberTitle  = 'Off';
-        fOpen.DockControls = 'Off';
-        
-        cDataSets = {};
-        cFields   = fieldnames(oData.DefaultPath);
-        for f=1:length(cFields)
-            if oData.DefaultPath.(cFields{f}).Available
-                cSets = fieldnames(oData.DataSets.ByPath.(cFields{f}));
-                for s=1:length(cSets)
-                    cDataSets{end+1} = oData.DataSets.ByPath.(cFields{f}).(cSets{s}).Name;
-                end % for
-            end % if
-        end % for
-
-        lstOpen = uicontrol('Style','Listbox','String',cDataSets,'FontName','FixedWidth','Position',[10 10 210 280],'HorizontalAlignment','Left');
-        uicontrol('Style','PushButton','String','Load #1','Position',[230 10 60 25],'Callback',{@fOpenDataSet,1,cDataSets(lstOpen.Value)});
-        uicontrol('Style','PushButton','String','Load #2','Position',[230 40 60 25],'Callback',{@fOpenDataSet,2,cDataSets(lstOpen.Value)});
-        uicontrol('Style','PushButton','String','Load #3','Position',[230 70 60 25],'Callback',{@fOpenDataSet,3,cDataSets(lstOpen.Value)});
-        
-        
-    end % function
-
-    function fOpenDataSet(~,~,iSet,sSet)
-        
-        edtSet(iSet).String       = sSet;
-        %stSettings.LoadPath{iSet} = '';
-        %fLoadSet(0,0,iSet);
-        
-    end % function
-
     function fSelectDataSet(~,~,sSet)
         
         cSets = fieldnames(oData.DataSets.ByPath.(sSet));
