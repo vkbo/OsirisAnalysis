@@ -65,6 +65,8 @@ function stReturn = fPlotUDist(oData, sTime, sBeam, sUDist, varargin)
     iTime  = oData.StringToDump(num2str(sTime));
 
     oOpt = inputParser;
+    addParameter(oOpt, 'Log',         'No');
+    addParameter(oOpt, 'Kelvin',      'No');
     addParameter(oOpt, 'Limits',      []);
     addParameter(oOpt, 'Slice',       0.0);
     addParameter(oOpt, 'SliceAxis',   3);
@@ -115,12 +117,24 @@ function stReturn = fPlotUDist(oData, sTime, sBeam, sUDist, varargin)
     sVAxis = stData.Axes{2};
     dZPos  = stData.ZPos;
     
+    if strcmpi(stOpt.Kelvin, 'Yes')
+        aData = aData/oData.Config.Constants.EV.Boltzmann;
+        sUnit = 'K';
+    end % if
+
     vHAxis = oData.Translate.Lookup(sHAxis);
     vVAxis = oData.Translate.Lookup(sVAxis);
     
-    dMax  = max(abs(aData(:)));
-    [dSMax,sSUnit] = fAutoScale(dMax,sUnit);
-    aData = aData*dSMax/dMax;
+    if strcmpi(stOpt.Log, 'Yes')
+        aData  = log10(aData);
+        %aData(~isfinite(aData)) = 0;
+        aData = real(aData);
+        sSUnit = sUnit;
+    else
+        dMax  = max(abs(aData(:)));
+        [dSMax,sSUnit] = fAutoScale(dMax,sUnit);
+        aData = aData*dSMax/dMax;
+    end % if
 
     stReturn.XAxis     = stData.HAxis;
     stReturn.YAxis     = stData.VAxis;
@@ -168,8 +182,16 @@ function stReturn = fPlotUDist(oData, sTime, sBeam, sUDist, varargin)
     
     imagesc(aHAxis, aVAxis, aData);
     set(gca,'YDir','Normal');
-    %colormap(flipud(fCMap('pink',256)));
-    colormap('hot');
+    aPos = cubehelix([],0.1, 0.5,2,1,[0.0,0.8],[0.0,0.8]);
+    aNeg = cubehelix([],0.1,-0.5,2,1,[0.0,0.8],[0.0,0.8]);
+    if min(aData(:)) < 0 && ~strcmpi(stOpt.Log, 'Yes')
+        dPeak = max(abs(aData(:)));
+        caxis([-dPeak dPeak]);
+        aMap = [flipud(aNeg); aPos];
+    else
+        aMap = aPos;
+    end % if
+    colormap(aMap);
     hCol = colorbar();
     if ~isempty(stOpt.CAxis)
         caxis(stOpt.CAxis);
@@ -194,7 +216,11 @@ function stReturn = fPlotUDist(oData, sTime, sBeam, sUDist, varargin)
     title(sTitle);
     xlabel(sprintf('%s [mm]',vHAxis.Tex));
     ylabel(sprintf('%s [mm]',vVAxis.Tex));
-    title(hCol,sprintf('%s [%s]',sLabel,sSUnit));
+    if strcmpi(stOpt.Log, 'Yes')
+        title(hCol,sprintf('log_{10}(%s) [%s]',sLabel,sSUnit));
+    else
+        title(hCol,sprintf('%s [%s]',sLabel,sSUnit));
+    end % if
     
     hold off;
     

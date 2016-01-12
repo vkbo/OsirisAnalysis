@@ -98,7 +98,8 @@ classdef UDist < OsirisType
             % Scale Dataset
             if strcmpi(obj.Units, 'SI')
                 sUnit  = vUDist.Unit;
-                dScale = 1.0;
+                dScale = obj.Data.Config.Constants.EV.ElectronMass;
+                dScale = dScale*obj.Config.RQM;
             else
                 sUnit  = 'N';
                 dScale = 1.0;
