@@ -60,6 +60,7 @@ function Analyse2D
     X.Plots{5} = 'Phase 2D';
     X.Plots{6} = 'XX'' Phase Space';
     X.Plots{7} = 'Raw 1D';
+    X.Plots{8} = 'Particle UDist';
     
     X.Opt.Sample = {'Random','WRandom','W2Random','Top','Bottom'};
 
@@ -526,6 +527,31 @@ function Analyse2D
         uicontrol(bgTab(t),'Style','Text','String','Horizontal Axis','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.RawAxis,'Value',1,'Position',[115 iY 180 20],'Callback',{@fPlotSetRawAxis,1,t});
         uicontrol(bgTab(t),'Style','Checkbox','String','Fit Gaussian','Value',X.Plot(t).Settings(1),'Position',[305 iY 150 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,1});
+        
+    end % function
+
+    function fCtrlUDist(t)
+        
+        % Clear panel
+        delete(bgTab(t));
+        bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 514 120],'BackgroundColor',cBackGround);
+        
+        % Create Controls
+        iY = 115;
+        
+        iY = iY - 25;
+        [~,iVal] = incellarray(X.Plot(t).Data, X.Data.Species);
+        if iVal == 0
+            X.Plot(t).Data = X.Data.Species{1};
+            iVal = 1;
+        end % if
+        uicontrol(bgTab(t),'Style','Text','String','Species','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Species,'Value',iVal,'Position',[115 iY 150 20],'Callback',{@fPlotSetSpecies,t});
+
+        iY = iY - 25;
+        uicontrol(bgTab(t),'Style','Text','String','Horizontal Axis','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.RawAxis,'Value',1,'Position',[115 iY 180 20],'Callback',{@fPlotSetRawAxis,1,t});
+        uicontrol(bgTab(t),'Style','Checkbox','String','Kelvin','Value',X.Plot(t).Settings(1),'Position',[305 iY 150 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,1});
         
     end % function
 
