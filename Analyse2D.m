@@ -209,13 +209,13 @@ function Analyse2D
     uicontrol(bgFigs,'Style','Text','String','Fig',      'Position',[  9 160  20 15],'HorizontalAlignment','Left');
     uicontrol(bgFigs,'Style','Text','String','Plot Type','Position',[ 34 160 150 15],'HorizontalAlignment','Center');
     uicontrol(bgFigs,'Style','Text','String','On',       'Position',[189 160  20 15],'HorizontalAlignment','Left');
-    uicontrol(bgFigs,'Style','Text','String','X-Min',    'Position',[214 160  55 15],'HorizontalAlignment','Center');
+    uicontrol(bgFigs,'Style','Text','String','H-Min',    'Position',[214 160  55 15],'HorizontalAlignment','Center');
     uicontrol(bgFigs,'Style','Text','String','| ',       'Position',[274 160  15 15],'HorizontalAlignment','Center');
-    uicontrol(bgFigs,'Style','Text','String','X-Max',    'Position',[294 160  55 15],'HorizontalAlignment','Center');
-    uicontrol(bgFigs,'Style','Text','String','Y-Min',    'Position',[354 160  55 15],'HorizontalAlignment','Center');
+    uicontrol(bgFigs,'Style','Text','String','H-Max',    'Position',[294 160  55 15],'HorizontalAlignment','Center');
+    uicontrol(bgFigs,'Style','Text','String','V-Min',    'Position',[354 160  55 15],'HorizontalAlignment','Center');
     uicontrol(bgFigs,'Style','Text','String','| ',       'Position',[414 160  15 15],'HorizontalAlignment','Center');
     uicontrol(bgFigs,'Style','Text','String','-=',       'Position',[432 160  19 15],'HorizontalAlignment','Left');
-    uicontrol(bgFigs,'Style','Text','String','Y-Max',    'Position',[454 160  55 15],'HorizontalAlignment','Center');
+    uicontrol(bgFigs,'Style','Text','String','V-Max',    'Position',[454 160  55 15],'HorizontalAlignment','Center');
 
     aY = [135 110 85 60 35 10];
     aP = [1 2 3 5 6 7];
@@ -540,19 +540,19 @@ function Analyse2D
     function fScanData(~,~)
         
         oData    = OsirisData('Silent','Yes');
-        cFields = fieldnames(oData.DefaultPath);
-        for f=1:length(cFields)
-            if oData.DefaultPath.(cFields{f}).Available
-                if isfield(oData.DataSets.ByPath,cFields{f})
-                    fOut(sprintf('Scanning %s (%d)', ...
-                         oData.DefaultPath.(cFields{f}).Name, ...
-                         length(fieldnames(oData.DataSets.ByPath.(cFields{f})))),1);
-                end % if
-                if isempty(mLd)
+        if isempty(mLd)
+            cFields = fieldnames(oData.DefaultPath);
+            for f=1:length(cFields)
+                if oData.DefaultPath.(cFields{f}).Available
+                    if isfield(oData.DataSets.ByPath,cFields{f})
+                        fOut(sprintf('Scanning %s (%d)', ...
+                             oData.DefaultPath.(cFields{f}).Name, ...
+                             length(fieldnames(oData.DataSets.ByPath.(cFields{f})))),1);
+                    end % if
                     mLd(f) = uimenu(mLoad,'Label',oData.DefaultPath.(cFields{f}).Name,'Callback',{@fSelectDataSet,cFields{f}});
                 end % if
-            end % if
-        end % for
+            end % for
+        end % if
         
     end % function
     
