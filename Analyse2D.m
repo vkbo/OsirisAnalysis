@@ -60,6 +60,7 @@ function Analyse2D
     X.Plots{5} = 'Phase 2D';
     X.Plots{6} = 'XX'' Phase Space';
     X.Plots{7} = 'Raw 1D';
+    X.Plots{8} = 'Particle UDist';
     
     X.Opt.Sample = {'Random','WRandom','W2Random','Top','Bottom'};
 
@@ -346,7 +347,7 @@ function Analyse2D
         iY = iY - 25;
         [~,iVal] = incellarray(X.Plot(t).Density, X.Data.Density);
         if iVal == 0
-            X.Plot(t).Data = X.Data.Density{1};
+            X.Plot(t).Density = X.Data.Density{1};
             iVal = 1;
         end % if
         uicontrol(bgTab(t),'Style','Text','String','Density','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
@@ -463,7 +464,6 @@ function Analyse2D
         
         X.Plot(t).Phase2D = oData.Config.Particles.Species.(X.Data.Species{iVal}).PhaseSpaces.Dim2;
         if numel(X.Plot(t).Phase2D) > 0
-            iPS = 1;
             X.Plot(t).Axis = X.Plot(t).Phase2D{1};
         end % if
         
@@ -526,6 +526,45 @@ function Analyse2D
         uicontrol(bgTab(t),'Style','Text','String','Horizontal Axis','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.RawAxis,'Value',1,'Position',[115 iY 180 20],'Callback',{@fPlotSetRawAxis,1,t});
         uicontrol(bgTab(t),'Style','Checkbox','String','Fit Gaussian','Value',X.Plot(t).Settings(1),'Position',[305 iY 150 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,1});
+        
+    end % function
+
+    function fCtrlUDist(t)
+        
+        % Clear panel
+        delete(bgTab(t));
+        bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 514 120],'BackgroundColor',cBackGround);
+        
+        % Create Controls
+        iY = 115;
+        
+        iY = iY - 25;
+        [~,iVal] = incellarray(X.Plot(t).Data, X.Data.Species);
+        if iVal == 0
+            X.Plot(t).Data = X.Data.Species{1};
+            iVal = 1;
+        end % if
+        uicontrol(bgTab(t),'Style','Text','String','Species','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Species,'Value',iVal,'Position',[85 iY 150 20],'Callback',{@fPlotSetSpecies,t});
+        uicontrol(bgTab(t),'Style','Text','String','CAxis','Position',[255 iY+1 60 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','Edit','String','','Position',[300 iY 100 20],'Callback',{@fPlotSetCAxis,t,0});
+
+        if isempty(X.Data.UDist)
+            return;
+        end % if
+
+        iY = iY - 25;
+        [~,iVal] = incellarray(X.Plot(t).UDist, X.Data.UDist);
+        if iVal == 0
+            X.Plot(t).UDist = X.Data.UDist{1};
+            iVal = 1;
+        end % if
+        uicontrol(bgTab(t),'Style','Text','String','UDist','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.UDist,'Value',iVal,'Position',[85 iY 260 20],'Callback',{@fPlotSetUDist,t});
+
+        iY = iY - 25;
+        uicontrol(bgTab(t),'Style','Checkbox','String','Kelvin','Value',X.Plot(t).Settings(1),'Position',[85 iY 150 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,1});
+        uicontrol(bgTab(t),'Style','Checkbox','String','Logarithmic','Value',X.Plot(t).Settings(2),'Position',[185 iY 150 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,2});
         
     end % function
 
@@ -625,6 +664,12 @@ function Analyse2D
         X.Data.Density = oData.Config.Particles.Species.(X.Data.Species{1}).DiagReports;
         for i=1:length(X.Data.Density)
             X.Data.Density{i} = oVar.Lookup(X.Data.Density{i}).Full;
+        end % for
+
+        % Translate UDist
+        X.Data.UDist = oData.Config.Particles.Species.(X.Data.Species{1}).DiagUDist;
+        for i=1:length(X.Data.UDist)
+            X.Data.UDist{i} = oVar.Lookup(X.Data.UDist{i}).Full;
         end % for
 
         % Translate Axes
@@ -949,6 +994,15 @@ function Analyse2D
                     X.Plot(f).Settings = [0];
                     fCtrlRaw1D(f);
                     aFigSize = [700 500];
+                    
+                case 'Particle UDist'
+                    X.Plot(f).Data     = X.Data.Species{1};
+                    X.Plot(f).UDist    = X.Data.UDist{1};
+                    X.Plot(f).Settings = [0 0];
+                    X.Plot(f).CAxis    = [];
+                    fCtrlUDist(f);
+                    aFigSize = [900 500];
+                    
 
             end % switch
 
@@ -1174,8 +1228,8 @@ function Analyse2D
                         end % if
                         
                     case 'Field Density'
-                        iMakeSym = 1;
                         figure(X.Plot(f).Figure); clf;
+                        iMakeSym = 1;
                         X.Plot(f).Return = fPlotField2D(oData,X.Time.Dump,oVar.Reverse(X.Plot(f).Data,'Full'), ...
                             'IsSubPlot','No','AutoResize','Off','HideDump','Yes','Limits',[aHLim aVLim], ...
                             'CAxis',X.Plot(f).CAxis,'Slice',X.Plot(f).Slice,'SliceAxis',X.Plot(f).SliceAxis);
@@ -1183,8 +1237,8 @@ function Analyse2D
                     case 'Phase 1D'
 
                     case 'Phase 2D'
-                        iMakeSym = 0;
                         figure(X.Plot(f).Figure); clf;
+                        iMakeSym = 0;
                         X.Plot(f).Return = fPlotPhase2D(oData,X.Time.Dump,X.Plot(f).Data,X.Plot(f).Axis, ...
                             'HLim',aHLim,'VLim',aVLim, ...
                             'IsSubPlot','No','AutoResize','Off','HideDump','Yes', ...
@@ -1202,6 +1256,7 @@ function Analyse2D
                             iMinPart = X.Plot(f).Count;
                         end % if
                         figure(X.Plot(f).Figure); clf;
+                        iMakeSym = 0;
                         X.Plot(f).Return = fPlotPhaseSpace(oData,X.Time.Dump,X.Plot(f).Data, ...
                             'MinParticles',iMinPart, ...
                             'IsSubPlot','No','AutoResize','Off','HideDump','Yes', ...
@@ -1215,6 +1270,7 @@ function Analyse2D
                             sGaussFit = 'No';
                         end % if
                         figure(X.Plot(f).Figure); clf;
+                        iMakeSym = 0;
                         X.Plot(f).Return = fPlotRaw1D(oData,X.Time.Dump,X.Plot(f).Data, ...
                             oVar.Reverse(X.Plot(f).Axis{1},'Full'), ...
                             'GaussFit',sGaussFit, ...
@@ -1224,6 +1280,27 @@ function Analyse2D
                         end % if
                         X.Plot(f).Scale = X.Plot(f).Return.AxisScale*[1 1];
 
+                    case 'Particle UDist'
+                        if X.Plot(f).Settings(1) == 1
+                            sKelvin = 'Yes';
+                        else
+                            sKelvin = 'No';
+                        end % if
+                        if X.Plot(f).Settings(2) == 1
+                            sLog = 'Yes';
+                        else
+                            sLog = 'No';
+                        end % if
+                        figure(X.Plot(f).Figure); clf;
+                        sUDist = oVar.Reverse(X.Plot(f).UDist,'Full');
+                        iMakeSym = 1;
+
+                        X.Plot(f).Return = fPlotUDist(oData,X.Time.Dump,X.Plot(f).Data,sUDist, ...
+                            'IsSubPlot','No','AutoResize','Off','HideDump','Yes','Absolute','Yes','ShowOverlay','Yes', ...
+                            'Limits',[aHLim aVLim],'CAxis',X.Plot(f).CAxis,'Kelvin',sKelvin,'Log',sLog, ...
+                            'Slice',X.Plot(f).Slice,'SliceAxis',X.Plot(f).SliceAxis);
+
+                    
                     otherwise
                         return;
                                                                        
@@ -1461,20 +1538,31 @@ function Analyse2D
         
         iSpecies = uiSrc.Value;
         sSpecies = X.Data.Species{iSpecies};
-        
+
         X.Plot(f).Data = sSpecies;
+        
+        X.Data.Density = oData.Config.Particles.Species.(X.Plot(f).Data).DiagReports;
+        for i=1:length(X.Data.Density)
+            X.Data.Density{i} = oVar.Lookup(X.Data.Density{i}).Full;
+        end % for
+
+        X.Data.UDist = oData.Config.Particles.Species.(X.Plot(f).Data).DiagUDist;
+        for i=1:length(X.Data.UDist)
+            X.Data.UDist{i} = oVar.Lookup(X.Data.UDist{i}).Full;
+        end % for
+
         switch(X.Plots{X.Figure(f)})
+
             case 'Phase 2D'
                 X.Plot(f).MaxLim = [0.0 0.0 0.0 0.0];
                 X.Plot(f).Limits = [0.0 0.0 0.0 0.0];
                 X.Plot(f).Scale  = [1.0 1.0];
                 fCtrlPhase2D(f);
+                
+            case 'Particle UDist'
+                fCtrlUDist(f);
+                
         end % switch
-        
-        X.Data.Density = oData.Config.Particles.Species.(X.Data.Species{1}).DiagReports;
-        for i=1:length(X.Data.Density)
-            X.Data.Density{i} = oVar.Lookup(X.Data.Density{i}).Full;
-        end % for
         
         fRefresh(f);
         
@@ -1651,6 +1739,16 @@ function Analyse2D
 
         fRefresh(f);
 
+    end % function
+
+    function fPlotSetUDist(uiSrc,~,f)
+        
+        iUDist = uiSrc.Value;
+        sUDist = X.Data.UDist{iUDist};
+        
+        X.Plot(f).UDist = sUDist;
+        fRefresh(f);
+        
     end % function
    
 end % function

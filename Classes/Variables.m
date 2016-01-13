@@ -67,7 +67,7 @@ classdef Variables
                          'EField','BField','EFieldExt','BFieldExt', ...
                          'EFieldPart','BFieldPart','EFieldEnergy','BFieldEnergy', ...
                          'Field','FieldEnergy','FieldDiv', ...
-                         'Quantity','Flux','Poynting'};
+                         'Quantity','Flux','Poynting','Ufl','Uth'};
 
 
             %
@@ -99,6 +99,7 @@ classdef Variables
             stMap.Allowed.Quantity     = {'charge','|charge|','chargecons','m','ene','g','gl','psi','t'};
             stMap.Allowed.Flux         = {'q1','q2','q3'};
             stMap.Allowed.Poynting     = {'s1','s2','s3'};
+            stMap.Allowed.UDist        = {'ufl1','ufl2','ufl3','uth1','uth2','uth3'};
             stMap.Allowed.RawAxis      = {'x1','x2','x3','p1','p2','p3','ene','charge','tag1','tag2'};
 
             % Osiris diagnostics options
@@ -112,6 +113,7 @@ classdef Variables
             stMap.Diag.Species    = {'charge','m','ene','q1','q2','q3','j1','j2','j3'};
             stMap.Diag.PhaseSpace = {'x1','x2','x3','p1','p2','p3','l1','l2','l3','gl','g'};
             stMap.Diag.Deposit    = {'charge','m','ene','|charge|','q1','q2','q3','j1','j2','j3'};
+            stMap.Diag.UDist      = {'ufl1','ufl2','ufl3','uth1','uth2','uth3'};
 
             % Alternative names used in input deck
             LocalConfig;
@@ -694,6 +696,58 @@ classdef Variables
             stMap.Translate.Poynting(3).Unit  = {'W/m^2','W/m^2'};
             stMap.Translate.Poynting(3).Dim   = 3;
 
+            % Fluid Momentum
+
+            stMap.Translate.Ufl(1).Name  = 'ufl1';
+            stMap.Translate.Ufl(1).Alt   = {'uflz'};
+            stMap.Translate.Ufl(1).Full  = {'Longitudinal Fluid Momentum','Longitudinal Fluid Momentum'};
+            stMap.Translate.Ufl(1).Short = {'Uz','Uz'};
+            stMap.Translate.Ufl(1).Tex   = {'u_{z}','u_{z}'};
+            stMap.Translate.Ufl(1).Unit  = {'eV/c','eV/c'};
+            stMap.Translate.Ufl(1).Dim   = 1;
+
+            stMap.Translate.Ufl(2).Name  = 'ufl2';
+            stMap.Translate.Ufl(2).Alt   = {'uflr','uflx'};
+            stMap.Translate.Ufl(2).Full  = {'Radial Fluid Momentum','Horizontal Fluid Momentum'};
+            stMap.Translate.Ufl(2).Short = {'Ur','Ux'};
+            stMap.Translate.Ufl(2).Tex   = {'u_{r}','u_{x}'};
+            stMap.Translate.Ufl(2).Unit  = {'eV/c','eV/c'};
+            stMap.Translate.Ufl(2).Dim   = 2;
+
+            stMap.Translate.Ufl(3).Name  = 'ufl3';
+            stMap.Translate.Ufl(3).Alt   = {'uflth','ufly'};
+            stMap.Translate.Ufl(3).Full  = {'Azimuthal Fluid Momentum','Vertical Fluid Momentum'};
+            stMap.Translate.Ufl(3).Short = {'Uth','Uy'};
+            stMap.Translate.Ufl(3).Tex   = {'u_{\theta}','u_{y}'};
+            stMap.Translate.Ufl(3).Unit  = {'eV/c','eV/c'};
+            stMap.Translate.Ufl(3).Dim   = 3;
+
+            % Momentum Distribution
+
+            stMap.Translate.Uth(1).Name  = 'uth1';
+            stMap.Translate.Uth(1).Alt   = {'uthz'};
+            stMap.Translate.Uth(1).Full  = {'Longitudinal Momentum Distribution','Longitudinal Momentum Distribution'};
+            stMap.Translate.Uth(1).Short = {'Tz','Tz'};
+            stMap.Translate.Uth(1).Tex   = {'T_{z}','T_{z}'};
+            stMap.Translate.Uth(1).Unit  = {'eV/c','eV/c'};
+            stMap.Translate.Uth(1).Dim   = 1;
+
+            stMap.Translate.Uth(2).Name  = 'uth2';
+            stMap.Translate.Uth(2).Alt   = {'uthr','uthx'};
+            stMap.Translate.Uth(2).Full  = {'Radial Momentum Distribution','Horizontal Momentum Distribution'};
+            stMap.Translate.Uth(2).Short = {'Tr','Tx'};
+            stMap.Translate.Uth(2).Tex   = {'T_{r}','T_{x}'};
+            stMap.Translate.Uth(2).Unit  = {'eV/c','eV/c'};
+            stMap.Translate.Uth(2).Dim   = 2;
+
+            stMap.Translate.Uth(3).Name  = 'uth3';
+            stMap.Translate.Uth(3).Alt   = {'uthth','uthy'};
+            stMap.Translate.Uth(3).Full  = {'Azimuthal Momentum Distribution','Vertical Momentum Distribution'};
+            stMap.Translate.Uth(3).Short = {'Tth','Ty'};
+            stMap.Translate.Uth(3).Tex   = {'T_{\theta}','T_{y}'};
+            stMap.Translate.Uth(3).Unit  = {'eV/c','eV/c'};
+            stMap.Translate.Uth(3).Dim   = 3;
+
             % Save map
             obj.Map = stMap;
 
@@ -819,10 +873,12 @@ classdef Variables
             stReturn.isQuantity            = (sum(ismember(obj.Map.Allowed.Quantity,stReturn.Name)) == 1);
             stReturn.isFlux                = (sum(ismember(obj.Map.Allowed.Flux,stReturn.Name)) == 1);
             stReturn.isPoynting            = (sum(ismember(obj.Map.Allowed.Poynting,stReturn.Name)) == 1);
+            stReturn.isUDist               = (sum(ismember(obj.Map.Allowed.UDist,stReturn.Name)) == 1);
             stReturn.isValidEMFDiag        = (sum(ismember(obj.Map.Diag.EMF,stReturn.Name)) == 1);
             stReturn.isValidSpeciesDiag    = (sum(ismember(obj.Map.Diag.Species,stReturn.Name)) == 1);
             stReturn.isValidPhaseSpaceDiag = (sum(ismember(obj.Map.Diag.PhaseSpace,stReturn.Name)) == 1);
             stReturn.isValidDepositDiag    = (sum(ismember(obj.Map.Diag.Deposit,stReturn.Name)) == 1);
+            stReturn.isValidUDistDiag      = (sum(ismember(obj.Map.Diag.UDist,stReturn.Name)) == 1);
             
         end % function
 

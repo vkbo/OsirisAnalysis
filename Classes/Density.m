@@ -123,8 +123,9 @@ classdef Density < OsirisType
                         dScale = obj.Data.Config.Convert.SI.JFac(3);
                 end % switch
             else
+                sUnit  = 'N';
+                sLabel = vDensity.Tex;
                 dScale = 1.0;
-                sUnit  = '';
             end % if
             
             % Return Data

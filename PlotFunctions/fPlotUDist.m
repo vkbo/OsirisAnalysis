@@ -1,14 +1,15 @@
 
 %
-%  Function: fPlotBeamDensity
-% ****************************
-%  Plots density plot
+%  Function: fPlotUDist
+% **********************
+%  Plots udist plot
 %
 %  Inputs:
 % =========
-%  oData :: OsirisData object
-%  sTime :: Time dump
-%  sBeam :: Which beam to look at
+%  oData  :: OsirisData object
+%  sTime  :: Time dump
+%  sBeam  :: Which beam to look at
+%  sUDist :: Which distribution to look at
 %
 %  Options:
 % ==========
@@ -24,7 +25,7 @@
 %  Absolute    :: Use absolute charge. Default No
 %
 
-function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
+function stReturn = fPlotUDist(oData, sTime, sBeam, sUDist, varargin)
 
     % Input/Output
 
@@ -32,15 +33,16 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
 
     if nargin == 0
         fprintf('\n');
-        fprintf('  Function: fPlotBeamDensity\n');
-        fprintf(' ****************************\n');
-        fprintf('  Plots density plot\n');
+        fprintf('  Function: fPlotUDist\n');
+        fprintf(' **********************\n');
+        fprintf('  Plots udist plot\n');
         fprintf('\n');
         fprintf('  Inputs:\n');
         fprintf(' =========\n');
         fprintf('  oData :: OsirisData object\n');
         fprintf('  sTime :: Time dump\n');
         fprintf('  sBeam :: Which beam to look at\n');
+        fprintf('  sUDist :: Which distribution to look at\n');
         fprintf('\n');
         fprintf('  Options:\n');
         fprintf(' ==========\n');
@@ -58,11 +60,13 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
         return;
     end % if
     
-    vBeam = oData.Translate.Lookup(sBeam,'Species');
-    iTime = oData.StringToDump(num2str(sTime));
+    vBeam  = oData.Translate.Lookup(sBeam,'Species');
+    vUDist = oData.Translate.Lookup(sUDist,{'Ufl','Uth'});
+    iTime  = oData.StringToDump(num2str(sTime));
 
     oOpt = inputParser;
-    addParameter(oOpt, 'Data',        'charge');
+    addParameter(oOpt, 'Log',         'No');
+    addParameter(oOpt, 'Kelvin',      'No');
     addParameter(oOpt, 'Limits',      []);
     addParameter(oOpt, 'Slice',       0.0);
     addParameter(oOpt, 'SliceAxis',   3);
@@ -83,21 +87,20 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
 
     % Prepare Data
     
-    oDN      = Density(oData,vBeam.Name,'Units','SI','Scale','mm');
-    oDN.Time = iTime;
+    oUD      = UDist(oData,vBeam.Name,'Units','SI','Scale','mm');
+    oUD.Time = iTime;
 
     if length(stOpt.Limits) == 4
-        oDN.X1Lim = stOpt.Limits(1:2);
-        oDN.X2Lim = stOpt.Limits(3:4);
+        oUD.X1Lim = stOpt.Limits(1:2);
+        oUD.X2Lim = stOpt.Limits(3:4);
     end % if
     
     if oData.Config.Simulation.Dimensions == 3
-        oDN.SliceAxis = stOpt.SliceAxis;
-        oDN.Slice     = stOpt.Slice;
+        oUD.SliceAxis = stOpt.SliceAxis;
+        oUD.Slice     = stOpt.Slice;
     end % if
     
-    vData  = oData.Translate.Lookup(stOpt.Data);
-    stData = oDN.Density2D(vData.Name);
+    stData = oUD.Density2D(vUDist.Name);
     
     if isempty(stData)
         fprintf(2, 'Error: No data.\n');
@@ -114,29 +117,55 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     sVAxis = stData.Axes{2};
     dZPos  = stData.ZPos;
     
+    if strcmpi(stOpt.Kelvin, 'Yes')
+        aData = aData/oData.Config.Constants.EV.Boltzmann;
+        sUnit = 'K';
+    end % if
+
     vHAxis = oData.Translate.Lookup(sHAxis);
     vVAxis = oData.Translate.Lookup(sVAxis);
     
-    dMax  = max(abs(aData(:)));
-    [dSMax,sSUnit] = fAutoScale(dMax,sUnit);
-    aData = aData*dSMax/dMax;
+    if strcmpi(stOpt.Log, 'Yes')
+        aData  = log10(aData);
+        %aData(~isfinite(aData)) = 0;
+        aData = real(aData);
+        sSUnit = sUnit;
+    else
+        dMax  = max(abs(aData(:)));
+        [dSMax,sSUnit] = fAutoScale(dMax,sUnit);
+        aData = aData*dSMax/dMax;
+    end % if
 
     stReturn.XAxis     = stData.HAxis;
     stReturn.YAxis     = stData.VAxis;
     stReturn.ZPos      = stData.ZPos;
-    stReturn.AxisFac   = oDN.AxisFac;
-    stReturn.AxisRange = oDN.AxisRange;
+    stReturn.AxisFac   = oUD.AxisFac;
+    stReturn.AxisRange = oUD.AxisRange;
     
-    if strcmpi(stOpt.Absolute, 'Yes')
-        aData = abs(aData);
-    end % if
-    
-    aProjZ = abs(sum(aData));
-    aProjZ = 0.15*(aVAxis(end)-aVAxis(1))*aProjZ/max(abs(aProjZ))+aVAxis(1);
+    if strcmpi(stOpt.ShowOverlay, 'Yes')
 
-    stQTot       = oDN.BeamCharge;
-    [dQ, sQUnit] = fAutoScale(stQTot.QTotal,'C');
-    sBeamCharge  = sprintf('Q_{tot} = %.2f %s', dQ, sQUnit);
+        oDN      = Density(oData,vBeam.Name,'Units','SI','Scale','mm');
+        oDN.Time = iTime;
+
+        if length(stOpt.Limits) == 4
+            oDN.X1Lim = stOpt.Limits(1:2);
+            oDN.X2Lim = stOpt.Limits(3:4);
+        end % if
+
+        if oData.Config.Simulation.Dimensions == 3
+            oDN.SliceAxis = stOpt.SliceAxis;
+            oDN.Slice     = stOpt.Slice;
+        end % if
+
+        stData = oDN.Density2D('charge');
+        aProjZ = abs(sum(stData.Data));
+        aProjZ = 0.15*(aVAxis(end)-aVAxis(1))*aProjZ/max(abs(aProjZ))+aVAxis(1);
+
+        stQTot       = oDN.BeamCharge;
+        [dQ, sQUnit] = fAutoScale(stQTot.QTotal,'C');
+        sBeamCharge  = sprintf('Q_{tot} = %.2f %s', dQ, sQUnit);
+
+    end % if
     
 
     % Plot
@@ -146,14 +175,23 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
         if strcmpi(stOpt.AutoResize, 'On')
             fFigureSize(gcf, stOpt.FigureSize);
         end % if
-        set(gcf,'Name',sprintf('Beam Density (%s #%d)',oData.Config.Name,iTime))
+        set(gcf,'Name',sprintf('Particle UDist (%s #%d)',oData.Config.Name,iTime))
     else
         cla;
     end % if
     
     imagesc(aHAxis, aVAxis, aData);
     set(gca,'YDir','Normal');
-    colormap('hot');
+    aPos = cubehelix([],0.1, 0.5,2,1,[0.0,0.8],[0.0,0.8]);
+    aNeg = cubehelix([],0.1,-0.5,2,1,[0.0,0.8],[0.0,0.8]);
+    if min(aData(:)) < 0 && ~strcmpi(stOpt.Log, 'Yes')
+        dPeak = max(abs(aData(:)));
+        caxis([-dPeak dPeak]);
+        aMap = [flipud(aNeg); aPos];
+    else
+        aMap = aPos;
+    end % if
+    colormap(aMap);
     hCol = colorbar();
     if ~isempty(stOpt.CAxis)
         caxis(stOpt.CAxis);
@@ -165,29 +203,33 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
         plot(aHAxis, aProjZ, 'White');
         h = legend(sBeamCharge, 'Location', 'NE');
         set(h,'Box','Off');
-        set(h,'TextColor', [1 1 1]);
+        set(h,'TextColor', [1.0 1.0 1.0]);
         set(findobj(h, 'type', 'line'), 'visible', 'off')
     end % if
 
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s %s Density %s (%s #%d)',vBeam.Full,vData.Full,oDN.PlasmaPosition,oData.Config.Name,iTime);
+        sTitle = sprintf('%s %s %s (%s #%d)',vBeam.Full,vUDist.Full,oUD.PlasmaPosition,oData.Config.Name,iTime);
     else
-        sTitle = sprintf('%s %s Density %s',vBeam.Full,vData.Full,oDN.PlasmaPosition);
+        sTitle = sprintf('%s %s %s',vBeam.Full,vUDist.Full,oUD.PlasmaPosition);
     end % if
 
     title(sTitle);
     xlabel(sprintf('%s [mm]',vHAxis.Tex));
     ylabel(sprintf('%s [mm]',vVAxis.Tex));
-    title(hCol,sprintf('%s [%s]',sLabel,sSUnit));
+    if strcmpi(stOpt.Log, 'Yes')
+        title(hCol,sprintf('log_{10}(%s) [%s]',sLabel,sSUnit));
+    else
+        title(hCol,sprintf('%s [%s]',sLabel,sSUnit));
+    end % if
     
     hold off;
     
     
     % Return
 
-    stReturn.Beam1 = sBeam;
-    stReturn.XLim  = xlim;
-    stReturn.YLim  = ylim;
-    stReturn.CLim  = caxis;
+    stReturn.Beam = sBeam;
+    stReturn.XLim = xlim;
+    stReturn.YLim = ylim;
+    stReturn.CLim = caxis;
     
 end % function

@@ -1058,6 +1058,13 @@ classdef OsirisConfig
                 cReports = {};
             end % try
             
+            % Reports, UDist
+            try
+                cRepUDist = stData.diag_species.rep_udist;
+            catch
+                cRepUDist = {};
+            end % try
+            
             % Return Variables
             stReturn.Data.RawFraction  = dRawFrac;
             stReturn.Data.DiagXMin     = aDiagXMin;
@@ -1073,6 +1080,7 @@ classdef OsirisConfig
             stReturn.Data.DiagGammaMax = dDiagGMax;
             stReturn.Data.DiagNGamma   = iDiagNG;
             stReturn.Data.DiagReports  = cReports;
+            stReturn.Data.DiagUDist    = cRepUDist;
             stReturn.Data.PhaseSpaces  = cPhaseSpaces;
 
 
