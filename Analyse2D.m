@@ -43,14 +43,21 @@ function Analyse2D
     
     % Settings
     
+    sTemp      = mfilename('fullpath');
+    X.Temp     = [sTemp(1:end-9) 'Temp/'];
+    X.Settings = [X.Temp 'Analyse2D-Settings.mat'];
+    if ~isdir(X.Temp)
+        mkdir(X.Temp);
+    end % if
+
     stSettings.LoadData = {'','',''};
     stSettings.LoadPath = {'','',''};
     for i=1:iXFig
         stSettings.Position(i).Pos  = [0 0];
         stSettings.Position(i).Size = [0 0];
     end % for
-    if exist(strcat(oData.Temp, '/OsirisAnalyseSettings.mat'), 'file')
-        stSettings = load(strcat(oData.Temp, '/OsirisAnalyseSettings.mat'));
+    if exist(X.Settings, 'file')
+        stSettings = load(X.Settings);
     end % if
 
     X.Plots{1} = 'Beam Density';
@@ -1405,7 +1412,7 @@ function Analyse2D
     
     function fSaveVariables
         
-        save(strcat(oData.Temp,'/OsirisAnalyseSettings.mat'),'-struct','stSettings');
+        save(X.Settings,'-struct','stSettings');
         
     end % function
 
