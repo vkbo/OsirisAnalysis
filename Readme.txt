@@ -22,6 +22,7 @@
   - All classes have better error checking functionality and will report errors rather than fail.
   - Added a listbox to browse/load datasets rather than drobdown menu. The dropdown meny does not handle lists longer
     than the screen height.
+  - New class and plot for handling udist diagnostics.
   
   Version 1.3
   - Bug fixes.
