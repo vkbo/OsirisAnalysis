@@ -23,6 +23,7 @@ classdef OsirisConfig
     properties(GetAccess='public', SetAccess='private')
     
         Name       = '';     % Name of the loaded dataset
+        Details    = {};     % Description of simulation. First lines of comments.
         Input      = {};     % Parsed input file
         Constants  = {};     % Constants
         Convert    = {};     % Unit conversion factors
@@ -196,6 +197,28 @@ classdef OsirisConfig
             oFile = fopen(strcat(obj.Path, '/', obj.File), 'r');
             sFile = sprintf(fread(oFile,'*char'));
             fclose(oFile);
+            
+            % Get Simulation Description
+            cLines = strsplit(sFile,'\n');
+            iLines = numel(cLines);
+            bStop  = false;
+            cDesc  = {};
+            
+            for i=1:iLines
+                sLine = strtrim(cLines{i});
+                if ~isempty(sLine)
+                    if sLine(1) == '!'
+                        cDesc{end+1} = strtrim(sLine(2:end));
+                    else
+                        bStop = true;
+                    end % if
+                end % if
+                if bStop
+                    break;
+                end % if
+            end % for
+
+            obj.Details = cDesc;
             
             % Clean-up
             sFile = regexprep(sFile,'\!.*?\n','\n');   % Removes all comments

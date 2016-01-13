@@ -23,6 +23,7 @@
   - Added a listbox to browse/load datasets rather than drobdown menu. The dropdown meny does not handle lists longer
     than the screen height.
   - New class and plot for handling udist diagnostics.
+  - First lines of comments in input deck are now read into a string array in OsirisData.Config.Details.
   
   Version 1.3
   - Bug fixes.
