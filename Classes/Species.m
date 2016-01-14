@@ -1,11 +1,11 @@
 
 %
-%  Class Object :: Tracks
-% ************************
+%  Class Object :: Species
+% *************************
 %  SubClass of OsirisType
 %
 %  Description:
-%    A class to analyse and handle Osiris data related to tracking particles
+%    A class to analyse and handle Osiris data related to (macro) particles
 %
 %  Constructor:
 %    oData    : OsirisDara object
@@ -28,7 +28,7 @@
 %  Public Methods:
 %
 
-classdef Tracks < OsirisType
+classdef Species < OsirisType
 
     %
     % Properties
@@ -46,7 +46,7 @@ classdef Tracks < OsirisType
 
     methods
         
-        function obj = Momentum(oData, sSpecies, varargin)
+        function obj = Species(oData, sSpecies, varargin)
             
             % Call OsirisType constructor
             obj@OsirisType(oData, sSpecies, varargin{:});
