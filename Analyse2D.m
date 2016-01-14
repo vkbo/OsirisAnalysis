@@ -1214,7 +1214,12 @@ function Analyse2D
                         for s=1:2
                             stEF(s).Range = [];
                             if X.Plot(f).Settings(s)
-                                stEF(s).Range = [3,3];
+                                if X.Data.Cyl
+                                    stEF(s).Range = [3,3];
+                                else
+                                    iCentre = floor(oData.Config.Simulation.Grid(X.Plot(f).SliceAxis))/2;
+                                    stEF(s).Range = [iCentre,2];
+                                end % if
                             end % if
                         end % for
                         iMakeSym = 1;

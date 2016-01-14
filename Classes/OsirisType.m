@@ -487,8 +487,8 @@ classdef OsirisType
             end % if
             
             % Get Limits
-            iHMin = fGetIndex(aHAxis, aHLim(1));
-            iHMax = fGetIndex(aHAxis, aHLim(2));
+            iHMin  = fGetIndex(aHAxis, aHLim(1));
+            iHMax  = fGetIndex(aHAxis, aHLim(2));
 
             % Crop Dataset
             iEnd   = iStart+iAverage-1;

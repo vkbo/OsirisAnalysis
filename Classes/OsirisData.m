@@ -520,44 +520,58 @@ classdef OsirisData
             
             sLoad = [sDataRoot, sFolder, sFile];
             
-            try
+            %try
                 if strcmpi(sType, 'RAW') || strcmpi(sType, 'TRACKS')
-
+                    
                     if strcmpi(sType, 'RAW')
                         sGroup = '/';
                     else
                         sGroup = strcat('/', sSet, '/');
                     end % if
+                    
+                    % Check that the dataset isn't too large
+                    % If the size is cut, charge calculation from raw data
+                    % no longer produces a correct result
+                    stInfo  = h5info(sLoad, [sGroup, 'x1']);
+                    iSize   = stInfo.Dataspace.Size;
+                    iStart  = 1;
+                    iCount  = iSize;
+                    iStride = 1;
+                    
+                    iMax    = 10e6; % Max records to read
+                    if iSize > iMax
+                        iStride = floor(iSize/iMax);
+                        iCount  = iMax;
+                        fprintf('Warning: Raw data truncated. Data size is %d. Max is %d.\n',iSize,iMax);
+                    end % if
 
-                    aCol1 = h5read(sLoad, [sGroup, 'x1']);
-                    aCol2 = h5read(sLoad, [sGroup, 'x2']);
+                    aReturn =          h5read(sLoad,[sGroup 'x1'],iStart,iCount,iStride);
+                    aReturn = [aReturn h5read(sLoad,[sGroup 'x2'],iStart,iCount,iStride)];
                     if obj.Config.Simulation.Dimensions == 3
-                        aCol3 = h5read(sLoad, [sGroup, 'x3']);
+                        aReturn = [aReturn h5read(sLoad,[sGroup 'x3'],iStart,iCount,iStride)];
                     else
-                        aCol3 = aCol1*0.0;
+                        aReturn = [aReturn aReturn(:,1)*0.0];
                     end % if
-                    aCol4 = h5read(sLoad, [sGroup, 'p1']);
-                    aCol5 = h5read(sLoad, [sGroup, 'p2']);
-                    aCol6 = h5read(sLoad, [sGroup, 'p3']);
-                    aCol7 = h5read(sLoad, [sGroup, 'ene']);
-                    aCol8 = h5read(sLoad, [sGroup, 'q']);
+                    aReturn = [aReturn h5read(sLoad,[sGroup 'p1'],iStart,iCount,iStride)];
+                    aReturn = [aReturn h5read(sLoad,[sGroup 'p2'],iStart,iCount,iStride)];
+                    aReturn = [aReturn h5read(sLoad,[sGroup 'p3'],iStart,iCount,iStride)];
+                    aReturn = [aReturn h5read(sLoad,[sGroup 'ene'],iStart,iCount,iStride)];
+                    aReturn = [aReturn h5read(sLoad,[sGroup 'q'],iStart,iCount,iStride)];
                     if strcmpi(sType, 'RAW')
-                        aCol9 = h5read(sLoad, [sGroup, 'tag']);
-                        aCol9 = double(transpose(aCol9));
+                        aReturn = [aReturn double(h5read(sLoad,[sGroup 'tag'],[1 iStart],[2 iCount],[1 iStride])')];
                     else
-                        aCol9 = h5read(sLoad, [sGroup, 'n']);
-                        aCol9 = double(aCol9);
+                        aReturn = [aReturn double(h5read(sLoad,[sGroup 'n'],iStart,iCount,iStride))];
                     end % if
-                    aReturn = [aCol1 aCol2 aCol3 aCol4 aCol5 aCol6 aCol7 aCol8 aCol9];
+                    %aReturn = [aCol1 aCol2 aCol3 aCol4 aCol5 aCol6 aCol7 aCol8 aCol9];
 
                 else
 
                     aReturn = h5read(sLoad, ['/',sSet]);
 
                 end % if
-            catch
-                fprintf(2, 'Error reading file %s\n', sLoad);
-            end % try
+            %catch
+            %    fprintf(2, 'Error reading file %s\n', sLoad);
+            %end % try
             
         end % function
         
