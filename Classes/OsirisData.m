@@ -520,58 +520,71 @@ classdef OsirisData
             
             sLoad = [sDataRoot, sFolder, sFile];
             
-            %try
-                if strcmpi(sType, 'RAW') || strcmpi(sType, 'TRACKS')
-                    
-                    if strcmpi(sType, 'RAW')
-                        sGroup = '/';
-                    else
-                        sGroup = strcat('/', sSet, '/');
-                    end % if
-                    
-                    % Check that the dataset isn't too large
-                    % If the size is cut, charge calculation from raw data
-                    % no longer produces a correct result
-                    stInfo  = h5info(sLoad, [sGroup, 'x1']);
-                    iSize   = stInfo.Dataspace.Size;
-                    iStart  = 1;
-                    iCount  = iSize;
-                    iStride = 1;
-                    
-                    iMax    = 10e6; % Max records to read
-                    if iSize > iMax
-                        iStride = floor(iSize/iMax);
-                        iCount  = iMax;
-                        fprintf('Warning: Raw data truncated. Data size is %d. Max is %d.\n',iSize,iMax);
-                    end % if
+            try
+                switch(sType)
 
-                    aReturn =          h5read(sLoad,[sGroup 'x1'],iStart,iCount,iStride);
-                    aReturn = [aReturn h5read(sLoad,[sGroup 'x2'],iStart,iCount,iStride)];
-                    if obj.Config.Simulation.Dimensions == 3
-                        aReturn = [aReturn h5read(sLoad,[sGroup 'x3'],iStart,iCount,iStride)];
-                    else
-                        aReturn = [aReturn aReturn(:,1)*0.0];
-                    end % if
-                    aReturn = [aReturn h5read(sLoad,[sGroup 'p1'],iStart,iCount,iStride)];
-                    aReturn = [aReturn h5read(sLoad,[sGroup 'p2'],iStart,iCount,iStride)];
-                    aReturn = [aReturn h5read(sLoad,[sGroup 'p3'],iStart,iCount,iStride)];
-                    aReturn = [aReturn h5read(sLoad,[sGroup 'ene'],iStart,iCount,iStride)];
-                    aReturn = [aReturn h5read(sLoad,[sGroup 'q'],iStart,iCount,iStride)];
-                    if strcmpi(sType, 'RAW')
-                        aReturn = [aReturn double(h5read(sLoad,[sGroup 'tag'],[1 iStart],[2 iCount],[1 iStride])')];
-                    else
-                        aReturn = [aReturn double(h5read(sLoad,[sGroup 'n'],iStart,iCount,iStride))];
-                    end % if
-                    %aReturn = [aCol1 aCol2 aCol3 aCol4 aCol5 aCol6 aCol7 aCol8 aCol9];
+                    case 'RAW'
 
-                else
+                        % Check that the dataset isn't too large
+                        % If the size is cut, charge calculation from raw data
+                        % no longer produces a correct result
+                        stInfo  = h5info(sLoad,'/x1');
+                        iSize   = stInfo.Dataspace.Size;
+                        iStart  = 1;
+                        iCount  = iSize;
+                        iStride = 1;
 
-                    aReturn = h5read(sLoad, ['/',sSet]);
+                        iMax    = 30e6; % Max records to read
+                        if iSize > iMax
+                            iStride = floor(iSize/iMax);
+                            iCount  = iMax;
+                            fprintf('Warning: Raw data truncated. Data size is %d. Max is %d.\n',iSize,iMax);
+                        end % if
 
-                end % if
-            %catch
-            %    fprintf(2, 'Error reading file %s\n', sLoad);
-            %end % try
+                        % Prealocate return matrix
+                        aReturn = zeros(iCount,10);
+
+                        aReturn(:,1)     = double(h5read(sLoad,'/x1', iStart,iCount,iStride));
+                        aReturn(:,2)     = double(h5read(sLoad,'/x2', iStart,iCount,iStride));
+                        if obj.Config.Simulation.Dimensions == 3
+                            aReturn(:,3) = double(h5read(sLoad,'/x3', iStart,iCount,iStride));
+                        end % if
+                        aReturn(:,4)     = double(h5read(sLoad,'/p1', iStart,iCount,iStride));
+                        aReturn(:,5)     = double(h5read(sLoad,'/p2', iStart,iCount,iStride));
+                        aReturn(:,6)     = double(h5read(sLoad,'/p3', iStart,iCount,iStride));
+                        aReturn(:,7)     = double(h5read(sLoad,'/ene',iStart,iCount,iStride));
+                        aReturn(:,8)     = double(h5read(sLoad,'/q',  iStart,iCount,iStride));
+                        aReturn(:,9:10)  = double(h5read(sLoad,'/tag',[1 iStart],[2 iCount],[1 iStride])');
+
+                    case 'TRACKS'
+
+                        stInfo = h5info(sLoad,['/' sSet '/x1']);
+                        iCount = stInfo.Dataspace.Size;
+
+                        % Prealocate return matrix
+                        aReturn = zeros(iCount,9);
+
+                        aReturn(:,1) = double(h5read(sLoad,['/' sSet '/x1']));
+                        aReturn(:,2) = double(h5read(sLoad,['/' sSet '/x2']));
+                        if obj.Config.Simulation.Dimensions == 3
+                            aReturn(:,3) = double(h5read(sLoad,['/' sSet '/x3']));
+                        end % if
+                        aReturn(:,4) = double(h5read(sLoad,['/' sSet '/p1']));
+                        aReturn(:,5) = double(h5read(sLoad,['/' sSet '/p2']));
+                        aReturn(:,6) = double(h5read(sLoad,['/' sSet '/p3']));
+                        aReturn(:,7) = double(h5read(sLoad,['/' sSet '/ene']));
+                        aReturn(:,8) = double(h5read(sLoad,['/' sSet '/q']));
+                        aReturn(:,9) = double(h5read(sLoad,['/' sSet '/n']));
+
+                    otherwise
+
+                        aReturn = double(h5read(sLoad, ['/',sSet]));
+
+                end % switch
+            
+            catch
+                fprintf(2, 'Error reading file %s\n', sLoad);
+            end % try
             
         end % function
         
