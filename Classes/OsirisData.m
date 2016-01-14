@@ -517,9 +517,9 @@ classdef OsirisData
                 fprintf(2, 'Error: Dump %d does not exist. Last dump is %d.\n', iTime, iFiles-1);
                 return;
             end % if
-            
             sLoad = [sDataRoot, sFolder, sFile];
             
+            % Wraps reading in a try/catch because sometimes files are corrupt even if they exist.
             try
                 switch(sType)
 
@@ -536,12 +536,12 @@ classdef OsirisData
 
                         iMax    = 30e6; % Max records to read
                         if iSize > iMax
-                            iStride = floor(iSize/iMax);
                             iCount  = iMax;
+                            iStride = floor(iSize/iMax);
                             fprintf('Warning: Raw data truncated. Data size is %d. Max is %d.\n',iSize,iMax);
                         end % if
 
-                        % Prealocate return matrix
+                        % Preallocate return matrix
                         aReturn = zeros(iCount,10);
 
                         aReturn(:,1)     = double(h5read(sLoad,'/x1', iStart,iCount,iStride));
@@ -559,10 +559,10 @@ classdef OsirisData
                     case 'TRACKS'
 
                         stInfo = h5info(sLoad,['/' sSet '/x1']);
-                        iCount = stInfo.Dataspace.Size;
+                        iSize  = stInfo.Dataspace.Size;
 
-                        % Prealocate return matrix
-                        aReturn = zeros(iCount,9);
+                        % Preallocate return matrix
+                        aReturn = zeros(iSize,9);
 
                         aReturn(:,1) = double(h5read(sLoad,['/' sSet '/x1']));
                         aReturn(:,2) = double(h5read(sLoad,['/' sSet '/x2']));
@@ -581,7 +581,6 @@ classdef OsirisData
                         aReturn = double(h5read(sLoad, ['/',sSet]));
 
                 end % switch
-            
             catch
                 fprintf(2, 'Error reading file %s\n', sLoad);
             end % try
