@@ -36,18 +36,7 @@ classdef Species < OsirisType
 
     properties(GetAccess='public', SetAccess='public')
         
-        Tags      = [];    % Array of Tags
-        TMin      = 0;     % Select time from
-        TMax      = 0;     % Select time to
-        Tracking  = false; % Track particles in obj.Tags from TMin to TMax
-        Progress  = false; % Set to true to display tracking progress
-
-    end % properties
-
-    properties(GetAccess='public', SetAccess='private')
-        
-        Particles = {};    % Struct of particles
-        Count     = 0;     % Number of particles
+        % None
 
     end % properties
 
@@ -61,77 +50,9 @@ classdef Species < OsirisType
             
             % Call OsirisType constructor
             obj@OsirisType(oData, sSpecies, varargin{:});
-            
-            obj.TMin = 'Start';
-            obj.TMax = 'End';
 
         end % function
         
-    end % methods
-
-    %
-    % Setters and Getters
-    %
-
-    methods
-        
-        function obj = set.Tags(obj, aTags)
-            
-            if ~ismatrix(aTags)
-                fprintf(2,'Error: Tags must be a n x 2 size matrix.\n');
-                return;
-            end % if
-            
-            [iR,iC] = size(aTags);
-            if iC ~= 2
-                fprintf(2,'Error: Tags must be a n x 2 size matrix.\n');
-                return;
-            end % if
-            
-            obj.Tags  = aTags;
-            obj.Count = iR;
-            
-        end % function
-        
-        function obj = set.TMin(obj, sTMin)
-            
-            obj.TMin = obj.Data.StringToDump(sTMin);
-            
-        end % function
-
-        function obj = set.TMax(obj, sTMax)
-            
-            obj.TMax = obj.Data.StringToDump(sTMax);
-            
-        end % function
-        
-        function obj = set.Tracking(obj, bTracking)
-            
-            if ~bTracking
-                obj.Tracking = false;
-                return;
-            end % if
-                
-            if isempty(obj.Tags)
-                obj.Tracking = false;
-                return;
-            end % if
-            
-            obj.Particles = obj.TrackParticles();
-            obj.Tracking  = true;
-            
-        end % function
-        
-        function obj = set.Progress(obj, bProgress)
-            
-            if bProgress
-                obj.Progress = true;
-            else
-                obj.Progress = false;
-            end % if
-            
-        end % function
-
     end % methods
 
     %
@@ -140,18 +61,38 @@ classdef Species < OsirisType
     
     methods(Access='public')
         
-        function stReturn = TrackParticles(obj)
+        function stReturn = TrackParticles(obj, aTags, sStart, sEnd)
             
-            % Output
+            % Input/Output
             stReturn = {};
             
-            nTags = size(obj.Tags,1);
-            nTime = obj.TMax-obj.TMin+1;
+            if nargin < 4
+                sEnd = 'End';
+            end % if
 
+            if nargin < 3
+                sStart = 'Start';
+            end % if
+
+            nTags  = size(aTags,1);
+            iStart = obj.Data.StringToDump(sStart);
+            iEnd   = obj.Data.StringToDump(sEnd);
+            nTime  = iEnd-iStart+1;
+
+            if ~ismatrix(aTags) || size(aTags,2) ~= 2
+                fprintf(2,'Error: Tags must be a n x 2 size matrix.\n');
+                return;
+            end % if
+
+            % Get Conversion Factors
             if strcmpi(obj.Units,'SI')
                 dTFac = obj.Data.Config.Convert.SI.TimeFac;
+                dLFac = obj.Data.Config.Convert.SI.LengthFac;
+                dMFac = obj.Data.Config.Constants.EV.ElectronMass;
             else
                 dTFac = obj.Data.Config.Simulation.TimeStep*obj.Data.Config.Simulation.NDump;
+                dLFac = 1.0;
+                dMFac = 1.0;
             end % if
             dRQM = obj.Config.RQM;
             
@@ -165,17 +106,17 @@ classdef Species < OsirisType
 
             for t=1:nTime
                 
-                iTime = obj.TMin + t - 1;
+                iTime = iStart + t - 1;
                 aRaw  = obj.Data.Data(iTime,'RAW','',obj.Species.Name);
                 
                 for n=1:nTags
                     
-                    aPart = aRaw(aRaw(:,9) == obj.Tags(n,1) & aRaw(:,10) == obj.Tags(n,2),:);
+                    aPart = aRaw(aRaw(:,9) == aTags(n,1) & aRaw(:,10) == aTags(n,2),:);
                     stReturn(n).Tag(1:2)   = [aPart(9) aPart(10)];
-                    stReturn(n).X(t,1:3)   = [aPart(1)-iTime*dTFac aPart(2) aPart(3)];
+                    stReturn(n).X(t,1:3)   = [aPart(1)-iTime*dTFac aPart(2) aPart(3)]*dLFac;
                     stReturn(n).P(t,1:3)   = [aPart(4) aPart(5) aPart(6)];
                     stReturn(n).Energy(t)  = aPart(7);
-                    stReturn(n).Kinetic(t) = aPart(7)*dRQM*aPart(8);
+                    stReturn(n).Kinetic(t) = aPart(7)*dRQM*aPart(8)*dMFac;
                     stReturn(n).Charge(t)  = aPart(8);
                     stReturn(n).Gamma(t)   = sqrt(aPart(4)^2 + aPart(5)^2 + aPart(6)^2 +1);
                     
