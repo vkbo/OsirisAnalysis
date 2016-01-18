@@ -31,7 +31,7 @@ function Analyse2D
     
     % Data
     
-    iXFig = 10;
+    iXFig = 11;
     oData = OsirisData('Silent','Yes');
     oVar  = Variables();
 
@@ -289,6 +289,18 @@ function Analyse2D
     edtT10(1) = uicontrol(bgTabX(1),'Style','Edit','String','0','Position',[425 iY 40 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,9});
     edtT10(2) = uicontrol(bgTabX(1),'Style','Edit','String','0','Position',[470 iY 40 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,9});
 
+    % Beam Slip
+    iY = iY - 25;
+
+    uicontrol(bgTabX(1),'Style','Text','String','#11','Position',[5 iY+1 30 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    uicontrol(bgTabX(1),'Style','Text','String','Raw Time','Position',[40 iY+1 160 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+    uicontrol(bgTabX(1),'Style','Text','String','T =','Position',[395 iY+1 25 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+
+    btnFig(10) = uicontrol(bgTabX(1),'Style','PushButton','String','','Position',[210 iY 20 20],'BackgroundColor',cButtonOff,'Callback',{@fToggleXFig,10});
+    pumT11(1)  = uicontrol(bgTabX(1),'Style','PopupMenu','String',X.Data.Beam,'Value',1,'Position',[240 iY 150 20],'Callback',{@fPlotSetBeam,10});
+    edtT11(1)  = uicontrol(bgTabX(1),'Style','Edit','String','0','Position',[425 iY 40 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,10});
+    edtT11(2)  = uicontrol(bgTabX(1),'Style','Edit','String','0','Position',[470 iY 40 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,10});
+
     
     %  GUI Tools
     % ===========
@@ -301,7 +313,7 @@ function Analyse2D
     iY = iY - 25;
     uicontrol(bgTabX(2),'Style','Text','String','#11','Position',[5 iY+1 30 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
     uicontrol(bgTabX(2),'Style','Text','String','Track Density','Position',[40 iY+1 160 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-    btnFig(10) = uicontrol(bgTabX(2),'Style','PushButton','String','','Position',[210 iY 20 20],'BackgroundColor',cButtonOff,'Callback',{@fToggleXFig,10});
+    btnFig(11) = uicontrol(bgTabX(2),'Style','PushButton','String','','Position',[210 iY 20 20],'BackgroundColor',cButtonOff,'Callback',{@fToggleXFig,11});
 
     set(hTabGroup,'SelectedTab',hTabX(2));
     
@@ -697,20 +709,25 @@ function Analyse2D
         edtT8(2).String  = X.Time.Limits(4);
         edtT9(1).String  = X.Time.Limits(2);
         edtT9(2).String  = X.Time.Limits(4);
-        edtT10(1).String = X.Time.Limits(1);
+        edtT10(1).String = X.Time.Limits(2);
         edtT10(2).String = X.Time.Limits(4);
+        edtT11(1).String = X.Time.Limits(1);
+        edtT11(2).String = X.Time.Limits(4);
         
         pumT8(1).String  = X.Data.Beam;
         pumT9(1).String  = X.Data.Beam;
         pumT10(1).String = X.Data.Beam;
+        pumT11(1).String = X.Data.Beam;
 
         pumT8(1).Value   = X.Data.WitnessIdx;
         pumT9(1).Value   = X.Data.WitnessIdx;
         pumT10(1).Value  = X.Data.WitnessIdx;
+        pumT11(1).Value  = X.Data.WitnessIdx;
         
         X.Plot(7).Data   = X.Data.Beam{X.Data.WitnessIdx};
         X.Plot(8).Data   = X.Data.Beam{X.Data.WitnessIdx};
         X.Plot(9).Data   = X.Data.Beam{X.Data.WitnessIdx};
+        X.Plot(10).Data  = X.Data.Beam{X.Data.WitnessIdx};
 
         % Refresh
         fReloadOptions;
@@ -1301,6 +1318,12 @@ function Analyse2D
                         fPlotBeamSlip(oData,X.Plot(f).Data,'Start',sStart,'End',sEnd,'HideDump','Yes','IsSubPlot','No','AutoResize','Off');
 
                     case 10
+                        sStart = get(edtT10(1),'String');
+                        sEnd   = get(edtT10(2),'String');
+                        figure(X.Plot(f).Figure); clf;
+                        fPlotRawTime(oData,X.Plot(f).Data,'Start',sStart,'End',sEnd,'HideDump','Yes','IsSubPlot','No','AutoResize','Off');
+
+                    case 11
                         figure(X.Plot(f).Figure); clf;
                         uiTrackDensity(oData);
 
