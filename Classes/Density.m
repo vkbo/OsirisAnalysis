@@ -431,10 +431,10 @@ classdef Density < OsirisType
             stOpt = oOpt.Results;
 
             % Species must be a beam
-            if ~obj.Species.isBeam
-                fprintf(2, 'Error: Species %s is not a beam.\n', obj.Species.Name);
-                return;
-            end % if
+            %if ~obj.Species.isBeam
+            %    fprintf(2, 'Error: Species %s is not a beam.\n', obj.Species.Name);
+            %    return;
+            %end % if
             
             dRawFrac  = obj.Data.Config.Particles.Species.(obj.Species.Name).RawFraction;
             dTFactor  = obj.Data.Config.Convert.SI.TimeFac;

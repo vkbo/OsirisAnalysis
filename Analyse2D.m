@@ -60,7 +60,7 @@ function Analyse2D
         stSettings = load(X.Settings);
     end % if
 
-    X.Plots{1} = 'Beam Density';
+    X.Plots{1} = 'Particle Density';
     X.Plots{2} = 'Plasma Density';
     X.Plots{3} = 'Field Density';
     X.Plots{4} = 'Phase 1D';
@@ -331,7 +331,7 @@ function Analyse2D
 
     end % function
     
-    function fCtrlBeamDensity(t)
+    function fCtrlParticleDensity(t)
         
         % Clear panel
         delete(bgTab(t));
@@ -341,13 +341,13 @@ function Analyse2D
         iY = 135;
         
         iY = iY - 25;
-        [~,iVal] = incellarray(X.Plot(t).Data, X.Data.Beam);
+        [~,iVal] = incellarray(X.Plot(t).Data, X.Data.Species);
         if iVal == 0
-            X.Plot(t).Data = X.Data.Beam{1};
+            X.Plot(t).Data = X.Data.Species{1};
             iVal = 1;
         end % if
-        uicontrol(bgTab(t),'Style','Text','String','Beam','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Beam,'Value',iVal,'Position',[85 iY 150 20],'Callback',{@fPlotSetBeam,t});
+        uicontrol(bgTab(t),'Style','Text','String','Particle','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Species,'Value',iVal,'Position',[85 iY 150 20],'Callback',{@fPlotSetSpecies,t});
         uicontrol(bgTab(t),'Style','Text','String','CAxis','Position',[255 iY+1 60 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','Edit','String','','Position',[300 iY 100 20],'Callback',{@fPlotSetCAxis,t,0});
 
@@ -949,11 +949,11 @@ function Analyse2D
 
             switch(X.Plots{iOpt})
 
-                case 'Beam Density'
-                    X.Plot(f).Data    = X.Data.Beam{1};
+                case 'Particle Density'
+                    X.Plot(f).Data    = X.Data.Species{1};
                     X.Plot(f).Density = X.Data.Density{1};
                     X.Plot(f).CAxis   = [];
-                    fCtrlBeamDensity(f);
+                    fCtrlParticleDensity(f);
                     aFigSize = [900 500];
 
                 case 'Plasma Density'
@@ -1129,9 +1129,9 @@ function Analyse2D
             
             switch(X.Plots{X.Figure(f)})
 
-                case 'Beam Density'
+                case 'Particle Density'
                     fResetTab(f);
-                    fCtrlBeamDensity(f);
+                    fCtrlParticleDensity(f);
 
                 case 'Plasma Density'
                     fResetTab(f);
@@ -1199,12 +1199,12 @@ function Analyse2D
                 
                 switch(X.Plots{X.Figure(f)})
                     
-                    case 'Beam Density'
+                    case 'Particle Density'
                         figure(X.Plot(f).Figure); clf;
                         sData = oVar.Reverse(X.Plot(f).Density,'Full');
                         iMakeSym = 1;
 
-                        X.Plot(f).Return = fPlotBeamDensity(oData,X.Time.Dump,X.Plot(f).Data,'Data',sData, ...
+                        X.Plot(f).Return = fPlotParticleDensity(oData,X.Time.Dump,X.Plot(f).Data,'Data',sData, ...
                             'IsSubPlot','No','AutoResize','Off','HideDump','Yes','Absolute','Yes','ShowOverlay','Yes', ...
                             'Limits',[aHLim aVLim],'CAxis',X.Plot(f).CAxis, ...
                             'Slice',X.Plot(f).Slice,'SliceAxis',X.Plot(f).SliceAxis);

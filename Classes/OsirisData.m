@@ -530,6 +530,10 @@ classdef OsirisData
                         % no longer produces a correct result
                         stInfo  = h5info(sLoad,'/x1');
                         iSize   = stInfo.Dataspace.Size;
+                        if isempty(iSize)
+                            iSize = 1;
+                        end % if
+
                         iStart  = 1;
                         iCount  = iSize;
                         iStride = 1;
@@ -543,23 +547,40 @@ classdef OsirisData
 
                         % Preallocate return matrix
                         aReturn = zeros(iCount,10);
-
-                        aReturn(:,1)     = double(h5read(sLoad,'/x1', iStart,iCount,iStride));
-                        aReturn(:,2)     = double(h5read(sLoad,'/x2', iStart,iCount,iStride));
-                        if obj.Config.Simulation.Dimensions == 3
-                            aReturn(:,3) = double(h5read(sLoad,'/x3', iStart,iCount,iStride));
+                        
+                        if iCount < iSize
+                            aReturn(:,1)     = double(h5read(sLoad,'/x1', iStart,iCount,iStride));
+                            aReturn(:,2)     = double(h5read(sLoad,'/x2', iStart,iCount,iStride));
+                            if obj.Config.Simulation.Dimensions == 3
+                                aReturn(:,3) = double(h5read(sLoad,'/x3', iStart,iCount,iStride));
+                            end % if
+                            aReturn(:,4)     = double(h5read(sLoad,'/p1', iStart,iCount,iStride));
+                            aReturn(:,5)     = double(h5read(sLoad,'/p2', iStart,iCount,iStride));
+                            aReturn(:,6)     = double(h5read(sLoad,'/p3', iStart,iCount,iStride));
+                            aReturn(:,7)     = double(h5read(sLoad,'/ene',iStart,iCount,iStride));
+                            aReturn(:,8)     = double(h5read(sLoad,'/q',  iStart,iCount,iStride));
+                            aReturn(:,9:10)  = double(h5read(sLoad,'/tag',[1 iStart],[2 iCount],[1 iStride])');
+                        else
+                            aReturn(:,1)     = double(h5read(sLoad,'/x1'));
+                            aReturn(:,2)     = double(h5read(sLoad,'/x2'));
+                            if obj.Config.Simulation.Dimensions == 3
+                                aReturn(:,3) = double(h5read(sLoad,'/x3'));
+                            end % if
+                            aReturn(:,4)     = double(h5read(sLoad,'/p1'));
+                            aReturn(:,5)     = double(h5read(sLoad,'/p2'));
+                            aReturn(:,6)     = double(h5read(sLoad,'/p3'));
+                            aReturn(:,7)     = double(h5read(sLoad,'/ene'));
+                            aReturn(:,8)     = double(h5read(sLoad,'/q'));
+                            aReturn(:,9:10)  = double(h5read(sLoad,'/tag')');
                         end % if
-                        aReturn(:,4)     = double(h5read(sLoad,'/p1', iStart,iCount,iStride));
-                        aReturn(:,5)     = double(h5read(sLoad,'/p2', iStart,iCount,iStride));
-                        aReturn(:,6)     = double(h5read(sLoad,'/p3', iStart,iCount,iStride));
-                        aReturn(:,7)     = double(h5read(sLoad,'/ene',iStart,iCount,iStride));
-                        aReturn(:,8)     = double(h5read(sLoad,'/q',  iStart,iCount,iStride));
-                        aReturn(:,9:10)  = double(h5read(sLoad,'/tag',[1 iStart],[2 iCount],[1 iStride])');
 
                     case 'TRACKS'
 
                         stInfo = h5info(sLoad,['/' sSet '/x1']);
                         iSize  = stInfo.Dataspace.Size;
+                        if isempty(iSize)
+                            iSize = 1;
+                        end % if
 
                         % Preallocate return matrix
                         aReturn = zeros(iSize,9);

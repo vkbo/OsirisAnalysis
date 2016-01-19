@@ -98,10 +98,13 @@ classdef Species < OsirisType
             % Simulation data and conversion factors
             if strcmpi(obj.Units, 'SI')
                 if strcmpi(stOpt.Unit, 'Joule')
-                    dEFac = obj.Data.Config.Constants.EV.ElectronMass*obj.Data.Config.Constants.SI.ElementaryCharge;
+                    dEFac =         obj.Data.Config.Constants.EV.ElectronMass;
+                    dEFac = dEFac * obj.Data.Config.Convert.SI.ChargeFac;
                     sUnit = 'J';
                 else
-                    dEFac = obj.Data.Config.Constants.EV.ElectronMass;
+                    dEFac =         obj.Data.Config.Constants.EV.ElectronMass;
+                    dEFac = dEFac * obj.Data.Config.Convert.SI.ChargeFac;
+                    dEFac = dEFac / obj.Data.Config.Constants.SI.ElementaryCharge;
                     sUnit = 'eV';
                 end % if
             else
@@ -197,8 +200,8 @@ classdef Species < OsirisType
             stReturn.CountLost = aCount(:,3);
             
             % Debug
-            stReturn.RawC = aRawC;
-            stReturn.RawP = aRawP;
+            %stReturn.RawC = aRawC;
+            %stReturn.RawP = aRawP;
 
         end % function
         
