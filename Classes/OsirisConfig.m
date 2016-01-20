@@ -1332,10 +1332,10 @@ classdef OsirisConfig
                             stProfile(2).Value = sum(mTemp,2)';
                             aTemp = mTemp;
 
-                            mTemp = oMathFunc.Eval(stProfile(1).Axis,stProfile(3).Axis,[0]);
+                            mTemp = oMathFunc.Eval(stProfile(1).Axis,[0],stProfile(3).Axis);
                             mTemp = mTemp.*(mTemp > 0);
-                            stProfile(3).Value = sum(mTemp,2)';
-                            aTemp   = sum(mTemp,1).*sum(aTemp,1);
+                            stProfile(3).Value = squeeze(sum(mTemp,2))';
+                            aTemp   = squeeze(sum(mTemp,3)).*squeeze(sum(aTemp,1));
                             dCharge = sqrt(2)*sum(aTemp(:))*dDeltaCorr;
                         else
                             mTemp = oMathFunc.Eval(stProfile(1).Axis,stProfile(2).Axis,[0]);
