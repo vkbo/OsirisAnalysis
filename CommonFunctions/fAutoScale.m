@@ -9,12 +9,25 @@ function [dValue, sUnit] = fAutoScale(dBaseValue, sBaseUnit)
     dValue = dBaseValue;
     sUnit  = sBaseUnit;
     
-    if abs(dBaseValue) < 1e-18
+    if abs(dBaseValue) < 1e-24
         dValue = 0.0;
         return;
     end % if
     
     if abs(dBaseValue) > 1.0
+
+        if abs(dBaseValue) > 1e24
+            dValue = dBaseValue*1e-24;
+            sUnit  = strcat('Y',sBaseUnit);
+            return;
+        end % if
+
+        if abs(dBaseValue) > 1e21
+            dValue = dBaseValue*1e-21;
+            sUnit  = strcat('Z',sBaseUnit);
+            return;
+        end % if
+
         if abs(dBaseValue) > 1e18
             dValue = dBaseValue*1e-18;
             sUnit  = strcat('E',sBaseUnit);
@@ -52,6 +65,18 @@ function [dValue, sUnit] = fAutoScale(dBaseValue, sBaseUnit)
         end % if
 
     else
+
+        if abs(dBaseValue) < 0.999e-21
+            dValue = dBaseValue*1e24;
+            sUnit  = strcat('y',sBaseUnit);
+            return;
+        end % if
+
+        if abs(dBaseValue) < 0.999e-18
+            dValue = dBaseValue*1e21;
+            sUnit  = strcat('z',sBaseUnit);
+            return;
+        end % if
 
         if abs(dBaseValue) < 0.999e-15
             dValue = dBaseValue*1e18;
