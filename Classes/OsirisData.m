@@ -142,9 +142,9 @@ classdef OsirisData
             % ***********************************
             %
             
-            iHasData   = 0;
-            iHasTracks = 0;
-            iCompleted = 0;
+            iHasData   = 0; %#ok<NASGU>
+            iHasTracks = 0; %#ok<NASGU>
+            iCompleted = 0; %#ok<NASGU>
             
             if isstruct(vInput)
                 if isfield(vInput, 'Path')
@@ -685,7 +685,7 @@ classdef OsirisData
 
             % Save File
             stSave.Save           = stData;
-            stSave.Save.TimeStamp = sTimeStamp;
+            stSave.Save.TimeStamp = sTimeStamp; %#ok<STRNU>
             save([sPath, '/', sFile],'-struct','stSave');
             
             bReturn = true;
