@@ -2,7 +2,7 @@
   Osiris Analysis Toolbox
  ******************************************
   MATLAB package for analysing Osiris data
-  Current version: 1.4
+  Current version: Dev1.5
  
 
   Developed by:
@@ -14,6 +14,8 @@
 
   Development History
  =====================
+
+  Version 1.5
 
   Version 1.4
   - Classes and tools now support 3D simulations in 2D plots by making slices. A flexible Grid2D and Lineout function
