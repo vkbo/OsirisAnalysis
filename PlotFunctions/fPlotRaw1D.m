@@ -121,11 +121,19 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
     if strcmpi(stOpt.GaussFit,'Yes')
     
         try
-            oFit   = fit(double(aAxis)',double(aData)','Gauss1','StartPoint',rand(1,3));
+            oFit   = fit(double(aAxis)',double(aData)','Gauss1');
             aFit   = feval(oFit,aAxis);
             dAmp   = oFit.a1;
             dMu    = oFit.b1;
             dSigma = oFit.c1/sqrt(2);
+
+            if sum(aFit) == 0
+                oFit   = fit(double(aAxis)',double(aData)','Gauss2');
+                aFit   = feval(oFit,aAxis);
+                dAmp   = oFit.a2;
+                dMu    = oFit.b2;
+                dSigma = oFit.c2/sqrt(2);
+            end % if
 
             [dSSigma,sSUnit] = fAutoScale(dSigma/dAScale,stData.AxisUnit);
 
