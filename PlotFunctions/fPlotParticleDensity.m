@@ -1,14 +1,14 @@
 
 %
-%  Function: fPlotBeamDensity
-% ****************************
+%  Function: fPlotParticleDensity
+% ********************************
 %  Plots density plot
 %
 %  Inputs:
 % =========
-%  oData :: OsirisData object
-%  sTime :: Time dump
-%  sBeam :: Which beam to look at
+%  oData    :: OsirisData object
+%  sTime    :: Time dump
+%  sSpecies :: Which species to look at
 %
 %  Options:
 % ==========
@@ -24,7 +24,7 @@
 %  Absolute    :: Use absolute charge. Default No
 %
 
-function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
+function stReturn = fPlotParticleDensity(oData, sTime, sSpecies, varargin)
 
     % Input/Output
 
@@ -32,15 +32,15 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
 
     if nargin == 0
         fprintf('\n');
-        fprintf('  Function: fPlotBeamDensity\n');
-        fprintf(' ****************************\n');
+        fprintf('  Function: fPlotParticleDensity\n');
+        fprintf(' ********************************\n');
         fprintf('  Plots density plot\n');
         fprintf('\n');
         fprintf('  Inputs:\n');
         fprintf(' =========\n');
-        fprintf('  oData :: OsirisData object\n');
-        fprintf('  sTime :: Time dump\n');
-        fprintf('  sBeam :: Which beam to look at\n');
+        fprintf('  oData    :: OsirisData object\n');
+        fprintf('  sTime    :: Time dump\n');
+        fprintf('  sSpecies :: Which species to look at\n');
         fprintf('\n');
         fprintf('  Options:\n');
         fprintf(' ==========\n');
@@ -58,8 +58,8 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
         return;
     end % if
     
-    vBeam = oData.Translate.Lookup(sBeam,'Species');
-    iTime = oData.StringToDump(num2str(sTime));
+    vSpecies = oData.Translate.Lookup(sSpecies,'Species');
+    iTime    = oData.StringToDump(num2str(sTime));
 
     oOpt = inputParser;
     addParameter(oOpt, 'Data',        'charge');
@@ -83,7 +83,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
 
     % Prepare Data
     
-    oDN      = Density(oData,vBeam.Name,'Units','SI','Scale','mm');
+    oDN      = Density(oData,vSpecies.Name,'Units','SI','Scale','mm');
     oDN.Time = iTime;
 
     if length(stOpt.Limits) == 4
@@ -134,9 +134,14 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     aProjZ = abs(sum(aData));
     aProjZ = 0.15*(aVAxis(end)-aVAxis(1))*aProjZ/max(abs(aProjZ))+aVAxis(1);
 
-    stQTot       = oDN.BeamCharge;
-    [dQ, sQUnit] = fAutoScale(stQTot.QTotal,'C');
-    sBeamCharge  = sprintf('Q_{tot} = %.2f %s', dQ, sQUnit);
+    stQTot = oDN.BeamCharge;
+    if ~isempty(stQTot)
+        [dQ, sQUnit] = fAutoScale(stQTot.QTotal,'C');
+    else
+        dQ     = 0.0;
+        sQUnit = 'C';
+    end % if
+    sPCharge = sprintf('Q_{tot} = %.2f %s', dQ, sQUnit);
     
 
     % Plot
@@ -146,7 +151,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
         if strcmpi(stOpt.AutoResize, 'On')
             fFigureSize(gcf, stOpt.FigureSize);
         end % if
-        set(gcf,'Name',sprintf('Beam Density (%s #%d)',oData.Config.Name,iTime))
+        set(gcf,'Name',sprintf('Particle Density (%s #%d)',oData.Config.Name,iTime))
     else
         cla;
     end % if
@@ -163,16 +168,16 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
 
     if strcmpi(stOpt.ShowOverlay, 'Yes')
         plot(aHAxis, aProjZ, 'White');
-        h = legend(sBeamCharge, 'Location', 'NE');
+        h = legend(sPCharge, 'Location', 'NE');
         set(h,'Box','Off');
         set(h,'TextColor', [1 1 1]);
         set(findobj(h, 'type', 'line'), 'visible', 'off')
     end % if
 
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s %s Density %s (%s #%d)',vBeam.Full,vData.Full,oDN.PlasmaPosition,oData.Config.Name,iTime);
+        sTitle = sprintf('%s %s Density %s (%s #%d)',vSpecies.Full,vData.Full,oDN.PlasmaPosition,oData.Config.Name,iTime);
     else
-        sTitle = sprintf('%s %s Density %s',vBeam.Full,vData.Full,oDN.PlasmaPosition);
+        sTitle = sprintf('%s %s Density %s',vSpecies.Full,vData.Full,oDN.PlasmaPosition);
     end % if
 
     title(sTitle);
@@ -185,7 +190,7 @@ function stReturn = fPlotBeamDensity(oData, sTime, sBeam, varargin)
     
     % Return
 
-    stReturn.Beam1 = sBeam;
+    stReturn.Beam1 = sSpecies;
     stReturn.XLim  = xlim;
     stReturn.YLim  = ylim;
     stReturn.CLim  = caxis;
