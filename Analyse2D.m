@@ -1287,7 +1287,10 @@ function Analyse2D
                             oVar.Reverse(X.Plot(f).Axis{1},'Full'), ...
                             'GaussFit',sGaussFit, ...
                             'IsSubPlot','No','AutoResize','Off','HideDump','Yes');
-                        if isempty(X.Plot(f).Return)
+                        if isfield(X.Plot(f).Return,'Error')
+                            if ~isempty(X.Plot(f).Return.Error)
+                                fOut(X.Plot(f).Return.Error,3);
+                            end % if
                             return;
                         end % if
                         X.Plot(f).Scale = X.Plot(f).Return.AxisScale*[1 1];

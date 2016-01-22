@@ -20,12 +20,12 @@
     has been added to OsirisType.
   - Added option to select slices in Analyse2D for the relevant plots.
   - All classes have better error checking functionality and will report errors rather than fail.
-  - Added a listbox to browse/load datasets rather than drobdown menu. The dropdown meny does not handle lists longer
+  - Added a listbox to browse/load datasets rather than drobdown menu. The dropdown menu does not handle lists longer
     than the screen height.
-  - New class and plot for handling udist diagnostics.
+  - New class and plot for handling UDIST diagnostics.
   - First lines of comments in input deck are now read into a string array in OsirisData.Config.Details.
   - New class to handle particle tracking. The class is named Species.
-  - Rewritten reading of RAW data in OsirisData.Data().
+  - Rewritten reading of RAW data in OsirisData.Data.
   
   Version 1.3
   - Bug fixes.

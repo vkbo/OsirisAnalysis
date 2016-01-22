@@ -463,11 +463,17 @@ classdef Phase < OsirisType
                 aW(aCut) = [];
             end % if
 
-            % Convert to array
-            [aData, aAxis] = fAccu1D(aA, aW, stOpt.Grid,'Method',stOpt.Method);
+            if sum(isnan(aW)) > 0
+                return;
+            end % if
 
+            % Convert to array
+            [aData, aAxis] = fAccu1D(aA,aW,stOpt.Grid,'Method',stOpt.Method);
+            
             % Return data
             stReturn.Data      = aData;
+            stReturn.Mean      = abs(wmean(aA,aW)*dFac);
+            stReturn.Std       = abs(wstd(aA,aW)*dFac);
             stReturn.Axis      = aAxis*dFac;
             stReturn.AxisUnit  = sUnit;
             stReturn.AxisScale = dFac;
