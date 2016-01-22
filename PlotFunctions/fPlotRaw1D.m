@@ -58,7 +58,6 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
     addParameter(oOpt, 'Method',     'Deposit');
     addParameter(oOpt, 'Grid',       100);
     addParameter(oOpt, 'GaussFit',   'No');
-    addParameter(oOpt, 'StatInfo',   'Yes');
     addParameter(oOpt, 'FigureSize', [900 500]);
     addParameter(oOpt, 'HideDump',   'No');
     addParameter(oOpt, 'IsSubPlot',  'No');
@@ -151,30 +150,26 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
         
     end % if
 
-    % Statistical Info
-    if strcmpi(stOpt.StatInfo,'Yes')
-        
-        dMean = stData.Mean*dAScale;
-        dStd  = stData.Std*dAScale;
-        dMax  = max(aData);
-        
-        [dMVal,sMUnit] = fAutoScale(stData.Mean,stData.AxisUnit);
-        [dSVal,sSUnit] = fAutoScale(stData.Std, stData.AxisUnit);
+    % Add mean and std info
+    dMean = stData.Mean*dAScale;
+    dStd  = stData.Std*dAScale;
+    dMax  = max(aData);
 
-        hold on;
-        
-        sMean = sprintf('Mean: %.2f %s',dMVal,sMUnit);
-        sStd  = sprintf('Std: %.2f %s',dSVal,sSUnit);
+    [dMVal,sMUnit] = fAutoScale(stData.Mean,stData.AxisUnit);
+    [dSVal,sSUnit] = fAutoScale(stData.Std, stData.AxisUnit);
 
-        dX = interp1([0 1], xlim(), 0.02);
-        dY = interp1([0 1], ylim(), 0.95);
+    hold on;
 
-        text(dX,dY,sMean);
-        text(dX,0.95*dY,sStd);
-        
-        hold off;
-        
-    end % if
+    sMean = sprintf('Mean: %.2f %s',dMVal,sMUnit);
+    sStd  = sprintf('Std: %.2f %s',dSVal,sSUnit);
+
+    dX = interp1([0 1], xlim(), 0.02);
+    dY = interp1([0 1], ylim(), 0.95);
+
+    text(dX,dY,sMean);
+    text(dX,0.95*dY,sStd);
+
+    hold off;
     
     if strcmpi(stOpt.HideDump, 'No')
         sTitle = sprintf('%s %s %s (%s #%d)',vSpecies.Full,vAxis.Full,oPha.PlasmaPosition,oData.Config.Name,iTime);
