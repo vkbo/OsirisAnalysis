@@ -24,6 +24,8 @@
     than the screen height.
   - New class and plot for handling udist diagnostics.
   - First lines of comments in input deck are now read into a string array in OsirisData.Config.Details.
+  - New class to handle particle tracking. The class is named Species.
+  - Rewritten reading of RAW data in OsirisData.Data().
   
   Version 1.3
   - Bug fixes.
