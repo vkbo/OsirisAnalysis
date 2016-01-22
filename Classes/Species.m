@@ -112,10 +112,6 @@ classdef Species < OsirisType
                 sUnit = 'N';
             end % if
             
-            if obj.Cylindrical
-                dEFac = dEFac*2*pi;
-            end % if
-            
             % Prepare data arrays
             aTotal   = zeros(nTime,1);
             aDelta   = zeros(nTime,1);
