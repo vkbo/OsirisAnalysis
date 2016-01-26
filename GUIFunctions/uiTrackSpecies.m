@@ -60,14 +60,14 @@ function uiTrackSpecies(oData)
     oDN.Time = X.Dump;
     
     % Limits
-    X.XLim = oDN.AxisRange;
+    X.XLim = oDN.AxisRange*1e-3;
     if X.Cyl
         X.XLim(3) = -X.XLim(4);
     end % if
-    X.Plot.Limits  = [X.XLim(1:4) 0 0];
-    X.Track.Limits = zeros(16,1);
-    X.Track.Scale  = ones(16,1);
-    X.Track.Units  = cell(16,1);
+    X.Plot.Limits  = [oDN.AxisRange(1:4) 0 0];
+    X.Track.Limits = [X.XLim 0 X.XLim(4) 0 1 0 1 0 1 0 1];
+    X.Track.Scale  = ones(8,1);
+    X.Track.Units  = {'m','m','m','m','eV','eV','eV','C'};
     
 
     %
@@ -204,14 +204,14 @@ function uiTrackSpecies(oData)
     edtTLim(16) = uicontrol(bgTLim,'Style','Edit','Position',[150 iY-238 55 20],'Callback',{@fSetTrackLim,16});
 
     % Units
-    lblTLim(1)  = uicontrol(bgTLim,'Style','Text','String','N','Position',[210 iY-45  40 20],'HorizontalAlignment','Left');
-    lblTLim(2)  = uicontrol(bgTLim,'Style','Text','String','N','Position',[210 iY-70  40 20],'HorizontalAlignment','Left');
-    lblTLim(3)  = uicontrol(bgTLim,'Style','Text','String','N','Position',[210 iY-95  40 20],'HorizontalAlignment','Left');
-    lblTLim(4)  = uicontrol(bgTLim,'Style','Text','String','N','Position',[210 iY-120 40 20],'HorizontalAlignment','Left');
-    lblTLim(5)  = uicontrol(bgTLim,'Style','Text','String','N','Position',[210 iY-155 40 20],'HorizontalAlignment','Left');
-    lblTLim(6)  = uicontrol(bgTLim,'Style','Text','String','N','Position',[210 iY-180 40 20],'HorizontalAlignment','Left');
-    lblTLim(7)  = uicontrol(bgTLim,'Style','Text','String','N','Position',[210 iY-205 40 20],'HorizontalAlignment','Left');
-    lblTLim(8)  = uicontrol(bgTLim,'Style','Text','String','N','Position',[210 iY-240 40 20],'HorizontalAlignment','Left');
+    lblTLim(1)  = uicontrol(bgTLim,'Style','Text','Position',[210 iY-45  40 20],'HorizontalAlignment','Left');
+    lblTLim(2)  = uicontrol(bgTLim,'Style','Text','Position',[210 iY-70  40 20],'HorizontalAlignment','Left');
+    lblTLim(3)  = uicontrol(bgTLim,'Style','Text','Position',[210 iY-95  40 20],'HorizontalAlignment','Left');
+    lblTLim(4)  = uicontrol(bgTLim,'Style','Text','Position',[210 iY-120 40 20],'HorizontalAlignment','Left');
+    lblTLim(5)  = uicontrol(bgTLim,'Style','Text','Position',[210 iY-155 40 20],'HorizontalAlignment','Left');
+    lblTLim(6)  = uicontrol(bgTLim,'Style','Text','Position',[210 iY-180 40 20],'HorizontalAlignment','Left');
+    lblTLim(7)  = uicontrol(bgTLim,'Style','Text','Position',[210 iY-205 40 20],'HorizontalAlignment','Left');
+    lblTLim(8)  = uicontrol(bgTLim,'Style','Text','Position',[210 iY-240 40 20],'HorizontalAlignment','Left');
 
     % Options
     uicontrol(bgTLim,'Style','Text','String','Units', 'Position',[10 iY-275 55 20],'HorizontalAlignment','Left');
@@ -226,26 +226,8 @@ function uiTrackSpecies(oData)
     uicontrol(bgTLim,'Style','PushButton','String','Get Values','Position',[90 iY-350 115 20],'Callback',{@fGetTrackValues});
     
     % Defaults
-    edtTLim(1).String  = sprintf('%.2f', X.Plot.Limits(1));
-    edtTLim(2).String  = sprintf('%.2f', X.Plot.Limits(2));
-    edtTLim(3).String  = sprintf('%.2f', X.Plot.Limits(3));
-    edtTLim(4).String  = sprintf('%.2f', X.Plot.Limits(4));
-    edtTLim(5).String  = sprintf('%.2f', X.Plot.Limits(5));
-    edtTLim(6).String  = sprintf('%.2f', X.Plot.Limits(6));
-    edtTLim(7).String  = '0.00';
-    edtTLim(8).String  = sprintf('%.2f', X.Plot.Limits(4));
+    fAutoScaleTrack;
 
-    edtTLim(9).String  = '0.00';
-    edtTLim(10).String = '1.00';
-    edtTLim(11).String = '0.00';
-    edtTLim(12).String = '1.00';
-    edtTLim(13).String = '0.00';
-    edtTLim(14).String = '1.00';
-    
-    edtTLim(15).String = '0.00';
-    edtTLim(16).String = '1.00';
-    
-    
     
     %
     % Init
@@ -380,7 +362,9 @@ function uiTrackSpecies(oData)
     function fSetTrackLim(uiSrc,~,iDim)
         
         dValue = str2double(uiSrc.String);
-        
+        iVar   = ceil(iDim/2);
+        dValue = dValue/X.Track.Scale(iVar);
+
         if iDim == 1 || iDim == 3
             if dValue < X.XLim(iDim)
                 dValue = X.XLim(iDim);
@@ -410,9 +394,9 @@ function uiTrackSpecies(oData)
                 dValue = X.XLim(4);
             end % if
         end % if
-
+        
         X.Track.Limits(iDim) = dValue;
-        uiSrc.String = sprintf('%.2f',dValue);
+        fAutoScaleTrack(iVar);
         
     end % function
 
@@ -422,26 +406,25 @@ function uiTrackSpecies(oData)
         
         % Units to SI/eV
         if iOpt == 1 && iValue == 1
-            lblTLim(1).String = 'mm';
-            lblTLim(2).String = 'mm';
-            lblTLim(3).String = 'mm';
-            lblTLim(4).String = 'mm';
-            lblTLim(5).String = 'eV';
-            lblTLim(6).String = 'eV';
-            lblTLim(7).String = 'eV';
-            lblTLim(8).String = 'C';
+            X.Track.Units(1:4) = {'m','m','m','m'};
+            X.Track.Units(5:8) = {'eV','eV','eV','C'};
+            X.Track.Scale(1:4) = [1 1 1 1]*1e3;
+            X.Track.Scale(5:8) = [1 1 1 1];
+            for i=1:8
+                lblTLim(i).String = X.Track.Units{i};
+            end % for
+            fAutoScaleTrack;
         end % if
         
         % Units to Normalised
-        if iOpt == 1 && iValue == 1
-            lblTLim(1).String = 'c/w';
-            lblTLim(2).String = 'mm';
-            lblTLim(3).String = 'mm';
-            lblTLim(4).String = 'mm';
-            lblTLim(5).String = 'eV';
-            lblTLim(6).String = 'eV';
-            lblTLim(7).String = 'eV';
-            lblTLim(8).String = 'C';
+        if iOpt == 1 && iValue == 2
+            X.Track.Units(1:4) = {'c/ω','c/ω','c/ω','c/ω'};
+            X.Track.Units(5:8) = {'γβ','γβ','γβ','N'};
+            X.Track.Scale(1:8) = [1 1 1 1 1 1 1 1];
+            for i=1:8
+                lblTLim(i).String = X.Track.Units{i};
+            end % for
+            fAutoScaleTrack;
         end % if
         
     end % function
@@ -494,6 +477,47 @@ function uiTrackSpecies(oData)
 
         lstOut.String = cOut;
         lstOut.Value  = iN;
+        
+    end % function
+
+    function fAutoScaleTrack(iVar)
+        
+        if nargin < 1
+            iS = 1;
+            iE = 8;
+        else
+            iS = iVar;
+            iE = iVar;
+        end % if
+        
+        for i=iS:iE
+            
+            iA = (2*i)-1;
+            iB = 2*i;
+
+            aVal = X.Track.Limits(iA:iB);
+            if aVal(1) > aVal(2)
+                dTemp   = aVal(1);
+                aVal(1) = aVal(2);
+                aVal(2) = dTemp;
+                X.Track.Limits(iA:iB) = aVal;
+            end %  if
+            dMax = max(abs(aVal));
+            
+            [dVal,sUnit] = fAutoScale(dMax,X.Track.Units{i});
+            
+            if dMax ~= 0
+                dScale = dVal/dMax;
+            else
+                dScale = 1.0;
+            end % if
+            
+            X.Track.Scale(i)   = dScale;
+            edtTLim(iA).String = sprintf('%.2f',aVal(1)*dScale);
+            edtTLim(iB).String = sprintf('%.2f',aVal(2)*dScale);
+            lblTLim(i).String  = sUnit;
+
+        end % for
         
     end % function
 
