@@ -11,7 +11,14 @@ function uiTrackSpecies(oData)
     % *************
     %
     
-    X.Name  = oData.Config.Name; % Name of dataset
+    % Check Input
+    if nargin < 1
+        fprintf(2,'Error: Please provide an OsirisData object.\n');
+        return;
+    end %if
+    
+    % Get DataSet Info
+    X.Name = oData.Config.Name; % Name of dataset
 
     % Time Limits
     X.Limits(1) = oData.StringToDump('Start');  % Start of simulation
@@ -33,15 +40,20 @@ function uiTrackSpecies(oData)
     % ********
     %
     
-    fMain = gcf; clf;
+    fMain = figure('IntegerHandle', 'Off'); clf;
     aFPos = get(fMain, 'Position');
-    iH    = 770;
+    iH    = 600;
     
     % Set Figure Properties
-    set(fMain, 'Units', 'Pixels');
-    set(fMain, 'MenuBar', 'None');
-    set(fMain, 'Position', [aFPos(1:2) 915 iH]);
-    set(fMain, 'Name', 'Track Species');
+    fMain.Units        = 'Pixels';
+    fMain.MenuBar      = 'None';
+    fMain.Position     = [aFPos(1:2) 800 iH];
+    fMain.Name         = 'OsirisAnalysis: Track Species';
+    fMain.NumberTitle  = 'Off';
+    fMain.DockControls = 'Off';
+    fMain.Tag          = 'uiOA-TS';
+    
+    
     
 
 end % function

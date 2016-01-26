@@ -1456,7 +1456,7 @@ function AnalyseGUI
 
     function fTools(~,~,sTool)
         
-        figure('IntegerHandle','Off','Tag',sprintf('uiOA-%s',sTool));
+        figure('IntegerHandle','Off');
         clf;
 
         switch(sTool)
@@ -1464,6 +1464,7 @@ function AnalyseGUI
                 uiTrackDensity(oData);
             case '3D'
             case 'SP'
+                uiTrackSpecies(oData);
             case 'TM'
         end % switch
         
