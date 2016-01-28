@@ -1456,15 +1456,19 @@ function AnalyseGUI
 
     function fTools(~,~,sTool)
         
-        figure('IntegerHandle','Off');
-        clf;
+        if X.DataSet == 0
+            fOut('No dataset loaded',3);
+            return;
+        end % if
 
+        aTmp = fMain.OuterPosition;
+        aPos = aTmp(1:2)+aTmp(3:4);
         switch(sTool)
             case 'DN'
                 uiTrackDensity(oData);
             case '3D'
             case 'SP'
-                uiTrackSpecies(oData);
+                uiTrackSpecies(oData,'Position',aPos);
             case 'TM'
         end % switch
         
