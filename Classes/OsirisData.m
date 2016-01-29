@@ -333,6 +333,7 @@ classdef OsirisData
             sSpecies = obj.Translate.Lookup(sSpecies,'Beam').Name;
             
             iDim     = obj.Config.Simulation.Dimensions;
+            dC       = obj.Config.Constants.SI.SpeedOfLight;
             dLFac    = obj.Config.Convert.SI.LengthFac;
             dQFac    = obj.Config.Convert.SI.ChargeFac;
             dPFac    = obj.Config.Convert.SI.ParticleFac;
@@ -414,15 +415,20 @@ classdef OsirisData
 
             dBeamCharge  = dCharge*dQFac;
             dBeamNum     = dCharge*dPFac;
+            dBeamCurrent = dBeamCharge*dC / sqrt(2*pi*(dSigmaX1*dLFac)^2);
 
             stReturn.Particles = dBeamNum;
             stReturn.Charge    = dBeamCharge;
+            stReturn.Current   = dBeamCurrent;
 
-            [dBeamCharge, sChargeUnit] = fAutoScale(dBeamCharge,'C');
+            [dBeamCharge,  sChargeUnit]  = fAutoScale(dBeamCharge,'C');
+            [dBeamCurrent, sCurrentUnit] = fAutoScale(dBeamCurrent,'A');
+            [dBeamNum,     sBeamNumUnit] = fAutoScale(dBeamNum,'');
 
             if ~obj.Silent
-                fprintf(' Total Charge:      %0.3f %s\n', dBeamCharge, sChargeUnit);
-                fprintf(' Particle Count:    %0.3e \n',   dBeamNum);
+                fprintf(' Beam Charge:      %7.3f %s\n', dBeamCharge, sChargeUnit);
+                fprintf(' Beam Current:     %7.3f %s\n', dBeamCurrent, sCurrentUnit);
+                fprintf(' Particle Count:   %7.3f %s Particles\n', dBeamNum, sBeamNumUnit);
                 fprintf('\n');
             end % if
             
