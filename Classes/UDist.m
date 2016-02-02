@@ -106,7 +106,7 @@ classdef UDist < OsirisType
             end % if
             
             % Return Data
-            stReturn.Data   = stData.Data*dScale;
+            stReturn.Data  = stData.Data*dScale;
             stReturn.Unit  = sUnit;
             stReturn.Label = vUDist.Tex;
             stReturn.Axes  = stData.Axes;
