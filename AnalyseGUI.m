@@ -564,6 +564,13 @@ function AnalyseGUI
         uicontrol(bgTab(t),'Style','Checkbox','String','Kelvin','Value',X.Plot(t).Settings(1),'Position',[85 iY 150 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,1});
         uicontrol(bgTab(t),'Style','Checkbox','String','Logarithmic','Value',X.Plot(t).Settings(2),'Position',[185 iY 150 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,2});
         
+        if X.Data.Dim == 3
+            iY = iY - 25;
+            uicontrol(bgTab(t),'Style','Text','String','3D Slice','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+            uicontrol(bgTab(t),'Style','PopupMenu','String',{'X1','X2','X3'},'Value',X.Plot(t).SliceAxis,'Position',[85 iY 50 20],'Callback',{@fPlotSetSliceAxis,t});
+            uicontrol(bgTab(t),'Style','Edit','String',sprintf('%.2f',X.Plot(t).Slice),'Position',[140 iY 95 20],'Callback',{@fPlotSetSlice,t});
+        end % if
+
     end % function
 
 
