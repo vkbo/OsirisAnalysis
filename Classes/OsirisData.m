@@ -544,7 +544,7 @@ classdef OsirisData
                         iCount  = iSize;
                         iStride = 1;
 
-                        iMax    = 30e6; % Max records to read
+                        iMax    = 50e6; % Max records to read
                         if iSize > iMax
                             iCount  = iMax;
                             iStride = floor(iSize/iMax);

@@ -1,10 +1,10 @@
 
 %
-%  GUI :: Analyse 2D Data
-% ************************
+%  GUI :: Analyse Osiris Data
+% ****************************
 %
 
-function Analyse2D
+function AnalyseGUI
 
     %
     %  Variable Presets
@@ -20,8 +20,6 @@ function Analyse2D
     cOutText     = [0.00 1.00 0.00];
     cGreyText    = [0.50 0.50 0.50];
     cInfoBack    = [0.80 0.80 0.80];
-    cInfoBtn     = [0.00 0.55 0.88];
-    cFocusBtn    = [0.00 0.55 0.00];
     cInfoRed     = [1.00 0.50 0.50];
     cInfoYellow  = [1.00 1.00 0.50];
     cInfoGreen   = [0.50 1.00 0.50];
@@ -31,7 +29,7 @@ function Analyse2D
     
     % Data
     
-    iXFig = 10;
+    iXFig = 9;
     oData = OsirisData('Silent','Yes');
     oVar  = Variables();
 
@@ -44,8 +42,8 @@ function Analyse2D
     % Settings
     
     sTemp      = mfilename('fullpath');
-    X.Temp     = [sTemp(1:end-9) 'Temp/'];
-    X.Settings = [X.Temp 'Analyse2D-Settings.mat'];
+    X.Temp     = [sTemp(1:end-10) 'Temp/'];
+    X.Settings = [X.Temp 'AnalyseGUI-Settings.mat'];
     if ~isdir(X.Temp)
         mkdir(X.Temp);
     end % if
@@ -104,7 +102,7 @@ function Analyse2D
     % Set figure properties
     fMain.Units        = 'Pixels';
     fMain.MenuBar      = 'None';
-    fMain.Position     = [aFPos(1:2) 550 660];
+    fMain.Position     = [aFPos(1:2) 585 660];
     fMain.Name         = 'OsirisAnalysis Version Dev1.5 - GUI';
     fMain.NumberTitle  = 'Off';
     fMain.DockControls = 'Off';
@@ -150,13 +148,20 @@ function Analyse2D
     
     set(0, 'CurrentFigure', fMain);
     uicontrol('Style','Text','String','Controls','FontSize',20,'Position',[20 622 140 25],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-    uicontrol('Style','PushButton','String','i','FontSize',15,'FontName','FixedWidth','FontWeight','Bold','Position',[210 620 25 25],'BackgroundColor',cButtonOff,'ForegroundColor',cInfoBtn,'Callback',{@fShowSimInfo});
-    uicontrol('Style','PushButton','String','f','FontSize',15,'FontName','FixedWidth','FontWeight','Bold','Position',[180 620 25 25],'BackgroundColor',cButtonOff,'ForegroundColor',cFocusBtn,'Callback',{@fFocus});
+    uicontrol('Style','PushButton','String','i','FontSize',15,'FontName','FixedWidth','FontWeight','Bold','Position',[210 620 25 25],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.55 0.88],'Callback',{@fShowSimInfo});
+    uicontrol('Style','PushButton','String','f','FontSize',15,'FontName','FixedWidth','FontWeight','Bold','Position',[180 620 25 25],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.55 0.00],'Callback',{@fFocus});
 
     lblData = uicontrol('Style','Text','String','No Data','FontSize',18,'Position',[240 620 300 25],'ForegroundColor',cInfoText,'BackgroundColor',cInfoBack);
+    
+    % Button Column
+    iYBn = 573;
+    uicontrol('Style','PushButton','String','DN','TooltipString','Track Density','FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.80 0.00 0.00],'Callback',{@fTools,'DN'}); iYBn = iYBn-38;
+    uicontrol('Style','PushButton','String','3D','TooltipString','3D Tools',     'FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.80 0.50 0.00],'Callback',{@fTools,'3D'}); iYBn = iYBn-38;
+    uicontrol('Style','PushButton','String','SP','TooltipString','Track Species','FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.70 0.00],'Callback',{@fTools,'SP'}); iYBn = iYBn-38;
+    uicontrol('Style','PushButton','String','TM','TooltipString','Track Time',   'FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.20 0.80],'Callback',{@fTools,'TM'}); iYBn = iYBn-38;
 
     % Output Window
-    lstOut = uicontrol('Style','Listbox','String','OsirisAnalysis','FontName','FixedWidth','Position',[20 20 520 87],'HorizontalAlignment','Left','BackgroundColor',cBlack,'ForegroundColor',cOutText);
+    lstOut = uicontrol('Style','Listbox','String','OsirisAnalysis','FontName','FixedWidth','Position',[20 20 560 87],'HorizontalAlignment','Left','BackgroundColor',cBlack,'ForegroundColor',cOutText);
     jOut   = findjobj(lstOut);
     jList  = jOut.getViewport.getComponent(0);
     set(jList, 'SelectionBackground', java.awt.Color.black);
@@ -247,7 +252,7 @@ function Analyse2D
     %  Tabs
     % ======
 
-    hTabGroup = uitabgroup('Units','Pixels','Position',[20 120 520 170]);
+    hTabGroup = uitabgroup('Units','Pixels','Position',[20 120 560 170]);
     
     for t=1:6
         hTabs(t) = uitab(hTabGroup,'Title',sprintf('Plot %d', t));
@@ -261,7 +266,7 @@ function Analyse2D
 
     iY = 135;
     hTabX(1)  = uitab(hTabGroup,'Title','Time Plots');
-    bgTabX(1) = uibuttongroup(hTabX(1),'Title','','BorderType','None','Units','Pixels','Position',[3 3 514 140],'BackgroundColor',cBackGround);
+    bgTabX(1) = uibuttongroup(hTabX(1),'Title','','BorderType','None','Units','Pixels','Position',[3 3 554 140],'BackgroundColor',cBackGround);
         
     % Sigma E to E Mean
     iY = iY - 25;
@@ -299,22 +304,8 @@ function Analyse2D
     edtT10(1) = uicontrol(bgTabX(1),'Style','Edit','String','0','Position',[425 iY 40 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,9});
     edtT10(2) = uicontrol(bgTabX(1),'Style','Edit','String','0','Position',[470 iY 40 20],'BackgroundColor',cWhite,'Callback',{@fChangeXVal,9});
 
-    
-    %  GUI Tools
-    % ===========
-
-    iY = 135;
-    hTabX(2)  = uitab(hTabGroup,'Title','GUI Tools');
-    bgTabX(2) = uibuttongroup(hTabX(2),'Title','','BorderType','None','Units','Pixels','Position',[3 3 514 140],'BackgroundColor',cBackGround);
-        
-    % Track Density
-    iY = iY - 25;
-    uicontrol(bgTabX(2),'Style','Text','String','#11','Position',[5 iY+1 30 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-    uicontrol(bgTabX(2),'Style','Text','String','Track Density','Position',[40 iY+1 160 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-    btnFig(10) = uicontrol(bgTabX(2),'Style','PushButton','String','','Position',[210 iY 20 20],'BackgroundColor',cButtonOff,'Callback',{@fToggleXFig,10});
-
-    set(hTabGroup,'SelectedTab',hTabX(2));
-    
+    % Init
+    set(hTabGroup,'SelectedTab',hTabX(1));
     fScanData(0,0);
     
     
@@ -326,7 +317,7 @@ function Analyse2D
     function fResetTab(t)
 
         delete(bgTab(t));
-        bgTab(t) = uibuttongroup(hTabs(t),'Title','','BorderType','None','Units','Pixels','Position',[3 3 514 140],'BackgroundColor',cBackGround);
+        bgTab(t) = uibuttongroup(hTabs(t),'Title','','BorderType','None','Units','Pixels','Position',[3 3 554 140],'BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','Text','String','No settings','FontSize',15,'Position',[10 105 160 25],'HorizontalAlignment','Left','BackgroundColor',cBackGround,'ForegroundColor',cGreyText);
 
     end % function
@@ -335,7 +326,7 @@ function Analyse2D
         
         % Clear panel
         delete(bgTab(t));
-        bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 514 140],'BackgroundColor',cBackGround);
+        bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 554 140],'BackgroundColor',cBackGround);
         
         % Create Controls
         iY = 135;
@@ -377,7 +368,7 @@ function Analyse2D
         
         % Clear panel
         delete(bgTab(t));
-        bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 514 140],'BackgroundColor',cBackGround);
+        bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 554 140],'BackgroundColor',cBackGround);
         
         % Create Controls
         iY = 135;
@@ -431,7 +422,7 @@ function Analyse2D
         
         % Clear panel
         delete(bgTab(t));
-        bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 514 140],'BackgroundColor',cBackGround);
+        bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 554 140],'BackgroundColor',cBackGround);
         
         % Create Controls
         iY = 135;
@@ -457,7 +448,7 @@ function Analyse2D
         
         % Clear panel
         delete(bgTab(t));
-        bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 514 140],'BackgroundColor',cBackGround);
+        bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 554 140],'BackgroundColor',cBackGround);
         
         % Create Controls
         iY = 135;
@@ -489,7 +480,7 @@ function Analyse2D
         
         % Clear panel
         delete(bgTab(t));
-        bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 514 140],'BackgroundColor',cBackGround);
+        bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 554 140],'BackgroundColor',cBackGround);
         
         % Create Controls
         iY = 135;
@@ -515,7 +506,7 @@ function Analyse2D
         
         % Clear panel
         delete(bgTab(t));
-        bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 514 140],'BackgroundColor',cBackGround);
+        bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 554 140],'BackgroundColor',cBackGround);
         
         % Create Controls
         iY = 135;
@@ -540,7 +531,7 @@ function Analyse2D
         
         % Clear panel
         delete(bgTab(t));
-        bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 514 140],'BackgroundColor',cBackGround);
+        bgTab(t) = uibuttongroup(hTabs(t),'Title','','Units','Pixels','Position',[3 3 554 140],'BackgroundColor',cBackGround);
         
         % Create Controls
         iY = 135;
@@ -573,6 +564,13 @@ function Analyse2D
         uicontrol(bgTab(t),'Style','Checkbox','String','Kelvin','Value',X.Plot(t).Settings(1),'Position',[85 iY 150 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,1});
         uicontrol(bgTab(t),'Style','Checkbox','String','Logarithmic','Value',X.Plot(t).Settings(2),'Position',[185 iY 150 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,2});
         
+        if X.Data.Dim == 3
+            iY = iY - 25;
+            uicontrol(bgTab(t),'Style','Text','String','3D Slice','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+            uicontrol(bgTab(t),'Style','PopupMenu','String',{'X1','X2','X3'},'Value',X.Plot(t).SliceAxis,'Position',[85 iY 50 20],'Callback',{@fPlotSetSliceAxis,t});
+            uicontrol(bgTab(t),'Style','Edit','String',sprintf('%.2f',X.Plot(t).Slice),'Position',[140 iY 95 20],'Callback',{@fPlotSetSlice,t});
+        end % if
+
     end % function
 
 
@@ -1402,10 +1400,6 @@ function Analyse2D
                         figure(X.Plot(f).Figure); clf;
                         fPlotBeamSlip(oData,X.Plot(f).Data,'Start',sStart,'End',sEnd,'HideDump','Yes','IsSubPlot','No','AutoResize','Off');
 
-                    case 10
-                        figure(X.Plot(f).Figure); clf;
-                        uiTrackDensity(oData);
-
                 end % switch
                 
                 if sum(stSettings.Position(f).Pos) > 0
@@ -1464,6 +1458,26 @@ function Analyse2D
     end % function
 
     function fShowSimInfo(~,~)
+        
+    end % function
+
+    function fTools(~,~,sTool)
+        
+        if X.DataSet == 0
+            fOut('No dataset loaded',3);
+            return;
+        end % if
+
+        aTmp = fMain.OuterPosition;
+        aPos = aTmp(1:2)+aTmp(3:4);
+        switch(sTool)
+            case 'DN'
+                uiTrackDensity(oData);
+            case '3D'
+            case 'SP'
+                uiTrackSpecies(oData,'Position',aPos);
+            case 'TM'
+        end % switch
         
     end % function
 
