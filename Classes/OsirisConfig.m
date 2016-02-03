@@ -1336,7 +1336,7 @@ classdef OsirisConfig
                             mTemp = mTemp.*(mTemp > 0);
                             stProfile(3).Value = squeeze(sum(mTemp,2))';
                             aTemp   = squeeze(sum(mTemp,3)).*squeeze(sum(aTemp,1));
-                            dCharge = sqrt(2)*sum(aTemp(:))*dDeltaCorr;
+                            dCharge = sum(aTemp(:))*dDeltaCorr;
                         else
                             mTemp = oMathFunc.Eval(stProfile(1).Axis,stProfile(2).Axis,[0]);
                             mTemp = mTemp.*(mTemp > 0);
@@ -1350,7 +1350,7 @@ classdef OsirisConfig
                                 % This calculation has not been checked, but it sums all elements
                                 % down on x1 axis and squares them before doing another sum.
                                 aTemp   = sum(mTemp,1).^2;
-                                dCharge = sqrt(2)*sum(aTemp(:))*dDeltaCorr;
+                                dCharge = sum(aTemp(:))*dDeltaCorr;
                             end % if
                         end % if
 
