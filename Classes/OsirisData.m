@@ -397,12 +397,12 @@ classdef OsirisData
             stReturn.X2Sigma  = dSISigmaX2;
             stReturn.X3Sigma  = dSISigmaX3;
 
-            [dSIMeanX1,  sUnitM1] = fAutoScale(dSIMeanX1,'m');
-            [dSIMeanX2,  sUnitM2] = fAutoScale(dSIMeanX2,'m');
-            [dSIMeanX3,  sUnitM3] = fAutoScale(dSIMeanX3,'m');
-            [dSISigmaX1, sUnitS1] = fAutoScale(dSISigmaX1,'m');
-            [dSISigmaX2, sUnitS2] = fAutoScale(dSISigmaX2,'m');
-            [dSISigmaX3, sUnitS3] = fAutoScale(dSISigmaX3,'m');
+            [dSIMeanX1,  sUnitM1] = fAutoScale(dSIMeanX1,'m',1e-9);
+            [dSIMeanX2,  sUnitM2] = fAutoScale(dSIMeanX2,'m',1e-9);
+            [dSIMeanX3,  sUnitM3] = fAutoScale(dSIMeanX3,'m',1e-9);
+            [dSISigmaX1, sUnitS1] = fAutoScale(dSISigmaX1,'m',1e-9);
+            [dSISigmaX2, sUnitS2] = fAutoScale(dSISigmaX2,'m',1e-9);
+            [dSISigmaX3, sUnitS3] = fAutoScale(dSISigmaX3,'m',1e-9);
             
             if ~obj.Silent
                 fprintf(' X1 Mean, Sigma: %7.2f, %9.4f [%7.2f %2s, %7.2f %2s]\n',dMeanX1,dSigmaX1,dSIMeanX1,sUnitM1,dSISigmaX1,sUnitS1);

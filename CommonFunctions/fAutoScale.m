@@ -4,12 +4,16 @@
 % ************************
 %
 
-function [dValue, sUnit] = fAutoScale(dBaseValue, sBaseUnit)
+function [dValue, sUnit] = fAutoScale(dBaseValue, sBaseUnit, dMin)
+
+    if nargin < 3
+        dMin = 0.999e-24;
+    end % if
 
     dValue = dBaseValue;
     sUnit  = sBaseUnit;
     
-    if abs(dBaseValue) < 1e-24
+    if abs(dBaseValue) < dMin
         dValue = 0.0;
         return;
     end % if
