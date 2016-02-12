@@ -102,18 +102,18 @@ classdef Momentum < OsirisType
                 
                 k = i-iStart+1;
                 
-                aData = obj.Data.Data(i, 'RAW', '', obj.Species.Name);
+                aRaw = obj.Data.Data(i, 'RAW', '', obj.Species.Name);
                 if isempty(aData)
                     return;
                 end % if
                 
-                if length(aData(:,8)) == 1 && aData(1,8) == 0
+                if length(aRaw(:,8)) == 1 && aRaw(1,8) == 0
                     aMean(k)  = 0.0;
                     aSigma(k) = 0.0;
                     aData(k)  = 0.0;
                 else
-                    aMean(k)  = obj.fMomentumToEnergy(wmean(aData(:,4), abs(aData(:,8))));
-                    aSigma(k) = obj.fMomentumToEnergy(wstd(aData(:,4), abs(aData(:,8))));
+                    aMean(k)  = obj.fMomentumToEnergy(wmean(aRaw(:,4), abs(aRaw(:,8))));
+                    aSigma(k) = obj.fMomentumToEnergy(wstd(aRaw(:,4), abs(aRaw(:,8))));
                     aData(k)  = aSigma(k)/aMean(k);
                 end % if
                 
