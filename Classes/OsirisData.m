@@ -858,6 +858,12 @@ classdef OsirisData
 
             if isintegerstring(sString)
                 iReturn = floor(str2double(sString));
+                if iReturn < 0
+                    iReturn = 0;
+                end % if
+                if iReturn > obj.MSData.MinFiles - 1
+                    iReturn = obj.MSData.MinFiles - 1;
+                end % if
                 return;
             end % if
 
