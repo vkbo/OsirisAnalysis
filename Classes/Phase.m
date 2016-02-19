@@ -478,6 +478,7 @@ classdef Phase < OsirisType
             stReturn.AxisUnit  = sUnit;
             stReturn.AxisScale = dFac;
             stReturn.AxisRange = [dMin dMax];
+            stReturn.ZPos      = obj.fGetZPos;
 
         end % function
 
