@@ -62,6 +62,7 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
     addParameter(oOpt, 'HideDump',   'No');
     addParameter(oOpt, 'IsSubPlot',  'No');
     addParameter(oOpt, 'AutoResize', 'On');
+    addParameter(oOpt, 'ForceFig',   0);
     parse(oOpt, varargin{:});
     stOpt = oOpt.Results;
 
@@ -93,9 +94,38 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
     stReturn.AxisRange = stData.AxisRange;
     stReturn.AxisScale = stData.AxisScale*dAScale;
     stReturn.Error     = '';
+
+    % Curve Fitting
+    if strcmpi(stOpt.GaussFit,'Yes')
+    
+        try
+            oFit   = fit(double(aAxis)',double(aData)','Gauss1');
+            aFit   = feval(oFit,aAxis);
+            dAmp   = oFit.a1;
+            dMu    = oFit.b1;
+            dSigma = oFit.c1/sqrt(2);
+
+            if abs(max(aFit))/abs(min(aFit)) < 2
+                fprintf('Warning: Gauss1 failed, trying Gauss2\n');
+                oFit   = fit(double(aAxis)',double(aData)','Gauss2');
+                aFit   = feval(oFit,aAxis);
+                dAmp   = oFit.a2;
+                dMu    = oFit.b2;
+                dSigma = oFit.c2/sqrt(2);
+            end % if
+
+            [dSSigma,sSUnit] = fAutoScale(dSigma/dAScale,stData.AxisUnit);
+        catch
+            stReturn.Error = 'Curve fitting failed';
+        end % try
+        
+    end % if
     
 
     % Plot
+    if stOpt.ForceFig > 0
+        figure(stOpt.ForceFig);
+    end % if
     
     if strcmpi(stOpt.IsSubPlot, 'No')
         clf;
@@ -107,6 +137,9 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
         cla;
     end % if
     
+    if stOpt.ForceFig > 0
+        figure(stOpt.ForceFig);
+    end % if
     stairs(aAxis, aData, 'Color', [0.0 0.0 0.6], 'LineWidth', 1.5);
 
     dYMax = max(aData);
@@ -121,22 +154,9 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
     if strcmpi(stOpt.GaussFit,'Yes')
     
         try
-            oFit   = fit(double(aAxis)',double(aData)','Gauss1');
-            aFit   = feval(oFit,aAxis);
-            dAmp   = oFit.a1;
-            dMu    = oFit.b1;
-            dSigma = oFit.c1/sqrt(2);
-
-            if sum(aFit) == 0
-                oFit   = fit(double(aAxis)',double(aData)','Gauss2');
-                aFit   = feval(oFit,aAxis);
-                dAmp   = oFit.a2;
-                dMu    = oFit.b2;
-                dSigma = oFit.c2/sqrt(2);
+            if stOpt.ForceFig > 0
+                figure(stOpt.ForceFig);
             end % if
-
-            [dSSigma,sSUnit] = fAutoScale(dSigma/dAScale,stData.AxisUnit);
-
             hold on;
             plot(aAxis, aFit, 'Color', 'Red');
 
@@ -153,7 +173,6 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
 
             hold off;
         catch
-            stReturn.Error = 'Curve fitting failed';
         end % try
         
     end % if
