@@ -521,8 +521,13 @@ function AnalyseGUI
         uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Species,'Value',iVal,'Position',[115 iY 150 20],'Callback',{@fPlotSetSpecies,t});
 
         iY = iY - 25;
+        [~,iVal] = incellarray(X.Plot(t).Axis{1}, X.Data.RawAxis);
+        if iVal == 0
+            X.Plot(t).Axis{1} = X.Data.RawAxis{1};
+            iVal = 1;
+        end % if
         uicontrol(bgTab(t),'Style','Text','String','Horizontal Axis','Position',[10 iY+1 100 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.RawAxis,'Value',1,'Position',[115 iY 180 20],'Callback',{@fPlotSetRawAxis,1,t});
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.RawAxis,'Value',iVal,'Position',[115 iY 180 20],'Callback',{@fPlotSetRawAxis,1,t});
         uicontrol(bgTab(t),'Style','Checkbox','String','Fit Gaussian','Value',X.Plot(t).Settings(1),'Position',[305 iY 150 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,1});
         
     end % function
@@ -1234,7 +1239,7 @@ function AnalyseGUI
                             'Slice',X.Plot(f).Slice,'SliceAxis',X.Plot(f).SliceAxis);
                         if isfield(X.Plot(f).Return,'Error')
                             fOut(X.Plot(f).Return.Error,3);
-                            return;
+                            continue;
                         end % if
                         
                     case 'Field Density'
@@ -1255,7 +1260,7 @@ function AnalyseGUI
                             'CAxis',X.Plot(f).CAxis);
                         if isfield(X.Plot(f).Return,'Error')
                             fOut(X.Plot(f).Return.Error,3);
-                            return;
+                            continue;
                         end % if
                         X.Plot(f).Scale = X.Plot(f).Return.AxisScale(1:2);
     
@@ -1289,7 +1294,7 @@ function AnalyseGUI
                             if ~isempty(X.Plot(f).Return.Error)
                                 fOut(X.Plot(f).Return.Error,3);
                             end % if
-                            return;
+                            continue;
                         end % if
                         X.Plot(f).Scale = X.Plot(f).Return.AxisScale*[1 1];
 
@@ -1315,12 +1320,12 @@ function AnalyseGUI
 
                     
                     otherwise
-                        return;
+                        continue;
                                                                        
                 end % switch
 
                 if isempty(X.Plot(f).Return)
-                    return;
+                    continue;
                 end % if
                 
                 if isfield(X.Plot(f).Return, 'Error')

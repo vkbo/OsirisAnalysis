@@ -114,7 +114,7 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
                 dSigma = oFit.c2/sqrt(2);
             end % if
 
-            [dSSigma,sSUnit] = fAutoScale(dSigma/dAScale,stData.AxisUnit);
+            [dSSigma,sSUnit] = fAutoScale(dSigma/dAScale,stData.AxisUnit, 1e-6);
         catch
             stReturn.Error = 'Curve fitting failed';
         end % try
@@ -182,8 +182,8 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
     dStd  = stData.Std*dAScale;
     dMax  = max(aData);
 
-    [dMVal,sMUnit] = fAutoScale(stData.Mean,stData.AxisUnit);
-    [dSVal,sSUnit] = fAutoScale(stData.Std, stData.AxisUnit);
+    [dMVal,sMUnit] = fAutoScale(stData.Mean,stData.AxisUnit,1e-6);
+    [dSVal,sSUnit] = fAutoScale(stData.Std, stData.AxisUnit,1e-6);
 
     hold on;
 

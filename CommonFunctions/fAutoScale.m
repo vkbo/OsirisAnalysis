@@ -14,6 +14,7 @@ function [dValue, sUnit] = fAutoScale(dBaseValue, sBaseUnit, dMin)
     sUnit  = sBaseUnit;
     
     if abs(dBaseValue) < dMin
+        [~, sUnit] = fAutoScale(dMin,sBaseUnit);
         dValue = 0.0;
         return;
     end % if
