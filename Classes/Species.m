@@ -214,7 +214,7 @@ classdef Species < OsirisType
             %stReturn.RawP = aRawP;
 
         end % function
-        
+       
         function stReturn = TrackParticles(obj, aTags, varargin)
             
             % Input/Output

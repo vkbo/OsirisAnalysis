@@ -2,11 +2,15 @@
   Osiris Analysis Toolbox
  ******************************************
   MATLAB package for analysing Osiris data
+<<<<<<< HEAD
   Current version: Dev1.5
+=======
+  Current version: 1.4.1
+>>>>>>> rel1.4
  
 
   Developed by:
- =========================
+ ===========================
   Veronica K. Berglyd Olsen
   Department of Physics
   University of Oslo
@@ -16,6 +20,12 @@
  =====================
 
   Version 1.5
+
+  Version 1.4.1
+  - Fixed bug in Analyse2D where a refresh following moving to another time step would break before all plots have been
+    updated.
+  - Fixed bug in calculating Species.EnergyChange with limits set.
+  - Added current to OsirisData.BeamInfo().
 
   Version 1.4
   - Classes and tools now support 3D simulations in 2D plots by making slices. A flexible Grid2D and Lineout function
