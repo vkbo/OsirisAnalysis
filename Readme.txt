@@ -6,7 +6,7 @@
  
 
   Developed by:
- =========================
+ ===========================
   Veronica K. Berglyd Olsen
   Department of Physics
   University of Oslo
@@ -14,6 +14,10 @@
 
   Development History
  =====================
+
+  Version 1.4.1
+  - Fixed bug in Analyse2D where a refresh following moving to another time step would break before all plots have been
+    updated. 
 
   Version 1.4
   - Classes and tools now support 3D simulations in 2D plots by making slices. A flexible Grid2D and Lineout function

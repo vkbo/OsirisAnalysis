@@ -117,6 +117,7 @@ classdef Species < OsirisType
             aDelta   = zeros(nTime,1);
             aMissing = zeros(nTime,1);
             aCount   = zeros(nTime,3);
+            aCharge  = zeros(nTime,3);
 
             if obj.Progress
                 fprintf('Progress   0.0%%');
@@ -140,16 +141,17 @@ classdef Species < OsirisType
                 dTDump = obj.Data.Config.Simulation.TimeStep*obj.Data.Config.Simulation.NDump;
                 
                 aRawC(:,1) = aRawC(:,1) - dTDump*(iStart+t);
-                aRawC((aRawC(:,1) < obj.X1Lim(1) & aRawC(:,1) > obj.X1Lim(2)),:) = [];
-                aRawC((aRawC(:,2) < obj.X2Lim(1) & aRawC(:,2) > obj.X2Lim(2)),:) = [];
+                aRawP(:,1) = aRawP(:,1) - dTDump*(iStart+t-1);
+
+                aRawC((aRawC(:,1) < obj.X1Lim(1) | aRawC(:,1) > obj.X1Lim(2)),:) = [];
+                aRawC((aRawC(:,2) < obj.X2Lim(1) | aRawC(:,2) > obj.X2Lim(2)),:) = [];
                 if obj.Dim == 3
                     aRawC((aRawC(:,3) >= obj.X3Lim(1) & aRawC(:,3) <= obj.X3Lim(2)),:) = [];
                 end % if
 
                 if strcmpi(stOpt.CutPrev, 'Yes')
-                    aRawP(:,1) = aRawP(:,1) - dTDump*(iStart+t-1);
-                    aRawP((aRawP(:,1) < obj.X1Lim(1) & aRawP(:,1) > obj.X1Lim(2)),:) = [];
-                    aRawP((aRawP(:,2) < obj.X2Lim(1) & aRawP(:,2) > obj.X2Lim(2)),:) = [];
+                    aRawP((aRawP(:,1) < obj.X1Lim(1) | aRawP(:,1) > obj.X1Lim(2)),:) = [];
+                    aRawP((aRawP(:,2) < obj.X2Lim(1) | aRawP(:,2) > obj.X2Lim(2)),:) = [];
                     if obj.Dim == 3
                         aRawP((aRawP(:,3) >= obj.X3Lim(1) & aRawP(:,3) <= obj.X3Lim(2)),:) = [];
                     end % if
@@ -166,9 +168,18 @@ classdef Species < OsirisType
                 % Calculate delta and missing energy
                 aTotal(t)      = sum(aRawC(:,7).*aRawC(:,8));
                 aDelta(t)      = sum(aRawC(aIndC,7).*aRawC(aIndC,8)-aRawP(aIndP,7).*aRawP(aIndP,8));
+                
                 aRawP(aIndP,7) = 0;
+                aRawP((aRawP(:,1) < obj.X1Lim(1) | aRawP(:,1) > obj.X1Lim(2)),:) = [];
+                aRawP((aRawP(:,2) < obj.X2Lim(1) | aRawP(:,2) > obj.X2Lim(2)),:) = [];
+                if obj.Dim == 3
+                    aRawP((aRawP(:,3) >= obj.X3Lim(1) & aRawP(:,3) <= obj.X3Lim(2)),:) = [];
+                end % if
+                aIndP = find(aRawP(:,7) == 0);
+
                 aMissing(t)    = sum(aRawP(:,7).*aRawP(:,8));
                 aCount(t,1:3)  = [size(aRawC,1) size(aRawP,1) size(aRawP,1)-size(aIndP,1)];
+                aCharge(t,1:3) = [sum(aRawC(:,8)) sum(aRawP(:,8)) sum(aRawP(:,8))-sum(aRawP(aIndP,8))];
                 
                 % Print progress
                 if obj.Progress
@@ -178,7 +189,7 @@ classdef Species < OsirisType
             end % for
 
             if obj.Progress
-                fprintf('\n');
+                fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b');
             end % if
             
             % Get time axis
@@ -186,21 +197,24 @@ classdef Species < OsirisType
             aTAxis = aTAxis(iStart+2:iEnd+1);
             
             % Return results
-            stReturn.Total     = aTotal*obj.Config.RQM*dEFac;
-            stReturn.Delta     = aDelta*obj.Config.RQM*dEFac;
-            stReturn.Missing   = aMissing*obj.Config.RQM*dEFac;
-            stReturn.Unit      = sUnit;
-            stReturn.TAxis     = aTAxis;
-            stReturn.CountCurr = aCount(:,1);
-            stReturn.CountPrev = aCount(:,2);
-            stReturn.CountLost = aCount(:,3);
+            stReturn.Total      = aTotal*obj.Config.RQM*dEFac;
+            stReturn.Delta      = aDelta*obj.Config.RQM*dEFac;
+            stReturn.Missing    = aMissing*obj.Config.RQM*dEFac;
+            stReturn.Unit       = sUnit;
+            stReturn.TAxis      = aTAxis;
+            stReturn.CountCurr  = aCount(:,1);
+            stReturn.CountPrev  = aCount(:,2);
+            stReturn.CountLost  = aCount(:,3);
+            stReturn.ChargeCurr = aCharge(:,1)*obj.Data.Config.Convert.SI.ChargeFac;
+            stReturn.ChargePrev = aCharge(:,2)*obj.Data.Config.Convert.SI.ChargeFac;
+            stReturn.ChargeLost = aCharge(:,3)*obj.Data.Config.Convert.SI.ChargeFac;
             
             % Debug
             %stReturn.RawC = aRawC;
             %stReturn.RawP = aRawP;
 
         end % function
-        
+       
         function stReturn = TrackParticles(obj, aTags, varargin)
             
             % Input/Output
