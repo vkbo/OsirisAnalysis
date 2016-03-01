@@ -637,6 +637,7 @@ function AnalyseGUI
         X.Data.Coords     = oData.Config.Simulation.Coordinates;
         X.Data.Cyl        = oData.Config.Simulation.Cylindrical;
         X.Data.Dim        = oData.Config.Simulation.Dimensions;
+        X.Data.Details    = oData.Config.Details;
         
         % Reload Variables class
         oVar = Variables(X.Data.Coords);
@@ -1463,6 +1464,8 @@ function AnalyseGUI
     end % function
 
     function fShowSimInfo(~,~)
+        
+        msgbox(X.Data.Details,'Simulation Description');
         
     end % function
 
