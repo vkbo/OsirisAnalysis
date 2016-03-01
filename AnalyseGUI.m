@@ -588,7 +588,7 @@ function AnalyseGUI
     
     function fScanData(~,~)
         
-        oData    = OsirisData('Silent','Yes');
+        oData = OsirisData('Silent','Yes');
         if isempty(mLd)
             cFields = fieldnames(oData.DefaultPath);
             for f=1:length(cFields)
@@ -1465,6 +1465,11 @@ function AnalyseGUI
 
     function fShowSimInfo(~,~)
         
+        if X.DataSet == 0
+            fOut('No dataset loaded',3);
+            return;
+        end % if
+
         msgbox(X.Data.Details,'Simulation Description');
         
     end % function
