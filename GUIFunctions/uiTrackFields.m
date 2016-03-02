@@ -135,22 +135,34 @@ function uiTrackFields(oData, varargin)
     jList.setSelectionAppearanceReflectsFocus(0);
     
     % Main Controls
-    bgCtrl = uibuttongroup('Title','Controls','Units','Pixels','Position',[20 iH-380 250 330]);
-    uicontrol(bgCtrl,'Style','Text','String',X.Name,'FontSize',18,'Position',[10 285 225 25],'ForegroundColor',[1.00 1.00 0.00],'BackgroundColor',[0.80 0.80 0.80]); 
+    bgCtrl = uibuttongroup('Title','Controls','Units','Pixels','Position',[20 iH-180 250 130]);
+    uicontrol(bgCtrl,'Style','Text','String',X.Name,'FontSize',18,'Position',[10 85 225 25],'ForegroundColor',[1.00 1.00 0.00],'BackgroundColor',[0.80 0.80 0.80]); 
 
-    uicontrol(bgCtrl,'Style','Text','String','Track Start','Position',[10 255 100 20],'HorizontalAlignment','Left');
-    uicontrol(bgCtrl,'Style','Text','String','Track Stop', 'Position',[10 230 100 20],'HorizontalAlignment','Left');
-    uicontrol(bgCtrl,'Style','Text','String','Species',    'Position',[10 205 100 20],'HorizontalAlignment','Left');
+    uicontrol(bgCtrl,'Style','Text','String','Species',    'Position',[10 5 100 20],'HorizontalAlignment','Left');
+    pumSpecies = uicontrol(bgCtrl,'Style','PopupMenu','String',X.Species,       'Position',[95 10 140 20],'Callback',{@fSetSpecies});
+
+    %
+    % Time Dump
+    %
+
+    bgTime = uibuttongroup('Title','Time Dump','Units','Pixels','Position',[20 iH-330 140 100]);
+
+    uicontrol(bgTime,'Style','PushButton','String','<<','Position',[ 9 60 30 20],'Callback',{@fDump, -10});
+    uicontrol(bgTime,'Style','PushButton','String','<', 'Position',[39 60 30 20],'Callback',{@fDump,  -1});
+    uicontrol(bgTime,'Style','PushButton','String','>', 'Position',[69 60 30 20],'Callback',{@fDump,   1});
+    uicontrol(bgTime,'Style','PushButton','String','>>','Position',[99 60 30 20],'Callback',{@fDump,  10});
+
+    uicontrol(bgTime,'Style','PushButton','String','<S','Position',[ 9 35 30 20],'Callback',{@fJump, 1});
+    uicontrol(bgTime,'Style','PushButton','String','<P','Position',[39 35 30 20],'Callback',{@fJump, 2});
+    uicontrol(bgTime,'Style','PushButton','String','P>','Position',[69 35 30 20],'Callback',{@fJump, 3});
+    uicontrol(bgTime,'Style','PushButton','String','S>','Position',[99 35 30 20],'Callback',{@fJump, 4});
+
+    lblDump(1) = uicontrol(bgTime,'Style','Text','String','0','Position',[ 10 11 28 15],'BackgroundColor',[0.80 0.80 0.80]);
+    lblDump(2) = uicontrol(bgTime,'Style','Text','String','0','Position',[ 40 11 28 15],'BackgroundColor',[0.80 0.80 0.80]);
+    lblDump(3) = uicontrol(bgTime,'Style','Text','String','0','Position',[ 70 11 28 15],'BackgroundColor',[0.80 0.80 0.80]);
+    lblDump(4) = uicontrol(bgTime,'Style','Text','String','0','Position',[100 11 28 15],'BackgroundColor',[0.80 0.80 0.80]);
+
     
-    uicontrol(bgCtrl,'Style','PushButton','String','<S','Position',[155 260 40 20],'Callback',{@fJump, 1});
-    uicontrol(bgCtrl,'Style','PushButton','String','<P','Position',[195 260 40 20],'Callback',{@fJump, 2});
-    uicontrol(bgCtrl,'Style','PushButton','String','P>','Position',[155 235 40 20],'Callback',{@fJump, 3});
-    uicontrol(bgCtrl,'Style','PushButton','String','S>','Position',[195 235 40 20],'Callback',{@fJump, 4});
-
-    edtStart   = uicontrol(bgCtrl,'Style','Edit',     'String',X.Track.Time(1), 'Position',[95 260  55 20],'Callback',{@fSetStart});
-    edtStop    = uicontrol(bgCtrl,'Style','Edit',     'String',X.Track.Time(2), 'Position',[95 235  55 20],'Callback',{@fSetStop});
-    pumSpecies = uicontrol(bgCtrl,'Style','PopupMenu','String',X.Species,       'Position',[95 210 140 20],'Callback',{@fSetSpecies});
-
     %
     % Plot Limits
     %
