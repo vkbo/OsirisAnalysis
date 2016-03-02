@@ -1,10 +1,10 @@
 
 %
-%  GUI :: Track Fields
+%  GUI :: Lineout Tool
 % *********************
 %
 
-function uiTrackFields(oData, varargin)
+function uiLineoutTools(oData, varargin)
 
     %
     %  Data Struct
@@ -100,16 +100,16 @@ function uiTrackFields(oData, varargin)
     %fMain = figure('IntegerHandle', 'Off'); clf;
     fMain = figure(1); clf;
     aFPos = get(fMain, 'Position');
-    iH    = 610;
+    iH    = 740;
     
     % Set Figure Properties
     fMain.Units        = 'Pixels';
     fMain.MenuBar      = 'None';
-    fMain.Position     = [aFPos(1:2) 1170 iH];
-    fMain.Name         = 'OsirisAnalysis: Track Fields';
+    fMain.Position     = [aFPos(1:2) 1220 iH];
+    fMain.Name         = 'OsirisAnalysis: Lineout Tools';
     fMain.NumberTitle  = 'Off';
     fMain.DockControls = 'Off';
-    fMain.Tag          = 'uiOA-TF';
+    fMain.Tag          = 'uiOA-LN';
 
     if ~isempty(stOpt.Position) && sum(size(stOpt.Position) == [1 2]) == 2
         aOPos = fMain.OuterPosition;
@@ -117,35 +117,22 @@ function uiTrackFields(oData, varargin)
     end % if
     
     % Axes
-    axMain = axes('Units','Pixels','Position',[340 iH-290 550 230]);
+    axMain = axes('Units','Pixels','Position',[310 iH-290 550 230]);
+    axHorz = axes('Units','Pixels','Position',[310 iH-580 550 230]);
+    axVert = axes('Units','Pixels','Position',[910 iH-290 280 230]);
     
     %
     % Controls
     %
     
-    uicontrol('Style','Text','String','Track Fields','FontSize',20,'Position',[20 iH-50 200 35],'HorizontalAlignment','Left');
-
-    % Output Window
-    lstOut = uicontrol('Style','Listbox','String','OsirisAnalysis: Track Species','FontName','FixedWidth','HorizontalAlignment','Left','BackgroundColor',[0 0 0],'ForegroundColor',[0 1 0]);
-    lstOut.Position = [20 iH-590 560 87];
-    jOut   = findjobj(lstOut);
-    jList  = jOut.getViewport.getComponent(0);
-    set(jList, 'SelectionBackground', java.awt.Color.black);
-    set(jList, 'SelectionForeground', java.awt.Color.green);
-    jList.setSelectionAppearanceReflectsFocus(0);
-    
-    % Main Controls
-    bgCtrl = uibuttongroup('Title','Controls','Units','Pixels','Position',[20 iH-180 250 130]);
-    uicontrol(bgCtrl,'Style','Text','String',X.Name,'FontSize',18,'Position',[10 85 225 25],'ForegroundColor',[1.00 1.00 0.00],'BackgroundColor',[0.80 0.80 0.80]); 
-
-    uicontrol(bgCtrl,'Style','Text','String','Species',    'Position',[10 5 100 20],'HorizontalAlignment','Left');
-    pumSpecies = uicontrol(bgCtrl,'Style','PopupMenu','String',X.Species,       'Position',[95 10 140 20],'Callback',{@fSetSpecies});
+    uicontrol('Style','Text','String','Lineout Tools','FontSize',20,'Position',[20 iH-50 200 35],'HorizontalAlignment','Left');
+    uicontrol('Style','Text','String',X.Name,'FontSize',18,'Position',[20 iH-85 230 25],'ForegroundColor',[1.00 1.00 0.00],'BackgroundColor',[0.80 0.80 0.80]);
 
     %
     % Time Dump
     %
 
-    bgTime = uibuttongroup('Title','Time Dump','Units','Pixels','Position',[20 iH-330 140 100]);
+    bgTime = uibuttongroup('Title','Time Dump','Units','Pixels','Position',[20 iH-195 140 100]);
 
     uicontrol(bgTime,'Style','PushButton','String','<<','Position',[ 9 60 30 20],'Callback',{@fDump, -10});
     uicontrol(bgTime,'Style','PushButton','String','<', 'Position',[39 60 30 20],'Callback',{@fDump,  -1});
@@ -162,36 +149,43 @@ function uiTrackFields(oData, varargin)
     lblDump(3) = uicontrol(bgTime,'Style','Text','String','0','Position',[ 70 11 28 15],'BackgroundColor',[0.80 0.80 0.80]);
     lblDump(4) = uicontrol(bgTime,'Style','Text','String','0','Position',[100 11 28 15],'BackgroundColor',[0.80 0.80 0.80]);
 
-    
+    %
+    % DataSet
+    %
+
+    bgData = uibuttongroup('Title','Reference Data','Units','Pixels','Position',[20 iH-280 230 80]);
+
+    uicontrol(bgData,'Style','Text','String','Data Set','Position',[ 10 35 60 20],'HorizontalAlignment','Left');
+    uicontrol(bgData,'Style','Text','String','3D Slice','Position',[ 10  5 60 20],'HorizontalAlignment','Left');
+    uicontrol(bgData,'Style','Text','String','Pos',     'Position',[135  5 25 20],'HorizontalAlignment','Left');
+
+    pumSpecies = uicontrol(bgData,'Style','PopupMenu','String',X.Species,'Position',[75 40 145 20],'Callback',{@fSetSpecies});
+    pumSlice   = uicontrol(bgData,'Style','PopupMenu','Position',[ 75 10  55 20],'Callback',{@fSetAliceAxis},'String',X.Opt.SliceAxis);
+    edtSlPos   = uicontrol(bgData,'Style','Edit',     'Position',[165  8  55 20],'Callback',{@fSetSlicePos});
+
     %
     % Plot Limits
     %
 
-    bgPLim = uibuttongroup('Title','Plot Limits','Units','Pixels','Position',[280 iH-490 295 150]);
+    bgPLim = uibuttongroup('Title','Plot Limits','Units','Pixels','Position',[20 iH-430 230 145]);
 
     % Labels
-    uicontrol(bgPLim,'Style','Text','String','Slice','Position',[ 10 108 60 20],'HorizontalAlignment','Left');
-    uicontrol(bgPLim,'Style','Text','String','Axis', 'Position',[ 10  85 60 20],'HorizontalAlignment','Left');
-    uicontrol(bgPLim,'Style','Text','String','Pos',  'Position',[ 10  60 60 20],'HorizontalAlignment','Left');
 
-    uicontrol(bgPLim,'Style','Text','String','Min',  'Position',[160 108 55 20]);
-    uicontrol(bgPLim,'Style','Text','String','Max',  'Position',[225 108 55 20]);
-    uicontrol(bgPLim,'Style','Text','String','HAxis','Position',[120  85 60 20],'HorizontalAlignment','Left');
-    uicontrol(bgPLim,'Style','Text','String','VAxis','Position',[120  60 60 20],'HorizontalAlignment','Left');
-    uicontrol(bgPLim,'Style','Text','String','CAxis','Position',[120  35 60 20],'HorizontalAlignment','Left');
-    uicontrol(bgPLim,'Style','Text','String','CMap', 'Position',[120  10 60 20],'HorizontalAlignment','Left');
+    uicontrol(bgPLim,'Style','Text','String','Min',       'Position',[ 90 108 60 20]);
+    uicontrol(bgPLim,'Style','Text','String','Max',       'Position',[160 108 60 20]);
+    uicontrol(bgPLim,'Style','Text','String','Horizontal','Position',[ 10  85 70 20],'HorizontalAlignment','Left');
+    uicontrol(bgPLim,'Style','Text','String','Vertical',  'Position',[ 10  60 70 20],'HorizontalAlignment','Left');
+    uicontrol(bgPLim,'Style','Text','String','Color',     'Position',[ 10  35 70 20],'HorizontalAlignment','Left');
+    uicontrol(bgPLim,'Style','Text','String','Color Map', 'Position',[ 10  10 70 20],'HorizontalAlignment','Left');
 
     % Fields
-    pumSlice = uicontrol(bgPLim,'Style','PopupMenu','Position',[ 50 87  55 20],'Callback',{@fSetAliceAxis},'String',X.Opt.SliceAxis);
-    edtSlPos = uicontrol(bgPLim,'Style','Edit',     'Position',[ 50 62  55 20],'Callback',{@fSetSlicePos});
-
-    edtPHMin = uicontrol(bgPLim,'Style','Edit',     'Position',[160 87  55 20],'Callback',{@fSetPlotLim,1});
-    edtPHMax = uicontrol(bgPLim,'Style','Edit',     'Position',[225 87  55 20],'Callback',{@fSetPlotLim,2});
-    edtPVMin = uicontrol(bgPLim,'Style','Edit',     'Position',[160 62  55 20],'Callback',{@fSetPlotLim,3});
-    edtPVMax = uicontrol(bgPLim,'Style','Edit',     'Position',[225 62  55 20],'Callback',{@fSetPlotLim,4});
-    edtPCMin = uicontrol(bgPLim,'Style','Edit',     'Position',[160 37  55 20],'Callback',{@fSetPlotLim,5});
-    edtPCMax = uicontrol(bgPLim,'Style','Edit',     'Position',[225 37  55 20],'Callback',{@fSetPlotLim,6});
-    pumPCMap = uicontrol(bgPLim,'Style','PopupMenu','Position',[160 12 120 20],'Callback',{@fSetPlotLim,7},'String','N');
+    edtPHMin = uicontrol(bgPLim,'Style','Edit',     'Position',[ 90 87  60 20],'Callback',{@fSetPlotLim,1});
+    edtPHMax = uicontrol(bgPLim,'Style','Edit',     'Position',[160 87  60 20],'Callback',{@fSetPlotLim,2});
+    edtPVMin = uicontrol(bgPLim,'Style','Edit',     'Position',[ 90 62  60 20],'Callback',{@fSetPlotLim,3});
+    edtPVMax = uicontrol(bgPLim,'Style','Edit',     'Position',[160 62  60 20],'Callback',{@fSetPlotLim,4});
+    edtPCMin = uicontrol(bgPLim,'Style','Edit',     'Position',[ 90 37  60 20],'Callback',{@fSetPlotLim,5});
+    edtPCMax = uicontrol(bgPLim,'Style','Edit',     'Position',[160 37  60 20],'Callback',{@fSetPlotLim,6});
+    pumPCMap = uicontrol(bgPLim,'Style','PopupMenu','Position',[ 90 12 130 20],'Callback',{@fSetPlotLim,7},'String','N');
     
     % Defaults
     pumSlice.Value  = X.SliceAxis;
@@ -204,6 +198,14 @@ function uiTrackFields(oData, varargin)
     edtPCMax.String = '0.00';
 
 
+    % Output Window
+    lstOut = uicontrol('Style','Listbox','String','OsirisAnalysis: Lineout Tools','FontName','FixedWidth','HorizontalAlignment','Left','BackgroundColor',[0 0 0],'ForegroundColor',[0 1 0]);
+    lstOut.Position = [20 iH-720 560 87];
+    jOut   = findjobj(lstOut);
+    jList  = jOut.getViewport.getComponent(0);
+    set(jList, 'SelectionBackground', java.awt.Color.black);
+    set(jList, 'SelectionForeground', java.awt.Color.green);
+    jList.setSelectionAppearanceReflectsFocus(0);
 
     
     %

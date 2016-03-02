@@ -156,8 +156,8 @@ function AnalyseGUI
     % Button Column
     iYBn = 573;
     uicontrol('Style','PushButton','String','DN','TooltipString','Track Density','FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.80 0.00 0.00],'Callback',{@fTools,'DN'}); iYBn = iYBn-38;
-    uicontrol('Style','PushButton','String','EM','TooltipString','Track Fields', 'FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.80 0.50 0.00],'Callback',{@fTools,'EM'}); iYBn = iYBn-38;
-    uicontrol('Style','PushButton','String','3D','TooltipString','3D Tools',     'FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.70 0.00],'Callback',{@fTools,'3D'}); iYBn = iYBn-38;
+    uicontrol('Style','PushButton','String','3D','TooltipString','3D Tools',     'FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.80 0.50 0.00],'Callback',{@fTools,'3D'}); iYBn = iYBn-38;
+    uicontrol('Style','PushButton','String','LN','TooltipString','Lineout Tools','FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.70 0.00],'Callback',{@fTools,'LN'}); iYBn = iYBn-38;
     uicontrol('Style','PushButton','String','SP','TooltipString','Track Species','FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.20 0.80],'Callback',{@fTools,'SP'}); iYBn = iYBn-38;
     uicontrol('Style','PushButton','String','TM','TooltipString','Track Time',   'FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.50 0.00 0.80],'Callback',{@fTools,'TM'}); iYBn = iYBn-38;
 
@@ -1487,9 +1487,9 @@ function AnalyseGUI
         switch(sTool)
             case 'DN'
                 uiTrackDensity(oData);
-            case 'EM'
-                uiTrackFields(oData);
             case '3D'
+            case 'LN'
+                uiLineoutTools(oData);
             case 'SP'
                 uiTrackSpecies(oData,'Position',aPos);
             case 'TM'
