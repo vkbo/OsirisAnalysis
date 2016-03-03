@@ -119,9 +119,11 @@ classdef Field < OsirisType
 
             % Return Data
             stReturn.Data  = stData.Data*dScale;
+            stReturn.Unit  = sUnit;
+            stReturn.Label = sLabel;
+            stReturn.Axes  = stData.Axes;
             stReturn.HAxis = stData.HAxis;
             stReturn.VAxis = stData.VAxis;
-            stReturn.Axes  = stData.Axes;
             stReturn.ZPos  = obj.fGetZPos();        
         
         end % function

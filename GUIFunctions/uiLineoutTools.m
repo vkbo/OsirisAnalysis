@@ -30,15 +30,30 @@ function uiLineoutTools(oData, varargin)
     dLFac   = oData.Config.Convert.SI.LengthFac;
 
     % Get DataSet Info
-    X.Name    = oData.Config.Name;                          % Name of dataset
-    X.Species = fieldnames(oData.Config.Particles.Species); % All species in dataset
-    X.Cyl     = oData.Config.Simulation.Cylindrical;
-    X.Dim     = oData.Config.Simulation.Dimensions;
+    X.Name     = oData.Config.Name;                          % Name of dataset
+    X.Species  = fieldnames(oData.Config.Particles.Species); % All species in dataset
+    X.Fields   = oData.Config.EMFields.Reports;
+    X.Cyl      = oData.Config.Simulation.Cylindrical;
+    X.Dim      = oData.Config.Simulation.Dimensions;
 
     if isempty(X.Species)
         fprintf(2,'Error: Dataset contains no species.\n');
         return;
     end % if
+    
+    X.DataSets  = {};
+    X.DataTypes = {};
+    X.DataNames = {};
+    for s=1:length(X.Species)
+        X.DataSets{end+1}  = X.Species{s};
+        X.DataTypes{end+1} = 'S';
+        X.DataNames{end+1} = oData.Translate.Lookup(X.Species{s},'Species').Name;
+    end % for
+    for s=1:length(X.Fields)
+        X.DataSets{end+1}  = X.Fields{s};
+        X.DataTypes{end+1} = 'F';
+        X.DataNames{end+1} = oData.Translate.Lookup(X.Fields{s}).Full;
+    end % for
 
     % Time Limits
     X.Limits(1) = oData.StringToDump('Start');  % Start of simulation
@@ -48,22 +63,14 @@ function uiLineoutTools(oData, varargin)
     X.Dump      = X.Limits(2);
     
     % Get Time Axis
-    X.TAxis = (linspace(0.0, dTFac*iDumps, iDumps+1)-dPStart)*dLFac;
+    %X.TAxis = (linspace(0.0, dTFac*iDumps, iDumps+1)-dPStart)*dLFac;
     
     % Tracking
-    X.Track.Time    = [X.Limits(2) X.Limits(3)];
-    X.Track.Species = X.Species{1};
-    X.Track.Details = oData.Translate.Lookup(X.Species{1},'Species');
+    X.Analyse.DataSet = X.DataSets{1};
+    X.Analyse.Details = oData.Translate.Lookup(X.DataSets{1});
 
-    % Time Limits
-    X.Limits(1) = oData.StringToDump('Start');  % Start of simulation
-    X.Limits(2) = oData.StringToDump('PStart'); % Start of plasma
-    X.Limits(3) = oData.StringToDump('PEnd');   % End of plasma
-    X.Limits(4) = oData.StringToDump('End');    % End of simulation
-    X.Dump      = X.Limits(2);
-    
     % Data Objects
-    oDN = Density(oData,X.Track.Species,'Units','SI','Scale','mm');
+    oDN = Density(oData,X.Analyse.DataSet,'Units','SI','Scale','mm');
     oDN.Time = X.Dump;
     
     % Limits
@@ -73,14 +80,15 @@ function uiLineoutTools(oData, varargin)
         X.XLim(3)        = -X.XLim(4);
         X.Plot.Limits(3) = -X.Plot.Limits(4);
     end % if
-    X.Track.Limits = [X.XLim 0 X.XLim(4) 0 1 0 1 0 1 0 1];
-    X.Track.Scale  = ones(8,1);
-    X.Track.Units  = {'m','m','m','m','eV','eV','eV','C'};
+    %X.Track.Limits = [X.XLim 0 X.XLim(4) 0 1 0 1 0 1 0 1];
+    %X.Track.Scale  = ones(8,1);
+    %X.Track.Units  = {'m','m','m','m','eV','eV','eV','C'};
     
     % Options
     switch(X.Dim)
         case 1
             fprintf(2,'Error: 1D simulations not supported.\n');
+            return;
         case 2
             X.Opt.SliceAxis = {'X2'};
             X.SliceAxis     = 1;
@@ -144,10 +152,10 @@ function uiLineoutTools(oData, varargin)
     uicontrol(bgTime,'Style','PushButton','String','P>','Position',[69 35 30 20],'Callback',{@fJump, 3});
     uicontrol(bgTime,'Style','PushButton','String','S>','Position',[99 35 30 20],'Callback',{@fJump, 4});
 
-    lblDump(1) = uicontrol(bgTime,'Style','Text','String','0','Position',[ 10 11 28 15],'BackgroundColor',[0.80 0.80 0.80]);
-    lblDump(2) = uicontrol(bgTime,'Style','Text','String','0','Position',[ 40 11 28 15],'BackgroundColor',[0.80 0.80 0.80]);
-    lblDump(3) = uicontrol(bgTime,'Style','Text','String','0','Position',[ 70 11 28 15],'BackgroundColor',[0.80 0.80 0.80]);
-    lblDump(4) = uicontrol(bgTime,'Style','Text','String','0','Position',[100 11 28 15],'BackgroundColor',[0.80 0.80 0.80]);
+    lblDump(1) = uicontrol(bgTime,'Style','Text','String',X.Limits(1),'Position',[ 10 11 28 15],'BackgroundColor',[0.80 0.80 0.80]);
+    lblDump(2) = uicontrol(bgTime,'Style','Text','String',X.Limits(2),'Position',[ 40 11 28 15],'BackgroundColor',[0.80 0.80 0.80]);
+    lblDump(3) = uicontrol(bgTime,'Style','Text','String',X.Limits(3),'Position',[ 70 11 28 15],'BackgroundColor',[0.80 0.80 0.80]);
+    lblDump(4) = uicontrol(bgTime,'Style','Text','String',X.Limits(4),'Position',[100 11 28 15],'BackgroundColor',[0.80 0.80 0.80]);
 
     %
     % DataSet
@@ -159,7 +167,7 @@ function uiLineoutTools(oData, varargin)
     uicontrol(bgData,'Style','Text','String','3D Slice','Position',[ 10  5 60 20],'HorizontalAlignment','Left');
     uicontrol(bgData,'Style','Text','String','Pos',     'Position',[135  5 25 20],'HorizontalAlignment','Left');
 
-    pumSpecies = uicontrol(bgData,'Style','PopupMenu','String',X.Species,'Position',[75 40 145 20],'Callback',{@fSetSpecies});
+    pumSpecies = uicontrol(bgData,'Style','PopupMenu','String',X.DataNames,'Position',[75 40 145 20],'Callback',{@fSetDataSet});
     pumSlice   = uicontrol(bgData,'Style','PopupMenu','Position',[ 75 10  55 20],'Callback',{@fSetAliceAxis},'String',X.Opt.SliceAxis);
     edtSlPos   = uicontrol(bgData,'Style','Edit',     'Position',[165  8  55 20],'Callback',{@fSetSlicePos});
 
@@ -213,16 +221,22 @@ function uiLineoutTools(oData, varargin)
     %
     
     fRefreshDensity;
-    fOut(sprintf('Loaded ''%s''',X.Track.Species),1);
+    fOut(sprintf('Loaded ''%s''',X.DataNames{1}),1);
     
     
     %
     %  Data Functions
     %
+    
+    function fRefresh()
+        
+        fRefreshDensity();
+        
+    end % function
 
     function fRefreshDensity()
 
-        oDN.Time = X.Dump;
+        oDN.Time  = X.Dump;
         oDN.X1Lim = X.Plot.Limits(1:2);
         oDN.X2Lim = X.Plot.Limits(3:4);
 
@@ -257,62 +271,40 @@ function uiLineoutTools(oData, varargin)
         xlim([aHAxis(1) aHAxis(end)]);
         ylim([aVAxis(1) aVAxis(end)]);
         
-        title(sprintf('%s Charge Density',X.Track.Details.Full));
+        title(sprintf('%s Charge Density',X.Analyse.Details.Full));
         xlabel(sprintf('%s [mm]',vHAxis.Tex));
         ylabel(sprintf('%s [mm]',vVAxis.Tex));
         title(hCol,sprintf('%s [%s]',sLabel,sSUnit));
         
+    end % function
+
+    function fRefreshLineout()
+
+        oDN.Time  = X.Dump;
+        oDN.X1Lim = X.Plot.Limits(1:2);
+        oDN.X2Lim = X.Plot.Limits(3:4);
+
+        stData = oDN.Density2D();
+
     end % function
     
     %
     %  Callback Functions
     %
 
-    function fSetStart(uiSrc,~)
-        
-        iTime = round(str2double(uiSrc.String));
-        if iTime < X.Limits(1)
-            iTime = X.Limits(1);
-        end % if
-        uiSrc.String = iTime;
+    function fSetDataSet(uiSrc,~)
 
-        X.Track.Time(1) = iTime;
-        %sldTime.Min     = iTime;
-        %if sldTime.Value < sldTime.Min
-        %    sldTime.Value = sldTime.Min;
-        %end % if
-        
-        %fTrackTime(sldTime,0);
-        
-    end % function
-
-    function fSetStop(uiSrc,~)
-
-        iTime = round(str2double(uiSrc.String));
-        if iTime > X.Limits(4)
-            iTime = X.Limits(4);
-        end % if
-        uiSrc.String = iTime;
-
-        X.Track.Time(2) = iTime;
-        %sldTime.Max     = iTime;
-        %if sldTime.Value > sldTime.Max
-        %    sldTime.Value = sldTime.Max;
-        %end % if
-
-        %fTrackTime(sldTime,0);
-
-    end % function
-
-    function fSetSpecies(uiSrc,~)
-
-        X.Track.Species = X.Species{uiSrc.Value};
-        X.Track.Details = oData.Translate.Lookup(X.Species{1},'Species');
+        X.Analyse.DataSet = X.DataSets{uiSrc.Value};
+        X.Analyse.Details = oData.Translate.Lookup(X.DataSets{uiSrc.Value});
     
-        oDN = Density(oData,X.Track.Species,'Units','SI','Scale','mm');
-        fOut(sprintf('Loaded ''%s''',X.Track.Species),1);
+        if strcmpi(X.DataTypes{uiSrc.Value}, 'S')
+            oDN = Density(oData,X.Analyse.DataSet,'Units','SI','Scale','mm');
+        else
+            oDN = Field(oData,X.Analyse.DataSet,'Units','SI','Scale','mm');
+        end % if
+        fOut(sprintf('Loaded ''%s''',X.DataNames{uiSrc.Value}),1);
         
-        fRefreshDensity;
+        fRefresh;
 
     end % function
 
@@ -334,28 +326,33 @@ function uiLineoutTools(oData, varargin)
 
         X.Plot.Limits(iDim) = dValue;
         uiSrc.String = sprintf('%.2f',dValue);
-        fRefreshDensity
+        fRefresh;
+        
+    end % function
+    
+    function fDump(~,~,iStep)
+        
+        X.Dump = X.Dump + iStep;
+        
+        if X.Dump < X.Limits(1)
+            X.Dump = X.Limits(1);
+            fOut('At the start of the dataset',2);
+        end % if
+
+        if X.Dump > X.Limits(4)
+            X.Dump = X.Limits(4);
+            fOut('At the end of the dataset',2);
+        end % if
+        
+        fRefresh;
         
     end % function
 
     function fJump(~,~,iJump)
         
-        iTime = X.Limits(iJump);
-
-        switch(iJump)
-            case 1
-                edtStart.String = iTime;
-                fSetStart(edtStart,0);
-            case 2
-                edtStart.String = iTime;
-                fSetStart(edtStart,0);
-            case 3
-                edtStop.String = iTime;
-                fSetStop(edtStop,0);
-            case 4
-                edtStop.String = iTime;
-                fSetStop(edtStop,0);
-        end % switch
+        X.Dump = X.Limits(iJump);
+        
+        fRefresh;
         
     end % function
 
