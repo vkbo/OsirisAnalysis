@@ -68,7 +68,7 @@ classdef Momentum < OsirisType
     
     methods(Access='public')
         
-        function stReturn = SigmaEToEMean(obj, sStart, sEnd)
+        function stReturn = SigmaEToEMean(obj, sStart, sEnd, varargin)
 
             % Input/Output
             stReturn = {};
@@ -90,9 +90,20 @@ classdef Momentum < OsirisType
             iStart = obj.Data.StringToDump(sStart);
             iEnd   = obj.Data.StringToDump(sEnd);
 
+            oOpt = inputParser;
+            addParameter(oOpt, 'Relative', 'No');
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
+
             % Calculate axes
             aTAxis = obj.fGetTimeAxis;
             aTAxis = aTAxis(iStart+1:iEnd+1);
+            
+            if strcmpi(stOpt.Relative, 'Yes')
+                dEInit = obj.fMomentumToEnergy(obj.Data.Config.Particles.Species.(obj.Species.Name).Momentum(1));
+            else
+                dEInit = 0.0;
+            end % if
             
             aMean  = zeros(1, length(aTAxis));
             aSigma = zeros(1, length(aTAxis));
@@ -112,7 +123,7 @@ classdef Momentum < OsirisType
                     aSigma(k) = 0.0;
                     aData(k)  = 0.0;
                 else
-                    aMean(k)  = obj.fMomentumToEnergy(wmean(aRaw(:,4), abs(aRaw(:,8))));
+                    aMean(k)  = obj.fMomentumToEnergy(wmean(aRaw(:,4), abs(aRaw(:,8))))-dEInit;
                     aSigma(k) = obj.fMomentumToEnergy(wstd(aRaw(:,4), abs(aRaw(:,8))));
                     aData(k)  = aSigma(k)/aMean(k);
                 end % if
