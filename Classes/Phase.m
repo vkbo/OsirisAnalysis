@@ -444,7 +444,7 @@ classdef Phase < OsirisType
                 sUnit = obj.AxisUnits{iAxis};
             elseif iAxis == 4 || iAxis == 5 || iAxis == 6
                 dFac  = obj.Data.Config.Constants.EV.ElectronMass;
-                dFac  = dFac*obj.Config.RQM;
+                dFac  = dFac*abs(obj.Config.RQM);
                 sUnit = 'eV/c';
             elseif iAxis == 7
                 dFac  = obj.Data.Config.Constants.EV.ElectronMass;
