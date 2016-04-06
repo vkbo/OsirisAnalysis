@@ -35,7 +35,7 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
         fprintf('  Inputs:\n');
         fprintf(' =========\n');
         fprintf('  oData    :: OsirisData object\n');
-        fprintf('  sTime    :: Which dump to look at\n');
+        fprintf('  sTime    :: Which dump to look at\n');z
         fprintf('  sSpecies :: Which species to look at\n');
         fprintf('  sAxis    :: Which axis to plot\n');
         fprintf('\n');
@@ -141,13 +141,17 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
         figure(stOpt.ForceFig);
     end % if
     stairs(aAxis, aData, 'Color', [0.0 0.0 0.6], 'LineWidth', 1.5);
-
+    
     dYMax = max(aData);
     if dYMax > 0
         ylim([0 dYMax*1.1]);
     end % if
     if aAxis(end) > aAxis(1)
         xlim([aAxis(1) aAxis(end)]);
+    end % if
+    
+    if ~isempty(stOpt.Lim)
+        xlim(stOpt.Lim*dAScale);
     end % if
     
     % Curve Fitting

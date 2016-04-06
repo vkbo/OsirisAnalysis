@@ -1062,7 +1062,7 @@ function AnalyseGUI
         if X.Plot(f).Enabled == 0
             btnFig(f).BackgroundColor = cButtonOn;
             X.Plot(f).Enabled = 1;
-            fRefreshX
+            fRefreshX;
         else
             btnFig(f).BackgroundColor = cButtonOff;
             X.Plot(f).Enabled = 0;
