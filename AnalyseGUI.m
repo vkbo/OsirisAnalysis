@@ -409,6 +409,7 @@ function AnalyseGUI
         uicontrol(bgTab(t),'Style','Text','String','Fields','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','Checkbox','String',oVar.Lookup('e1').Short,'Value',X.Plot(t).Settings(1),'Position',[ 85 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,1});
         uicontrol(bgTab(t),'Style','Checkbox','String',oVar.Lookup('e2').Short,'Value',X.Plot(t).Settings(2),'Position',[135 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,2});
+        uicontrol(bgTab(t),'Style','Checkbox','String',oVar.Lookup('e3').Short,'Value',X.Plot(t).Settings(3),'Position',[185 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,3});
 
         if X.Data.Dim == 3
             iY = iY - 25;
@@ -972,7 +973,7 @@ function AnalyseGUI
                     X.Plot(f).Scatter    = {'' ''};
                     X.Plot(f).ScatterNum = [2000 2000];
                     X.Plot(f).Sample     = [3 3];
-                    X.Plot(f).Settings   = [0 0];
+                    X.Plot(f).Settings   = [0 0 0];
                     X.Plot(f).CAxis      = [0.0 5.0];
                     fCtrlPlasmaDensity(f);
                     aFigSize = [900 500];
@@ -1215,15 +1216,14 @@ function AnalyseGUI
                             'Slice',X.Plot(f).Slice,'SliceAxis',X.Plot(f).SliceAxis);
 
                     case 'Plasma Density'
-                        stEF(2) = struct();
-                        for s=1:2
+                        stEF(3) = struct();
+                        for s=1:3
                             stEF(s).Range = [];
                             if X.Plot(f).Settings(s)
                                 if X.Data.Cyl
                                     stEF(s).Range = [3,3];
                                 else
-                                    iCentre = floor(oData.Config.Simulation.Grid(X.Plot(f).SliceAxis))/2;
-                                    stEF(s).Range = [iCentre,2];
+                                    stEF(s).Range = [-1,2];
                                 end % if
                             end % if
                         end % for
@@ -1236,7 +1236,7 @@ function AnalyseGUI
                             'Sample1',X.Plot(f).ScatterNum(1),'Sample2',X.Plot(f).ScatterNum(2), ...
                             'Overlay1',X.Plot(f).Scatter{1},'Overlay2',X.Plot(f).Scatter{2}, ...
                             'Filter1',X.Opt.Sample{X.Plot(f).Sample(1)},'Filter2',X.Opt.Sample{X.Plot(f).Sample(2)}, ...
-                            'E1',stEF(1).Range,'E2',stEF(2).Range, ...
+                            'E1',stEF(1).Range,'E2',stEF(2).Range,'E3',stEF(3).Range, ...
                             'Limits',[aHLim aVLim],'CAxis',X.Plot(f).CAxis, ...
                             'Slice',X.Plot(f).Slice,'SliceAxis',X.Plot(f).SliceAxis);
                         if isfield(X.Plot(f).Return,'Error')

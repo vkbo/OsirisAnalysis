@@ -486,13 +486,19 @@ classdef OsirisType
                 end % switch
             end % if
             
-            % Get Limits
+            % Get H-Limits
             iHMin  = fGetIndex(aHAxis, aHLim(1));
             iHMax  = fGetIndex(aHAxis, aHLim(2));
+            
+            % Get V-Limits
+            iVN    = numel(aVAxis);
+            if ~obj.Cylindrical
+                iStart = iStart+iVN/2;
+            end % if
 
             % Crop Dataset
             iEnd   = iStart+iAverage-1;
-            aData  = transpose(mean(aData(iHMin:iHMax,iStart:iEnd),2));
+            aData  = squeeze(mean(aData(iHMin:iHMax,iStart:iEnd),2));
             aHAxis = aHAxis(iHMin:iHMax);
             
             % Return Data

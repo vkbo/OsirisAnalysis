@@ -91,6 +91,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     addParameter(oOpt, 'Filter2',     'Charge');
     addParameter(oOpt, 'E1',          []);
     addParameter(oOpt, 'E2',          []);
+    addParameter(oOpt, 'E3',          []);
     parse(oOpt, varargin{:});
     stOpt = oOpt.Results;
 
@@ -122,6 +123,12 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         stField(iField).Name  = 'e2';
         stField(iField).Range = stOpt.E2;
         stField(iField).Color = [0.9 0.9 0.7];
+        iField = iField + 1;
+    end % if
+    if ~isempty(stOpt.E3)
+        stField(iField).Name  = 'e3';
+        stField(iField).Range = stOpt.E3;
+        stField(iField).Color = [0.9 0.7 0.7];
         iField = iField + 1;
     end % if
 
@@ -324,12 +331,18 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
             iA = 3;
         end % if
         
-        oFLD      = Field(oData,stField(i).Name,'Units','SI','X1Scale',oDN.AxisScale{1},'X2Scale','m');
+        oFLD      = Field(oData,stField(i).Name,'Units','SI','X1Scale',oDN.AxisScale{1},'X2Scale',oDN.AxisScale{2});
         oFLD.Time = iTime;
         sFUnit    = oFLD.FieldUnit;
         
         if length(stOpt.Limits) == 4
             oFLD.X1Lim = stOpt.Limits(1:2);
+            oFLD.X2Lim = stOpt.Limits(3:4);
+        end % if
+
+        if oData.Config.Simulation.Dimensions == 3
+            oFLD.SliceAxis = stOpt.SliceAxis;
+            oFLD.Slice     = stOpt.Slice;
         end % if
 
         stEF    = oFLD.Lineout(iS,iA);
