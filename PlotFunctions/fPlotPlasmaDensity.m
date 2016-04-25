@@ -349,7 +349,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         aEFData = 0.15*(aVAxis(end)-aVAxis(1))*stEF.Data/max(abs(stEF.Data));
 
         [dEne,  sEne]  = fAutoScale(max(abs(stEF.Data)), sFUnit);
-        [dEVal, sUnit] = fAutoScale(stEF.VRange(2), 'm');
+        [dEVal, sUnit] = fAutoScale(stEF.VRange(2)*1e-3, 'm');
         dSVal          = stEF.VRange(1)*dEVal/stEF.VRange(2);
         
         plot(stEF.HAxis,aEFData,'Color',stField(i).Color);
