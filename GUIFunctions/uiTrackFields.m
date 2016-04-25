@@ -55,13 +55,6 @@ function uiTrackFields(oData, varargin)
     X.Track.Species = X.Species{1};
     X.Track.Details = oData.Translate.Lookup(X.Species{1},'Species');
 
-    % Time Limits
-    X.Limits(1) = oData.StringToDump('Start');  % Start of simulation
-    X.Limits(2) = oData.StringToDump('PStart'); % Start of plasma
-    X.Limits(3) = oData.StringToDump('PEnd');   % End of plasma
-    X.Limits(4) = oData.StringToDump('End');    % End of simulation
-    X.Dump      = X.Limits(2);
-    
     % Data Objects
     oDN = Density(oData,X.Track.Species,'Units','SI','Scale','mm');
     oDN.Time = X.Dump;
