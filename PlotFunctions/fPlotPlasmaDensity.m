@@ -370,7 +370,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         set(h,'TextColor', 'White');
 
         if length(stOLBeam) == 1
-            set(findobj(h, 'type', 'line'), 'visible', 'off')
+            set(findobj(h, 'type', 'line'), 'visible', 'off');
         end % if
 
     end % if

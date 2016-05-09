@@ -83,7 +83,7 @@ function stReturn = fPlotPhaseSpace(oData, sTime, sSpecies, varargin)
     end % if
     
     % Prepare Data
-    oM = Momentum(oData,vSpecies.Name,'Units','SI','X1Scale','mm','X2Scale','mm');
+    oM = Momentum(oData,vSpecies.Name,'Units','SI','Scale','mm');
     oM.Time = iTime;
     stData = oM.PhaseSpace('Sample',stOpt.Sample, ...
                            'MinParticles',stOpt.MinParticles, ...
@@ -127,6 +127,20 @@ function stReturn = fPlotPhaseSpace(oData, sTime, sSpecies, varargin)
     if ~isempty(stOpt.CAxis)
         caxis(stOpt.CAxis);
     end % if
+    
+    hold on;
+    
+    plot(0,0,'LineStyle','None');
+    plot(0,0,'LineStyle','None');
+    
+    cLegend{1} = sprintf('ε_{g} = %.2f µm',stData.ERMS);
+    cLegend{2} = sprintf('ε_{N} = %.2f µm',stData.ENorm);
+    
+    hold off;
+    
+    hL = legend(cLegend,'Location','NE');
+    set(hL,'Box','Off');
+    set(hL,'TextColor', 'White');
 
     if strcmpi(stOpt.HideDump, 'No')
         sTitle = sprintf('XX'' Phase Space %s (%s #%d)', oM.PlasmaPosition, oData.Config.Name, iTime);

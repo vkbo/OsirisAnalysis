@@ -359,14 +359,12 @@ classdef Momentum < OsirisType
                     aX   = aRaw(:,2)*obj.AxisFac(2);
                 end % if
  
-                aGamma    = obj.fMomentumToEnergy(aPz);
-                aXPrime   = sin(aPx./aP)*1e3;
-                aCharge   = aRaw(:,8)*obj.Data.Config.Convert.SI.ChargeFac;
-                aCov      = wcov([aX, aXPrime], abs(aCharge));
-                dGamma    = wmean(aGamma, abs(aCharge));
-                dBeta     = sqrt(1 - 1/dGamma^2);
-                aERMS(s)  = sqrt(det(aCov));
-                aENorm(s) = sqrt(det(aCov))*dGamma*dBeta;
+                aXPrime    = sin(aPx./aP)*1e3;
+                aCharge    = aRaw(:,8)*obj.Data.Config.Convert.SI.ChargeFac;
+                aCov       = wcov([aX, aXPrime], abs(aCharge));
+                dGammaBeta = wmean(aPz, abs(aCharge))/abs(obj.Config.RQM);
+                aERMS(s)   = sqrt(det(aCov));
+                aENorm(s)  = sqrt(det(aCov))*dGammaBeta;
             
                 if obj.Cylindrical
                     aX      = [-aX;aX];
