@@ -133,8 +133,8 @@ function stReturn = fPlotPhaseSpace(oData, sTime, sSpecies, varargin)
     plot(0,0,'LineStyle','None');
     plot(0,0,'LineStyle','None');
     
-    cLegend{1} = sprintf('ε_{g} = %.2f µm',stData.ERMS);
-    cLegend{2} = sprintf('ε_{N} = %.2f µm',stData.ENorm);
+    cLegend{1} = sprintf('ε_{g} = %.3f µm',stData.ERMS);
+    cLegend{2} = sprintf('ε_{N} = %.3f µm',stData.ENorm);
     
     hold off;
     
