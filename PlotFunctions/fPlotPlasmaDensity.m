@@ -282,12 +282,8 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     % *******************
     %
     
-    if length(stOLBeam) == 1
-        aCol(1,1:3) = [1.0 1.0 1.0];
-    else
-        aCol(1,1:3) = [1.0 0.7 0.7];
-        aCol(2,1:3) = [0.7 0.7 1.0];
-    end % if
+    aCol(1,1:3) = [1.0 0.7 0.7];
+    aCol(2,1:3) = [0.7 0.7 1.0];
 
     for i=1:length(stOLBeam)
     

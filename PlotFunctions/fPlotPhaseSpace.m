@@ -107,7 +107,7 @@ function stReturn = fPlotPhaseSpace(oData, sTime, sSpecies, varargin)
     stReturn.AxisRange = [aX1Axis(1) aX1Axis(end) aX2Axis(1) aX2Axis(end) 0.0 0.0];
     stReturn.Count     = stData.Count;
     stReturn.ERMS      = stData.ERMS;
-    
+
     % Plot
     
     if strcmpi(stOpt.IsSubPlot, 'No')

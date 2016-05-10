@@ -362,7 +362,7 @@ classdef Momentum < OsirisType
                 aXPrime    = sin(aPx./aP)*1e3;
                 aCharge    = aRaw(:,8)*obj.Data.Config.Convert.SI.ChargeFac;
                 aCov       = wcov([aX, aXPrime], abs(aCharge));
-                dGammaBeta = wmean(aPz, abs(aCharge))/abs(obj.Config.RQM);
+                dGammaBeta = wmean(aPz, abs(aCharge));
                 aERMS(s)   = sqrt(det(aCov));
                 aENorm(s)  = sqrt(det(aCov))*dGammaBeta;
             
