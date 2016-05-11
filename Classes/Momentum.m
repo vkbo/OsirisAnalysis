@@ -359,6 +359,7 @@ classdef Momentum < OsirisType
             end % if
             aERMS  = zeros(iS, 1);
             aENorm = zeros(iS, 1);
+            aGamBe = zeros(iS, 1);
             
             for s=1:iS
 
@@ -397,6 +398,7 @@ classdef Momentum < OsirisType
                 dGammaBeta = wmean(aPz, abs(aQ));
                 aERMS(s)   = sqrt(det(aCov));
                 aENorm(s)  = sqrt(det(aCov))*dGammaBeta;
+                aGamBe(s)  = dGammaBeta;
             
                 aRX  = [aRX;aX];
                 aRXP = [aRXP;aXPrime];
@@ -422,6 +424,7 @@ classdef Momentum < OsirisType
             stReturn.ERMSError  = 1.96*std(aERMS)/sqrt(iNE);
             stReturn.ENorm      = dENorm;
             stReturn.ENormError = 1.96*std(aENorm)/sqrt(iNE);
+            stReturn.GammaBeta  = mean(aGamBe);
 
             % Twiss parameters
             stReturn.Alpha      = aCov(1,2)/dERMS;
