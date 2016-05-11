@@ -317,7 +317,7 @@ classdef Momentum < OsirisType
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
 
-            aRaw = obj.Data.Data(obj.Time, 'RAW', '', obj.Species.Name);
+            aRaw = obj.Data.Data(obj.Time,'RAW','',obj.Species.Name);
             if isempty(aRaw)
                 return;
             end % if
@@ -338,7 +338,7 @@ classdef Momentum < OsirisType
             else
                 iS = stOpt.Samples;
             end % if
-
+            
             for s=1:iS
 
                 if obj.Dim == 2
@@ -359,19 +359,14 @@ classdef Momentum < OsirisType
                     aX   = aRaw(:,2)*obj.AxisFac(2);
                 end % if
  
-                aXPrime    = sin(aPx./aP)*1e3;
+                aXPrime    = sin(aPx./aP);
                 aCharge    = aRaw(:,8)*obj.Data.Config.Convert.SI.ChargeFac;
+                wstd(aXPrime,abs(aCharge))
                 aCov       = wcov([aX, aXPrime], abs(aCharge));
                 dGammaBeta = wmean(aPz, abs(aCharge));
                 aERMS(s)   = sqrt(det(aCov));
                 aENorm(s)  = sqrt(det(aCov))*dGammaBeta;
             
-                if obj.Cylindrical
-                    aX      = [-aX;aX];
-                    aXPrime = [-aXPrime;aXPrime];
-                    aCharge = [aCharge;aCharge];
-                end % if
-                
                 if length(aRX) < stOpt.MinParticles
                     aRX  = [aRX;aX];
                     aRXP = [aRXP;aXPrime];
@@ -387,7 +382,7 @@ classdef Momentum < OsirisType
             stReturn.X          = aRX;
             stReturn.XUnit      = obj.AxisUnits{1};
             stReturn.XPrime     = aRXP;
-            stReturn.XPrimeUnit = 'mrad';
+            stReturn.XPrimeUnit = 'rad';
             stReturn.Charge     = aRQ;
             stReturn.Weight     = abs(aRQ)/max(abs(aRQ));
             stReturn.Covariance = aCov;

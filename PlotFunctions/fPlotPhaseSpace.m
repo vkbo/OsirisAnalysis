@@ -83,7 +83,7 @@ function stReturn = fPlotPhaseSpace(oData, sTime, sSpecies, varargin)
     end % if
     
     % Prepare Data
-    oM = Momentum(oData,vSpecies.Name,'Units','SI','Scale','mm');
+    oM = Momentum(oData,vSpecies.Name,'Units','SI','Scale','m');
     oM.Time = iTime;
     stData = oM.PhaseSpace('Sample',stOpt.Sample, ...
                            'MinParticles',stOpt.MinParticles, ...
@@ -97,8 +97,8 @@ function stReturn = fPlotPhaseSpace(oData, sTime, sSpecies, varargin)
         sUnit = 'Q [nC]';
     end % if
     
-    aX1Axis = stData.HAxis;
-    aX2Axis = stData.VAxis;
+    aX1Axis = stData.HAxis*1e3;
+    aX2Axis = stData.VAxis*1e3;
 
     stReturn.HAxis     = aX1Axis;
     stReturn.VAxis     = aX2Axis;
@@ -107,6 +107,17 @@ function stReturn = fPlotPhaseSpace(oData, sTime, sSpecies, varargin)
     stReturn.AxisRange = [aX1Axis(1) aX1Axis(end) aX2Axis(1) aX2Axis(end) 0.0 0.0];
     stReturn.Count     = stData.Count;
     stReturn.ERMS      = stData.ERMS;
+
+    aCov = stData.Covariance
+    
+    dAlpha = aCov(1,2)/stData.ERMS
+    dBeta  = aCov(1,1)/stData.ERMS
+    dGamma = aCov(2,2)/stData.ERMS
+    dEmitt = stData.ERMS
+    dENorm = stData.ENorm
+    
+    dStdX      = wstd(aX1Axis,sum(stData.Hist,1))
+    dStdXPrime = wstd(aX2Axis,sum(stData.Hist,2))
 
     % Plot
     
@@ -120,7 +131,7 @@ function stReturn = fPlotPhaseSpace(oData, sTime, sSpecies, varargin)
         cla;
     end % if
 
-    imagesc(stData.HAxis, stData.VAxis, aData);
+    imagesc(aX1Axis, aX2Axis, aData);
     set(gca,'YDir','Normal');
     colormap('hot');
     hCol = colorbar();
@@ -149,8 +160,8 @@ function stReturn = fPlotPhaseSpace(oData, sTime, sSpecies, varargin)
     end % if
 
     title(sTitle);
-    xlabel(sprintf('x [%s]',stData.XUnit));
-    ylabel(sprintf('x'' [%s]',stData.XPrimeUnit));
+    xlabel('x [mm]');
+    ylabel('x'' [mrad]');
     title(hCol,sUnit);
     
     % Return
