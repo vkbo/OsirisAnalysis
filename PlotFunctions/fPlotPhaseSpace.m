@@ -69,7 +69,7 @@ function stReturn = fPlotPhaseSpace(oData, sTime, sSpecies, varargin)
     addParameter(oOpt, 'HideDump',     'No');
     addParameter(oOpt, 'IsSubPlot',    'No');
     addParameter(oOpt, 'AutoResize',   'On');
-    addParameter(oOpt, 'Axis',         'Log');
+    addParameter(oOpt, 'Axis',         '');
     addParameter(oOpt, 'CAxis',        []);
     addParameter(oOpt, 'Sample',       1);
     addParameter(oOpt, 'MinParticles', 100000);
@@ -83,7 +83,7 @@ function stReturn = fPlotPhaseSpace(oData, sTime, sSpecies, varargin)
     end % if
     
     % Prepare Data
-    oM = Momentum(oData,vSpecies.Name,'Units','SI','Scale','m');
+    oM = Momentum(oData,vSpecies.Name,'Units','SI','Scale','mm');
     oM.Time = iTime;
     stData = oM.PhaseSpace('Sample',stOpt.Sample, ...
                            'MinParticles',stOpt.MinParticles, ...
@@ -97,8 +97,8 @@ function stReturn = fPlotPhaseSpace(oData, sTime, sSpecies, varargin)
         sUnit = 'Q [nC]';
     end % if
     
-    aX1Axis = stData.HAxis*1e3;
-    aX2Axis = stData.VAxis*1e3;
+    aX1Axis = stData.HAxis;
+    aX2Axis = stData.VAxis;
 
     stReturn.HAxis     = aX1Axis;
     stReturn.VAxis     = aX2Axis;
@@ -107,17 +107,6 @@ function stReturn = fPlotPhaseSpace(oData, sTime, sSpecies, varargin)
     stReturn.AxisRange = [aX1Axis(1) aX1Axis(end) aX2Axis(1) aX2Axis(end) 0.0 0.0];
     stReturn.Count     = stData.Count;
     stReturn.ERMS      = stData.ERMS;
-
-    aCov = stData.Covariance
-    
-    dAlpha = aCov(1,2)/stData.ERMS
-    dBeta  = aCov(1,1)/stData.ERMS
-    dGamma = aCov(2,2)/stData.ERMS
-    dEmitt = stData.ERMS
-    dENorm = stData.ENorm
-    
-    dStdX      = wstd(aX1Axis,sum(stData.Hist,1))
-    dStdXPrime = wstd(aX2Axis,sum(stData.Hist,2))
 
     % Plot
     
@@ -160,8 +149,8 @@ function stReturn = fPlotPhaseSpace(oData, sTime, sSpecies, varargin)
     end % if
 
     title(sTitle);
-    xlabel('x [mm]');
-    ylabel('x'' [mrad]');
+    xlabel(sprintf('x [%s]',stData.XUnit));
+    ylabel(sprintf('x'' [%s]',stData.XPrimeUnit));
     title(hCol,sUnit);
     
     % Return
@@ -169,5 +158,10 @@ function stReturn = fPlotPhaseSpace(oData, sTime, sSpecies, varargin)
     stReturn.XLim  = xlim;
     stReturn.YLim  = ylim;
     stReturn.CLim  = caxis;
+    
+    %figure(30);
+    %plot(aX1Axis, stData.Hist(200,:));
+    %figure(31);
+    %plot(aX2Axis, stData.Hist(:,201));
 
 end % function

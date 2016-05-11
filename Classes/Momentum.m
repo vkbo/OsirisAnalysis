@@ -326,6 +326,9 @@ classdef Momentum < OsirisType
             iLen   = length(aP);
             aERMS  = zeros(stOpt.Samples, 1);
             aENorm = zeros(stOpt.Samples, 1);
+            %if obj.Cylindrical
+            %    aP = [aP;aP];
+            %end % if
             
             aRX   = [];
             aRXP  = [];
@@ -351,26 +354,31 @@ classdef Momentum < OsirisType
                     aPz  = aRaw(:,4);
                     aPr  = aRaw(:,5);
                     aPth = aRaw(:,6);
-                    aPx  = aPr.*cos(aXth) - aPth.*sin(aXth);
-                    aX   = aRaw(:,2).*cos(aXth)*obj.AxisFac(2);
+                    if abs(sum(aPth)) > 1e-5
+                        aPx = aPr.*cos(aXth) - aPth.*sin(aXth);
+                    else
+                        aPx = aPr;
+                    end % if
+                    aT   = aXth-pi;
+                    aX   = aRaw(:,2).*(aT./abs(aT))*obj.AxisFac(2);
+                    aQ   = aRaw(:,8)./aRaw(:,2)*obj.Data.Config.Convert.SI.ChargeFac;
                 else
                     aPz  = aRaw(:,4);
                     aPx  = aRaw(:,5);
                     aX   = aRaw(:,2)*obj.AxisFac(2);
+                    aQ   = aRaw(:,8)*obj.Data.Config.Convert.SI.ChargeFac;
                 end % if
  
-                aXPrime    = sin(aPx./aP);
-                aCharge    = aRaw(:,8)*obj.Data.Config.Convert.SI.ChargeFac;
-                wstd(aXPrime,abs(aCharge))
-                aCov       = wcov([aX, aXPrime], abs(aCharge));
-                dGammaBeta = wmean(aPz, abs(aCharge));
+                aXPrime    = sin(aPx./aP)*1e3;
+                aCov       = wcov([aX, aXPrime], abs(aQ));
+                dGammaBeta = wmean(aPz, abs(aQ));
                 aERMS(s)   = sqrt(det(aCov));
                 aENorm(s)  = sqrt(det(aCov))*dGammaBeta;
             
                 if length(aRX) < stOpt.MinParticles
                     aRX  = [aRX;aX];
                     aRXP = [aRXP;aXPrime];
-                    aRQ  = [aRQ;aCharge];
+                    aRQ  = [aRQ;aQ];
                 end % if
 
             end % for
@@ -378,19 +386,27 @@ classdef Momentum < OsirisType
             iNE = length(aERMS) - 1;
             iNE = iNE + (iNE == 0);
             
+            dERMS  = mean(aERMS);
+            dENorm = mean(aENorm);
+            
             stReturn.Raw        = aRaw;
             stReturn.X          = aRX;
             stReturn.XUnit      = obj.AxisUnits{1};
             stReturn.XPrime     = aRXP;
-            stReturn.XPrimeUnit = 'rad';
+            stReturn.XPrimeUnit = 'mrad';
             stReturn.Charge     = aRQ;
             stReturn.Weight     = abs(aRQ)/max(abs(aRQ));
             stReturn.Covariance = aCov;
-            stReturn.ERMS       = mean(aERMS);
+            stReturn.ERMS       = dERMS;
             stReturn.ERMSError  = 1.96*std(aERMS)/sqrt(iNE);
-            stReturn.ENorm      = mean(aENorm);
+            stReturn.ENorm      = dENorm;
             stReturn.ENormError = 1.96*std(aENorm)/sqrt(iNE);
-            
+
+            % Twiss parameters
+            stReturn.Alpha      = aCov(1,2)/dERMS;
+            stReturn.Beta       = aCov(1,1)/dERMS;
+            stReturn.Gamma      = aCov(2,2)/dERMS;
+
             if strcmpi(stOpt.Histogram, 'No')
                 return;
             end % if
