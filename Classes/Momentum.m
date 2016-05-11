@@ -314,8 +314,29 @@ classdef Momentum < OsirisType
             addParameter(oOpt, 'MinParticles', 100000);
             addParameter(oOpt, 'Histogram',    'No');
             addParameter(oOpt, 'Grid',         [1000 1000]);
+            addParameter(oOpt, 'Dimension',    '');
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
+            
+            if isempty(stOpt.Dimension)
+                if obj.Cylindrical
+                    iDim   = 2;
+                else
+                    iDIm   = 3;
+                end % if
+            else
+                if     strcmpi(stOpt.Dimension, 'Rad')
+                    iDim   = 1;
+                elseif strcmpi(stOpt.Dimension, 'RadToX')
+                    iDim   = 2;
+                elseif strcmpi(stOpt.Dimension, 'X')
+                    iDim   = 3;
+                elseif strcmpi(stOpt.Dimension, 'Y')
+                    iDim   = 4;
+                else
+                    iDim   = 1;
+                end % if
+            end % if
 
             aRaw = obj.Data.Data(obj.Time,'RAW','',obj.Species.Name);
             if isempty(aRaw)
@@ -324,23 +345,20 @@ classdef Momentum < OsirisType
 
             aP     = sqrt(aRaw(:,4).^2 + aRaw(:,5).^2 + aRaw(:,6).^2);
             iLen   = length(aP);
-            aERMS  = zeros(stOpt.Samples, 1);
-            aENorm = zeros(stOpt.Samples, 1);
-            %if obj.Cylindrical
-            %    aP = [aP;aP];
-            %end % if
             
             aRX   = [];
             aRXP  = [];
             aRQ   = [];
             aGam  = [];
-            
+
             iMin  = ceil(stOpt.MinParticles/iLen);
             if stOpt.Samples < iMin
                 iS = iMin;
             else
                 iS = stOpt.Samples;
             end % if
+            aERMS  = zeros(iS, 1);
+            aENorm = zeros(iS, 1);
             
             for s=1:iS
 
@@ -351,22 +369,27 @@ classdef Momentum < OsirisType
                 end % if
 
                 if obj.Cylindrical
-                    aPz  = aRaw(:,4);
-                    aPr  = aRaw(:,5);
-                    aPth = aRaw(:,6);
-                    if abs(sum(aPth)) > 1e-5
-                        aPx = aPr.*cos(aXth) - aPth.*sin(aXth);
+                    aPz = aRaw(:,4);
+                    aPr = aRaw(:,5);
+                    aPt = aRaw(:,6);
+                    if iDim == 2
+                        aPx = aPr.*cos(aXth) - aPt.*sin(aXth);
                     else
                         aPx = aPr;
                     end % if
-                    aT   = aXth-pi;
-                    aX   = aRaw(:,2).*(aT./abs(aT))*obj.AxisFac(2);
-                    aQ   = aRaw(:,8)./aRaw(:,2)*obj.Data.Config.Convert.SI.ChargeFac;
+                    aT  = aXth-pi;
+                    aX  = aRaw(:,2).*(aT./abs(aT))*obj.AxisFac(2);
+                    aQ  = aRaw(:,8)./aRaw(:,2)*obj.Data.Config.Convert.SI.ChargeFac;
                 else
-                    aPz  = aRaw(:,4);
-                    aPx  = aRaw(:,5);
-                    aX   = aRaw(:,2)*obj.AxisFac(2);
-                    aQ   = aRaw(:,8)*obj.Data.Config.Convert.SI.ChargeFac;
+                    aPz = aRaw(:,4);
+                    if iDim == 4
+                        aPx = aRaw(:,6);
+                        aX  = aRaw(:,3)*obj.AxisFac(3);
+                    else
+                        aPx = aRaw(:,5);
+                        aX  = aRaw(:,2)*obj.AxisFac(2);
+                    end % if
+                    aQ  = aRaw(:,8)*obj.Data.Config.Convert.SI.ChargeFac;
                 end % if
  
                 aXPrime    = sin(aPx./aP)*1e3;
@@ -375,11 +398,9 @@ classdef Momentum < OsirisType
                 aERMS(s)   = sqrt(det(aCov));
                 aENorm(s)  = sqrt(det(aCov))*dGammaBeta;
             
-                if length(aRX) < stOpt.MinParticles
-                    aRX  = [aRX;aX];
-                    aRXP = [aRXP;aXPrime];
-                    aRQ  = [aRQ;aQ];
-                end % if
+                aRX  = [aRX;aX];
+                aRXP = [aRXP;aXPrime];
+                aRQ  = [aRQ;aQ];
 
             end % for
             
@@ -430,7 +451,7 @@ classdef Momentum < OsirisType
             stReturn.Hist  = abs(transpose(aHist))*1e9;
             stReturn.HAxis = linspace(dXMin,dXMax,stOpt.Grid(1));
             stReturn.VAxis = linspace(dXPMin,dXPMax,stOpt.Grid(2));
-            stReturn.Count = iLen*iMin;
+            stReturn.Count = length(aRX);
             
         end % function
     
