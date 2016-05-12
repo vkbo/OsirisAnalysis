@@ -194,9 +194,7 @@ classdef OsirisConfig
         function obj = fReadNameLists(obj)
             
             % Read file
-            oFile = fopen(strcat(obj.Path, '/', obj.File), 'r');
-            sFile = sprintf(fread(oFile,'*char'));
-            fclose(oFile);
+            sFile  = fileread([obj.Path '/' obj.File]);
             
             % Get Simulation Description
             cLines = strsplit(sFile,'\n');
