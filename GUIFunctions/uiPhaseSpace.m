@@ -31,8 +31,11 @@ function uiPhaseSpace(oData, varargin)
     
     if strcmpi(stOpt.ReUseFig,'Yes')
         fMain = findobj('Tag','uiOA-PS');
-        set(0,'CurrentFigure',fMain);
-        clf;
+        if isempty(fMain)
+            fMain = figure('IntegerHandle','Off'); clf;
+        else
+            set(0,'CurrentFigure',fMain); clf;
+        end % if
     else
         fMain = figure('IntegerHandle','Off'); clf;
     end % if
@@ -69,12 +72,6 @@ function uiPhaseSpace(oData, varargin)
     cInfoYellow = [1.00 1.00 0.50];
     cInfoGreen  = [0.50 1.00 0.50];
     
-    % Get Values
-    iDumps  = oData.MSData.MaxFiles;
-    dPStart = oData.Config.Simulation.PlasmaStart;
-    dTFac   = oData.Config.Convert.SI.TimeFac;
-    dLFac   = oData.Config.Convert.SI.LengthFac;
-
     % Get DataSet Info
     X.Name    = oData.Config.Name;                          % Name of dataset
     X.Species = fieldnames(oData.Config.Particles.Species); % All species in dataset
