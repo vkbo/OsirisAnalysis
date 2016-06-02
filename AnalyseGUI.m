@@ -95,8 +95,12 @@ function AnalyseGUI
     % *************
     %
     
-    % Figure Controls
-    fMain = figure('IntegerHandle', 'Off'); clf;
+    fMain = findobj('Tag','uiOA-Main');
+    if isempty(fMain)
+        fMain = figure('IntegerHandle','Off'); clf;
+    else
+        set(0,'CurrentFigure',fMain); clf;
+    end % if
     aFPos = fMain.Position;
     
     % Set figure properties
@@ -158,8 +162,9 @@ function AnalyseGUI
     uicontrol('Style','PushButton','String','DN','TooltipString','Track Density','FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.80 0.00 0.00],'Callback',{@fTools,'DN'}); iYBn = iYBn-38;
     uicontrol('Style','PushButton','String','EM','TooltipString','Track Fields', 'FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.80 0.50 0.00],'Callback',{@fTools,'EM'}); iYBn = iYBn-38;
     uicontrol('Style','PushButton','String','3D','TooltipString','3D Tools',     'FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.70 0.00],'Callback',{@fTools,'3D'}); iYBn = iYBn-38;
-    uicontrol('Style','PushButton','String','SP','TooltipString','Track Species','FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.20 0.80],'Callback',{@fTools,'SP'}); iYBn = iYBn-38;
-    uicontrol('Style','PushButton','String','TM','TooltipString','Track Time',   'FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.50 0.00 0.80],'Callback',{@fTools,'TM'}); iYBn = iYBn-38;
+    uicontrol('Style','PushButton','String','SP','TooltipString','Track Species','FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.50 0.80],'Callback',{@fTools,'SP'}); iYBn = iYBn-38;
+    uicontrol('Style','PushButton','String','TM','TooltipString','Track Time',   'FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.20 0.80],'Callback',{@fTools,'TM'}); iYBn = iYBn-38;
+    uicontrol('Style','PushButton','String','PS','TooltipString','Phase Space',  'FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.50 0.00 0.80],'Callback',{@fTools,'PS'}); iYBn = iYBn-38;
 
     % Output Window
     lstOut = uicontrol('Style','Listbox','String','OsirisAnalysis','FontName','FixedWidth','Position',[20 20 560 87],'HorizontalAlignment','Left','BackgroundColor',cBlack,'ForegroundColor',cOutText);
@@ -1493,6 +1498,8 @@ function AnalyseGUI
             case 'SP'
                 uiTrackSpecies(oData,'Position',aPos);
             case 'TM'
+            case 'PS'
+                uiPhaseSpace(oData,'Position',aPos);
         end % switch
         
     end % function
