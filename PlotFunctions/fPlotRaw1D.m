@@ -35,7 +35,7 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
         fprintf('  Inputs:\n');
         fprintf(' =========\n');
         fprintf('  oData    :: OsirisData object\n');
-        fprintf('  sTime    :: Which dump to look at\n');z
+        fprintf('  sTime    :: Which dump to look at\n');
         fprintf('  sSpecies :: Which species to look at\n');
         fprintf('  sAxis    :: Which axis to plot\n');
         fprintf('\n');
