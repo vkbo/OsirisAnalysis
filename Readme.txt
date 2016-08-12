@@ -1,12 +1,8 @@
 
   Osiris Analysis Toolbox
- ******************************************
+ ==========================================
   MATLAB package for analysing Osiris data
-<<<<<<< HEAD
   Current version: Dev1.5
-=======
-  Current version: 1.4.1
->>>>>>> rel1.4
  
 
   Developed by:
@@ -21,6 +17,13 @@
 
   Version 1.5
 
+  Version 1.4.2
+  - Fixed bug in AnalyseGUI where opening a new dataset when another one is loaded caused the maximum zoom limits from
+    the previous dataset to not get updated to the new.
+  - Added code to disable time step controls when the plots are bing refreshed. Clicking multiple times can cause Matlab
+    to crash if a lot of plots are open at the same time.
+  - Added a reset button to each plot to reset the limits to maximum simulation box size.
+  
   Version 1.4.1
   - Fixed bug in Analyse2D where a refresh following moving to another time step would break before all plots have been
     updated.
