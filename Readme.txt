@@ -16,6 +16,13 @@
  =====================
 
   Version 1.5
+  - Added row of puttons in AnalyseGUi for a set of new GUI tools to analyse datasets in more detail. These are:
+     + DN (Track Density): A tool to track changes in beam profile based on density data
+     + EM (Track Fields):  A tool to track changes in the em-fields as time progresses.
+     + 3D (3D Tools):      Some extra tools specifically suited for 3D simulations that aren't covered bu the main GUI.
+     + SP (Track Species): A tool to track macroparticles of a specific species.
+     + TM (Track Time):    A tool to plot time evolution of a number of key parameters. Replaces the "Time Tools" tab.
+     + PS (Phase Space):   A tool to analyse emittance of a given beam.
 
   Version 1.4.2
   - Fixed bug in AnalyseGUI where opening a new dataset when another one is loaded caused the maximum zoom limits from
