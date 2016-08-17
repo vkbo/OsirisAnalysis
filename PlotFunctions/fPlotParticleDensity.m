@@ -12,6 +12,7 @@
 %
 %  Options:
 % ==========
+%  Data        :: Which data. Default charge
 %  Limits      :: Axis limits
 %  Slice       :: 2D slice coordinate for 3D data
 %  SliceAxis   :: 2D slice axis for 3D data
@@ -44,6 +45,7 @@ function stReturn = fPlotParticleDensity(oData, sTime, sSpecies, varargin)
         fprintf('\n');
         fprintf('  Options:\n');
         fprintf(' ==========\n');
+        fprintf('  Data        :: Which data. Default charge\n');
         fprintf('  Limits      :: Axis limits\n');
         fprintf('  Slice       :: 2D slice coordinate for 3D data\n');
         fprintf('  SliceAxis   :: 2D slice axis for 3D data\n');
