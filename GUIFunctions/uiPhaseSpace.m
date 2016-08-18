@@ -341,9 +341,21 @@ function uiPhaseSpace(oData, varargin)
         oM.Time = X.Dump;
         stData  = oM.PhaseSpace('Histogram','Yes','Grid',X.Data.Grid,'Dimension',sDims,'Samples',X.Data.Sample,'MinParticles',X.Data.MinPart);
         
-        aData  = stData.Hist;
-        aHAxis = stData.HAxis;
-        aVAxis = stData.VAxis;
+        if isempty(stData.Error)
+        
+            aData  = stData.Hist;
+            aHAxis = stData.HAxis;
+            aVAxis = stData.VAxis;
+            
+        else
+            
+            fOut(stData.Error,3);
+
+            aData  = zeros(3);
+            aHAxis = [-1 0 1];
+            aVAxis = [-1 0 1];
+
+        end % if
         
         axes(axMain); cla;
         hold on;
@@ -371,9 +383,16 @@ function uiPhaseSpace(oData, varargin)
             [~,iMax] = max(sum(aData,2));
             aLine    = aData(iMax,:);
         end % if
-        aLine  = aLine/max(aLine);
-        dHRMS  = wstd(aHAxis,aLine);
-        dHFWHM = fwhm(aHAxis,aLine);
+        
+        dNorm = max(aLine);
+        if dNorm ~= 0
+            aLine  = aLine/dNorm;
+            dHRMS  = wstd(aHAxis,aLine);
+            dHFWHM = fwhm(aHAxis,aLine);
+        else
+            dHRMS  = 0;
+            dHFWHM = 0;
+        end % if
 
         axes(axHorz); cla;
         plot(aHAxis, aLine);
@@ -393,9 +412,16 @@ function uiPhaseSpace(oData, varargin)
             [~,iMax] = max(sum(aData,1));
             aLine    = aData(:,iMax);
         end % if
-        aLine  = aLine/max(aLine);
-        dVRMS  = wstd(aVAxis,aLine);
-        dVFWHM = fwhm(aVAxis,aLine);
+
+        dNorm = max(aLine);
+        if dNorm ~= 0
+            aLine  = aLine/dNorm;
+            dVRMS  = wstd(aVAxis,aLine);
+            dVFWHM = fwhm(aVAxis,aLine);
+        else
+            dVRMS  = 0;
+            dVFWHM = 0;
+        end % if
 
         axes(axVert); cla;
         plot(aVAxis, aLine);

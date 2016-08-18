@@ -14,6 +14,9 @@
 %  Options:
 % ==========
 %  Lim         :: Horizontal axis limits
+%  Method      :: Weighted deposit ob grid, or use bins. Default Deposit
+%  Grid        :: Grid cells or bins. Default 100
+%  GaussFit    :: Default No
 %  FigureSize  :: Default [900 500]
 %  HideDump    :: Default No
 %  IsSubplot   :: Default No
@@ -42,6 +45,9 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
         fprintf('  Options:\n');
         fprintf(' ==========\n');
         fprintf('  Lim         :: Horizontal axis limits\n');
+        fprintf('  Method      :: Weighted deposit ob grid, or use bins. Default Deposit\n');
+        fprintf('  Grid        :: Grid cells or bins. Default 100\n');
+        fprintf('  GaussFit    :: Default No\n');
         fprintf('  FigureSize  :: Default [900 500]\n');
         fprintf('  HideDump    :: Default No\n');
         fprintf('  IsSubplot   :: Default No\n');

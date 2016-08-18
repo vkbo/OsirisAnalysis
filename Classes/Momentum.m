@@ -302,7 +302,8 @@ classdef Momentum < OsirisType
         function stReturn = PhaseSpace(obj, varargin)
             
             % Input/Output
-            stReturn = {};
+            stReturn       = {};
+            stReturn.Error = '';
 
             % Check that the object is initialised
             if obj.fError
@@ -441,16 +442,29 @@ classdef Momentum < OsirisType
             dXPMax  = max(abs(aRXP));
             dXMin   = -dXMax;
             dXPMin  = -dXPMax;
+            
+            % Check if angle is 0 (no emittance)
+            if dXPMax == 0
 
+                stReturn.Error = 'Maximum particle angle is 0.';
+                stReturn.Hist  = [];
+                stReturn.HAxis = [];
+                stReturn.VAxis = [];
+                stReturn.Count = 0;
+                
+                return;
+
+            end % if
+                
             dDX     = dXMax/((stOpt.Grid(1)-2)/2);
             dDXP    = dXPMax/((stOpt.Grid(2)-2)/2);
             aM      = floor(aRX/dDX)+(stOpt.Grid(1)/2)+1;
             aN      = floor(aRXP/dDXP)+(stOpt.Grid(2)/2)+1;
-            
+
             for i=1:length(aM)
                 aHist(aM(i),aN(i)) = aHist(aM(i),aN(i)) + aRQ(i);
             end % for
-            
+
             stReturn.Hist  = abs(transpose(aHist))*1e9;
             stReturn.HAxis = linspace(dXMin,dXMax,stOpt.Grid(1));
             stReturn.VAxis = linspace(dXPMin,dXPMax,stOpt.Grid(2));

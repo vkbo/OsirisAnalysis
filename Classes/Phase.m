@@ -640,7 +640,7 @@ classdef Phase < OsirisType
 
         function stReturn = fConvertDeposit(obj, sDeposit)
 
-            % Return Defualts
+            % Return Defaults
             stReturn.Fac  = 1.0;
             stReturn.Unit = 'N';
 

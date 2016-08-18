@@ -1641,6 +1641,9 @@ function AnalyseGUI
 
         switch(X.Plots{X.Figure(f)})
 
+            case 'Particle Density'
+                fCtrlParticleDensity(f);
+                
             case 'Phase 2D'
                 X.Plot(f).MaxLim = [0.0 0.0 0.0 0.0];
                 X.Plot(f).Limits = [0.0 0.0 0.0 0.0];
