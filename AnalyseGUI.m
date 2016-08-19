@@ -1045,7 +1045,11 @@ function AnalyseGUI
                     
                 case 'Particle UDist'
                     X.Plot(f).Data     = X.Data.Species{1};
-                    X.Plot(f).UDist    = X.Data.UDist{1};
+                    if length(X.Data.UDist) > 0
+                        X.Plot(f).UDist    = X.Data.UDist{1};
+                    else
+                        X.Plot(f).UDist    = '';
+                    end % if
                     X.Plot(f).Settings = [0 0];
                     X.Plot(f).CAxis    = [];
                     fCtrlUDist(f);
@@ -1349,6 +1353,9 @@ function AnalyseGUI
                             sLog = 'No';
                         end % if
                         figure(X.Plot(f).Figure); clf;
+                        if isempty(X.Plot(f).UDist)
+                            continue;
+                        end % if
                         sUDist = oVar.Reverse(X.Plot(f).UDist,'Full');
                         iMakeSym = 1;
 
