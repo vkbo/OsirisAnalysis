@@ -100,16 +100,16 @@ function uiTrackSpecies(oData, varargin)
     %fMain = figure('IntegerHandle', 'Off'); clf;
     fMain = figure(1); clf;
     aFPos = get(fMain, 'Position');
-    iH    = 610;
+    aSize = [1170 610];
     
     % Set Figure Properties
     fMain.Units        = 'Pixels';
     fMain.MenuBar      = 'None';
-    fMain.Position     = [aFPos(1:2) 1170 iH];
     fMain.Name         = 'OsirisAnalysis: Track Species';
     fMain.NumberTitle  = 'Off';
     fMain.DockControls = 'Off';
     fMain.Tag          = 'uiOA-TS';
+    fMain.Position     = [aFPos(1:2) aSize];
 
     if ~isempty(stOpt.Position) && sum(size(stOpt.Position) == [1 2]) == 2
         aOPos = fMain.OuterPosition;
@@ -271,6 +271,7 @@ function uiTrackSpecies(oData, varargin)
     
     fRefreshDensity;
     fOut(sprintf('Loaded ''%s''',X.Track.Species),1);
+    fMain.Position = [aFPos(1:2) aSize];
     
     
     %

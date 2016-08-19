@@ -113,7 +113,7 @@ function AnalyseGUI
 
     % Figure position
     aFPos = fMain.Position;
-    fMain.Position     = [aFPos(1:2) 590 660];
+    fMain.Position = [aFPos(1:2) 590 660];
     
     % Get figure background colour
     cBackGround = fMain.Color;
@@ -154,19 +154,21 @@ function AnalyseGUI
     
     set(0, 'CurrentFigure', fMain);
     uicontrol('Style','Text','String','Controls','FontSize',20,'Position',[20 622 140 25],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-    uicontrol('Style','PushButton','String','i','FontSize',15,'FontName','FixedWidth','FontWeight','Bold','Position',[210 620 25 25],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.55 0.88],'Callback',{@fShowSimInfo});
-    uicontrol('Style','PushButton','String','f','FontSize',15,'FontName','FixedWidth','FontWeight','Bold','Position',[180 620 25 25],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.55 0.00],'Callback',{@fFocus});
+    uicontrol('Style','PushButton','String','i','TooltipString','Show Sim. Info', 'FontSize',15,'FontName','FixedWidth','FontWeight','Bold','Position',[205 620 25 25],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.55 0.88],'Callback',{@fShowSimInfo});
+    uicontrol('Style','PushButton','String','f','TooltipString','Plots to Front', 'FontSize',15,'FontName','FixedWidth','FontWeight','Bold','Position',[170 620 25 25],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.55 0.00],'Callback',{@fFocus});
+    uicontrol('Style','PushButton','String','d','TooltipString','Open Input Deck','FontSize',15,'FontName','FixedWidth','FontWeight','Bold','Position',[550 620 25 25],'BackgroundColor',cButtonOff,'ForegroundColor',[0.88 0.55 0.55],'Callback',{@fShowInputDeck});
 
     lblData = uicontrol('Style','Text','String','No Data','FontSize',18,'Position',[240 620 300 25],'ForegroundColor',cInfoText,'BackgroundColor',cInfoBack);
     
     % Button Column
     iYBn = 573;
-    uicontrol('Style','PushButton','String','DN','TooltipString','Track Density','FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.80 0.00 0.00],'Callback',{@fTools,'DN'}); iYBn = iYBn-38;
-    uicontrol('Style','PushButton','String','EM','TooltipString','Track Fields', 'FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.80 0.50 0.00],'Callback',{@fTools,'EM'}); iYBn = iYBn-38;
-    uicontrol('Style','PushButton','String','3D','TooltipString','3D Tools',     'FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.70 0.00],'Callback',{@fTools,'3D'}); iYBn = iYBn-38;
-    uicontrol('Style','PushButton','String','SP','TooltipString','Track Species','FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.50 0.80],'Callback',{@fTools,'SP'}); iYBn = iYBn-38;
-    uicontrol('Style','PushButton','String','TM','TooltipString','Track Time',   'FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.20 0.80],'Callback',{@fTools,'TM'}); iYBn = iYBn-38;
-    uicontrol('Style','PushButton','String','PS','TooltipString','Phase Space',  'FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.50 0.00 0.80],'Callback',{@fTools,'PS'}); iYBn = iYBn-38;
+    uicontrol('Style','PushButton','String','DN','Enable','Off','TooltipString','Track Density','FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.80 0.00 0.00],'Callback',{@fTools,'DN'}); iYBn = iYBn-38;
+    uicontrol('Style','PushButton','String','EM','Enable','Off','TooltipString','Track Fields', 'FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.80 0.50 0.00],'Callback',{@fTools,'EM'}); iYBn = iYBn-38;
+    uicontrol('Style','PushButton','String','3D','Enable','Off','TooltipString','3D Tools',     'FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.50 0.50 0.00],'Callback',{@fTools,'3D'}); iYBn = iYBn-38;
+    uicontrol('Style','PushButton','String','SP','Enable','Off','TooltipString','Track Species','FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.70 0.00],'Callback',{@fTools,'SP'}); iYBn = iYBn-38;
+    uicontrol('Style','PushButton','String','TM','Enable','Off','TooltipString','Track Time',   'FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.50 0.80],'Callback',{@fTools,'TM'}); iYBn = iYBn-38;
+    uicontrol('Style','PushButton','String','LN','Enable','On', 'TooltipString','Lineout Tools','FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.20 0.80],'Callback',{@fTools,'LN'}); iYBn = iYBn-38;
+    uicontrol('Style','PushButton','String','PS','Enable','On', 'TooltipString','Phase Space',  'FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.50 0.00 0.80],'Callback',{@fTools,'PS'}); iYBn = iYBn-38;
 
     % Output Window
     lstOut = uicontrol('Style','Listbox','String','OsirisAnalysis','FontName','FixedWidth','Position',[20 20 560 87],'HorizontalAlignment','Left','BackgroundColor',cBlack,'ForegroundColor',cOutText);
@@ -317,6 +319,7 @@ function AnalyseGUI
     % Init
     set(hTabGroup,'SelectedTab',hTabX(1));
     fScanData(0,0);
+    fMain.Position = [aFPos(1:2) 590 660];
     
     
     %
@@ -857,7 +860,15 @@ function AnalyseGUI
         
         X.Time.Dump = X.Time.Limits(iJump);
         
+        for b=1:8
+            btnTime(b).Enable = 'Off';
+        end % for
+        
         fRefresh;
+
+        for b=1:8
+            btnTime(b).Enable = 'On';
+        end % for
         
     end % function
 
@@ -1045,7 +1056,7 @@ function AnalyseGUI
                     
                 case 'Particle UDist'
                     X.Plot(f).Data     = X.Data.Species{1};
-                    if length(X.Data.UDist) > 0
+                    if isempty(X.Data.UDist)
                         X.Plot(f).UDist    = X.Data.UDist{1};
                     else
                         X.Plot(f).UDist    = '';
@@ -1520,6 +1531,19 @@ function AnalyseGUI
         end % if
 
         msgbox(X.Data.Details,'Simulation Description');
+        
+    end % function
+
+    function fShowInputDeck(~,~)
+        
+        if X.DataSet == 0
+            fOut('No dataset loaded',3);
+            return;
+        end % if
+
+        sFile = [oData.Config.Path '/' oData.Config.File];
+        system(['gedit ' sFile ' &']);
+        fOut(['Opening ' sFile],1);
         
     end % function
 

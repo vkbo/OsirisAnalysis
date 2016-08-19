@@ -55,11 +55,11 @@ function uiPhaseSpace(oData, varargin)
     % Set Figure Properties
     fMain.Units        = 'Pixels';
     fMain.MenuBar      = 'None';
-    fMain.Position     = [figX figY figW figH];
     fMain.Name         = 'OsirisAnalysis: Phase Space';
     fMain.NumberTitle  = 'Off';
     fMain.DockControls = 'Off';
     fMain.Tag          = 'uiOA-PS';
+    fMain.Position     = [figX figY figW figH];
 
     %
     %  Initial Values
@@ -308,6 +308,11 @@ function uiPhaseSpace(oData, varargin)
     % ============
     
     oM = [];
+    
+    % Makse sure figure size and position is correct
+    fMain.Position = [figX figY figW figH];
+    
+    % Update content
     fRefreshSpecies;
     fRefreshDim;
     fRefresh;
