@@ -105,7 +105,7 @@ function AnalyseGUI
     % Set figure properties
     fMain.Units        = 'Pixels';
     fMain.MenuBar      = 'None';
-    fMain.Name         = 'OsirisAnalysis Version Dev1.5 - GUI';
+    fMain.Name         = 'OsirisAnalysis Version Dev2.0 - GUI';
     fMain.NumberTitle  = 'Off';
     fMain.DockControls = 'Off';
     fMain.Tag          = 'uiOA-Main';

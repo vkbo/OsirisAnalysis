@@ -2,7 +2,7 @@
   Osiris Analysis Toolbox
  ==========================================
   MATLAB package for analysing Osiris data
-  Current version: Dev1.5
+  Current version: Dev2.0
  
 
   Developed by:
@@ -15,13 +15,16 @@
   Development History
  =====================
 
-  Version 1.5
-  - Added row of puttons in AnalyseGUi for a set of new GUI tools to analyse datasets in more detail. These are:
+  Version 2.0
+  - Numerous minor bug fixed to unexpected content in datasets
+  - Fixed bugs in plot control updates in AnalyseGUI
+  - Added row of buttons in AnalyseGUi for a set of new GUI tools to analyse datasets in more detail. These are:
      + DN (Track Density): A tool to track changes in beam profile based on density data
      + EM (Track Fields):  A tool to track changes in the em-fields as time progresses.
      + 3D (3D Tools):      Some extra tools specifically suited for 3D simulations that aren't covered bu the main GUI.
      + SP (Track Species): A tool to track macroparticles of a specific species.
      + TM (Track Time):    A tool to plot time evolution of a number of key parameters. Replaces the "Time Tools" tab.
+     + LN (Lineout Tools): A tool to look at lineouts of various density type plots.
      + PS (Phase Space):   A tool to analyse emittance of a given beam.
 
   Version 1.4.2
