@@ -160,6 +160,83 @@ classdef Field < OsirisType
         
         end % function
         
+        function stReturn = Potential2D(obj, sPotential)
+            
+            % Input/Output
+            stReturn = {};
+            
+            stPot = obj.Translate.Lookup(sPotential,'Potential');
+            if ~stPot.isPotential
+                fprintf(2, 'Error: ''%s'' is not a recognised potential. Using ''w1'' instead.\n', sPotential);
+                stPot = obj.Translate.Lookup('w1');
+            end % if
+            
+            % For now the code assumes all particles move at c in direction x1
+            dBeta1 = 1.0;
+            dBeta2 = 0.0;
+            dBeta3 = 0.0;
+            
+            % Extract parallel e-field
+            switch(stPot.Name)
+                case 'w1'
+                    aE  = obj.Data.Data(obj.Time, 'FLD', 'e1', '');
+                    bAz = false;
+                case 'w2'
+                    aE  = obj.Data.Data(obj.Time, 'FLD', 'e2', '');
+                    bAz = false;
+                case 'w3'
+                    aE  = obj.Data.Data(obj.Time, 'FLD', 'e3', '');
+                    bAz = true;
+            end % switch
+            
+            % If parallel e-field doesn't exist, return empty
+            if isempty(aE)
+                return;
+            end % if
+
+            % Extract ortogonal b-fields – partial derivatives
+            switch(stPot.Name)
+                case 'w1'
+                    aB1 = obj.Data.Data(obj.Time, 'FLD', 'b3', '');
+                    aB2 = obj.Data.Data(obj.Time, 'FLD', 'b2', '');
+                    dV1 = dBeta2;
+                    dV2 = dBeta3;
+                case 'w2'
+                    aB1 = obj.Data.Data(obj.Time, 'FLD', 'b1', '');
+                    aB2 = obj.Data.Data(obj.Time, 'FLD', 'b3', '');
+                    dV1 = dBeta3;
+                    dV2 = dBeta1;
+                case 'w3'
+                    aB1 = obj.Data.Data(obj.Time, 'FLD', 'b2', '');
+                    aB2 = obj.Data.Data(obj.Time, 'FLD', 'b1', '');
+                    dV1 = dBeta1;
+                    dV2 = dBeta2;
+            end % switch
+            
+            % If ortogonal b-field doesn't exist, return empty
+            if isempty(aB1) || isempty(aB2)
+                return;
+            end % if
+            
+            aW = aE + dV1*aB1 - dV2*aB2;
+            
+            % Slice the data
+            stData = obj.fParseGridData2D(aW,bAz);
+            if isempty(stData)
+                return;
+            end % if
+            
+            dScale = obj.Data.Config.Convert.SI.E0;
+            
+            % Return Data
+            stReturn.Data  = stData.Data*dScale;
+            stReturn.HAxis = stData.HAxis;
+            stReturn.VAxis = stData.VAxis;
+            stReturn.Axes  = stData.Axes;
+            stReturn.ZPos  = obj.fGetZPos();        
+            
+        end % function
+        
         function stReturn = Integral(obj, sStart, sStop, aRange)
 
             % Input/Output

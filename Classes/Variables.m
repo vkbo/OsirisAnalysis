@@ -66,7 +66,7 @@ classdef Variables
                          'Axis','Momentum','Angular','Current', ...
                          'EField','BField','EFieldExt','BFieldExt', ...
                          'EFieldPart','BFieldPart','EFieldEnergy','BFieldEnergy', ...
-                         'Field','FieldEnergy','FieldDiv', ...
+                         'Field','FieldEnergy','FieldDiv','Potential', ...
                          'Quantity','Flux','Poynting','Ufl','Uth'};
 
 
@@ -101,6 +101,9 @@ classdef Variables
             stMap.Allowed.Poynting     = {'s1','s2','s3'};
             stMap.Allowed.UDist        = {'ufl1','ufl2','ufl3','uth1','uth2','uth3'};
             stMap.Allowed.RawAxis      = {'x1','x2','x3','p1','p2','p3','ene','charge','tag1','tag2'};
+
+            % Calculated quantities (not in Osiris)
+            stMap.Allowed.Potential    = {'w1','w2','w3'}; % Calculated from e1, e2, e3, b1 and b3
 
             % Osiris diagnostics options
             stMap.Diag.EMF        = {'e1','e2','e3','b1','b2','b3', ...
@@ -748,6 +751,32 @@ classdef Variables
             stMap.Translate.Uth(3).Unit  = {'eV/c','eV/c'};
             stMap.Translate.Uth(3).Dim   = 3;
 
+            % Potential
+
+            stMap.Translate.Potential(1).Name  = 'w1';
+            stMap.Translate.Potential(1).Alt   = {'wz','w_z'};
+            stMap.Translate.Potential(1).Full  = {'Longitudinal Potential','Longitudinal Potential'};
+            stMap.Translate.Potential(1).Short = {'Wz','Wz'};
+            stMap.Translate.Potential(1).Tex   = {'W_{z}','W_{z}'};
+            stMap.Translate.Potential(1).Unit  = {'V','V'};
+            stMap.Translate.Potential(1).Dim   = 1;
+
+            stMap.Translate.Potential(2).Name  = 'w2';
+            stMap.Translate.Potential(2).Alt   = {'wx','w_x','wr','w_r'};
+            stMap.Translate.Potential(2).Full  = {'Radial Potential','Horizontal Potential'};
+            stMap.Translate.Potential(2).Short = {'Wr','Wx'};
+            stMap.Translate.Potential(2).Tex   = {'W_{r}','W_{x}'};
+            stMap.Translate.Potential(2).Unit  = {'V','V'};
+            stMap.Translate.Potential(2).Dim   = 2;
+
+            stMap.Translate.Potential(3).Name  = 'w3';
+            stMap.Translate.Potential(3).Alt   = {'wy','w_y','wth','w_th'};
+            stMap.Translate.Potential(3).Full  = {'Azimuthal Potential','Vertical Potential'};
+            stMap.Translate.Potential(3).Short = {'Wth','Wy'};
+            stMap.Translate.Potential(3).Tex   = {'W_{\theta}','W_{y}'};
+            stMap.Translate.Potential(3).Unit  = {'V','V'};
+            stMap.Translate.Potential(3).Dim   = 3;
+            
             % Save map
             obj.Map = stMap;
 
@@ -852,6 +881,8 @@ classdef Variables
             end % for
             
             % Check
+            
+            % Osiris
             stReturn.isBeam                = (sum(ismember(obj.Map.Allowed.Beam,stReturn.Name)) == 1);
             stReturn.isPlasma              = (sum(ismember(obj.Map.Allowed.Plasma,stReturn.Name)) == 1);
             stReturn.isSpecies             = (sum(ismember(obj.Map.Allowed.Species,stReturn.Name)) == 1);
@@ -874,6 +905,11 @@ classdef Variables
             stReturn.isFlux                = (sum(ismember(obj.Map.Allowed.Flux,stReturn.Name)) == 1);
             stReturn.isPoynting            = (sum(ismember(obj.Map.Allowed.Poynting,stReturn.Name)) == 1);
             stReturn.isUDist               = (sum(ismember(obj.Map.Allowed.UDist,stReturn.Name)) == 1);
+            
+            % Calculated
+            stReturn.isPotential           = (sum(ismember(obj.Map.Allowed.Potential,stReturn.Name)) == 1);
+
+            % Diagnostics
             stReturn.isValidEMFDiag        = (sum(ismember(obj.Map.Diag.EMF,stReturn.Name)) == 1);
             stReturn.isValidSpeciesDiag    = (sum(ismember(obj.Map.Diag.Species,stReturn.Name)) == 1);
             stReturn.isValidPhaseSpaceDiag = (sum(ismember(obj.Map.Diag.PhaseSpace,stReturn.Name)) == 1);

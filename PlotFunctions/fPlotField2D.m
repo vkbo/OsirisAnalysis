@@ -56,8 +56,14 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
         return;
     end % if
 
-    vField = oData.Translate.Lookup(sField);
+    vField = oData.Translate.Lookup(sField,{'Field','Potential'});
     iTime  = oData.StringToDump(sTime);
+    
+    if vField.isPotential
+        bField = false;
+    else
+        bField = true;
+    end % if
 
     oOpt = inputParser;
     addParameter(oOpt, 'Limits',      []);
@@ -77,16 +83,21 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
         return;
     end % if
     
-    if ~vField.isValidEMFDiag
+    if ~vField.isValidEMFDiag && ~vField.isPotential
         fprintf(2, 'Error: Non-existent field diagnostics specified.\n');
         return;
     end % if
     
     % Prepare Data
 
-    oFLD      = Field(oData,vField.Name,'Units','SI','Scale','mm');
+    if bField
+        oFLD = Field(oData,vField.Name,'Units','SI','Scale','mm');
+    else
+        oFLD = Field(oData,'e1','Units','SI','Scale','mm');
+    end % if
+
     oFLD.Time = iTime;
-    sBaseUnit = oFLD.FieldUnit;
+    sBaseUnit = vField.Unit;
     
     if length(stOpt.Limits) == 4
         oFLD.X1Lim = stOpt.Limits(1:2);
@@ -98,7 +109,11 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
         oFLD.Slice     = stOpt.Slice;
     end % if
     
-    stData = oFLD.Density2D;
+    if bField
+        stData = oFLD.Density2D;
+    else
+        stData = oFLD.Potential2D(vField.Name);
+    end % if
 
     if isempty(stData)
         fprintf(2, 'Error: No data.\n');
