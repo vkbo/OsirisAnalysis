@@ -25,7 +25,8 @@
 %  Scatter1/2 :: Beam scatter overlay
 %  Sample1/2  :: Beam scatter sample size [200]
 %  Filter1/2  :: Beam scatter filter type: Charge, Random, WRandom or W2Random
-%  E1/2       :: E-field overlay range average over [Start, Count]
+%  E1/2/3     :: E-field overlay range average over [Start, Count]
+%  W1/2/3     :: Potential overlay range average over [Start, Count]
 %
 
 function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
@@ -59,7 +60,8 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         fprintf('  Scatter1/2 :: Beam scatter overlay\n');
         fprintf('  Sample1/2  :: Beam scatter sample size [200]\n');
         fprintf('  Filter1/2  :: Beam scatter filter type: Charge, Random, WRandom or W2Random\n');
-        fprintf('  E1/2       :: E-field overlay range average over [Start, Count]\n');
+        fprintf('  E1/2/3     :: E-field overlay range average over [Start, Count]\n');
+        fprintf('  W1/2/3     :: Potential overlay range average over [Start, Count]\n');
         fprintf('\n');
         return;
     end % if
@@ -92,6 +94,9 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     addParameter(oOpt, 'E1',          []);
     addParameter(oOpt, 'E2',          []);
     addParameter(oOpt, 'E3',          []);
+    addParameter(oOpt, 'W1',          []);
+    addParameter(oOpt, 'W2',          []);
+    addParameter(oOpt, 'W3',          []);
     parse(oOpt, varargin{:});
     stOpt = oOpt.Results;
 
@@ -115,20 +120,44 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     iField = 1;
     if ~isempty(stOpt.E1)
         stField(iField).Name  = 'e1';
+        stField(iField).Type  = 1;
         stField(iField).Range = stOpt.E1;
         stField(iField).Color = [0.7 1.0 0.7];
         iField = iField + 1;
     end % if
     if ~isempty(stOpt.E2)
         stField(iField).Name  = 'e2';
+        stField(iField).Type  = 1;
         stField(iField).Range = stOpt.E2;
         stField(iField).Color = [0.9 0.9 0.7];
         iField = iField + 1;
     end % if
     if ~isempty(stOpt.E3)
         stField(iField).Name  = 'e3';
+        stField(iField).Type  = 1;
         stField(iField).Range = stOpt.E3;
         stField(iField).Color = [0.9 0.7 0.7];
+        iField = iField + 1;
+    end % if
+    if ~isempty(stOpt.W1)
+        stField(iField).Name  = 'w1';
+        stField(iField).Type  = 2;
+        stField(iField).Range = stOpt.W1;
+        stField(iField).Color = [0.7 1.0 1.0];
+        iField = iField + 1;
+    end % if
+    if ~isempty(stOpt.W2)
+        stField(iField).Name  = 'w2';
+        stField(iField).Type  = 2;
+        stField(iField).Range = stOpt.W2;
+        stField(iField).Color = [1.0 0.7 0.5];
+        iField = iField + 1;
+    end % if
+    if ~isempty(stOpt.W3)
+        stField(iField).Name  = 'w3';
+        stField(iField).Type  = 2;
+        stField(iField).Range = stOpt.W3;
+        stField(iField).Color = [1.0 0.7 1.0];
         iField = iField + 1;
     end % if
 
@@ -327,7 +356,11 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
             iA = 3;
         end % if
         
-        oFLD      = Field(oData,stField(i).Name,'Units','SI','X1Scale',oDN.AxisScale{1},'X2Scale',oDN.AxisScale{2});
+        if stField(i).Type == 1
+            oFLD = Field(oData,stField(i).Name,'Units','SI','X1Scale',oDN.AxisScale{1},'X2Scale',oDN.AxisScale{2});
+        else
+            oFLD = Field(oData,'e1','Units','SI','X1Scale',oDN.AxisScale{1},'X2Scale',oDN.AxisScale{2});
+        end % if
         oFLD.Time = iTime;
         sFUnit    = oFLD.FieldUnit;
         
@@ -341,14 +374,18 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
             oFLD.Slice     = stOpt.Slice;
         end % if
 
-        stEF    = oFLD.Lineout(iS,iA);
-        aEFData = 0.15*(aVAxis(end)-aVAxis(1))*stEF.Data/max(abs(stEF.Data));
+        if stField(i).Type == 1
+            stFLD   = oFLD.Lineout(iS,iA);
+        else
+            stFLD   = oFLD.PotLineout(stField(i).Name,iS,iA);
+        end % if
+        aEFData = 0.15*(aVAxis(end)-aVAxis(1))*stFLD.Data/max(abs(stFLD.Data));
 
-        [dEne,  sEne]  = fAutoScale(max(abs(stEF.Data)), sFUnit);
-        [dEVal, sUnit] = fAutoScale(stEF.VRange(2)*1e-3, 'm');
-        dSVal          = stEF.VRange(1)*dEVal/stEF.VRange(2);
+        [dEne,  sEne]  = fAutoScale(max(abs(stFLD.Data)), sFUnit);
+        [dEVal, sUnit] = fAutoScale(stFLD.VRange(2)*1e-3, 'm');
+        dSVal          = stFLD.VRange(1)*dEVal/stFLD.VRange(2);
         
-        plot(stEF.HAxis,aEFData,'Color',stField(i).Color);
+        plot(stFLD.HAxis,aEFData,'Color',stField(i).Color);
         stOLLeg{iOLNum} = sprintf('%s^{%.0f–%.0f %s} < %.1f %s',oData.Translate.Lookup(stField(i).Name).Tex,dSVal,dEVal,sUnit,dEne,sEne);
         iOLNum = iOLNum + 1;
         

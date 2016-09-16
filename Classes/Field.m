@@ -238,6 +238,85 @@ classdef Field < OsirisType
             stReturn.ZPos  = obj.fGetZPos();        
             
         end % function
+
+        function stReturn = PotLineout(obj, sPotential, iStart, iAverage)
+
+            % Input/Output
+            stReturn = {};
+            
+            stPot = obj.Translate.Lookup(sPotential,'Potential');
+            if ~stPot.isPotential
+                fprintf(2, 'Error: ''%s'' is not a recognised potential. Using ''w1'' instead.\n', sPotential);
+                stPot = obj.Translate.Lookup('w1');
+            end % if
+            
+            % Extract the beta values for the direction of simulation movement
+            aMove = obj.Data.Config.Simulation.Moving;
+            
+            % Extract parallel e-field
+            switch(stPot.Name)
+                case 'w1'
+                    aE    = obj.Data.Data(obj.Time, 'FLD', 'e1', '');
+                    bSign = false;
+                case 'w2'
+                    aE    = obj.Data.Data(obj.Time, 'FLD', 'e2', '');
+                    bSign = true;
+                case 'w3'
+                    aE    = obj.Data.Data(obj.Time, 'FLD', 'e3', '');
+                    bSign = true;
+            end % switch
+            
+            % If parallel e-field doesn't exist, return empty
+            if isempty(aE)
+                return;
+            end % if
+            
+            aB1 = 0.0;
+            aB2 = 0.0;
+
+            % Extract ortogonal b-fields – partial derivatives
+            switch(stPot.Name)
+                case 'w1'
+                    if aMove(2) ~= 0.0
+                        aB1 = aMove(2) * obj.Data.Data(obj.Time, 'FLD', 'b3', '');
+                    end % if
+                    if aMove(3) ~= 0.0
+                        aB2 = aMove(3) * obj.Data.Data(obj.Time, 'FLD', 'b2', '');
+                    end % if
+                case 'w2'
+                    if aMove(3) ~= 0.0
+                        aB1 = aMove(3) * obj.Data.Data(obj.Time, 'FLD', 'b1', '');
+                    end % if
+                    if aMove(1) ~= 0.0
+                        aB2 = aMove(1) * obj.Data.Data(obj.Time, 'FLD', 'b3', '');
+                    end % if
+                case 'w3'
+                    if aMove(1) ~= 0.0
+                        aB1 = aMove(1) * obj.Data.Data(obj.Time, 'FLD', 'b2', '');
+                    end % if
+                    if aMove(2) ~= 0.o
+                        aB2 = aMove(2) * obj.Data.Data(obj.Time, 'FLD', 'b1', '');
+                    end % if
+            end % switch
+            
+            aW = aE + aB1 - aB2;
+
+            % Slice the data
+            stData = obj.fParseGridData1D(aW,iStart,iAverage);
+            if isempty(stData)
+                return;
+            end % if
+
+            dScale = obj.Data.Config.Convert.SI.E0;
+
+            % Return Data
+            stReturn.Data   = stData.Data*dScale;
+            stReturn.HAxis  = stData.HAxis;
+            stReturn.HRange = stData.HLim;
+            stReturn.VRange = stData.VLim;
+            stReturn.ZPos   = obj.fGetZPos();        
+        
+        end % function
         
         function stReturn = Integral(obj, sStart, sStop, aRange)
 
