@@ -510,13 +510,13 @@ classdef OsirisType
 
         end % function
         
-        function stReturn = fParseGridData2D(obj, aData, bAzimuthal)
+        function stReturn = fParseGridData2D(obj, aData, bSignFlip)
             
             % Input/Output
             stReturn = {};
             
             if nargin < 3
-                bAzimuthal = false;
+                bSignFlip = false;
             end % if
 
             if ndims(aData) ~= obj.Dim
@@ -569,7 +569,7 @@ classdef OsirisType
 
             % Check if cylindrical
             if obj.Cylindrical
-                if bAzimuthal
+                if bSignFlip
                     aData = transpose([-fliplr(aData),aData]);
                 else
                     aData = transpose([ fliplr(aData),aData]);

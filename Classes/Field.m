@@ -97,7 +97,7 @@ classdef Field < OsirisType
                 return;
             end % if
 
-            stData = obj.fParseGridData2D(aData,(obj.FieldVar.Dim == 3));
+            stData = obj.fParseGridData2D(aData,~(obj.FieldVar.Dim == 1));
             
             if isempty(stData)
                 return;
@@ -171,57 +171,59 @@ classdef Field < OsirisType
                 stPot = obj.Translate.Lookup('w1');
             end % if
             
-            % For now the code assumes all particles move at c in direction x1
-            dBeta1 = 1.0;
-            dBeta2 = 0.0;
-            dBeta3 = 0.0;
+            % Extract the beta values for the direction of simulation movement
+            aMove = obj.Data.Config.Simulation.Moving;
             
             % Extract parallel e-field
             switch(stPot.Name)
                 case 'w1'
-                    aE  = obj.Data.Data(obj.Time, 'FLD', 'e1', '');
-                    bAz = false;
+                    aE    = obj.Data.Data(obj.Time, 'FLD', 'e1', '');
+                    bSign = false;
                 case 'w2'
-                    aE  = obj.Data.Data(obj.Time, 'FLD', 'e2', '');
-                    bAz = false;
+                    aE    = obj.Data.Data(obj.Time, 'FLD', 'e2', '');
+                    bSign = true;
                 case 'w3'
-                    aE  = obj.Data.Data(obj.Time, 'FLD', 'e3', '');
-                    bAz = true;
+                    aE    = obj.Data.Data(obj.Time, 'FLD', 'e3', '');
+                    bSign = true;
             end % switch
             
             % If parallel e-field doesn't exist, return empty
             if isempty(aE)
                 return;
             end % if
+            
+            aB1 = 0.0;
+            aB2 = 0.0;
 
             % Extract ortogonal b-fields – partial derivatives
             switch(stPot.Name)
                 case 'w1'
-                    aB1 = obj.Data.Data(obj.Time, 'FLD', 'b3', '');
-                    aB2 = obj.Data.Data(obj.Time, 'FLD', 'b2', '');
-                    dV1 = dBeta2;
-                    dV2 = dBeta3;
+                    if aMove(2) ~= 0.0
+                        aB1 = aMove(2) * obj.Data.Data(obj.Time, 'FLD', 'b3', '');
+                    end % if
+                    if aMove(3) ~= 0.0
+                        aB2 = aMove(3) * obj.Data.Data(obj.Time, 'FLD', 'b2', '');
+                    end % if
                 case 'w2'
-                    aB1 = obj.Data.Data(obj.Time, 'FLD', 'b1', '');
-                    aB2 = obj.Data.Data(obj.Time, 'FLD', 'b3', '');
-                    dV1 = dBeta3;
-                    dV2 = dBeta1;
+                    if aMove(3) ~= 0.0
+                        aB1 = aMove(3) * obj.Data.Data(obj.Time, 'FLD', 'b1', '');
+                    end % if
+                    if aMove(1) ~= 0.0
+                        aB2 = aMove(1) * obj.Data.Data(obj.Time, 'FLD', 'b3', '');
+                    end % if
                 case 'w3'
-                    aB1 = obj.Data.Data(obj.Time, 'FLD', 'b2', '');
-                    aB2 = obj.Data.Data(obj.Time, 'FLD', 'b1', '');
-                    dV1 = dBeta1;
-                    dV2 = dBeta2;
+                    if aMove(1) ~= 0.0
+                        aB1 = aMove(1) * obj.Data.Data(obj.Time, 'FLD', 'b2', '');
+                    end % if
+                    if aMove(2) ~= 0.o
+                        aB2 = aMove(2) * obj.Data.Data(obj.Time, 'FLD', 'b1', '');
+                    end % if
             end % switch
             
-            % If ortogonal b-field doesn't exist, return empty
-            if isempty(aB1) || isempty(aB2)
-                return;
-            end % if
-            
-            aW = aE + dV1*aB1 - dV2*aB2;
+            aW = aE + aB1 - aB2;
             
             % Slice the data
-            stData = obj.fParseGridData2D(aW,bAz);
+            stData = obj.fParseGridData2D(aW,bSign);
             if isempty(stData)
                 return;
             end % if

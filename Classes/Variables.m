@@ -758,7 +758,7 @@ classdef Variables
             stMap.Translate.Potential(1).Full  = {'Longitudinal Potential','Longitudinal Potential'};
             stMap.Translate.Potential(1).Short = {'Wz','Wz'};
             stMap.Translate.Potential(1).Tex   = {'W_{z}','W_{z}'};
-            stMap.Translate.Potential(1).Unit  = {'V','V'};
+            stMap.Translate.Potential(1).Unit  = {'V/m','V/m'};
             stMap.Translate.Potential(1).Dim   = 1;
 
             stMap.Translate.Potential(2).Name  = 'w2';
@@ -766,7 +766,7 @@ classdef Variables
             stMap.Translate.Potential(2).Full  = {'Radial Potential','Horizontal Potential'};
             stMap.Translate.Potential(2).Short = {'Wr','Wx'};
             stMap.Translate.Potential(2).Tex   = {'W_{r}','W_{x}'};
-            stMap.Translate.Potential(2).Unit  = {'V','V'};
+            stMap.Translate.Potential(2).Unit  = {'V/m','V/m'};
             stMap.Translate.Potential(2).Dim   = 2;
 
             stMap.Translate.Potential(3).Name  = 'w3';
@@ -774,7 +774,7 @@ classdef Variables
             stMap.Translate.Potential(3).Full  = {'Azimuthal Potential','Vertical Potential'};
             stMap.Translate.Potential(3).Short = {'Wth','Wy'};
             stMap.Translate.Potential(3).Tex   = {'W_{\theta}','W_{y}'};
-            stMap.Translate.Potential(3).Unit  = {'V','V'};
+            stMap.Translate.Potential(3).Unit  = {'V/m','V/m'};
             stMap.Translate.Potential(3).Dim   = 3;
             
             % Save map

@@ -643,7 +643,7 @@ function AnalyseGUI
         X.Data.Beam       = oData.Config.Particles.Beams;
         X.Data.Plasma     = oData.Config.Particles.Plasma;
         X.Data.Species    = [X.Data.Beam X.Data.Plasma];
-        X.Data.Field      = oData.Config.EMFields.Reports;
+        X.Data.Field      = [oData.Config.EMFields.Reports oData.Config.EMFields.Potentials];
         X.Data.Completed  = oData.Completed;
         X.Data.HasData    = oData.HasData;
         X.Data.HasTracks  = oData.HasTracks;
