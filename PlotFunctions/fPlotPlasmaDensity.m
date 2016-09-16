@@ -26,7 +26,7 @@
 %  Sample1/2  :: Beam scatter sample size [200]
 %  Filter1/2  :: Beam scatter filter type: Charge, Random, WRandom or W2Random
 %  E1/2/3     :: E-field overlay range average over [Start, Count]
-%  W1/2/3     :: Potential overlay range average over [Start, Count]
+%  W1/2/3     :: Wakefield overlay range average over [Start, Count]
 %
 
 function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
@@ -61,7 +61,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         fprintf('  Sample1/2  :: Beam scatter sample size [200]\n');
         fprintf('  Filter1/2  :: Beam scatter filter type: Charge, Random, WRandom or W2Random\n');
         fprintf('  E1/2/3     :: E-field overlay range average over [Start, Count]\n');
-        fprintf('  W1/2/3     :: Potential overlay range average over [Start, Count]\n');
+        fprintf('  W1/2/3     :: Wakefield overlay range average over [Start, Count]\n');
         fprintf('\n');
         return;
     end % if
@@ -377,7 +377,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         if stField(i).Type == 1
             stFLD   = oFLD.Lineout(iS,iA);
         else
-            stFLD   = oFLD.PotLineout(stField(i).Name,iS,iA);
+            stFLD   = oFLD.WFLineout(stField(i).Name,iS,iA);
         end % if
         aEFData = 0.15*(aVAxis(end)-aVAxis(1))*stFLD.Data/max(abs(stFLD.Data));
 

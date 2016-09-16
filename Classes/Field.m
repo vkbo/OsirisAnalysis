@@ -160,22 +160,22 @@ classdef Field < OsirisType
         
         end % function
         
-        function stReturn = Potential2D(obj, sPotential)
+        function stReturn = Wakefield2D(obj, sWakefield)
             
             % Input/Output
             stReturn = {};
             
-            stPot = obj.Translate.Lookup(sPotential,'Potential');
-            if ~stPot.isPotential
-                fprintf(2, 'Error: ''%s'' is not a recognised potential. Using ''w1'' instead.\n', sPotential);
-                stPot = obj.Translate.Lookup('w1');
+            stWF = obj.Translate.Lookup(sWakefield,'Wakefield');
+            if ~stWF.isWakefield
+                fprintf(2, 'Error: ''%s'' is not a recognised wakefield. Using ''w1'' instead.\n', sWakefield);
+                stWF = obj.Translate.Lookup('w1');
             end % if
             
             % Extract the beta values for the direction of simulation movement
             aMove = obj.Data.Config.Simulation.Moving;
             
             % Extract parallel e-field
-            switch(stPot.Name)
+            switch(stWF.Name)
                 case 'w1'
                     aE    = obj.Data.Data(obj.Time, 'FLD', 'e1', '');
                     bSign = false;
@@ -196,7 +196,7 @@ classdef Field < OsirisType
             aB2 = 0.0;
 
             % Extract ortogonal b-fields – partial derivatives
-            switch(stPot.Name)
+            switch(stWF.Name)
                 case 'w1'
                     if aMove(2) ~= 0.0
                         aB1 = aMove(2) * obj.Data.Data(obj.Time, 'FLD', 'b3', '');
@@ -239,31 +239,28 @@ classdef Field < OsirisType
             
         end % function
 
-        function stReturn = PotLineout(obj, sPotential, iStart, iAverage)
+        function stReturn = WFLineout(obj, sWakefield, iStart, iAverage)
 
             % Input/Output
             stReturn = {};
             
-            stPot = obj.Translate.Lookup(sPotential,'Potential');
-            if ~stPot.isPotential
-                fprintf(2, 'Error: ''%s'' is not a recognised potential. Using ''w1'' instead.\n', sPotential);
-                stPot = obj.Translate.Lookup('w1');
+            stWF = obj.Translate.Lookup(sWakefield,'Wakefield');
+            if ~stWF.isWakefield
+                fprintf(2, 'Error: ''%s'' is not a recognised wakefield. Using ''w1'' instead.\n', sWakefield);
+                stWF = obj.Translate.Lookup('w1');
             end % if
             
             % Extract the beta values for the direction of simulation movement
             aMove = obj.Data.Config.Simulation.Moving;
             
             % Extract parallel e-field
-            switch(stPot.Name)
+            switch(stWF.Name)
                 case 'w1'
                     aE    = obj.Data.Data(obj.Time, 'FLD', 'e1', '');
-                    bSign = false;
                 case 'w2'
                     aE    = obj.Data.Data(obj.Time, 'FLD', 'e2', '');
-                    bSign = true;
                 case 'w3'
                     aE    = obj.Data.Data(obj.Time, 'FLD', 'e3', '');
-                    bSign = true;
             end % switch
             
             % If parallel e-field doesn't exist, return empty
@@ -275,7 +272,7 @@ classdef Field < OsirisType
             aB2 = 0.0;
 
             % Extract ortogonal b-fields – partial derivatives
-            switch(stPot.Name)
+            switch(stWF.Name)
                 case 'w1'
                     if aMove(2) ~= 0.0
                         aB1 = aMove(2) * obj.Data.Data(obj.Time, 'FLD', 'b3', '');

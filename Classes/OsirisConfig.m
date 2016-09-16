@@ -722,8 +722,8 @@ classdef OsirisConfig
             % Save EMF Diagnostics
             obj.EMFields.Reports = cReports;
 
-            % Check which potentials can be calculated from the fields
-            cPot  = {};
+            % Check which wakefields can be calculated from the e- and b-fields
+            cWake = {};
             aMove = obj.Simulation.Moving;
             
             % w1 requires e1 to be present
@@ -733,7 +733,7 @@ classdef OsirisConfig
             if (sum(ismember(cReports,'e1')) > 0) ...
                     && (aMove(2) == 0.0 || sum(ismember(cReports,'b3')) > 0) ...
                     && (aMove(3) == 0.0 || sum(ismember(cReports,'b2')) > 0)
-                cPot{end+1} = 'w1';
+                cWake{end+1} = 'w1';
             end % if
 
             % w2 requires e2 to be present
@@ -743,7 +743,7 @@ classdef OsirisConfig
             if (sum(ismember(cReports,'e2')) > 0) ...
                     && (aMove(3) == 0.0 || sum(ismember(cReports,'b1')) > 0) ...
                     && (aMove(1) == 0.0 || sum(ismember(cReports,'b3')) > 0)
-                cPot{end+1} = 'w2';
+                cWake{end+1} = 'w2';
             end % if
 
             % w3 requires e3 to be present
@@ -753,11 +753,11 @@ classdef OsirisConfig
             if (sum(ismember(cReports,'e3')) > 0) ...
                     && (aMove(1) == 0.0 || sum(ismember(cReports,'b2')) > 0) ...
                     && (aMove(2) == 0.0 || sum(ismember(cReports,'b1')) > 0)
-                cPot{end+1} = 'w3';
+                cWake{end+1} = 'w3';
             end % if
             
             % Save Potential Options
-            obj.EMFields.Potentials = cPot;
+            obj.EMFields.Wakefields = cWake;
             
         end % function
         

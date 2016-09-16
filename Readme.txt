@@ -26,8 +26,8 @@
      + TM (Track Time):    A tool to plot time evolution of a number of key parameters. Replaces the "Time Tools" tab.
      + LN (Lineout Tools): A tool to look at lineouts of various density type plots.
      + PS (Phase Space):   A tool to analyse emittance of a given beam.
-  - Field class now also calculates potential using the simulation moving frame velocities in units of beta. The class
-    OsirisConfig will evaluate the emf reports to determine which potentials can be calculated, and the GUI will offer a
+  - Field class now also calculates wakefields using the simulation moving frame velocities in units of beta. The class
+    OsirisConfig will evaluate the emf reports to determine which wakefields can be calculated, and the GUI will offer a
     list based on this for the field density plot.
 
   Version 1.4.2

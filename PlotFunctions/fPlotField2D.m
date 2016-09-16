@@ -56,10 +56,10 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
         return;
     end % if
 
-    vField = oData.Translate.Lookup(sField,{'Field','Potential'});
+    vField = oData.Translate.Lookup(sField,{'Field','Wakefield'});
     iTime  = oData.StringToDump(sTime);
     
-    if vField.isPotential
+    if vField.isWakefield
         bField = false;
     else
         bField = true;
@@ -83,7 +83,7 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
         return;
     end % if
     
-    if ~vField.isValidEMFDiag && ~vField.isPotential
+    if ~vField.isValidEMFDiag && ~vField.isWakefield
         fprintf(2, 'Error: Non-existent field diagnostics specified.\n');
         return;
     end % if
@@ -112,7 +112,7 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
     if bField
         stData = oFLD.Density2D;
     else
-        stData = oFLD.Potential2D(vField.Name);
+        stData = oFLD.Wakefield2D(vField.Name);
     end % if
 
     if isempty(stData)

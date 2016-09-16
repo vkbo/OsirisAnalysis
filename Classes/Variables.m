@@ -66,7 +66,7 @@ classdef Variables
                          'Axis','Momentum','Angular','Current', ...
                          'EField','BField','EFieldExt','BFieldExt', ...
                          'EFieldPart','BFieldPart','EFieldEnergy','BFieldEnergy', ...
-                         'Field','FieldEnergy','FieldDiv','Potential', ...
+                         'Field','FieldEnergy','FieldDiv','Wakefield', ...
                          'Quantity','Flux','Poynting','Ufl','Uth'};
 
 
@@ -103,7 +103,7 @@ classdef Variables
             stMap.Allowed.RawAxis      = {'x1','x2','x3','p1','p2','p3','ene','charge','tag1','tag2'};
 
             % Calculated quantities (not in Osiris)
-            stMap.Allowed.Potential    = {'w1','w2','w3'}; % Calculated from e1, e2, e3, b1 and b3
+            stMap.Allowed.Wakefield    = {'w1','w2','w3'}; % Calculated from e1, e2, e3, b1 and b3
 
             % Osiris diagnostics options
             stMap.Diag.EMF        = {'e1','e2','e3','b1','b2','b3', ...
@@ -751,31 +751,31 @@ classdef Variables
             stMap.Translate.Uth(3).Unit  = {'eV/c','eV/c'};
             stMap.Translate.Uth(3).Dim   = 3;
 
-            % Potential
+            % Wakefield
 
-            stMap.Translate.Potential(1).Name  = 'w1';
-            stMap.Translate.Potential(1).Alt   = {'wz','w_z'};
-            stMap.Translate.Potential(1).Full  = {'Longitudinal Potential','Longitudinal Potential'};
-            stMap.Translate.Potential(1).Short = {'Wz','Wz'};
-            stMap.Translate.Potential(1).Tex   = {'W_{z}','W_{z}'};
-            stMap.Translate.Potential(1).Unit  = {'V/m','V/m'};
-            stMap.Translate.Potential(1).Dim   = 1;
+            stMap.Translate.Wakefield(1).Name  = 'w1';
+            stMap.Translate.Wakefield(1).Alt   = {'wz','w_z'};
+            stMap.Translate.Wakefield(1).Full  = {'Longitudinal Wakefield','Longitudinal Wakefield'};
+            stMap.Translate.Wakefield(1).Short = {'Wz','Wz'};
+            stMap.Translate.Wakefield(1).Tex   = {'W_{z}','W_{z}'};
+            stMap.Translate.Wakefield(1).Unit  = {'V/m','V/m'};
+            stMap.Translate.Wakefield(1).Dim   = 1;
 
-            stMap.Translate.Potential(2).Name  = 'w2';
-            stMap.Translate.Potential(2).Alt   = {'wx','w_x','wr','w_r'};
-            stMap.Translate.Potential(2).Full  = {'Radial Potential','Horizontal Potential'};
-            stMap.Translate.Potential(2).Short = {'Wr','Wx'};
-            stMap.Translate.Potential(2).Tex   = {'W_{r}','W_{x}'};
-            stMap.Translate.Potential(2).Unit  = {'V/m','V/m'};
-            stMap.Translate.Potential(2).Dim   = 2;
+            stMap.Translate.Wakefield(2).Name  = 'w2';
+            stMap.Translate.Wakefield(2).Alt   = {'wx','w_x','wr','w_r'};
+            stMap.Translate.Wakefield(2).Full  = {'Radial Wakefield','Horizontal Wakefield'};
+            stMap.Translate.Wakefield(2).Short = {'Wr','Wx'};
+            stMap.Translate.Wakefield(2).Tex   = {'W_{r}','W_{x}'};
+            stMap.Translate.Wakefield(2).Unit  = {'V/m','V/m'};
+            stMap.Translate.Wakefield(2).Dim   = 2;
 
-            stMap.Translate.Potential(3).Name  = 'w3';
-            stMap.Translate.Potential(3).Alt   = {'wy','w_y','wth','w_th'};
-            stMap.Translate.Potential(3).Full  = {'Azimuthal Potential','Vertical Potential'};
-            stMap.Translate.Potential(3).Short = {'Wth','Wy'};
-            stMap.Translate.Potential(3).Tex   = {'W_{\theta}','W_{y}'};
-            stMap.Translate.Potential(3).Unit  = {'V/m','V/m'};
-            stMap.Translate.Potential(3).Dim   = 3;
+            stMap.Translate.Wakefield(3).Name  = 'w3';
+            stMap.Translate.Wakefield(3).Alt   = {'wy','w_y','wth','w_th'};
+            stMap.Translate.Wakefield(3).Full  = {'Azimuthal Wakefield','Vertical Wakefield'};
+            stMap.Translate.Wakefield(3).Short = {'Wth','Wy'};
+            stMap.Translate.Wakefield(3).Tex   = {'W_{\theta}','W_{y}'};
+            stMap.Translate.Wakefield(3).Unit  = {'V/m','V/m'};
+            stMap.Translate.Wakefield(3).Dim   = 3;
             
             % Save map
             obj.Map = stMap;
@@ -907,7 +907,7 @@ classdef Variables
             stReturn.isUDist               = (sum(ismember(obj.Map.Allowed.UDist,stReturn.Name)) == 1);
             
             % Calculated
-            stReturn.isPotential           = (sum(ismember(obj.Map.Allowed.Potential,stReturn.Name)) == 1);
+            stReturn.isWakefield           = (sum(ismember(obj.Map.Allowed.Wakefield,stReturn.Name)) == 1);
 
             % Diagnostics
             stReturn.isValidEMFDiag        = (sum(ismember(obj.Map.Diag.EMF,stReturn.Name)) == 1);
