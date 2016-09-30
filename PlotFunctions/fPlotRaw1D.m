@@ -103,10 +103,16 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
 
     % Curve Fitting
     if strcmpi(stOpt.GaussFit,'Yes')
+        
+        if isempty(stOpt.Lim)
+            aFAxis = aAxis;
+        else
+            aFAxis = stOpt.Lim(1)*dAScale:(aAxis(2)-aAxis(1)):stOpt.Lim(2)*dAScale;
+        end % if
     
         try
             oFit   = fit(double(aAxis)',double(aData)','Gauss1');
-            aFit   = feval(oFit,aAxis);
+            aFit   = feval(oFit,aFAxis);
             dAmp   = oFit.a1;
             dMu    = oFit.b1;
             dSigma = oFit.c1/sqrt(2);
@@ -114,7 +120,7 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
             if abs(max(aFit))/abs(min(aFit)) < 2
                 fprintf('Warning: Gauss1 failed, trying Gauss2\n');
                 oFit   = fit(double(aAxis)',double(aData)','Gauss2');
-                aFit   = feval(oFit,aAxis);
+                aFit   = feval(oFit,aFAxis);
                 dAmp   = oFit.a2;
                 dMu    = oFit.b2;
                 dSigma = oFit.c2/sqrt(2);
@@ -168,7 +174,7 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
                 figure(stOpt.ForceFig);
             end % if
             hold on;
-            plot(aAxis, aFit, 'Color', 'Red');
+            plot(aFAxis, aFit, 'Color', 'Red');
 
             sAmp   = sprintf('\\leftarrow A = %.2f%%',dAmp);
             sMu    = sprintf('\\mu = %.2f %s \\rightarrow',dMu,sAUnit);
@@ -200,11 +206,17 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
     sMean = sprintf('Mean: %.2f %s',dMVal,sMUnit);
     sStd  = sprintf('Std: %.2f %s',dSVal,sSUnit);
 
-    dX = interp1([0 1], xlim(), 0.02);
-    dY = interp1([0 1], ylim(), 0.95);
+    aXLim = xlim();
+    aYLim = ylim();
+    aSize = get(gca,'Position');
+    dDX   = aSize(3)/(aXLim(2)-aXLim(1));
+    dDY   = aSize(4)/(aYLim(2)-aYLim(1));
+    dX    = aXLim(1)+8/dDX;
+    dY1   = aYLim(2)-15/dDY;
+    dY2   = aYLim(2)-30/dDY;
 
-    text(dX,dY,sMean);
-    text(dX,0.95*dY,sStd);
+    text(dX,dY1,sMean);
+    text(dX,dY2,sStd);
 
     hold off;
     
@@ -216,7 +228,7 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
 
     title(sTitle);
     xlabel(sprintf('%s [%s]',vAxis.Tex,sAUnit));
-    ylabel('Ratio [%]');
+    ylabel('% Per Bin');
     
 
     % Return
