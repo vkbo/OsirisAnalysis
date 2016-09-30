@@ -107,13 +107,16 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     
     stOLBeam = {};
     if ~isempty(stOpt.Overlay)
-        stOLBeam{1} = stOpt.Overlay;
+        vTemp = oData.Translate.Lookup(stOpt.Overlay,'Species');
+        stOLBeam{1} = vTemp.Name;
     end % if
     if ~isempty(stOpt.Overlay1)
-        stOLBeam{1} = stOpt.Overlay1;
+        vTemp = oData.Translate.Lookup(stOpt.Overlay1,'Species');
+        stOLBeam{1} = vTemp.Name;
     end % if
     if ~isempty(stOpt.Overlay2)
-        stOLBeam{2} = stOpt.Overlay2;
+        vTemp = oData.Translate.Lookup(stOpt.Overlay2,'Species');
+        stOLBeam{2} = vTemp.Name;
     end % if
     
     stField = {};
@@ -163,13 +166,16 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
 
     stSCBeam = {};
     if ~isempty(stOpt.Scatter)
-        stSCBeam{1} = stOpt.Scatter;
+        vTemp = oData.Translate.Lookup(stOpt.Scatter,'Species');
+        stSCBeam{1} = vTemp.Name;
     end % if
     if ~isempty(stOpt.Scatter1)
-        stSCBeam{1} = stOpt.Scatter1;
+        vTemp = oData.Translate.Lookup(stOpt.Scatter1,'Species');
+        stSCBeam{1} = vTemp.Name;
     end % if
     if ~isempty(stOpt.Scatter2)
-        stSCBeam{2} = stOpt.Scatter2;
+        vTemp = oData.Translate.Lookup(stOpt.Scatter2,'Species');
+        stSCBeam{2} = vTemp.Name;
     end % if
     
     aSample = [];
