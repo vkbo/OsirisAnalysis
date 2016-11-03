@@ -340,21 +340,36 @@ classdef OsirisType
 
             sReturn = 'Unknown Position';
 
-            dLFactor = obj.Data.Config.Convert.SI.LengthFac;    
+            dTFac    = obj.Data.Config.Convert.SI.TimeFac;
+            dLFac    = obj.Data.Config.Convert.SI.LengthFac;
             dPStart  = obj.Data.Config.Simulation.PlasmaStart;
             dPEnd    = obj.Data.Config.Simulation.PlasmaEnd;
-            dSimPos  = obj.Time*obj.Data.Config.Convert.SI.TimeFac;
+            
+            dSimPos  = obj.Time*dTFac;
+            dDeltaT  = dTFac*dLFac;
+            dTMag    = round(log10(dDeltaT));
+            
+            dScale = 1.0;
+            sUnit  = 'm';
+            if dTMag < -1
+                dScale = 1.0e2;
+                sUnit  = 'cm';
+            end % if
+            if dTMag < -2
+                dScale = 1.0e3;
+                sUnit  = 'mm';
+            end % if
 
             if dSimPos < dPStart
-                sReturn = sprintf('at %0.2f m Before Plasma', (dPStart-dSimPos)*dLFactor);
+                sReturn = sprintf('at %0.2f %s Before Plasma',(dPStart-dSimPos)*dLFac*dScale,sUnit);
             end % if
 
             if dSimPos >= dPStart && dSimPos <= dPEnd
-                sReturn = sprintf('at %0.2f m Into Plasma', (dSimPos-dPStart)*dLFactor);
+                sReturn = sprintf('at %0.2f %s Into Plasma',(dSimPos-dPStart)*dLFac*dScale,sUnit);
             end % if
 
             if dSimPos > dPEnd
-                sReturn = sprintf('at %0.2f m After Plasma', (dSimPos-dPEnd)*dLFactor);
+                sReturn = sprintf('at %0.2f %s After Plasma',(dSimPos-dPEnd)*dLFac*dScale,sUnit);
             end % if
 
         end % function
