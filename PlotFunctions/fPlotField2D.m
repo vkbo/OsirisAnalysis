@@ -56,7 +56,7 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
         return;
     end % if
 
-    vField = oData.Translate.Lookup(sField,{'Field','Wakefield'});
+    vField = oData.Translate.Lookup(sField);
     iTime  = oData.StringToDump(sTime);
     
     if vField.isWakefield

@@ -97,7 +97,12 @@ classdef Field < OsirisType
                 return;
             end % if
 
-            stData = obj.fParseGridData2D(aData,~(obj.FieldVar.Dim == 1));
+            bSign = ~(obj.FieldVar.Dim == 1);
+            switch(obj.FieldVar.Name)
+                case 'psi'
+                    bSign = false;
+            end % switch
+            stData = obj.fParseGridData2D(aData,bSign);
             
             if isempty(stData)
                 return;

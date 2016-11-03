@@ -635,7 +635,7 @@ classdef Variables
             stMap.Translate.Quantity(8).Alt   = {};
             stMap.Translate.Quantity(8).Full  = {'Pseudopotential','Pseudopotential'};
             stMap.Translate.Quantity(8).Short = {'Psi','Psi'};
-            stMap.Translate.Quantity(8).Tex   = {'\Psi_{x}','\Psi_{x}'};
+            stMap.Translate.Quantity(8).Tex   = {'\Psi','\Psi'};
             stMap.Translate.Quantity(8).Unit  = {'a.u.','a.u.'};
             stMap.Translate.Quantity(8).Dim   = 0;
 

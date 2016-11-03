@@ -423,7 +423,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     title(sTitle);
     xlabel('\xi [mm]');
     ylabel('r [mm]');
-    title(hCol,'n_{pe}/n_0');
+    title(hCol,'n/n_0');
     
     hold off;
     
