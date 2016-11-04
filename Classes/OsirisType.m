@@ -687,6 +687,27 @@ classdef OsirisType
             aReturn = sqrt(aMomentum.^2 + 1)*dPFac;
             
         end % function
+        
+        function aReturn = fPruneRaw(obj, aRaw, iVar, dMin, dMax)
+            
+            % By default do nothing.
+            aReturn = aRaw;
+            
+            if iVar < 1 || iVar > 8 || isempty(dMin) && isempty(dMax)
+                return;
+            end % if
+            
+            if ~isempty(dMin)
+                aInd = find(aReturn(:,iVar) < dMin);
+                aReturn(aInd,:) = [];
+            end % if
+
+            if ~isempty(dMax)
+                aInd = find(aReturn(:,iVar) > dMax);
+                aReturn(aInd,:) = [];
+            end % if
+            
+        end % function
 
     end % methods
     
