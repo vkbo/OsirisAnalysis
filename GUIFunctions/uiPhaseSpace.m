@@ -221,7 +221,7 @@ function uiPhaseSpace(oData, varargin)
     
     axMain = axes('Units','Pixels','Position',[ 80 iH-440 500 350]);
     axHorz = axes('Units','Pixels','Position',[600 iH-440 220 160]); 
-    axVert = axes('Units','Pixels','Position',[850 iH-440 220 160]);
+    axVert = axes('Units','Pixels','Position',[860 iH-440 220 160]);
     
     %  Settings Box A
     % ================
@@ -245,7 +245,7 @@ function uiPhaseSpace(oData, varargin)
     %  Parameter Set A
     % =================
     
-    bgParA = uibuttongroup('Title','Emittance & Twiss','Units','Pixels','Position',[760 iH-240 145 175]);
+    bgParA = uibuttongroup('Title','Emittance & Twiss','Units','Pixels','Position',[760 iH-240 155 175]);
     
     uicontrol(bgParA,'Style','Text','String','ϵ',  'FontSize',12,'Position',[ 5 135 20 17],'HorizontalAlignment','Left');
     uicontrol(bgParA,'Style','Text','String','g',  'FontSize',7, 'Position',[16 133 10 10],'HorizontalAlignment','Left');
@@ -264,17 +264,17 @@ function uiPhaseSpace(oData, varargin)
     lblParA(5) = uicontrol(bgParA,'Style','Text','String','0.0','Position',[39  35 70 17],'BackgroundColor',cInfoBack);
     lblParA(6) = uicontrol(bgParA,'Style','Text','String','0.0','Position',[39  10 70 17],'BackgroundColor',cInfoBack);
     
-    lblUntA(1) = uicontrol(bgParA,'Style','Text','String','mm','FontSize',8,'Position',[112 135 25 15],'HorizontalAlignment','Left');
-    lblUntA(2) = uicontrol(bgParA,'Style','Text','String','mm','FontSize',8,'Position',[112 110 25 15],'HorizontalAlignment','Left');
-    lblUntA(3) = uicontrol(bgParA,'Style','Text','String','mm','FontSize',8,'Position',[112  85 25 15],'HorizontalAlignment','Left');
-    lblUntA(4) = uicontrol(bgParA,'Style','Text','String','mm','FontSize',8,'Position',[112  60 25 15],'HorizontalAlignment','Left');
-    lblUntA(5) = uicontrol(bgParA,'Style','Text','String','mm','FontSize',8,'Position',[112  35 25 15],'HorizontalAlignment','Left');
-    lblUntA(6) = uicontrol(bgParA,'Style','Text','String','mm','FontSize',8,'Position',[112  10 25 15],'HorizontalAlignment','Left');
+    lblUntA(1) = uicontrol(bgParA,'Style','Text','String','mm', 'FontSize',8,'Position',[112 135 35 15],'HorizontalAlignment','Left');
+    lblUntA(2) = uicontrol(bgParA,'Style','Text','String','mm', 'FontSize',8,'Position',[112 110 35 15],'HorizontalAlignment','Left');
+    lblUntA(3) = uicontrol(bgParA,'Style','Text','String','DU', 'FontSize',8,'Position',[112  85 35 15],'HorizontalAlignment','Left');
+    lblUntA(4) = uicontrol(bgParA,'Style','Text','String','m/r','FontSize',8,'Position',[112  60 35 15],'HorizontalAlignment','Left');
+    lblUntA(5) = uicontrol(bgParA,'Style','Text','String','r/m','FontSize',8,'Position',[112  35 35 15],'HorizontalAlignment','Left');
+    lblUntA(6) = uicontrol(bgParA,'Style','Text','String','',   'FontSize',8,'Position',[112  10 35 15],'HorizontalAlignment','Left');
     
     %  Parameter Set B
     % =================
     
-    bgParB = uibuttongroup('Title','Dimensions','Units','Pixels','Position',[915 iH-240 155 175]);
+    bgParB = uibuttongroup('Title','Dimensions','Units','Pixels','Position',[925 iH-240 155 175]);
     
     uicontrol(bgParB,'Style','Text','String','H',      'FontSize',10,'Position',[ 5 135 20 17],'HorizontalAlignment','Left');
     uicontrol(bgParB,'Style','Text','String','RMS',    'FontSize',5, 'Position',[16 133 25 10],'HorizontalAlignment','Left');
@@ -294,10 +294,10 @@ function uiPhaseSpace(oData, varargin)
     bgParBH    = uibuttongroup(bgParB,'Units','Pixels','Position',[55 35 95 20],'BorderType','None');
     bgParBV    = uibuttongroup(bgParB,'Units','Pixels','Position',[55 10 95 20],'BorderType','None');
     
-    lblUntB(1) = uicontrol(bgParB,'Style','Text','String','mm','FontSize',8,'Position',[117 135 35 15],'HorizontalAlignment','Left');
-    lblUntB(2) = uicontrol(bgParB,'Style','Text','String','mm','FontSize',8,'Position',[117 110 35 15],'HorizontalAlignment','Left');
-    lblUntB(3) = uicontrol(bgParB,'Style','Text','String','mm','FontSize',8,'Position',[117  85 35 15],'HorizontalAlignment','Left');
-    lblUntB(4) = uicontrol(bgParB,'Style','Text','String','mm','FontSize',8,'Position',[117  60 35 15],'HorizontalAlignment','Left');
+    lblUntB(1) = uicontrol(bgParB,'Style','Text','String','m',  'FontSize',8,'Position',[117 135 35 15],'HorizontalAlignment','Left');
+    lblUntB(2) = uicontrol(bgParB,'Style','Text','String','rad','FontSize',8,'Position',[117 110 35 15],'HorizontalAlignment','Left');
+    lblUntB(3) = uicontrol(bgParB,'Style','Text','String','m',  'FontSize',8,'Position',[117  85 35 15],'HorizontalAlignment','Left');
+    lblUntB(4) = uicontrol(bgParB,'Style','Text','String','rad','FontSize',8,'Position',[117  60 35 15],'HorizontalAlignment','Left');
     
     uicontrol(bgParBH,'Style','RadioButton','String','Sum','FontSize',8,'Position',[ 0 0 50 20],'Callback',{@fSetSlice,1,1});
     uicontrol(bgParBH,'Style','RadioButton','String','Max','FontSize',8,'Position',[50 0 45 20],'Callback',{@fSetSlice,1,2});
@@ -440,12 +440,12 @@ function uiPhaseSpace(oData, varargin)
         %  Set Values
         % ============
         
-        [dERMS, sERMS]  = fAutoScale(stData.ERMS*1e-6, 'm',1e-15);
-        [dENorm,sENorm] = fAutoScale(stData.ENorm*1e-6,'m',1e-15);
-        [dAlpha,sAlpha] = fAutoScale(stData.Alpha     ,'m',1e-15);
-        [dBeta, sBeta]  = fAutoScale(stData.Beta      ,'m',1e-15);
-        [dGamma,sGamma] = fAutoScale(stData.Gamma     ,'m',1e-15);
-        [dGamBe,sGamBe] = fAutoScale(stData.GammaBeta ,'', 1e-15);
+        [dERMS, sERMS]  = fAutoScale(stData.ERMS*1e-6, 'm',  1e-15);
+        [dENorm,sENorm] = fAutoScale(stData.ENorm*1e-6,'m',  1e-15);
+        [dAlpha,sAlpha] = fAutoScale(stData.Alpha     ,'DU', 1e-15);
+        [dBeta, sBeta]  = fAutoScale(stData.Beta      ,'m/r',1e-15);
+        [dGamma,sGamma] = fAutoScale(stData.Gamma     ,'r/m',1e-15);
+        [dGamBe,sGamBe] = fAutoScale(stData.GammaBeta ,'',   1e-15);
         
         lblParA(1).String = sprintf('%.2f',dERMS);
         lblUntA(1).String = sprintf('%s',  sERMS);
