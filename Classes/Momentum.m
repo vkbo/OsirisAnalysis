@@ -396,12 +396,18 @@ classdef Momentum < OsirisType
             if isempty(aRaw)
                 return;
             end % if
+            aRaw = obj.fRawToXi(aRaw);
             
             % Slice data if requested
             if ~isempty(stOpt.Slice)
                 if stOpt.SliceAxis >= 1 && stOpt.SliceAxis <= obj.Dim && numel(stOpt.Slice) == 2
-                    aRaw = obj.fPruneRaw(aRaw,stOpt.SliceAxis,stOpt.Slice(1),stOpt.Slice(2));
+                    aSlice = stOpt.Slice/obj.AxisFac(stOpt.SliceAxis);
+                    aRaw = obj.fPruneRaw(aRaw,stOpt.SliceAxis,aSlice(1),aSlice(2));
                 end % if
+            end % if
+
+            if isempty(aRaw)
+                return;
             end % if
 
             aP    = sqrt(aRaw(:,4).^2 + aRaw(:,5).^2 + aRaw(:,6).^2);

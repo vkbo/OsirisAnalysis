@@ -698,14 +698,21 @@ classdef OsirisType
             end % if
             
             if ~isempty(dMin)
-                aInd = find(aReturn(:,iVar) < dMin);
+                aInd = aReturn(:,iVar) < dMin;
                 aReturn(aInd,:) = [];
             end % if
 
             if ~isempty(dMax)
-                aInd = find(aReturn(:,iVar) > dMax);
+                aInd = aReturn(:,iVar) > dMax;
                 aReturn(aInd,:) = [];
             end % if
+            
+        end % function
+        
+        function aRaw = fRawToXi(obj, aRaw)
+
+            dOffset = obj.Data.Config.Simulation.TimeStep*obj.Data.Config.Simulation.NDump*obj.Time;
+            aRaw(:,1) = aRaw(:,1) - dOffset;
             
         end % function
 

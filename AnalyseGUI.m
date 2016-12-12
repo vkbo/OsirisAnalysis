@@ -1812,7 +1812,7 @@ function AnalyseGUI
         cValue = strsplit(sValue,' ');
         
         if isempty(sValue)
-            cValue = {'0','1'};
+            cValue = {};
         end % if
         
         if numel(cValue) == 1
