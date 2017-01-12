@@ -804,6 +804,21 @@ classdef Variables
             %           Default: Scans all types.
             %
             
+            sNum = '';
+            if ~isempty(sVar)
+                if isstrprop(sVar(end),'digit')
+                    sTemp = lower(sVar(1:end-1));
+                    for i=1:size(obj.Map.Translate.Species,2)
+                        stItem = obj.Map.Translate.Species(i);
+                        if strcmpi(stItem.Name,sTemp) || sum(ismember(stItem.Alt,sTemp)) ~= 0
+                            sNum = sVar(end);
+                            sVar = stItem.Name;
+                            break;
+                        end % if
+                    end % for
+                end % if
+            end % if
+            
             % Return
             stReturn.Original = sVar;
             stReturn.Name     = sVar;
@@ -915,6 +930,15 @@ classdef Variables
             stReturn.isValidPhaseSpaceDiag = (sum(ismember(obj.Map.Diag.PhaseSpace,stReturn.Name)) == 1);
             stReturn.isValidDepositDiag    = (sum(ismember(obj.Map.Diag.Deposit,stReturn.Name)) == 1);
             stReturn.isValidUDistDiag      = (sum(ismember(obj.Map.Diag.UDist,stReturn.Name)) == 1);
+            
+            % Append Number if Present
+            if ~isempty(sNum)
+                stReturn.Original = [stReturn.Original sNum];
+                stReturn.Name     = [stReturn.Name sNum];
+                stReturn.Full     = [stReturn.Full ' ' sNum];
+                stReturn.Short    = [stReturn.Short sNum];
+                stReturn.Tex      = [stReturn.Tex '_{' sNum '}'];
+            end % if
             
         end % function
 

@@ -492,6 +492,7 @@ classdef Momentum < OsirisType
             stReturn.ENorm      = dENorm;
             stReturn.ENormError = 1.96*std(aENorm)/sqrt(iNE);
             stReturn.GammaBeta  = mean(aGamBe);
+            stReturn.ZPos       = obj.fGetZPos();
 
             % Twiss parameters
             stReturn.Alpha      = aCov(1,2)/dERMS;
