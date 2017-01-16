@@ -105,7 +105,7 @@ function AnalyseGUI
     % Set figure properties
     fMain.Units        = 'Pixels';
     fMain.MenuBar      = 'None';
-    fMain.Name         = 'OsirisAnalysis Version 1.4.2 - GUI';
+    fMain.Name         = 'OsirisAnalysis Version Dev2.0 - GUI';
     fMain.NumberTitle  = 'Off';
     fMain.DockControls = 'Off';
     fMain.Tag          = 'uiOA-Main';
@@ -113,7 +113,7 @@ function AnalyseGUI
 
     % Figure position
     aFPos = fMain.Position;
-    fMain.Position     = [aFPos(1:2) 590 660];
+    fMain.Position = [aFPos(1:2) 590 660];
     
     % Get figure background colour
     cBackGround = fMain.Color;
@@ -154,11 +154,22 @@ function AnalyseGUI
     
     set(0, 'CurrentFigure', fMain);
     uicontrol('Style','Text','String','Controls','FontSize',20,'Position',[20 622 140 25],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-    uicontrol('Style','PushButton','String','i','FontSize',15,'FontName','FixedWidth','FontWeight','Bold','Position',[210 620 25 25],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.55 0.88],'Callback',{@fShowSimInfo});
-    uicontrol('Style','PushButton','String','f','FontSize',15,'FontName','FixedWidth','FontWeight','Bold','Position',[180 620 25 25],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.55 0.00],'Callback',{@fFocus});
+    uicontrol('Style','PushButton','String','i','TooltipString','Show Sim. Info', 'FontSize',15,'FontName','FixedWidth','FontWeight','Bold','Position',[205 620 25 25],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.55 0.88],'Callback',{@fShowSimInfo});
+    uicontrol('Style','PushButton','String','f','TooltipString','Plots to Front', 'FontSize',15,'FontName','FixedWidth','FontWeight','Bold','Position',[170 620 25 25],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.55 0.00],'Callback',{@fFocus});
+    uicontrol('Style','PushButton','String','d','TooltipString','Open Input Deck','FontSize',15,'FontName','FixedWidth','FontWeight','Bold','Position',[550 620 25 25],'BackgroundColor',cButtonOff,'ForegroundColor',[0.88 0.55 0.55],'Callback',{@fShowInputDeck});
 
     lblData = uicontrol('Style','Text','String','No Data','FontSize',18,'Position',[240 620 300 25],'ForegroundColor',cInfoText,'BackgroundColor',cInfoBack);
     
+    % Button Column
+    iYBn = 573;
+    uicontrol('Style','PushButton','String','DN','Enable','Off','TooltipString','Track Density','FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.80 0.00 0.00],'Callback',{@fTools,'DN'}); iYBn = iYBn-38;
+    uicontrol('Style','PushButton','String','EM','Enable','Off','TooltipString','Track Fields', 'FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.80 0.50 0.00],'Callback',{@fTools,'EM'}); iYBn = iYBn-38;
+    uicontrol('Style','PushButton','String','3D','Enable','Off','TooltipString','3D Tools',     'FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.50 0.50 0.00],'Callback',{@fTools,'3D'}); iYBn = iYBn-38;
+    uicontrol('Style','PushButton','String','SP','Enable','Off','TooltipString','Track Species','FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.70 0.00],'Callback',{@fTools,'SP'}); iYBn = iYBn-38;
+    uicontrol('Style','PushButton','String','TM','Enable','Off','TooltipString','Track Time',   'FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.50 0.80],'Callback',{@fTools,'TM'}); iYBn = iYBn-38;
+    uicontrol('Style','PushButton','String','LN','Enable','On', 'TooltipString','Lineout Tools','FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.00 0.20 0.80],'Callback',{@fTools,'LN'}); iYBn = iYBn-38;
+    uicontrol('Style','PushButton','String','PS','Enable','On', 'TooltipString','Phase Space',  'FontSize',11,'FontWeight','Bold','Position',[550 iYBn 30 30],'BackgroundColor',cButtonOff,'ForegroundColor',[0.50 0.00 0.80],'Callback',{@fTools,'PS'}); iYBn = iYBn-38;
+
     % Output Window
     lstOut = uicontrol('Style','Listbox','String','OsirisAnalysis','FontName','FixedWidth','Position',[20 20 560 87],'HorizontalAlignment','Left','BackgroundColor',cBlack,'ForegroundColor',cOutText);
     jOut   = findjobj(lstOut);
@@ -308,6 +319,7 @@ function AnalyseGUI
     % Init
     set(hTabGroup,'SelectedTab',hTabX(1));
     fScanData(0,0);
+    fMain.Position = [aFPos(1:2) 590 660];
     
     
     %
@@ -410,6 +422,9 @@ function AnalyseGUI
         uicontrol(bgTab(t),'Style','Checkbox','String',oVar.Lookup('e1').Short,'Value',X.Plot(t).Settings(1),'Position',[ 85 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,1});
         uicontrol(bgTab(t),'Style','Checkbox','String',oVar.Lookup('e2').Short,'Value',X.Plot(t).Settings(2),'Position',[135 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,2});
         uicontrol(bgTab(t),'Style','Checkbox','String',oVar.Lookup('e3').Short,'Value',X.Plot(t).Settings(3),'Position',[185 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,3});
+        uicontrol(bgTab(t),'Style','Checkbox','String',oVar.Lookup('w1').Short,'Value',X.Plot(t).Settings(4),'Position',[235 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,4});
+        uicontrol(bgTab(t),'Style','Checkbox','String',oVar.Lookup('w2').Short,'Value',X.Plot(t).Settings(5),'Position',[285 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,5});
+        uicontrol(bgTab(t),'Style','Checkbox','String',oVar.Lookup('w3').Short,'Value',X.Plot(t).Settings(6),'Position',[335 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,6});
 
         if X.Data.Dim == 3
             iY = iY - 25;
@@ -631,7 +646,7 @@ function AnalyseGUI
         X.Data.Beam       = oData.Config.Particles.Beams;
         X.Data.Plasma     = oData.Config.Particles.Plasma;
         X.Data.Species    = [X.Data.Beam X.Data.Plasma];
-        X.Data.Field      = oData.Config.EMFields.Reports;
+        X.Data.Field      = [oData.Config.EMFields.Reports oData.Config.EMFields.Wakefields];
         X.Data.Completed  = oData.Completed;
         X.Data.HasData    = oData.HasData;
         X.Data.HasTracks  = oData.HasTracks;
@@ -848,7 +863,15 @@ function AnalyseGUI
         
         X.Time.Dump = X.Time.Limits(iJump);
         
+        for b=1:8
+            btnTime(b).Enable = 'Off';
+        end % for
+        
         fRefresh;
+
+        for b=1:8
+            btnTime(b).Enable = 'On';
+        end % for
         
     end % function
 
@@ -999,7 +1022,7 @@ function AnalyseGUI
                     X.Plot(f).Scatter    = {'' ''};
                     X.Plot(f).ScatterNum = [2000 2000];
                     X.Plot(f).Sample     = [3 3];
-                    X.Plot(f).Settings   = [0 0 0];
+                    X.Plot(f).Settings   = [0 0 0 0 0 0];
                     X.Plot(f).CAxis      = [0.0 5.0];
                     fCtrlPlasmaDensity(f);
                     aFigSize = [900 500];
@@ -1036,7 +1059,11 @@ function AnalyseGUI
                     
                 case 'Particle UDist'
                     X.Plot(f).Data     = X.Data.Species{1};
-                    X.Plot(f).UDist    = X.Data.UDist{1};
+                    if isempty(X.Data.UDist)
+                        X.Plot(f).UDist    = X.Data.UDist{1};
+                    else
+                        X.Plot(f).UDist    = '';
+                    end % if
                     X.Plot(f).Settings = [0 0];
                     X.Plot(f).CAxis    = [];
                     fCtrlUDist(f);
@@ -1244,14 +1271,14 @@ function AnalyseGUI
                             'Slice',X.Plot(f).Slice,'SliceAxis',X.Plot(f).SliceAxis);
 
                     case 'Plasma Density'
-                        stEF(3) = struct();
-                        for s=1:3
-                            stEF(s).Range = [];
+                        stFLD(3) = struct();
+                        for s=1:6
+                            stFLD(s).Range = [];
                             if X.Plot(f).Settings(s)
                                 if X.Data.Cyl
-                                    stEF(s).Range = [3,3];
+                                    stFLD(s).Range = [3,3];
                                 else
-                                    stEF(s).Range = [-1,2];
+                                    stFLD(s).Range = [-1,2];
                                 end % if
                             end % if
                         end % for
@@ -1264,7 +1291,8 @@ function AnalyseGUI
                             'Sample1',X.Plot(f).ScatterNum(1),'Sample2',X.Plot(f).ScatterNum(2), ...
                             'Overlay1',X.Plot(f).Scatter{1},'Overlay2',X.Plot(f).Scatter{2}, ...
                             'Filter1',X.Opt.Sample{X.Plot(f).Sample(1)},'Filter2',X.Opt.Sample{X.Plot(f).Sample(2)}, ...
-                            'E1',stEF(1).Range,'E2',stEF(2).Range,'E3',stEF(3).Range, ...
+                            'E1',stFLD(1).Range,'E2',stFLD(2).Range,'E3',stFLD(3).Range, ...
+                            'W1',stFLD(4).Range,'W2',stFLD(5).Range,'W3',stFLD(6).Range, ...
                             'Limits',[aHLim aVLim],'CAxis',X.Plot(f).CAxis, ...
                             'Slice',X.Plot(f).Slice,'SliceAxis',X.Plot(f).SliceAxis);
                         if isfield(X.Plot(f).Return,'Error')
@@ -1340,6 +1368,9 @@ function AnalyseGUI
                             sLog = 'No';
                         end % if
                         figure(X.Plot(f).Figure); clf;
+                        if isempty(X.Plot(f).UDist)
+                            continue;
+                        end % if
                         sUDist = oVar.Reverse(X.Plot(f).UDist,'Full');
                         iMakeSym = 1;
 
@@ -1507,6 +1538,19 @@ function AnalyseGUI
         
     end % function
 
+    function fShowInputDeck(~,~)
+        
+        if X.DataSet == 0
+            fOut('No dataset loaded',3);
+            return;
+        end % if
+
+        sFile = [oData.Config.Path '/' oData.Config.File];
+        system(['gedit ' sFile ' &']);
+        fOut(['Opening ' sFile],1);
+        
+    end % function
+
     function fTools(~,~,sTool)
         
         if X.DataSet == 0
@@ -1632,6 +1676,9 @@ function AnalyseGUI
 
         switch(X.Plots{X.Figure(f)})
 
+            case 'Particle Density'
+                fCtrlParticleDensity(f);
+                
             case 'Phase 2D'
                 X.Plot(f).MaxLim = [0.0 0.0 0.0 0.0];
                 X.Plot(f).Limits = [0.0 0.0 0.0 0.0];
@@ -1765,7 +1812,7 @@ function AnalyseGUI
         cValue = strsplit(sValue,' ');
         
         if isempty(sValue)
-            cValue = {'0','1'};
+            cValue = {};
         end % if
         
         if numel(cValue) == 1

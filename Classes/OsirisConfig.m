@@ -96,10 +96,10 @@ classdef OsirisConfig
  
                     [~, ~, sFileExt] = fileparts(aDir(i).name);
                     
-                    aExclude = {'.out','.sh','.e', '.tags'}; % Files to exclude as definitely not the config file
+                    cExclude = {'.out','.sh','.e', '.tags'}; % Files to exclude as definitely not the config file
                     aSizes   = [1024, 20480];                % Minimum, maximum size in bytes
                     
-                    if sum(ismember(sFileExt, aExclude)) == 0 ...
+                    if sum(ismember(sFileExt, cExclude)) == 0 ...
                             && sFileExt(end) ~= '~'           ...
                             && aDir(i).bytes >= aSizes(1)     ...
                             && aDir(i).bytes <= aSizes(2)
@@ -598,6 +598,14 @@ classdef OsirisConfig
             end % try
             aXMax = obj.fArrayPad(aXMax, [0.0 0.0 0.0]);
 
+            % Moving
+            try
+                aMove = double(cell2mat(obj.Input.simulation.space.if_move));
+            catch
+                aMove = 0.0;
+            end % try
+            aMove = obj.fArrayPad(aMove, [0.0 0.0 0.0]);
+
             % Save Plasma Variables for Simulation
             obj.Simulation.N0          = dN0;
             obj.Simulation.OmegaP      = dOmegaP;
@@ -625,6 +633,7 @@ classdef OsirisConfig
             % Save Space Variables
             obj.Simulation.XMin        = aXMin;
             obj.Simulation.XMax        = aXMax;
+            obj.Simulation.Moving      = aMove;
 
             
             %
@@ -712,6 +721,43 @@ classdef OsirisConfig
             
             % Save EMF Diagnostics
             obj.EMFields.Reports = cReports;
+
+            % Check which wakefields can be calculated from the e- and b-fields
+            cWake = {};
+            aMove = obj.Simulation.Moving;
+            
+            % w1 requires e1 to be present
+            %   and either u2 to be 0 or b3 to be present
+            %   and either u3 to be 0 or b2 to be present
+            % w1 = f1/q = e1 + u2*b3 - u3*b2
+            if (sum(ismember(cReports,'e1')) > 0) ...
+                    && (aMove(2) == 0.0 || sum(ismember(cReports,'b3')) > 0) ...
+                    && (aMove(3) == 0.0 || sum(ismember(cReports,'b2')) > 0)
+                cWake{end+1} = 'w1';
+            end % if
+
+            % w2 requires e2 to be present
+            %   and either u3 to be 0 or b1 to be present
+            %   and either u1 to be 0 or b3 to be present
+            % w2 = f2/q = e2 + u3*b1 - u1*b3
+            if (sum(ismember(cReports,'e2')) > 0) ...
+                    && (aMove(3) == 0.0 || sum(ismember(cReports,'b1')) > 0) ...
+                    && (aMove(1) == 0.0 || sum(ismember(cReports,'b3')) > 0)
+                cWake{end+1} = 'w2';
+            end % if
+
+            % w3 requires e3 to be present
+            %   and either u1 to be 0 or b2 to be present
+            %   and either u2 to be 0 or b1 to be present
+            % w3 = f3/q = e3 + u1*b2 - u2*b1
+            if (sum(ismember(cReports,'e3')) > 0) ...
+                    && (aMove(1) == 0.0 || sum(ismember(cReports,'b2')) > 0) ...
+                    && (aMove(2) == 0.0 || sum(ismember(cReports,'b1')) > 0)
+                cWake{end+1} = 'w3';
+            end % if
+            
+            % Save Potential Options
+            obj.EMFields.Wakefields = cWake;
             
         end % function
         

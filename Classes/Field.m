@@ -97,7 +97,12 @@ classdef Field < OsirisType
                 return;
             end % if
 
-            stData = obj.fParseGridData2D(aData,(obj.FieldVar.Dim == 3));
+            bSign = ~(obj.FieldVar.Dim == 1);
+            switch(obj.FieldVar.Name)
+                case 'psi'
+                    bSign = false;
+            end % switch
+            stData = obj.fParseGridData2D(aData,bSign);
             
             if isempty(stData)
                 return;
@@ -153,6 +158,161 @@ classdef Field < OsirisType
 
             % Return Data
             stReturn.Data   = stData.Data*obj.FieldFac;
+            stReturn.HAxis  = stData.HAxis;
+            stReturn.HRange = stData.HLim;
+            stReturn.VRange = stData.VLim;
+            stReturn.ZPos   = obj.fGetZPos();        
+        
+        end % function
+        
+        function stReturn = Wakefield2D(obj, sWakefield)
+            
+            % Input/Output
+            stReturn = {};
+            
+            stWF = obj.Translate.Lookup(sWakefield,'Wakefield');
+            if ~stWF.isWakefield
+                fprintf(2, 'Error: ''%s'' is not a recognised wakefield. Using ''w1'' instead.\n', sWakefield);
+                stWF = obj.Translate.Lookup('w1');
+            end % if
+            
+            % Extract the beta values for the direction of simulation movement
+            aMove = obj.Data.Config.Simulation.Moving;
+            
+            % Extract parallel e-field
+            switch(stWF.Name)
+                case 'w1'
+                    aE    = obj.Data.Data(obj.Time, 'FLD', 'e1', '');
+                    bSign = false;
+                case 'w2'
+                    aE    = obj.Data.Data(obj.Time, 'FLD', 'e2', '');
+                    bSign = true;
+                case 'w3'
+                    aE    = obj.Data.Data(obj.Time, 'FLD', 'e3', '');
+                    bSign = true;
+            end % switch
+            
+            % If parallel e-field doesn't exist, return empty
+            if isempty(aE)
+                return;
+            end % if
+            
+            aB1 = 0.0;
+            aB2 = 0.0;
+
+            % Extract ortogonal b-fields – partial derivatives
+            switch(stWF.Name)
+                case 'w1'
+                    if aMove(2) ~= 0.0
+                        aB1 = aMove(2) * obj.Data.Data(obj.Time, 'FLD', 'b3', '');
+                    end % if
+                    if aMove(3) ~= 0.0
+                        aB2 = aMove(3) * obj.Data.Data(obj.Time, 'FLD', 'b2', '');
+                    end % if
+                case 'w2'
+                    if aMove(3) ~= 0.0
+                        aB1 = aMove(3) * obj.Data.Data(obj.Time, 'FLD', 'b1', '');
+                    end % if
+                    if aMove(1) ~= 0.0
+                        aB2 = aMove(1) * obj.Data.Data(obj.Time, 'FLD', 'b3', '');
+                    end % if
+                case 'w3'
+                    if aMove(1) ~= 0.0
+                        aB1 = aMove(1) * obj.Data.Data(obj.Time, 'FLD', 'b2', '');
+                    end % if
+                    if aMove(2) ~= 0.o
+                        aB2 = aMove(2) * obj.Data.Data(obj.Time, 'FLD', 'b1', '');
+                    end % if
+            end % switch
+            
+            aW = aE + aB1 - aB2;
+            
+            % Slice the data
+            stData = obj.fParseGridData2D(aW,bSign);
+            if isempty(stData)
+                return;
+            end % if
+            
+            dScale = obj.Data.Config.Convert.SI.E0;
+            
+            % Return Data
+            stReturn.Data  = stData.Data*dScale;
+            stReturn.HAxis = stData.HAxis;
+            stReturn.VAxis = stData.VAxis;
+            stReturn.Axes  = stData.Axes;
+            stReturn.ZPos  = obj.fGetZPos();        
+            
+        end % function
+
+        function stReturn = WFLineout(obj, sWakefield, iStart, iAverage)
+
+            % Input/Output
+            stReturn = {};
+            
+            stWF = obj.Translate.Lookup(sWakefield,'Wakefield');
+            if ~stWF.isWakefield
+                fprintf(2, 'Error: ''%s'' is not a recognised wakefield. Using ''w1'' instead.\n', sWakefield);
+                stWF = obj.Translate.Lookup('w1');
+            end % if
+            
+            % Extract the beta values for the direction of simulation movement
+            aMove = obj.Data.Config.Simulation.Moving;
+            
+            % Extract parallel e-field
+            switch(stWF.Name)
+                case 'w1'
+                    aE    = obj.Data.Data(obj.Time, 'FLD', 'e1', '');
+                case 'w2'
+                    aE    = obj.Data.Data(obj.Time, 'FLD', 'e2', '');
+                case 'w3'
+                    aE    = obj.Data.Data(obj.Time, 'FLD', 'e3', '');
+            end % switch
+            
+            % If parallel e-field doesn't exist, return empty
+            if isempty(aE)
+                return;
+            end % if
+            
+            aB1 = 0.0;
+            aB2 = 0.0;
+
+            % Extract ortogonal b-fields – partial derivatives
+            switch(stWF.Name)
+                case 'w1'
+                    if aMove(2) ~= 0.0
+                        aB1 = aMove(2) * obj.Data.Data(obj.Time, 'FLD', 'b3', '');
+                    end % if
+                    if aMove(3) ~= 0.0
+                        aB2 = aMove(3) * obj.Data.Data(obj.Time, 'FLD', 'b2', '');
+                    end % if
+                case 'w2'
+                    if aMove(3) ~= 0.0
+                        aB1 = aMove(3) * obj.Data.Data(obj.Time, 'FLD', 'b1', '');
+                    end % if
+                    if aMove(1) ~= 0.0
+                        aB2 = aMove(1) * obj.Data.Data(obj.Time, 'FLD', 'b3', '');
+                    end % if
+                case 'w3'
+                    if aMove(1) ~= 0.0
+                        aB1 = aMove(1) * obj.Data.Data(obj.Time, 'FLD', 'b2', '');
+                    end % if
+                    if aMove(2) ~= 0.o
+                        aB2 = aMove(2) * obj.Data.Data(obj.Time, 'FLD', 'b1', '');
+                    end % if
+            end % switch
+            
+            aW = aE + aB1 - aB2;
+
+            % Slice the data
+            stData = obj.fParseGridData1D(aW,iStart,iAverage);
+            if isempty(stData)
+                return;
+            end % if
+
+            dScale = obj.Data.Config.Convert.SI.E0;
+
+            % Return Data
+            stReturn.Data   = stData.Data*dScale;
             stReturn.HAxis  = stData.HAxis;
             stReturn.HRange = stData.HLim;
             stReturn.VRange = stData.VLim;
