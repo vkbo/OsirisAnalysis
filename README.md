@@ -1,10 +1,11 @@
-# OsirisAnalysis
+## OsirisAnalysis
+
 Osiris Analysis Toolbox
 
 MATLAB package for analysing hdf5 data from the PIC code Osiris
 
-**Stable Version:** [1.4.2](https://github.com/Jadzia626/OsirisAnalysis/releases/tag/v1.4.2)
-**Development Version:** Dev2.0
+**Stable Version:** [1.4.2](https://github.com/Jadzia626/OsirisAnalysis/releases/tag/v1.4.2)<br>
+**Development Version:** Dev2.0<br>
 Semi-stable on master branch, latest code on develop branch
  
 ### Developed By
