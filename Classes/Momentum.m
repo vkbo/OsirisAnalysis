@@ -394,19 +394,28 @@ classdef Momentum < OsirisType
 
             aRaw = obj.Data.Data(obj.Time,'RAW','',obj.Species.Name);
             if isempty(aRaw)
+                stReturn.Error = 'No initial data.';
                 return;
             end % if
             aRaw = obj.fRawToXi(aRaw);
             
             % Slice data if requested
             if ~isempty(stOpt.Slice)
-                if stOpt.SliceAxis >= 1 && stOpt.SliceAxis <= obj.Dim && numel(stOpt.Slice) == 2
-                    aSlice = stOpt.Slice/obj.AxisFac(stOpt.SliceAxis);
+                if stOpt.SliceAxis >= 1 && stOpt.SliceAxis <= 7 && numel(stOpt.Slice) == 2
+                    if stOpt.SliceAxis <= 3
+                        aSlice = stOpt.Slice/obj.AxisFac(stOpt.SliceAxis);
+                    end % if
+                    if stOpt.SliceAxis > 3 && stOpt.SliceAxis <= 7
+                        dFac   = obj.Data.Config.Constants.EV.ElectronMass;
+                        dFac   = dFac*abs(obj.Config.RQM);
+                        aSlice = stOpt.Slice/dFac;
+                    end % if
                     aRaw = obj.fPruneRaw(aRaw,stOpt.SliceAxis,aSlice(1),aSlice(2));
                 end % if
             end % if
 
             if isempty(aRaw)
+                stReturn.Error = 'No data after cut.';
                 return;
             end % if
 
