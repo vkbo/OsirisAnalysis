@@ -1,4 +1,4 @@
-## OsirisAnalysis
+# OsirisAnalysis
 
 Osiris Analysis Toolbox
 
