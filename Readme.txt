@@ -36,6 +36,7 @@
     list based on this for the field density plot.
   - Momentum.PhaseSpace now accepts Slice and SliceDim as input parameter. The calculation is only made in the region
     defined by these slice parameters.
+  - Species names can now have a one digit number appended to them, so ElectronBeam1 and EB1 are valid names.
 
   Version 1.4.2
   *************
