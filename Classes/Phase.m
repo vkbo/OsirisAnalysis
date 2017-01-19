@@ -406,9 +406,10 @@ classdef Phase < OsirisType
             end % if
 
             oOpt = inputParser;
-            addParameter(oOpt, 'Grid',   100);
-            addParameter(oOpt, 'Method', 'Deposit');
-            addParameter(oOpt, 'Lim',    []);
+            addParameter(oOpt, 'Grid',     100);
+            addParameter(oOpt, 'Method',   'Deposit');
+            addParameter(oOpt, 'Lim',      []);
+            addParameter(oOpt, 'FixedLim', []);
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
             
@@ -434,9 +435,6 @@ classdef Phase < OsirisType
                 aW = [ aW; aW];
             end % if
             aW = aW/sum(aW);
-            
-            dMin = min(aA);
-            dMax = max(aA);
             
             % Get conversion factor
             if     iAxis == 1 || iAxis == 2 || iAxis == 3
@@ -468,7 +466,7 @@ classdef Phase < OsirisType
             end % if
 
             % Convert to array
-            [aData, aAxis] = fAccu1D(aA,aW,stOpt.Grid,'Method',stOpt.Method);
+            [aData, aAxis] = fAccu1D(aA,aW,stOpt.Grid,'Method',stOpt.Method,'FixedLim',stOpt.FixedLim/dFac);
             
             % Return data
             stReturn.Data      = aData;
@@ -477,12 +475,14 @@ classdef Phase < OsirisType
             stReturn.Axis      = aAxis*dFac;
             stReturn.AxisUnit  = sUnit;
             stReturn.AxisScale = dFac;
-            stReturn.AxisRange = [dMin dMax];
+            stReturn.AxisRange = [aAxis(1) aAxis(end)]*dFac;
             stReturn.ZPos      = obj.fGetZPos;
 
         end % function
 
         function stReturn = RawHist2D(obj, sAxis1, sAxis2, varargin)
+            
+            % Incomplete
 
             % Input/Output
             stReturn = {};

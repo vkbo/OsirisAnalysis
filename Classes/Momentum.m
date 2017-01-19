@@ -419,14 +419,14 @@ classdef Momentum < OsirisType
                 return;
             end % if
 
-            aP    = sqrt(aRaw(:,4).^2 + aRaw(:,5).^2 + aRaw(:,6).^2);
-            iLen  = length(aP);
+            aP   = sqrt(aRaw(:,4).^2 + aRaw(:,5).^2 + aRaw(:,6).^2);
+            iLen = length(aP);
             
-            aRX   = [];
-            aRXP  = [];
-            aRQ   = [];
+            aRX  = [];
+            aRXP = [];
+            aRQ  = [];
 
-            iMin  = ceil(stOpt.MinParticles/iLen);
+            iMin = ceil(stOpt.MinParticles/iLen);
             if stOpt.Samples < iMin
                 iS = iMin;
             else
@@ -502,6 +502,8 @@ classdef Momentum < OsirisType
             stReturn.ENormError = 1.96*std(aENorm)/sqrt(iNE);
             stReturn.GammaBeta  = mean(aGamBe);
             stReturn.ZPos       = obj.fGetZPos();
+            stReturn.Count      = length(aRX);
+            stReturn.RawCount   = length(aRaw);
 
             % Twiss parameters
             stReturn.Alpha      = aCov(1,2)/dERMS;
@@ -544,7 +546,6 @@ classdef Momentum < OsirisType
             stReturn.Hist  = abs(transpose(aHist))*1e9;
             stReturn.HAxis = linspace(dXMin,dXMax,stOpt.Grid(1));
             stReturn.VAxis = linspace(dXPMin,dXPMax,stOpt.Grid(2));
-            stReturn.Count = length(aRX);
             
         end % function
     

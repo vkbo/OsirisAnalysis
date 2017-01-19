@@ -67,6 +67,7 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
     addParameter(oOpt, 'Grid',       100);
     addParameter(oOpt, 'GaussFit',   'No');
     addParameter(oOpt, 'FitRange',   []);
+    addParameter(oOpt, 'FixedLim',   []);
     addParameter(oOpt, 'FigureSize', [900 500]);
     addParameter(oOpt, 'HideDump',   'No');
     addParameter(oOpt, 'IsSubPlot',  'No');
@@ -83,7 +84,7 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
     % Data
     oPha      = Phase(oData,vSpecies.Name,'Units','SI');
     oPha.Time = iTime;
-    stData    = oPha.RawHist1D(sAxis,'Grid',stOpt.Grid,'Lim',stOpt.Lim,'Method',stOpt.Method);
+    stData    = oPha.RawHist1D(sAxis,'Grid',stOpt.Grid,'Lim',stOpt.Lim,'Method',stOpt.Method,'FixedLim',stOpt.FixedLim);
     
     if isempty(stData)
         fprintf(2, 'Error: No data.\n');
