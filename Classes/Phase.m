@@ -593,7 +593,6 @@ classdef Phase < OsirisType
                 return;
             end % if
 
-            
             % Return data
             stReturn.Mean   = abs(wmean(aA,aW)*dFac);
             stReturn.Std    = abs(wstd(aA,aW)*dFac);
