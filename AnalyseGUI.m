@@ -1195,6 +1195,10 @@ function AnalyseGUI
                     fCtrlParticleDensity(f);
 
                 case 'Plasma Density'
+                    X.Plot(f).ScatterOpt = ['Off' X.Data.Beam];
+                    X.Plot(f).Scatter    = {'' ''};
+                    X.Plot(f).ScatterNum = [2000 2000];
+                    X.Plot(f).Sample     = [3 3];
                     fResetTab(f);
                     fCtrlPlasmaDensity(f);
 
