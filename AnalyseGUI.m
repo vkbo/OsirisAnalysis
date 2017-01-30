@@ -134,6 +134,20 @@ function AnalyseGUI
     mSims = uimenu(fMain,'Label','Simulation');
             uimenu(mSims,'Label','Show Sim Info','Accelerator','i','Callback',{@fShowSimInfo});
 
+    mTime = uimenu(fMain,'Label','Time');
+            uimenu(mTime,'Label','GoTo: Simulation Start','Callback',{@fJump, 1});
+            uimenu(mTime,'Label','GoTo: Plasma Start',    'Callback',{@fJump, 2});
+            uimenu(mTime,'Label','GoTo: Plasma End',      'Callback',{@fJump, 3});
+            uimenu(mTime,'Label','GoTo: Simulation End',  'Callback',{@fJump, 4});
+            uimenu(mTime,'Label','Move: +1',              'Callback',{@fDump,   +1},'Separator','On');
+            uimenu(mTime,'Label','Move: +10',             'Callback',{@fDump,  +10});
+            uimenu(mTime,'Label','Move: +50',             'Callback',{@fDump,  +50});
+            uimenu(mTime,'Label','Move: +100',            'Callback',{@fDump, +100});
+            uimenu(mTime,'Label','Move: -1',              'Callback',{@fDump,   -1},'Separator','On');
+            uimenu(mTime,'Label','Move: -10',             'Callback',{@fDump,  -10});
+            uimenu(mTime,'Label','Move: -50',             'Callback',{@fDump,  -50});
+            uimenu(mTime,'Label','Move: -100',            'Callback',{@fDump, -100});
+
     mFigs = uimenu(fMain,'Label','Figure');
             uimenu(mFigs,'Label','Focus Figures','Accelerator','f','Callback',{@fFocus});
             
