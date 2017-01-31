@@ -489,7 +489,62 @@ classdef OsirisConfig
             end % if
             
         end % function
-        
+
+        function stReturn = fParseReports(cReports)
+            
+
+            stReturn.Reports  = cReports;
+            stReturn.GridDiag = {};
+
+            nReports = numel(cReports);
+            if nReports == 0
+                return;
+            end % if
+            
+            stReturn.GridDiag.Reports = cell(1,nReports);
+            stReturn.GridDiag.Type    = cell(1,nReports);
+            stReturn.GridDiag.Grid    = cell(1,nReports);
+            stReturn.GridDiag.Pos1    = zeros(1,nReports,'int32');
+            stReturn.GridDiag.Pos2    = zeros(1,nReports,'int32');
+            
+            for r=1:nReports
+                cElems = strsplit(cReports{r},',');
+                nElems = numel(cElems);
+                if nElems == 0
+                    continue;
+                end % if
+                if nElems > 0
+                    sReport = strtrim(cElems{1});
+                    stReturn.GridDiag.Reports{r} = sReport;
+                end % if
+                if nElems > 1
+                    sType = strtrim(cElems{2});
+                    stReturn.GridDiag.Type{r} = sType;
+                else
+                    stReturn.GridDiag.Type{r} = 'default';
+                end % if
+                if nElems > 2
+                    sGrid = strtrim(cElems{3});
+                    switch(sType)
+                        case 'line'
+                            iPos1 = str2num(strtrim(cElems{4}));
+                            iPos2 = str2num(strtrim(cElems{4}));
+                        case 'slice'
+                            iPos1 = str2num(strtrim(cElems{4}));
+                            iPos2 = 0;
+                        otherwise
+                            iPos1 = 0;
+                            iPos2 = 0;
+                    end % switch
+                    sType = strtrim(cElems{2});
+                    stReturn.GridDiag.Grid{r} = sGrid;
+                    stReturn.GridDiag.Pos1(r) = iPos1;
+                    stReturn.GridDiag.Pos2(r) = iPos2;
+                end % if
+            end % for
+            
+        end % function
+
         function aReturn = fArrayPad(aData, aTemplate)
             
             aTemplate(1:length(aData)) = aData;
@@ -719,8 +774,11 @@ classdef OsirisConfig
                 cReports = {};
             end % try
             
+            stReports = obj.fParseReports(cReports);
+            
             % Save EMF Diagnostics
-            obj.EMFields.Reports = cReports;
+            obj.EMFields = stReports;
+            cReports     = obj.EMFields.Reports;
 
             % Check which wakefields can be calculated from the e- and b-fields
             cWake = {};
