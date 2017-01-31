@@ -787,61 +787,59 @@ classdef OsirisConfig
             catch
                 cReports = {};
             end % try
-            
             stReports = obj.fParseReports(cReports);
             
             % Save EMF Diagnostics
             obj.EMFields = stReports;
-            cReports     = obj.EMFields.Reports;
 
             % Check which wakefields can be calculated from the e- and b-fields
-            cWake = {};
-            aMove = obj.Simulation.Moving;
-            
-            % w1 requires e1 to be present
-            %   and either u2 to be 0 or b3 to be present
-            %   and either u3 to be 0 or b2 to be present
-            % w1 = f1/q = e1 + u2*b3 - u3*b2
-            if (sum(ismember(cReports,'e1')) > 0) ...
-                    && (aMove(2) == 0.0 || sum(ismember(cReports,'b3')) > 0) ...
-                    && (aMove(3) == 0.0 || sum(ismember(cReports,'b2')) > 0)
-                cWake{end+1} = 'w1';
-            end % if
-
-            % w2 requires e2 to be present
-            %   and either u3 to be 0 or b1 to be present
-            %   and either u1 to be 0 or b3 to be present
-            % w2 = f2/q = e2 + u3*b1 - u1*b3
-            if (sum(ismember(cReports,'e2')) > 0) ...
-                    && (aMove(3) == 0.0 || sum(ismember(cReports,'b1')) > 0) ...
-                    && (aMove(1) == 0.0 || sum(ismember(cReports,'b3')) > 0)
-                cWake{end+1} = 'w2';
-            end % if
-
-            % w3 requires e3 to be present
-            %   and either u1 to be 0 or b2 to be present
-            %   and either u2 to be 0 or b1 to be present
-            % w3 = f3/q = e3 + u1*b2 - u2*b1
-            if (sum(ismember(cReports,'e3')) > 0) ...
-                    && (aMove(1) == 0.0 || sum(ismember(cReports,'b2')) > 0) ...
-                    && (aMove(2) == 0.0 || sum(ismember(cReports,'b1')) > 0)
-                cWake{end+1} = 'w3';
-            end % if
-            
-            % Save Potential Options
-            obj.EMFields.Wakefields = cWake;
-            
-            % Check when Grid Diagnostics is in use
-            nReports = numel(obj.EMFields.GridDiag.Reports);
+            cWake    = {};
+            aMove    = obj.Simulation.Moving;
+            nReports = numel(cReports);
+ 
             for r=1:nReports
-                sReport = obj.EMFields.GridDiag.Reports{r};
-                bValid  = false;
-                switch(sReport)
+                sReport = cReports{r};
+                sEF     = sReport(1:2);
+                sWF     = sReport;
+                sBF1    = sReport;
+                sBF2    = sReport;
+                switch(sEF)
                     case 'e1'
-                        
+                        sWF(1:2)  = 'w1';
+                        sBF1(1:2) = 'b3';
+                        sBF2(1:2) = 'b2';
+                        if (aMove(2) == 0.0 || sum(ismember(cReports,sBF1)) > 0) ...
+                        && (aMove(3) == 0.0 || sum(ismember(cReports,sBF2)) > 0)
+                            cWake{end+1} = sWF;
+                        end % if
+                    case 'e2'
+                        sWF(1:2)  = 'w2';
+                        sBF1(1:2) = 'b1';
+                        sBF2(1:2) = 'b3';
+                        if (aMove(3) == 0.0 || sum(ismember(cReports,sBF1)) > 0) ...
+                        && (aMove(1) == 0.0 || sum(ismember(cReports,sBF2)) > 0)
+                            cWake{end+1} = sWF;
+                        end % if
+                    case 'e3'
+                        sWF(1:2)  = 'w3';
+                        sBF1(1:2) = 'b2';
+                        sBF2(1:2) = 'b1';
+                        if (aMove(1) == 0.0 || sum(ismember(cReports,sBF1)) > 0) ...
+                        && (aMove(2) == 0.0 || sum(ismember(cReports,sBF2)) > 0)
+                            cWake{end+1} = sWF;
+                        end % if
+                    otherwise
+                        continue;
                 end % switch
             end % for
+
+            stWake = obj.fParseReports(cWake);
             
+            % Save Wakefield Options
+            obj.EMFields.Wakefields = cWake;
+            obj.EMFields.WakeDiag   = stWake.GridDiag;
+            
+
         end % function
         
         function obj = fGetParticleVariables(obj)
