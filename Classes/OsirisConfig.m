@@ -504,9 +504,17 @@ classdef OsirisConfig
             stReturn.GridDiag.Reports = cell(1,nReports);
             stReturn.GridDiag.Type    = cell(1,nReports);
             stReturn.GridDiag.Grid    = cell(1,nReports);
+            stReturn.GridDiag.Number  = zeros(1,nReports,'int32');
             stReturn.GridDiag.Pos1    = zeros(1,nReports,'int32');
             stReturn.GridDiag.Pos2    = zeros(1,nReports,'int32');
+
+            stReturn.GridDiag.Reports(:) = {''};
+            stReturn.GridDiag.Type(:)    = {''};
+            stReturn.GridDiag.Grid(:)    = {''};
             
+            cTemp    = cell(1,nReports);
+            cTemp(:) = {''};
+
             for r=1:nReports
                 cElems = strsplit(cReports{r},',');
                 nElems = numel(cElems);
@@ -525,21 +533,27 @@ classdef OsirisConfig
                 end % if
                 if nElems > 2
                     sGrid = strtrim(cElems{3});
+                    sTemp = sprintf('%s-%s-%s',sReport,sType,sGrid);
+                    cTemp{r} = sTemp;
                     switch(sType)
                         case 'line'
+                            iNum  = sum(ismember(cTemp,sTemp));
                             iPos1 = str2num(strtrim(cElems{4}));
                             iPos2 = str2num(strtrim(cElems{4}));
                         case 'slice'
+                            iNum  = sum(ismember(cTemp,sTemp));
                             iPos1 = str2num(strtrim(cElems{4}));
                             iPos2 = 0;
                         otherwise
+                            iNum  = 0;
                             iPos1 = 0;
                             iPos2 = 0;
                     end % switch
                     sType = strtrim(cElems{2});
-                    stReturn.GridDiag.Grid{r} = sGrid;
-                    stReturn.GridDiag.Pos1(r) = iPos1;
-                    stReturn.GridDiag.Pos2(r) = iPos2;
+                    stReturn.GridDiag.Grid{r}   = sGrid;
+                    stReturn.GridDiag.Number(r) = iNum;
+                    stReturn.GridDiag.Pos1(r)   = iPos1;
+                    stReturn.GridDiag.Pos2(r)   = iPos2;
                 end % if
             end % for
             
@@ -816,6 +830,17 @@ classdef OsirisConfig
             
             % Save Potential Options
             obj.EMFields.Wakefields = cWake;
+            
+            % Check when Grid Diagnostics is in use
+            nReports = numel(obj.EMFields.GridDiag.Reports);
+            for r=1:nReports
+                sReport = obj.EMFields.GridDiag.Reports{r};
+                bValid  = false;
+                switch(sReport)
+                    case 'e1'
+                        
+                end % switch
+            end % for
             
         end % function
         
