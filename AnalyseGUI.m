@@ -660,7 +660,6 @@ function AnalyseGUI
         X.Data.Beam       = oData.Config.Particles.Beams;
         X.Data.Plasma     = oData.Config.Particles.Plasma;
         X.Data.Species    = [X.Data.Beam X.Data.Plasma];
-        X.Data.Field      = [oData.Config.EMFields.Reports oData.Config.EMFields.Wakefields];
         X.Data.Completed  = oData.Completed;
         X.Data.HasData    = oData.HasData;
         X.Data.HasTracks  = oData.HasTracks;
@@ -698,15 +697,15 @@ function AnalyseGUI
         end % for
         
         % Translate Fields
-        for i=1:length(X.Data.Field)
-            X.Data.Field{i} = oVar.Lookup(X.Data.Field{i}).Full;
-        end % for
+        stTempA          = fParseReports(oData.Config.EMFields.GridDiag);
+        stTempB          = fParseReports(oData.Config.EMFields.WakeDiag);
+        X.Data.Field     = [stTempA.List stTempB.List];
+        X.Data.FieldDiag = [stTempA.Diag stTempB.Diag];
 
         % Translate Densities
-        X.Data.Density = oData.Config.Particles.Species.(X.Data.Species{1}).DiagReports;
-        for i=1:length(X.Data.Density)
-            X.Data.Density{i} = oVar.Lookup(X.Data.Density{i}).Full;
-        end % for
+        stTemp         = fParseReports(oData.Config.Particles.Species.(X.Data.Species{1}).DiagReports.GridDiag);
+        X.Data.Density = stTemp.List;
+        X.Data.DenDiag = stTemp.Diag;
 
         % Translate UDist
         X.Data.UDist = oData.Config.Particles.Species.(X.Data.Species{1}).DiagUDist;
@@ -1323,9 +1322,11 @@ function AnalyseGUI
                     case 'Field Density'
                         figure(X.Plot(f).Figure); clf;
                         iMakeSym = 1;
-                        X.Plot(f).Return = fPlotField2D(oData,X.Time.Dump,oVar.Reverse(X.Plot(f).Data,'Full'), ...
+                        [sField,cDiag] = fReverseReport(X.Plot(f).Data,X.Data.Field,X.Data.FieldDiag);
+                        X.Plot(f).Return = fPlotField2D(oData,X.Time.Dump,sField, ...
                             'IsSubPlot','No','AutoResize','Off','HideDump','Yes','Limits',[aHLim aVLim], ...
-                            'CAxis',X.Plot(f).CAxis,'Slice',X.Plot(f).Slice,'SliceAxis',X.Plot(f).SliceAxis);
+                            'CAxis',X.Plot(f).CAxis,'Slice',X.Plot(f).Slice,'SliceAxis',X.Plot(f).SliceAxis, ...
+                            'GridDiag',cDiag);
 
                     case 'Phase 1D'
 
@@ -1647,6 +1648,58 @@ function AnalyseGUI
         
     end % function
 
+    function stReturn = fParseReports(stDiag)
+        
+        stReturn = {};
+        
+        iCount   = numel(stDiag.Reports);
+        cList    = cell(1,iCount);
+        cList(:) = {''};
+        cDiag    = cell(4,iCount);
+        cDiag(:) = {''};
+        
+        for r=1:iCount
+
+            sFull  = oVar.Lookup(stDiag.Reports{r}).Full;
+            sShort = oVar.Lookup(stDiag.Reports{r}).Short;
+            sName  = stDiag.Reports{r};
+            sType  = stDiag.Type{r};
+            sAxis  = stDiag.Grid{r};
+            iNum   = stDiag.Number(r);
+            iPos1  = stDiag.Pos1(r);
+            iPos2  = stDiag.Pos2(r);
+            
+            cDiag(1,r) = {sName};
+            cDiag(2,r) = {sType};
+            cDiag(3,r) = {sAxis};
+            cDiag(4,r) = {sprintf('%d',iNum)};
+            
+            switch(stDiag.Type{r})
+                case 'line'
+                    if X.Data.Dim == 3
+                        cList{r} = sprintf('%s-Line %s:%d,%d',sShort,sAxis,iPos1,iPos2);
+                    else
+                        cList{r} = sprintf('%s-Line %s:%d',sShort,sAxis,iPos1);
+                    end % if
+                case 'slice'
+                    cList{r} = sprintf('%s-Slice %s:%d',sShort,sAxis,iPos1);
+                case 'default'
+                    cList{r} = sFull;
+            end % switch
+        end % for
+        
+        stReturn.List = cList;
+        stReturn.Diag = cDiag;
+        
+    end % function
+
+    function [sName, cDiag] = fReverseReport(sString, cList, stDiag)
+        
+        iDiag = find(strcmp(cList, sString));
+        sName = stDiag{1,iDiag};
+        cDiag = stDiag(2:4,iDiag)';
+        
+    end % function
 
     %
     %  Update Plots
@@ -1684,10 +1737,9 @@ function AnalyseGUI
 
         X.Plot(f).Data = sSpecies;
         
-        X.Data.Density = oData.Config.Particles.Species.(X.Plot(f).Data).DiagReports;
-        for i=1:length(X.Data.Density)
-            X.Data.Density{i} = oVar.Lookup(X.Data.Density{i}).Full;
-        end % for
+        stTemp         = fParseReports(oData.Config.Particles.Species.(X.Data.Species{1}).DiagReports.GridDiag);
+        X.Data.Density = stTemp.List;
+        X.Data.DenDiag = stTemp.Diag;
 
         X.Data.UDist = oData.Config.Particles.Species.(X.Plot(f).Data).DiagUDist;
         for i=1:length(X.Data.UDist)
