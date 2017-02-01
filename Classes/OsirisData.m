@@ -453,15 +453,19 @@ classdef OsirisData
 
             if nargin == 1
                 fprintf('\n');
-                fprintf(' Data-extraction function\n');
-                fprintf('**************************\n');
+                fprintf('  Data-extraction function\n');
+                fprintf(' **************************\n');
                 fprintf('\n');
-                fprintf(' Input:\n');
-                fprintf('========\n');
-                fprintf(' iTime    :: Time dump to extract\n');
-                fprintf(' sType    :: Data type [DENSITY, FLD, PHA, RAW, TRACKS]\n');
-                fprintf(' sSet     :: Data set i.e. charge, x1p1, etc\n');
-                fprintf(' sSpecies :: Particle species\n');
+                fprintf('  Input:\n');
+                fprintf(' ========\n');
+                fprintf('  iTime    :: Time dump to extract\n');
+                fprintf('  sType    :: Data type [DENSITY, FLD, PHA, RAW, TRACKS]\n');
+                fprintf('  sSet     :: Data set i.e. charge, x1p1, etc\n');
+                fprintf('  sSpecies :: Particle species\n');
+                fprintf('\n');
+                fprintf('  Options:\n');
+                fprintf(' ==========\n');
+                fprintf('  GridDiag :: Options for grid diagnostics data.\n');
                 fprintf('\n');
                 return;
             end % if
