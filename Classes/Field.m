@@ -86,13 +86,19 @@ classdef Field < OsirisType
     
     methods(Access = 'public')
         
-        function stReturn = Density2D(obj)
+        function stReturn = Density2D(obj, varargin)
 
             % Input/Output
             stReturn = {};
             
+            % Parse input
+            oOpt = inputParser;
+            addParameter(oOpt, 'GridDiag', {});
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
+
             % Get Data and Parse it
-            aData = obj.Data.Data(obj.Time, 'FLD', obj.FieldVar.Name, '');
+            aData = obj.Data.Data(obj.Time,'FLD',obj.FieldVar.Name,'','GridDiag',stOpt.GridDiag);
             if isempty(aData)
                 return;
             end % if
@@ -102,7 +108,7 @@ classdef Field < OsirisType
                 case 'psi'
                     bSign = false;
             end % switch
-            stData = obj.fParseGridData2D(aData,bSign);
+            stData = obj.fParseGridData2D(aData,'SignFlip',bSign,'GridDiag',stOpt.GridDiag);
             
             if isempty(stData)
                 return;

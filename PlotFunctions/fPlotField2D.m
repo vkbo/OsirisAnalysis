@@ -46,6 +46,7 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
         fprintf('  Limits      :: Axis limits\n');
         fprintf('  Slice       :: 2D slice coordinate for 3D data\n');
         fprintf('  SliceAxis   :: 2D slice axis for 3D data\n');
+        fprintf('  GridDiag    :: Options for grid diagnostics data.\n');
         fprintf('  FigureSize  :: Default [900 500]\n');
         fprintf('  HideDump    :: Default No\n');
         fprintf('  IsSubplot   :: Default No\n');
@@ -69,6 +70,7 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
     addParameter(oOpt, 'Limits',      []);
     addParameter(oOpt, 'Slice',       0.0);
     addParameter(oOpt, 'SliceAxis',   3);
+    addParameter(oOpt, 'GridDiag',    {});
     addParameter(oOpt, 'FigureSize',  [900 500]);
     addParameter(oOpt, 'HideDump',    'No');
     addParameter(oOpt, 'IsSubPlot',   'No');
@@ -110,9 +112,9 @@ function stReturn = fPlotField2D(oData, sTime, sField, varargin)
     end % if
     
     if bField
-        stData = oFLD.Density2D;
+        stData = oFLD.Density2D('GridDiag',stOpt.GridDiag);
     else
-        stData = oFLD.Wakefield2D(vField.Name);
+        stData = oFLD.Wakefield2D(vField.Name,'GridDiag',stOpt.GridDiag);
     end % if
 
     if isempty(stData)

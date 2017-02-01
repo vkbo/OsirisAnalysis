@@ -101,7 +101,7 @@ function stReturn = fPlotParticleDensity(oData, sTime, sSpecies, varargin)
     end % if
     
     vData  = oData.Translate.Lookup(stOpt.Data);
-    stData = oDN.Density2D(vData.Name,'GridDiag',stOpt.GridDiag);
+    stData = oDN.Density2D('Density',vData.Name,'GridDiag',stOpt.GridDiag);
     
     if isempty(stData)
         fprintf(2, 'Error: No data.\n');

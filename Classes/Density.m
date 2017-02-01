@@ -62,17 +62,14 @@ classdef Density < OsirisType
     
     methods(Access = 'public')
         
-        function stReturn = Density2D(obj, sDensity, varargin)
+        function stReturn = Density2D(obj, varargin)
             
             % Input/Output
             stReturn = {};
-            
-            if nargin < 2
-                sDensity = 'charge';
-            end % if
 
             % Parse input
             oOpt = inputParser;
+            addParameter(oOpt, 'Density',  'charge');
             addParameter(oOpt, 'GridDiag', {});
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
@@ -83,7 +80,7 @@ classdef Density < OsirisType
             end % if
             
             % Density Diag
-            vDensity = obj.Translate.Lookup(sDensity);
+            vDensity = obj.Translate.Lookup(stOpt.Density);
             if ~vDensity.isValidSpeciesDiag
                 fprintf(2,'Error: Not a valid density diagnostics.\n');
                 return;

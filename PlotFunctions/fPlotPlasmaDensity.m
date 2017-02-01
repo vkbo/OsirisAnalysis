@@ -50,6 +50,9 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         fprintf('  Options:\n');
         fprintf(' ==========\n');
         fprintf('  Limits     :: Axis limits\n');
+        fprintf('  Slice      :: 2D slice coordinate for 3D data\n');
+        fprintf('  SliceAxis  :: 2D slice axis for 3D data\n');
+        fprintf('  GridDiag   :: Options for grid diagnostics data.\n');
         fprintf('  FigureSize :: Default [900 500]\n');
         fprintf('  HideDump   :: Default No\n');
         fprintf('  IsSubplot  :: Default No\n');
@@ -73,6 +76,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     addParameter(oOpt, 'Limits',      []);
     addParameter(oOpt, 'Slice',       0.0);
     addParameter(oOpt, 'SliceAxis',   3);
+    addParameter(oOpt, 'GridDiag',    {});
     addParameter(oOpt, 'FigureSize',  [900 500]);
     addParameter(oOpt, 'HideDump',    'No');
     addParameter(oOpt, 'IsSubPlot',   'No');
@@ -216,7 +220,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         oDN.Slice     = stOpt.Slice;
     end % if
 
-    stData = oDN.Density2D;
+    stData = oDN.Density2D('GridDiag',stOpt.GridDiag);
 
     if isempty(stData)
         fprintf(2, 'Error: No data.\n');
@@ -332,7 +336,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
                 oBeam.X2Lim = stOpt.Limits(3:4);
             end % if
         
-            stBeam = oBeam.Density2D;
+            stBeam = oBeam.Density2D('GridDiag',stOpt.GridDiag);
             aProjZ = abs(sum(stBeam.Data));
             aProjZ = 0.15*(aVAxis(end)-aVAxis(1))*aProjZ/max(abs(aProjZ))+aVAxis(1);
             stQTot = oBeam.BeamCharge;
