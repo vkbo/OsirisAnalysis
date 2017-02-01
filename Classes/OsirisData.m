@@ -188,7 +188,7 @@ classdef OsirisData
             obj.HasTracks   = iHasTracks;
             obj.Completed   = iCompleted;
             
-            if obj.MSData.MinFiles == obj.MSData.MaxFiles
+            if mod(obj.MSData.MaxFiles,obj.MSData.MinFiles) == 0
                obj.Consistent = true;
             else
                obj.Consistent = false;

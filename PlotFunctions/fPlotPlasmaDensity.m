@@ -49,6 +49,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         fprintf('\n');
         fprintf('  Options:\n');
         fprintf(' ==========\n');
+        fprintf('  Density    :: Which plasma data to plot\n');
         fprintf('  Limits     :: Axis limits\n');
         fprintf('  Slice      :: 2D slice coordinate for 3D data\n');
         fprintf('  SliceAxis  :: 2D slice axis for 3D data\n');
@@ -64,6 +65,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         fprintf('  Sample1/2  :: Beam scatter sample size [200]\n');
         fprintf('  Filter1/2  :: Beam scatter filter type: Charge, Random, WRandom or W2Random\n');
         fprintf('  E1/2/3     :: E-field overlay range average over [Start, Count]\n');
+        fprintf('  B1/2/3     :: B-field overlay range average over [Start, Count]\n');
         fprintf('  W1/2/3     :: Wakefield overlay range average over [Start, Count]\n');
         fprintf('\n');
         return;
@@ -73,6 +75,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     iTime   = oData.StringToDump(num2str(sTime));
 
     oOpt = inputParser;
+    addParameter(oOpt, 'Density',     'charge');
     addParameter(oOpt, 'Limits',      []);
     addParameter(oOpt, 'Slice',       0.0);
     addParameter(oOpt, 'SliceAxis',   3);
@@ -98,6 +101,9 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     addParameter(oOpt, 'E1',          []);
     addParameter(oOpt, 'E2',          []);
     addParameter(oOpt, 'E3',          []);
+    addParameter(oOpt, 'B1',          []);
+    addParameter(oOpt, 'B2',          []);
+    addParameter(oOpt, 'B3',          []);
     addParameter(oOpt, 'W1',          []);
     addParameter(oOpt, 'W2',          []);
     addParameter(oOpt, 'W3',          []);
@@ -144,6 +150,27 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         stField(iField).Type  = 1;
         stField(iField).Range = stOpt.E3;
         stField(iField).Color = [0.9 0.7 0.7];
+        iField = iField + 1;
+    end % if
+    if ~isempty(stOpt.B1)
+        stField(iField).Name  = 'b1';
+        stField(iField).Type  = 1;
+        stField(iField).Range = stOpt.B1;
+        stField(iField).Color = [0.2 1.0 0.2];
+        iField = iField + 1;
+    end % if
+    if ~isempty(stOpt.B2)
+        stField(iField).Name  = 'b2';
+        stField(iField).Type  = 1;
+        stField(iField).Range = stOpt.B2;
+        stField(iField).Color = [0.9 0.9 0.2];
+        iField = iField + 1;
+    end % if
+    if ~isempty(stOpt.B3)
+        stField(iField).Name  = 'b3';
+        stField(iField).Type  = 1;
+        stField(iField).Range = stOpt.B3;
+        stField(iField).Color = [0.9 0.2 0.2];
         iField = iField + 1;
     end % if
     if ~isempty(stOpt.W1)
@@ -220,7 +247,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         oDN.Slice     = stOpt.Slice;
     end % if
 
-    stData = oDN.Density2D('GridDiag',stOpt.GridDiag);
+    stData = oDN.Density2D('Density',stOpt.Density,'GridDiag',stOpt.GridDiag);
 
     if isempty(stData)
         fprintf(2, 'Error: No data.\n');

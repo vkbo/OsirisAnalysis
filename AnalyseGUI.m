@@ -408,8 +408,15 @@ function AnalyseGUI
         end % if
         uicontrol(bgTab(t),'Style','Text','String','Plasma','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Plasma,'Value',iVal,'Position',[85 iY 150 20],'Callback',{@fPlotSetPlasma,t});
-        uicontrol(bgTab(t),'Style','Text','String','CAxis','Position',[240 iY+1 60 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','Edit','String','','Position',[285 iY 100 20],'Callback',{@fPlotSetCAxis,t,0});
+
+        [~,iVal] = incellarray(X.Plot(t).Density, X.Data.Density);
+        if iVal == 0
+            X.Plot(t).Density = X.Data.Density{1};
+            iVal = 1;
+        end % if
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Data.Density,'Value',iVal,'Position',[240 iY 120 20],'Callback',{@fPlotSetDensity,t});
+        uicontrol(bgTab(t),'Style','Text','String','CAxis','Position',[365 iY+1 55 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','Edit','String','','Position',[425 iY 100 20],'Callback',{@fPlotSetCAxis,t,0});
 
         iY = iY - 25;
         [~,iVal] = incellarray(X.Plot(t).Scatter(1),X.Plot(t).ScatterOpt);
@@ -417,9 +424,9 @@ function AnalyseGUI
         uicontrol(bgTab(t),'Style','Text','String','Scatter 1','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','PopupMenu','String',X.Plot(t).ScatterOpt,'Value',iVal,'Position',[85 iY 150 20],'Callback',{@fPlotSetScatter,t,1});
         uicontrol(bgTab(t),'Style','Text','String','Count','Position',[240 iY+1 45 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','Edit','String',sprintf('%d',X.Plot(t).ScatterNum(1)),'Position',[285 iY 60 20],'Callback',{@fPlotSetScatterNum,t,1});
-        uicontrol(bgTab(t),'Style','Text','String','Sample','Position',[355 iY+1 55 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Opt.Sample,'Value',X.Plot(t).Sample(1),'Position',[415 iY 90 20],'Callback',{@fPlotSetSample,t,1});
+        uicontrol(bgTab(t),'Style','Edit','String',sprintf('%d',X.Plot(t).ScatterNum(1)),'Position',[285 iY 75 20],'Callback',{@fPlotSetScatterNum,t,1});
+        uicontrol(bgTab(t),'Style','Text','String','Sample','Position',[365 iY+1 55 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Opt.Sample,'Value',X.Plot(t).Sample(1),'Position',[425 iY 100 20],'Callback',{@fPlotSetSample,t,1});
 
         iY = iY - 25;
         [~,iVal] = incellarray(X.Plot(t).Scatter(2),X.Plot(t).ScatterOpt);
@@ -427,18 +434,32 @@ function AnalyseGUI
         uicontrol(bgTab(t),'Style','Text','String','Scatter 2','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
         uicontrol(bgTab(t),'Style','PopupMenu','String',X.Plot(t).ScatterOpt,'Value',iVal,'Position',[85 iY 150 20],'Callback',{@fPlotSetScatter,t,2});
         uicontrol(bgTab(t),'Style','Text','String','Count','Position',[240 iY+1 45 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','Edit','String',sprintf('%d',X.Plot(t).ScatterNum(2)),'Position',[285 iY 60 20],'Callback',{@fPlotSetScatterNum,t,2});
-        uicontrol(bgTab(t),'Style','Text','String','Sample','Position',[355 iY+1 55 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Opt.Sample,'Value',X.Plot(t).Sample(2),'Position',[415 iY 90 20],'Callback',{@fPlotSetSample,t,2});
+        uicontrol(bgTab(t),'Style','Edit','String',sprintf('%d',X.Plot(t).ScatterNum(2)),'Position',[285 iY 75 20],'Callback',{@fPlotSetScatterNum,t,2});
+        uicontrol(bgTab(t),'Style','Text','String','Sample','Position',[365 iY+1 55 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','PopupMenu','String',X.Opt.Sample,'Value',X.Plot(t).Sample(2),'Position',[425 iY 100 20],'Callback',{@fPlotSetSample,t,2});
         
         iY = iY - 25;
-        uicontrol(bgTab(t),'Style','Text','String','Fields','Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
-        uicontrol(bgTab(t),'Style','Checkbox','String',oVar.Lookup('e1').Short,'Value',X.Plot(t).Settings(1),'Position',[ 85 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,1});
-        uicontrol(bgTab(t),'Style','Checkbox','String',oVar.Lookup('e2').Short,'Value',X.Plot(t).Settings(2),'Position',[135 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,2});
-        uicontrol(bgTab(t),'Style','Checkbox','String',oVar.Lookup('e3').Short,'Value',X.Plot(t).Settings(3),'Position',[185 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,3});
-        uicontrol(bgTab(t),'Style','Checkbox','String',oVar.Lookup('w1').Short,'Value',X.Plot(t).Settings(4),'Position',[235 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,4});
-        uicontrol(bgTab(t),'Style','Checkbox','String',oVar.Lookup('w2').Short,'Value',X.Plot(t).Settings(5),'Position',[285 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,5});
-        uicontrol(bgTab(t),'Style','Checkbox','String',oVar.Lookup('w3').Short,'Value',X.Plot(t).Settings(6),'Position',[335 iY 50 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,6});
+        sE1 = oVar.Lookup('e1').Short;
+        sE2 = oVar.Lookup('e2').Short;
+        sE3 = oVar.Lookup('e3').Short;
+        sDim = sprintf('(%s,%s,%s)',sE1(2:end),sE2(2:end),sE3(2:end));
+        uicontrol(bgTab(t),'Style','Text','String',['Fld' sDim],'Position',[10 iY+1 70 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','Text','String','E','Position',[85 iY+1 20 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','Checkbox','String','','Value',X.Plot(t).Settings(1),'Position',[105 iY-1 15 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,1});
+        uicontrol(bgTab(t),'Style','Checkbox','String','','Value',X.Plot(t).Settings(2),'Position',[125 iY-1 15 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,2});
+        uicontrol(bgTab(t),'Style','Checkbox','String','','Value',X.Plot(t).Settings(3),'Position',[145 iY-1 15 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,3});
+        uicontrol(bgTab(t),'Style','Text','String','B','Position',[175 iY+1 20 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','Checkbox','String','','Value',X.Plot(t).Settings(4),'Position',[195 iY-1 15 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,4});
+        uicontrol(bgTab(t),'Style','Checkbox','String','','Value',X.Plot(t).Settings(5),'Position',[215 iY-1 15 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,5});
+        uicontrol(bgTab(t),'Style','Checkbox','String','','Value',X.Plot(t).Settings(6),'Position',[235 iY-1 15 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,6});
+        uicontrol(bgTab(t),'Style','Text','String','W','Position',[265 iY+1 20 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','Checkbox','String','','Value',X.Plot(t).Settings(7),'Position',[285 iY-1 15 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,7});
+        uicontrol(bgTab(t),'Style','Checkbox','String','','Value',X.Plot(t).Settings(8),'Position',[305 iY-1 15 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,8});
+        uicontrol(bgTab(t),'Style','Checkbox','String','','Value',X.Plot(t).Settings(9),'Position',[325 iY-1 15 20],'BackgroundColor',cBackGround,'Callback',{@fPlotSetting,t,9});
+
+        sRange = sprintf('%d %d',X.Plot(t).Range(1),sum(X.Plot(t).Range)-1);
+        uicontrol(bgTab(t),'Style','Text','String','Average','Position',[365 iY+1 55 15],'HorizontalAlignment','Left','BackgroundColor',cBackGround);
+        uicontrol(bgTab(t),'Style','Edit','String',sRange,'Position',[425 iY 100 20],'Callback',{@fPlotSetRange,t});
 
         if X.Data.Dim == 3
             iY = iY - 25;
@@ -1031,11 +1052,16 @@ function AnalyseGUI
                         X.Plot(f).Data = '';
                         fOut('No plasma in simulation.',2);
                     end % if
+                    if X.Data.Cyl
+                        X.Plot(f).Range = [3,3];
+                    else
+                        X.Plot(f).Range = [-1,2];
+                    end % if
                     X.Plot(f).ScatterOpt = ['Off' X.Data.Beam];
                     X.Plot(f).Scatter    = {'' ''};
                     X.Plot(f).ScatterNum = [2000 2000];
                     X.Plot(f).Sample     = [3 3];
-                    X.Plot(f).Settings   = [0 0 0 0 0 0];
+                    X.Plot(f).Settings   = [0 0 0 0 0 0 0 0 0];
                     X.Plot(f).CAxis      = [0.0 5.0];
                     fCtrlPlasmaDensity(f);
                     aFigSize = [900 500];
@@ -1292,16 +1318,13 @@ function AnalyseGUI
 
                     case 'Plasma Density'
                         stFLD(3) = struct();
-                        for s=1:6
+                        for s=1:9
                             stFLD(s).Range = [];
                             if X.Plot(f).Settings(s)
-                                if X.Data.Cyl
-                                    stFLD(s).Range = [3,3];
-                                else
-                                    stFLD(s).Range = [-1,2];
-                                end % if
+                                stFLD(s).Range = X.Plot(f).Range;
                             end % if
                         end % for
+                        [sDensity,cDiag] = fReverseReport(X.Plot(f).Density,X.Data.Density,X.Data.DenDiag);
                         iMakeSym = 1;
                             
                         figure(X.Plot(f).Figure); clf;
@@ -1312,9 +1335,11 @@ function AnalyseGUI
                             'Overlay1',X.Plot(f).Scatter{1},'Overlay2',X.Plot(f).Scatter{2}, ...
                             'Filter1',X.Opt.Sample{X.Plot(f).Sample(1)},'Filter2',X.Opt.Sample{X.Plot(f).Sample(2)}, ...
                             'E1',stFLD(1).Range,'E2',stFLD(2).Range,'E3',stFLD(3).Range, ...
-                            'W1',stFLD(4).Range,'W2',stFLD(5).Range,'W3',stFLD(6).Range, ...
+                            'B1',stFLD(4).Range,'B2',stFLD(5).Range,'B3',stFLD(6).Range, ...
+                            'W1',stFLD(7).Range,'W2',stFLD(8).Range,'W3',stFLD(9).Range, ...
                             'Limits',[aHLim aVLim],'CAxis',X.Plot(f).CAxis, ...
-                            'Slice',X.Plot(f).Slice,'SliceAxis',X.Plot(f).SliceAxis);
+                            'Slice',X.Plot(f).Slice,'SliceAxis',X.Plot(f).SliceAxis, ...
+                            'Density',sDensity,'GridDiag',cDiag);
                         if isfield(X.Plot(f).Return,'Error')
                             fOut(X.Plot(f).Return.Error,3);
                             continue;
@@ -1700,6 +1725,10 @@ function AnalyseGUI
         sName = stDiag{1,iDiag};
         cDiag = stDiag(2:4,iDiag)';
         
+        if strcmpi(cDiag{1},'default')
+            cDiag = {};
+        end % if
+        
     end % function
 
     %
@@ -1914,6 +1943,34 @@ function AnalyseGUI
         
         uiSrc.String    = sReturn;
         X.Plot(f).CAxis = aCAxis;
+        fRefresh(f);
+        
+    end % function
+
+    function fPlotSetRange(uiSrc,~,f)
+        
+        sValue = strtrim(uiSrc.String);
+        cValue = strsplit(sValue,' ');
+        
+        if isempty(sValue)
+            cValue = {};
+        end % if
+        
+        if numel(cValue) == 1
+            aRange(1) = str2double(cValue{1});
+            aRange(2) = 3;
+            sReturn   = sprintf('%d %d', aRange(1), aRange(1)+aRange(2)-1);
+        elseif numel(cValue) > 1
+            aRange(1) = str2double(cValue{1});
+            aRange(2) = abs(str2double(cValue{2})-aRange(1))+1;
+            sReturn   = sprintf('%d %d', aRange(1), aRange(1)+aRange(2)-1);
+        else
+            aRange    = [];
+            sReturn   = '';
+        end % if
+        
+        uiSrc.String    = sReturn;
+        X.Plot(f).Range = aRange;
         fRefresh(f);
         
     end % function
