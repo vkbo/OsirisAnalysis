@@ -1205,7 +1205,9 @@ classdef OsirisConfig
             catch
                 cReports = {};
             end % try
-            
+
+            stReports = obj.fParseReports(cReports);
+
             % Reports, UDist
             try
                 cRepUDist = stData.diag_species.rep_udist;
@@ -1227,7 +1229,7 @@ classdef OsirisConfig
             stReturn.Data.DiagGammaMin = dDiagGMin;
             stReturn.Data.DiagGammaMax = dDiagGMax;
             stReturn.Data.DiagNGamma   = iDiagNG;
-            stReturn.Data.DiagReports  = cReports;
+            stReturn.Data.DiagReports  = stReports;
             stReturn.Data.DiagUDist    = cRepUDist;
             stReturn.Data.PhaseSpaces  = cPhaseSpaces;
 
