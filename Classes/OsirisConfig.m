@@ -96,10 +96,10 @@ classdef OsirisConfig
  
                     [~, ~, sFileExt] = fileparts(aDir(i).name);
                     
-                    aExclude = {'.out','.sh','.e', '.tags'}; % Files to exclude as definitely not the config file
+                    cExclude = {'.out','.sh','.e', '.tags'}; % Files to exclude as definitely not the config file
                     aSizes   = [1024, 20480];                % Minimum, maximum size in bytes
                     
-                    if sum(ismember(sFileExt, aExclude)) == 0 ...
+                    if sum(ismember(sFileExt, cExclude)) == 0 ...
                             && sFileExt(end) ~= '~'           ...
                             && aDir(i).bytes >= aSizes(1)     ...
                             && aDir(i).bytes <= aSizes(2)
@@ -194,9 +194,7 @@ classdef OsirisConfig
         function obj = fReadNameLists(obj)
             
             % Read file
-            oFile = fopen(strcat(obj.Path, '/', obj.File), 'r');
-            sFile = sprintf(fread(oFile,'*char'));
-            fclose(oFile);
+            sFile  = fileread([obj.Path '/' obj.File]);
             
             % Get Simulation Description
             cLines = strsplit(sFile,'\n');
@@ -491,7 +489,76 @@ classdef OsirisConfig
             end % if
             
         end % function
-        
+
+        function stReturn = fParseReports(cReports)
+            
+
+            stReturn.Reports  = cReports;
+            stReturn.GridDiag = {};
+
+            nReports = numel(cReports);
+            if nReports == 0
+                return;
+            end % if
+            
+            stReturn.GridDiag.Reports = cell(1,nReports);
+            stReturn.GridDiag.Type    = cell(1,nReports);
+            stReturn.GridDiag.Grid    = cell(1,nReports);
+            stReturn.GridDiag.Number  = zeros(1,nReports,'int32');
+            stReturn.GridDiag.Pos1    = zeros(1,nReports,'int32');
+            stReturn.GridDiag.Pos2    = zeros(1,nReports,'int32');
+
+            stReturn.GridDiag.Reports(:) = {''};
+            stReturn.GridDiag.Type(:)    = {''};
+            stReturn.GridDiag.Grid(:)    = {''};
+            
+            cTemp    = cell(1,nReports);
+            cTemp(:) = {''};
+
+            for r=1:nReports
+                cElems = strsplit(cReports{r},',');
+                nElems = numel(cElems);
+                if nElems == 0
+                    continue;
+                end % if
+                if nElems > 0
+                    sReport = strtrim(cElems{1});
+                    stReturn.GridDiag.Reports{r} = sReport;
+                end % if
+                if nElems > 1
+                    sType = strtrim(cElems{2});
+                    stReturn.GridDiag.Type{r} = sType;
+                else
+                    stReturn.GridDiag.Type{r} = 'default';
+                end % if
+                if nElems > 2
+                    sGrid = strtrim(cElems{3});
+                    sTemp = sprintf('%s-%s-%s',sReport,sType,sGrid);
+                    cTemp{r} = sTemp;
+                    switch(sType)
+                        case 'line'
+                            iNum  = sum(ismember(cTemp,sTemp));
+                            iPos1 = str2num(strtrim(cElems{4}));
+                            iPos2 = str2num(strtrim(cElems{4}));
+                        case 'slice'
+                            iNum  = sum(ismember(cTemp,sTemp));
+                            iPos1 = str2num(strtrim(cElems{4}));
+                            iPos2 = 0;
+                        otherwise
+                            iNum  = 0;
+                            iPos1 = 0;
+                            iPos2 = 0;
+                    end % switch
+                    sType = strtrim(cElems{2});
+                    stReturn.GridDiag.Grid{r}   = sGrid;
+                    stReturn.GridDiag.Number(r) = iNum;
+                    stReturn.GridDiag.Pos1(r)   = iPos1;
+                    stReturn.GridDiag.Pos2(r)   = iPos2;
+                end % if
+            end % for
+            
+        end % function
+
         function aReturn = fArrayPad(aData, aTemplate)
             
             aTemplate(1:length(aData)) = aData;
@@ -600,6 +667,14 @@ classdef OsirisConfig
             end % try
             aXMax = obj.fArrayPad(aXMax, [0.0 0.0 0.0]);
 
+            % Moving
+            try
+                aMove = double(cell2mat(obj.Input.simulation.space.if_move));
+            catch
+                aMove = 0.0;
+            end % try
+            aMove = obj.fArrayPad(aMove, [0.0 0.0 0.0]);
+
             % Save Plasma Variables for Simulation
             obj.Simulation.N0          = dN0;
             obj.Simulation.OmegaP      = dOmegaP;
@@ -627,6 +702,7 @@ classdef OsirisConfig
             % Save Space Variables
             obj.Simulation.XMin        = aXMin;
             obj.Simulation.XMax        = aXMax;
+            obj.Simulation.Moving      = aMove;
 
             
             %
@@ -711,10 +787,59 @@ classdef OsirisConfig
             catch
                 cReports = {};
             end % try
+            stReports = obj.fParseReports(cReports);
             
             % Save EMF Diagnostics
-            obj.EMFields.Reports = cReports;
+            obj.EMFields = stReports;
+
+            % Check which wakefields can be calculated from the e- and b-fields
+            cWake    = {};
+            aMove    = obj.Simulation.Moving;
+            nReports = numel(cReports);
+ 
+            for r=1:nReports
+                sReport = cReports{r};
+                sEF     = sReport(1:2);
+                sWF     = sReport;
+                sBF1    = sReport;
+                sBF2    = sReport;
+                switch(sEF)
+                    case 'e1'
+                        sWF(1:2)  = 'w1';
+                        sBF1(1:2) = 'b3';
+                        sBF2(1:2) = 'b2';
+                        if (aMove(2) == 0.0 || sum(ismember(cReports,sBF1)) > 0) ...
+                        && (aMove(3) == 0.0 || sum(ismember(cReports,sBF2)) > 0)
+                            cWake{end+1} = sWF;
+                        end % if
+                    case 'e2'
+                        sWF(1:2)  = 'w2';
+                        sBF1(1:2) = 'b1';
+                        sBF2(1:2) = 'b3';
+                        if (aMove(3) == 0.0 || sum(ismember(cReports,sBF1)) > 0) ...
+                        && (aMove(1) == 0.0 || sum(ismember(cReports,sBF2)) > 0)
+                            cWake{end+1} = sWF;
+                        end % if
+                    case 'e3'
+                        sWF(1:2)  = 'w3';
+                        sBF1(1:2) = 'b2';
+                        sBF2(1:2) = 'b1';
+                        if (aMove(1) == 0.0 || sum(ismember(cReports,sBF1)) > 0) ...
+                        && (aMove(2) == 0.0 || sum(ismember(cReports,sBF2)) > 0)
+                            cWake{end+1} = sWF;
+                        end % if
+                    otherwise
+                        continue;
+                end % switch
+            end % for
+
+            stWake = obj.fParseReports(cWake);
             
+            % Save Wakefield Options
+            obj.EMFields.Wakefields = cWake;
+            obj.EMFields.WakeDiag   = stWake.GridDiag;
+            
+
         end % function
         
         function obj = fGetParticleVariables(obj)
@@ -1080,7 +1205,9 @@ classdef OsirisConfig
             catch
                 cReports = {};
             end % try
-            
+
+            stReports = obj.fParseReports(cReports);
+
             % Reports, UDist
             try
                 cRepUDist = stData.diag_species.rep_udist;
@@ -1102,7 +1229,7 @@ classdef OsirisConfig
             stReturn.Data.DiagGammaMin = dDiagGMin;
             stReturn.Data.DiagGammaMax = dDiagGMax;
             stReturn.Data.DiagNGamma   = iDiagNG;
-            stReturn.Data.DiagReports  = cReports;
+            stReturn.Data.DiagReports  = stReports;
             stReturn.Data.DiagUDist    = cRepUDist;
             stReturn.Data.PhaseSpaces  = cPhaseSpaces;
 

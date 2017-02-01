@@ -406,9 +406,10 @@ classdef Phase < OsirisType
             end % if
 
             oOpt = inputParser;
-            addParameter(oOpt, 'Grid',   100);
-            addParameter(oOpt, 'Method', 'Deposit');
-            addParameter(oOpt, 'Lim',    []);
+            addParameter(oOpt, 'Grid',     100);
+            addParameter(oOpt, 'Method',   'Deposit');
+            addParameter(oOpt, 'Lim',      []);
+            addParameter(oOpt, 'FixedLim', []);
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
             
@@ -435,16 +436,13 @@ classdef Phase < OsirisType
             end % if
             aW = aW/sum(aW);
             
-            dMin = min(aA);
-            dMax = max(aA);
-            
             % Get conversion factor
             if     iAxis == 1 || iAxis == 2 || iAxis == 3
                 dFac  = obj.AxisFac(iAxis);
                 sUnit = obj.AxisUnits{iAxis};
             elseif iAxis == 4 || iAxis == 5 || iAxis == 6
                 dFac  = obj.Data.Config.Constants.EV.ElectronMass;
-                dFac  = dFac*obj.Config.RQM;
+                dFac  = dFac*abs(obj.Config.RQM);
                 sUnit = 'eV/c';
             elseif iAxis == 7
                 dFac  = obj.Data.Config.Constants.EV.ElectronMass;
@@ -468,7 +466,7 @@ classdef Phase < OsirisType
             end % if
 
             % Convert to array
-            [aData, aAxis] = fAccu1D(aA,aW,stOpt.Grid,'Method',stOpt.Method);
+            [aData, aAxis] = fAccu1D(aA,aW,stOpt.Grid,'Method',stOpt.Method,'FixedLim',stOpt.FixedLim/dFac);
             
             % Return data
             stReturn.Data      = aData;
@@ -477,12 +475,14 @@ classdef Phase < OsirisType
             stReturn.Axis      = aAxis*dFac;
             stReturn.AxisUnit  = sUnit;
             stReturn.AxisScale = dFac;
-            stReturn.AxisRange = [dMin dMax];
+            stReturn.AxisRange = [aAxis(1) aAxis(end)]*dFac;
             stReturn.ZPos      = obj.fGetZPos;
 
         end % function
 
         function stReturn = RawHist2D(obj, sAxis1, sAxis2, varargin)
+            
+            % Incomplete
 
             % Input/Output
             stReturn = {};
@@ -531,6 +531,78 @@ classdef Phase < OsirisType
             
         end % function
     
+        function stReturn = RawStats(obj, sAxis, varargin)
+
+            % Input/Output
+            stReturn = {};
+
+            % Check that the object is initialised
+            if obj.fError
+                return;
+            end % if
+
+            oOpt = inputParser;
+            addParameter(oOpt, 'Lim', []);
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
+            
+            iAxis = obj.Data.RawToIndex(lower(sAxis));
+            if iAxis < 1 || iAxis > 8
+                fprintf(2,'Error: Unrecognised axis ''%s'' in Phase.RawHist1D.\n',sAxis);
+                return;
+            end % if
+            
+            % Get data
+            aRaw = obj.Data.Data(obj.Time, 'RAW', '', obj.Species.Name);
+            if isempty(aRaw)
+                return;
+            end % if
+            aRaw(:,1) = aRaw(:,1) - obj.BoxOffset;
+
+            % Prepare data
+            aA = aRaw(:,iAxis);
+            aW = aRaw(:,8);
+            aW = aW/sum(aW);
+            
+            % Get conversion factor
+            if     iAxis == 1 || iAxis == 2 || iAxis == 3
+                dFac  = obj.AxisFac(iAxis);
+                sUnit = obj.AxisUnits{iAxis};
+            elseif iAxis == 4 || iAxis == 5 || iAxis == 6
+                dFac  = obj.Data.Config.Constants.EV.ElectronMass;
+                dFac  = dFac*abs(obj.Config.RQM);
+                sUnit = 'eV/c';
+            elseif iAxis == 7
+                dFac  = obj.Data.Config.Constants.EV.ElectronMass;
+                dFac  = dFac*obj.Config.RQM;
+                sUnit = 'eV/c^2';
+            elseif iAxis == 8
+                dFac  = obj.Data.Config.Convert.SI.ChargeFac;
+                sUnit = 'C';
+            end % if
+
+            % Apply limits
+            if ~isempty(stOpt.Lim)
+                aLim = stOpt.Lim/dFac;
+                aCut = find(aA < aLim(1) | aA > aLim(2));
+                aA(aCut) = [];
+                aW(aCut) = [];
+            end % if
+
+            if sum(isnan(aW)) > 0
+                return;
+            end % if
+
+            % Return data
+            stReturn.Mean   = abs(wmean(aA,aW)*dFac);
+            stReturn.Std    = abs(wstd(aA,aW)*dFac);
+            stReturn.Median = abs(wprctile(aA,50,aW)*dFac);
+            stReturn.Unit   = sUnit;
+            stReturn.Scale  = dFac;
+            stReturn.ZPos   = obj.fGetZPos;
+
+        end % function
+
     end % methods
     
     %
@@ -640,7 +712,7 @@ classdef Phase < OsirisType
 
         function stReturn = fConvertDeposit(obj, sDeposit)
 
-            % Return Defualts
+            % Return Defaults
             stReturn.Fac  = 1.0;
             stReturn.Unit = 'N';
 

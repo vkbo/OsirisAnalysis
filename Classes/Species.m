@@ -36,7 +36,7 @@ classdef Species < OsirisType
 
     properties(GetAccess='public', SetAccess='public')
         
-        Progress = false; % Print progress for loops over many time steps
+        % None
 
     end % properties
 
@@ -51,16 +51,6 @@ classdef Species < OsirisType
             % Call OsirisType constructor
             obj@OsirisType(oData, sSpecies, varargin{:});
 
-        end % function
-        
-        function obj = set.Progress(obj, bProgress)
-            
-            if bProgress
-                obj.Progress = true;
-            else
-                obj.Progress = false;
-            end % if
-            
         end % function
         
     end % methods
@@ -82,6 +72,7 @@ classdef Species < OsirisType
             addParameter(oOpt, 'Unit',    'Joule');
             addParameter(oOpt, 'ZLim',    []);
             addParameter(oOpt, 'CutPrev', 'No');
+            addParameter(oOpt, 'Progress','None');
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
 
@@ -119,8 +110,11 @@ classdef Species < OsirisType
             aCount   = zeros(nTime,3);
             aCharge  = zeros(nTime,3);
 
-            if obj.Progress
+            if strcmpi(stOpt.Progress,'Text')
                 fprintf('Progress   0.0%%');
+            end % if
+            if strcmpi(stOpt.Progress,'WaitBar')
+                hWB = waitbar(0,'0.0%','Name','Calculating Energy Change');
             end % if
             
             for t=1:nTime
@@ -182,14 +176,20 @@ classdef Species < OsirisType
                 aCharge(t,1:3) = [sum(aRawC(:,8)) sum(aRawP(:,8)) sum(aRawP(:,8))-sum(aRawP(aIndP,8))];
                 
                 % Print progress
-                if obj.Progress
+                if strcmpi(stOpt.Progress,'Text')
                     fprintf('\b\b\b\b\b\b%5.1f%%',100*t/nTime);
+                end % if
+                if strcmpi(stOpt.Progress,'WaitBar')
+                    waitbar(t/nTime,hWB,sprintf('%.1f%%',100*t/nTime));
                 end % if
 
             end % for
 
-            if obj.Progress
+            if strcmpi(stOpt.Progress,'Text')
                 fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b');
+            end % if
+            if strcmpi(stOpt.Progress,'WaitBar')
+                close(hWB);
             end % if
             
             % Get time axis

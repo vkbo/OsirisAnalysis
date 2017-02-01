@@ -14,6 +14,10 @@
 %  Options:
 % ==========
 %  Lim         :: Horizontal axis limits
+%  Method      :: Weighted deposit ob grid, or use bins. Default Deposit
+%  Grid        :: Grid cells or bins. Default 100
+%  GaussFit    :: Default No
+%  FitRange    :: Default []
 %  FigureSize  :: Default [900 500]
 %  HideDump    :: Default No
 %  IsSubplot   :: Default No
@@ -42,6 +46,10 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
         fprintf('  Options:\n');
         fprintf(' ==========\n');
         fprintf('  Lim         :: Horizontal axis limits\n');
+        fprintf('  Method      :: Weighted deposit ob grid, or use bins. Default Deposit\n');
+        fprintf('  Grid        :: Grid cells or bins. Default 100\n');
+        fprintf('  GaussFit    :: Default No\n');
+        fprintf('  FitRange    :: Default []\n');
         fprintf('  FigureSize  :: Default [900 500]\n');
         fprintf('  HideDump    :: Default No\n');
         fprintf('  IsSubplot   :: Default No\n');
@@ -58,6 +66,8 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
     addParameter(oOpt, 'Method',     'Deposit');
     addParameter(oOpt, 'Grid',       100);
     addParameter(oOpt, 'GaussFit',   'No');
+    addParameter(oOpt, 'FitRange',   []);
+    addParameter(oOpt, 'FixedLim',   []);
     addParameter(oOpt, 'FigureSize', [900 500]);
     addParameter(oOpt, 'HideDump',   'No');
     addParameter(oOpt, 'IsSubPlot',  'No');
@@ -74,7 +84,7 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
     % Data
     oPha      = Phase(oData,vSpecies.Name,'Units','SI');
     oPha.Time = iTime;
-    stData    = oPha.RawHist1D(sAxis,'Grid',stOpt.Grid,'Lim',stOpt.Lim,'Method',stOpt.Method);
+    stData    = oPha.RawHist1D(sAxis,'Grid',stOpt.Grid,'Lim',stOpt.Lim,'Method',stOpt.Method,'FixedLim',stOpt.FixedLim);
     
     if isempty(stData)
         fprintf(2, 'Error: No data.\n');
@@ -91,32 +101,53 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
     dAScale = dAVal/dAMax;
     aAxis   = aAxis*dAScale;
 
+    stReturn.Data      = aData;
+    stReturn.HAxis     = aAxis;
     stReturn.AxisRange = stData.AxisRange;
     stReturn.AxisScale = stData.AxisScale*dAScale;
     stReturn.Error     = '';
 
     % Curve Fitting
     if strcmpi(stOpt.GaussFit,'Yes')
+        
+        if isempty(stOpt.FitRange)
+            aFitA = aAxis;
+            aFitD = aData;
+        else
+            iS = fGetIndex(aAxis,stOpt.FitRange(1));
+            iE = fGetIndex(aAxis,stOpt.FitRange(2));
+            aFitA = aAxis(iS:iE);
+            aFitD = aData(iS:iE);
+        end % if
+
+        if isempty(stOpt.Lim)
+            aFAxis = aAxis;
+        else
+            aFAxis = stOpt.Lim(1)*dAScale:(aAxis(2)-aAxis(1)):stOpt.Lim(2)*dAScale;
+        end % if
     
         try
-            oFit   = fit(double(aAxis)',double(aData)','Gauss1');
-            aFit   = feval(oFit,aAxis);
-            dAmp   = oFit.a1;
-            dMu    = oFit.b1;
-            dSigma = oFit.c1/sqrt(2);
+            [oFit,oGOF] = fit(double(aFitA)',double(aFitD)','Gauss1');
+            aFit        = feval(oFit,aFAxis);
+            dAmp        = oFit.a1;
+            dMu         = oFit.b1;
+            dSigma      = oFit.c1/sqrt(2);
 
             if abs(max(aFit))/abs(min(aFit)) < 2
                 fprintf('Warning: Gauss1 failed, trying Gauss2\n');
-                oFit   = fit(double(aAxis)',double(aData)','Gauss2');
-                aFit   = feval(oFit,aAxis);
-                dAmp   = oFit.a2;
-                dMu    = oFit.b2;
-                dSigma = oFit.c2/sqrt(2);
+                [oFit,oGOF] = fit(double(aFitA)',double(aFitD)','Gauss2');
+                aFit        = feval(oFit,aFAxis);
+                dAmp        = oFit.a2;
+                dMu         = oFit.b2;
+                dSigma      = oFit.c2/sqrt(2);
             end % if
 
             [dSSigma,sSUnit] = fAutoScale(dSigma/dAScale,stData.AxisUnit, 1e-6);
+            
+            stReturn.Fit      = oFit;
+            stReturn.Goodness = oGOF;
         catch
-            stReturn.Error = 'Curve fitting failed';
+            stReturn.Error    = 'Curve fitting failed';
         end % try
         
     end % if
@@ -141,13 +172,17 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
         figure(stOpt.ForceFig);
     end % if
     stairs(aAxis, aData, 'Color', [0.0 0.0 0.6], 'LineWidth', 1.5);
-
+    
     dYMax = max(aData);
     if dYMax > 0
         ylim([0 dYMax*1.1]);
     end % if
     if aAxis(end) > aAxis(1)
         xlim([aAxis(1) aAxis(end)]);
+    end % if
+    
+    if ~isempty(stOpt.Lim)
+        xlim(stOpt.Lim*dAScale);
     end % if
     
     % Curve Fitting
@@ -158,7 +193,7 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
                 figure(stOpt.ForceFig);
             end % if
             hold on;
-            plot(aAxis, aFit, 'Color', 'Red');
+            plot(aFAxis, aFit, 'Color', 'Red');
 
             sAmp   = sprintf('\\leftarrow A = %.2f%%',dAmp);
             sMu    = sprintf('\\mu = %.2f %s \\rightarrow',dMu,sAUnit);
@@ -190,11 +225,18 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
     sMean = sprintf('Mean: %.2f %s',dMVal,sMUnit);
     sStd  = sprintf('Std: %.2f %s',dSVal,sSUnit);
 
-    dX = interp1([0 1], xlim(), 0.02);
-    dY = interp1([0 1], ylim(), 0.95);
+    aXLim = xlim();
+    aYLim = ylim();
+    set(gca,'Units','Pixels');
+    aSize = get(gca,'Position');
+    dDX   = aSize(3)/(aXLim(2)-aXLim(1));
+    dDY   = aSize(4)/(aYLim(2)-aYLim(1));
+    dX    = aXLim(1)+8/dDX;
+    dY1   = aYLim(2)-15/dDY;
+    dY2   = aYLim(2)-30/dDY;
 
-    text(dX,dY,sMean);
-    text(dX,0.95*dY,sStd);
+    text(dX,dY1,sMean);
+    text(dX,dY2,sStd);
 
     hold off;
     
@@ -206,7 +248,7 @@ function stReturn = fPlotRaw1D(oData, sTime, sSpecies, sAxis, varargin)
 
     title(sTitle);
     xlabel(sprintf('%s [%s]',vAxis.Tex,sAUnit));
-    ylabel('Ratio [%]');
+    ylabel('% Per Bin');
     
 
     % Return

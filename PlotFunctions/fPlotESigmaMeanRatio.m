@@ -55,15 +55,21 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
     addParameter(oOpt, 'HideDump',   'No');
     addParameter(oOpt, 'IsSubPlot',  'No');
     addParameter(oOpt, 'AutoResize', 'On');
+    addParameter(oOpt, 'Relative',   'Yes');
     addParameter(oOpt, 'Start',      'PStart');
     addParameter(oOpt, 'End',        'PEnd');
     parse(oOpt, varargin{:});
     stOpt = oOpt.Results;
 
+    % Variables
+    
 
     % Data
     oMom   = Momentum(oData, vSpecies.Name);
-    stData = oMom.SigmaEToEMean(stOpt.Start,stOpt.End);
+    stData = oMom.SigmaEToEMean(stOpt.Start,stOpt.End,'Relative',stOpt.Relative);
+    
+    aTAxis = stData.TAxis;
+    aData  = stData.Data*100;
     
     if isempty(stData)
         fprintf(2, 'Error: No data.\n');
@@ -85,9 +91,9 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
     
     hold on;
     
-    H(1) = plot(stData.TAxis, stData.Data*100, '-b', 'LineWidth', 2);
+    H(1) = plot(aTAxis, aData, '-b', 'LineWidth', 2);
     
-    xlim([stData.TAxis(1),stData.TAxis(end)]);
+    xlim([aTAxis(1),aTAxis(end)]);
 
     if strcmpi(stOpt.HideDump, 'No')
         sTitle = sprintf('%s Energy Sigma to Mean Ratio (%s #%d)',vSpecies.Full,oData.Config.Name,iTime);
@@ -97,7 +103,11 @@ function stReturn = fPlotESigmaMeanRatio(oData, sSpecies, varargin)
 
     title(sTitle);
     xlabel('z [m]');
-    ylabel('\sigma_E/<E> [%]');
+    if strcmpi(stOpt.Relative,'Yes')
+        ylabel('\sigma_E/\langleE\rangle-E_0 [%]');
+    else
+        ylabel('\sigma_E/\langleE\rangle [%]');
+    end % if
     
     hold off;
 

@@ -68,7 +68,7 @@ classdef Momentum < OsirisType
     
     methods(Access='public')
         
-        function stReturn = SigmaEToEMean(obj, sStart, sEnd)
+        function stReturn = SigmaEToEMean(obj, sStart, sEnd, varargin)
 
             % Input/Output
             stReturn = {};
@@ -90,9 +90,20 @@ classdef Momentum < OsirisType
             iStart = obj.Data.StringToDump(sStart);
             iEnd   = obj.Data.StringToDump(sEnd);
 
+            oOpt = inputParser;
+            addParameter(oOpt, 'Relative', 'No');
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
+
             % Calculate axes
             aTAxis = obj.fGetTimeAxis;
             aTAxis = aTAxis(iStart+1:iEnd+1);
+            
+            if strcmpi(stOpt.Relative, 'Yes')
+                dEInit = obj.fMomentumToEnergy(obj.Data.Config.Particles.Species.(obj.Species.Name).Momentum(1));
+            else
+                dEInit = 0.0;
+            end % if
             
             aMean  = zeros(1, length(aTAxis));
             aSigma = zeros(1, length(aTAxis));
@@ -112,7 +123,7 @@ classdef Momentum < OsirisType
                     aSigma(k) = 0.0;
                     aData(k)  = 0.0;
                 else
-                    aMean(k)  = obj.fMomentumToEnergy(wmean(aRaw(:,4), abs(aRaw(:,8))));
+                    aMean(k)  = obj.fMomentumToEnergy(wmean(aRaw(:,4), abs(aRaw(:,8))))-dEInit;
                     aSigma(k) = obj.fMomentumToEnergy(wstd(aRaw(:,4), abs(aRaw(:,8))));
                     aData(k)  = aSigma(k)/aMean(k);
                 end % if
@@ -289,9 +300,61 @@ classdef Momentum < OsirisType
         end % function
 
         function stReturn = PhaseSpace(obj, varargin)
-            
+            %
+            %  Function: Momentum.PhaseSpace
+            % *******************************
+            %
+            %  Inputs:
+            % =========
+            %  Species and time defined by class settings.
+            %
+            %  Options:
+            % ==========
+            %  Samples [integer]
+            %          How many times to sample each particle. Useful when one axis is monte carlo sampled. Default 1.
+            %  MinParticles [integer]
+            %          Minimum number of particles to use for statistics. If there is not enough particles, the
+            %          particles are sampled several times w/monet carlo. Default 100000.
+            %  Histogram [Yes/No]
+            %          Whether to use fixed bins like in a histogram. Default behaviour is to deposit the charge on
+            %          a sample grid. Default 'no'.
+            %  Grid [2-vector, integer]
+            %          The dimension of the hisorgram or deposit grid.
+            %  Dimension [Rad/RadToX/X/Y]
+            %          Which dimension to calculate the angle on.
+            %          [Rad]    The radial axis alone.
+            %          [RadToX] Projecting r and theta onto x by sampling theta.
+            %          [X], [Y] The x or y axis alone.
+            %          Defaults to RadToX for cylindrical and X for cartesian simulations.
+            %  Slice [2-vector, float]
+            %          Excludes all macro particles outside the defind limits. Units defined by class setting Units, and
+            %          Scale parameter. Default is none, i.e. all particles.
+            %  SliceAxis [1/2/3]
+            %          Which axis to slice along. Setting is ignored if Slice is not defined. Defaults to 1.
+            %
+            %  Outputs:
+            % ==========
+            %  Raw        :: The macroparticles used in the calculation
+            %  X          :: The x axis values
+            %  XUnit      :: The unit of the x axis
+            %  XPrime     :: The x prime axis (angle)
+            %  XPrimeUnit :: The unit of the x prime axis
+            %  Charge     :: The charge of the macroparticles used
+            %  Weight     :: The aprticle weights
+            %  Covariance :: The covariance matrix
+            %  ERMS       :: The RMS emittance
+            %  ERMSError  :: The standard error of the emittance
+            %  ENorm      :: The normalised emittance
+            %  ENormError :: The standard error of the normalised emittance
+            %  GammaBeta  :: The mean gamma * beta of the particles
+            %  Alpha      :: The alpha twiss parameter
+            %  Beta       :: The beta twiss parameter
+            %  Gamma      :: The gamma twiss parameter
+            %
+
             % Input/Output
-            stReturn = {};
+            stReturn       = {};
+            stReturn.Error = '';
 
             % Check that the object is initialised
             if obj.fError
@@ -303,31 +366,76 @@ classdef Momentum < OsirisType
             addParameter(oOpt, 'MinParticles', 100000);
             addParameter(oOpt, 'Histogram',    'No');
             addParameter(oOpt, 'Grid',         [1000 1000]);
+            addParameter(oOpt, 'Dimension',    '');
+            addParameter(oOpt, 'Slice',        '');
+            addParameter(oOpt, 'SliceAxis',    1);
             parse(oOpt, varargin{:});
             stOpt = oOpt.Results;
+            
+            if isempty(stOpt.Dimension)
+                if obj.Cylindrical
+                    iDim   = 2;
+                else
+                    iDim   = 3;
+                end % if
+            else
+                if     strcmpi(stOpt.Dimension, 'Rad')
+                    iDim   = 1;
+                elseif strcmpi(stOpt.Dimension, 'RadToX')
+                    iDim   = 2;
+                elseif strcmpi(stOpt.Dimension, 'X')
+                    iDim   = 3;
+                elseif strcmpi(stOpt.Dimension, 'Y')
+                    iDim   = 4;
+                else
+                    iDim   = 1;
+                end % if
+            end % if
 
-            aRaw = obj.Data.Data(obj.Time, 'RAW', '', obj.Species.Name);
+            aRaw = obj.Data.Data(obj.Time,'RAW','',obj.Species.Name);
             if isempty(aRaw)
+                stReturn.Error = 'No initial data.';
+                return;
+            end % if
+            aRaw = obj.fRawToXi(aRaw);
+            
+            % Slice data if requested
+            if ~isempty(stOpt.Slice)
+                if stOpt.SliceAxis >= 1 && stOpt.SliceAxis <= 7 && numel(stOpt.Slice) == 2
+                    if stOpt.SliceAxis <= 3
+                        aSlice = stOpt.Slice/obj.AxisFac(stOpt.SliceAxis);
+                    end % if
+                    if stOpt.SliceAxis > 3 && stOpt.SliceAxis <= 7
+                        dFac   = obj.Data.Config.Constants.EV.ElectronMass;
+                        dFac   = dFac*abs(obj.Config.RQM);
+                        aSlice = stOpt.Slice/dFac;
+                    end % if
+                    aRaw = obj.fPruneRaw(aRaw,stOpt.SliceAxis,aSlice(1),aSlice(2));
+                end % if
+            end % if
+
+            if isempty(aRaw)
+                stReturn.Error = 'No data after cut.';
                 return;
             end % if
 
-            aP     = sqrt(aRaw(:,4).^2 + aRaw(:,5).^2 + aRaw(:,6).^2);
-            iLen   = length(aP);
-            aERMS  = zeros(stOpt.Samples, 1);
-            aENorm = zeros(stOpt.Samples, 1);
+            aP   = sqrt(aRaw(:,4).^2 + aRaw(:,5).^2 + aRaw(:,6).^2);
+            iLen = length(aP);
             
-            aRX   = [];
-            aRXP  = [];
-            aRQ   = [];
-            aGam  = [];
-            
-            iMin  = ceil(stOpt.MinParticles/iLen);
+            aRX  = [];
+            aRXP = [];
+            aRQ  = [];
+
+            iMin = ceil(stOpt.MinParticles/iLen);
             if stOpt.Samples < iMin
                 iS = iMin;
             else
                 iS = stOpt.Samples;
             end % if
-
+            aERMS  = zeros(iS, 1);
+            aENorm = zeros(iS, 1);
+            aGamBe = zeros(iS, 1);
+            
             for s=1:iS
 
                 if obj.Dim == 2
@@ -337,42 +445,48 @@ classdef Momentum < OsirisType
                 end % if
 
                 if obj.Cylindrical
-                    aPz  = aRaw(:,4);
-                    aPr  = aRaw(:,5);
-                    aPth = aRaw(:,6);
-                    aPx  = aPr.*cos(aXth) - aPth.*sin(aXth);
-                    aX   = aRaw(:,2).*cos(aXth)*obj.AxisFac(2);
+                    aPz = aRaw(:,4);
+                    aPr = aRaw(:,5);
+                    aPt = aRaw(:,6);
+                    if iDim == 2
+                        aPx = aPr.*cos(aXth) - aPt.*sin(aXth);
+                    else
+                        aPx = aPr;
+                    end % if
+                    aT  = aXth-pi;
+                    aX  = aRaw(:,2).*(aT./abs(aT))*obj.AxisFac(2);
+                    aQ  = aRaw(:,8)./aRaw(:,2)*obj.Data.Config.Convert.SI.ChargeFac;
                 else
-                    aPz  = aRaw(:,4);
-                    aPx  = aRaw(:,5);
-                    aX   = aRaw(:,2)*obj.AxisFac(2);
+                    aPz = aRaw(:,4);
+                    if iDim == 4
+                        aPx = aRaw(:,6);
+                        aX  = aRaw(:,3)*obj.AxisFac(3);
+                    else
+                        aPx = aRaw(:,5);
+                        aX  = aRaw(:,2)*obj.AxisFac(2);
+                    end % if
+                    aQ  = aRaw(:,8)*obj.Data.Config.Convert.SI.ChargeFac;
                 end % if
  
-                aGamma    = obj.fMomentumToEnergy(aPz);
-                aXPrime   = sin(aPx./aP)*1e3;
-                aCharge   = aRaw(:,8)*obj.Data.Config.Convert.SI.ChargeFac;
-                aCov      = wcov([aX, aXPrime], abs(aCharge));
-                dGamma    = wmean(aGamma, abs(aCharge));
-                dBeta     = sqrt(1 - 1/dGamma^2);
-                aERMS(s)  = sqrt(det(aCov));
-                aENorm(s) = sqrt(det(aCov))*dGamma*dBeta;
+                aXPrime    = tan(aPx./aPz)*1e3;
+                aCov       = wcov([aX, aXPrime], abs(aQ));
+                dGammaBeta = wmean(aPz, abs(aQ));
+                aERMS(s)   = sqrt(det(aCov));
+                aENorm(s)  = sqrt(det(aCov))*dGammaBeta;
+                aGamBe(s)  = dGammaBeta;
             
-                if obj.Cylindrical
-                    aX      = [-aX;aX];
-                    aXPrime = [-aXPrime;aXPrime];
-                    aCharge = [aCharge;aCharge];
-                end % if
-                
-                if length(aRX) < stOpt.MinParticles
-                    aRX  = [aRX;aX];
-                    aRXP = [aRXP;aXPrime];
-                    aRQ  = [aRQ;aCharge];
-                end % if
+                % Preallocating these could speed up the function
+                aRX  = [aRX;aX];
+                aRXP = [aRXP;aXPrime];
+                aRQ  = [aRQ;aQ];
 
             end % for
             
             iNE = length(aERMS) - 1;
             iNE = iNE + (iNE == 0);
+            
+            dERMS  = mean(aERMS);
+            dENorm = mean(aENorm);
             
             stReturn.Raw        = aRaw;
             stReturn.X          = aRX;
@@ -382,11 +496,20 @@ classdef Momentum < OsirisType
             stReturn.Charge     = aRQ;
             stReturn.Weight     = abs(aRQ)/max(abs(aRQ));
             stReturn.Covariance = aCov;
-            stReturn.ERMS       = mean(aERMS);
+            stReturn.ERMS       = dERMS;
             stReturn.ERMSError  = 1.96*std(aERMS)/sqrt(iNE);
-            stReturn.ENorm      = mean(aENorm);
+            stReturn.ENorm      = dENorm;
             stReturn.ENormError = 1.96*std(aENorm)/sqrt(iNE);
-            
+            stReturn.GammaBeta  = mean(aGamBe);
+            stReturn.ZPos       = obj.fGetZPos();
+            stReturn.Count      = length(aRX);
+            stReturn.RawCount   = length(aRaw);
+
+            % Twiss parameters
+            stReturn.Alpha      = aCov(1,2)/dERMS;
+            stReturn.Beta       = aCov(1,1)/dERMS;
+            stReturn.Gamma      = aCov(2,2)/dERMS;
+
             if strcmpi(stOpt.Histogram, 'No')
                 return;
             end % if
@@ -397,20 +520,32 @@ classdef Momentum < OsirisType
             dXPMax  = max(abs(aRXP));
             dXMin   = -dXMax;
             dXPMin  = -dXPMax;
+            
+            % Check if angle is 0 (no emittance)
+            if dXPMax == 0
 
+                stReturn.Error = 'Maximum particle angle is 0.';
+                stReturn.Hist  = [];
+                stReturn.HAxis = [];
+                stReturn.VAxis = [];
+                stReturn.Count = 0;
+                
+                return;
+
+            end % if
+                
             dDX     = dXMax/((stOpt.Grid(1)-2)/2);
             dDXP    = dXPMax/((stOpt.Grid(2)-2)/2);
             aM      = floor(aRX/dDX)+(stOpt.Grid(1)/2)+1;
             aN      = floor(aRXP/dDXP)+(stOpt.Grid(2)/2)+1;
-            
+
             for i=1:length(aM)
                 aHist(aM(i),aN(i)) = aHist(aM(i),aN(i)) + aRQ(i);
             end % for
-            
+
             stReturn.Hist  = abs(transpose(aHist))*1e9;
             stReturn.HAxis = linspace(dXMin,dXMax,stOpt.Grid(1));
             stReturn.VAxis = linspace(dXPMin,dXPMax,stOpt.Grid(2));
-            stReturn.Count = iLen*iMin;
             
         end % function
     

@@ -25,7 +25,8 @@
 %  Scatter1/2 :: Beam scatter overlay
 %  Sample1/2  :: Beam scatter sample size [200]
 %  Filter1/2  :: Beam scatter filter type: Charge, Random, WRandom or W2Random
-%  E1/2       :: E-field overlay range average over [Start, Count]
+%  E1/2/3     :: E-field overlay range average over [Start, Count]
+%  W1/2/3     :: Wakefield overlay range average over [Start, Count]
 %
 
 function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
@@ -48,7 +49,11 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         fprintf('\n');
         fprintf('  Options:\n');
         fprintf(' ==========\n');
+        fprintf('  Density    :: Which plasma data to plot\n');
         fprintf('  Limits     :: Axis limits\n');
+        fprintf('  Slice      :: 2D slice coordinate for 3D data\n');
+        fprintf('  SliceAxis  :: 2D slice axis for 3D data\n');
+        fprintf('  GridDiag   :: Options for grid diagnostics data.\n');
         fprintf('  FigureSize :: Default [900 500]\n');
         fprintf('  HideDump   :: Default No\n');
         fprintf('  IsSubplot  :: Default No\n');
@@ -59,7 +64,9 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         fprintf('  Scatter1/2 :: Beam scatter overlay\n');
         fprintf('  Sample1/2  :: Beam scatter sample size [200]\n');
         fprintf('  Filter1/2  :: Beam scatter filter type: Charge, Random, WRandom or W2Random\n');
-        fprintf('  E1/2       :: E-field overlay range average over [Start, Count]\n');
+        fprintf('  E1/2/3     :: E-field overlay range average over [Start, Count]\n');
+        fprintf('  B1/2/3     :: B-field overlay range average over [Start, Count]\n');
+        fprintf('  W1/2/3     :: Wakefield overlay range average over [Start, Count]\n');
         fprintf('\n');
         return;
     end % if
@@ -68,9 +75,11 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     iTime   = oData.StringToDump(num2str(sTime));
 
     oOpt = inputParser;
+    addParameter(oOpt, 'Density',     'charge');
     addParameter(oOpt, 'Limits',      []);
     addParameter(oOpt, 'Slice',       0.0);
     addParameter(oOpt, 'SliceAxis',   3);
+    addParameter(oOpt, 'GridDiag',    {});
     addParameter(oOpt, 'FigureSize',  [900 500]);
     addParameter(oOpt, 'HideDump',    'No');
     addParameter(oOpt, 'IsSubPlot',   'No');
@@ -91,6 +100,13 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     addParameter(oOpt, 'Filter2',     'Charge');
     addParameter(oOpt, 'E1',          []);
     addParameter(oOpt, 'E2',          []);
+    addParameter(oOpt, 'E3',          []);
+    addParameter(oOpt, 'B1',          []);
+    addParameter(oOpt, 'B2',          []);
+    addParameter(oOpt, 'B3',          []);
+    addParameter(oOpt, 'W1',          []);
+    addParameter(oOpt, 'W2',          []);
+    addParameter(oOpt, 'W3',          []);
     parse(oOpt, varargin{:});
     stOpt = oOpt.Results;
 
@@ -101,39 +117,96 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     
     stOLBeam = {};
     if ~isempty(stOpt.Overlay)
-        stOLBeam{1} = stOpt.Overlay;
+        vTemp = oData.Translate.Lookup(stOpt.Overlay,'Species');
+        stOLBeam{1} = vTemp.Name;
     end % if
     if ~isempty(stOpt.Overlay1)
-        stOLBeam{1} = stOpt.Overlay1;
+        vTemp = oData.Translate.Lookup(stOpt.Overlay1,'Species');
+        stOLBeam{1} = vTemp.Name;
     end % if
     if ~isempty(stOpt.Overlay2)
-        stOLBeam{2} = stOpt.Overlay2;
+        vTemp = oData.Translate.Lookup(stOpt.Overlay2,'Species');
+        stOLBeam{2} = vTemp.Name;
     end % if
     
     stField = {};
     iField = 1;
     if ~isempty(stOpt.E1)
         stField(iField).Name  = 'e1';
+        stField(iField).Type  = 1;
         stField(iField).Range = stOpt.E1;
         stField(iField).Color = [0.7 1.0 0.7];
         iField = iField + 1;
     end % if
     if ~isempty(stOpt.E2)
         stField(iField).Name  = 'e2';
+        stField(iField).Type  = 1;
         stField(iField).Range = stOpt.E2;
         stField(iField).Color = [0.9 0.9 0.7];
+        iField = iField + 1;
+    end % if
+    if ~isempty(stOpt.E3)
+        stField(iField).Name  = 'e3';
+        stField(iField).Type  = 1;
+        stField(iField).Range = stOpt.E3;
+        stField(iField).Color = [0.9 0.7 0.7];
+        iField = iField + 1;
+    end % if
+    if ~isempty(stOpt.B1)
+        stField(iField).Name  = 'b1';
+        stField(iField).Type  = 1;
+        stField(iField).Range = stOpt.B1;
+        stField(iField).Color = [0.2 1.0 0.2];
+        iField = iField + 1;
+    end % if
+    if ~isempty(stOpt.B2)
+        stField(iField).Name  = 'b2';
+        stField(iField).Type  = 1;
+        stField(iField).Range = stOpt.B2;
+        stField(iField).Color = [0.9 0.9 0.2];
+        iField = iField + 1;
+    end % if
+    if ~isempty(stOpt.B3)
+        stField(iField).Name  = 'b3';
+        stField(iField).Type  = 1;
+        stField(iField).Range = stOpt.B3;
+        stField(iField).Color = [0.9 0.2 0.2];
+        iField = iField + 1;
+    end % if
+    if ~isempty(stOpt.W1)
+        stField(iField).Name  = 'w1';
+        stField(iField).Type  = 2;
+        stField(iField).Range = stOpt.W1;
+        stField(iField).Color = [0.7 1.0 1.0];
+        iField = iField + 1;
+    end % if
+    if ~isempty(stOpt.W2)
+        stField(iField).Name  = 'w2';
+        stField(iField).Type  = 2;
+        stField(iField).Range = stOpt.W2;
+        stField(iField).Color = [1.0 0.7 0.5];
+        iField = iField + 1;
+    end % if
+    if ~isempty(stOpt.W3)
+        stField(iField).Name  = 'w3';
+        stField(iField).Type  = 2;
+        stField(iField).Range = stOpt.W3;
+        stField(iField).Color = [1.0 0.7 1.0];
         iField = iField + 1;
     end % if
 
     stSCBeam = {};
     if ~isempty(stOpt.Scatter)
-        stSCBeam{1} = stOpt.Scatter;
+        vTemp = oData.Translate.Lookup(stOpt.Scatter,'Species');
+        stSCBeam{1} = vTemp.Name;
     end % if
     if ~isempty(stOpt.Scatter1)
-        stSCBeam{1} = stOpt.Scatter1;
+        vTemp = oData.Translate.Lookup(stOpt.Scatter1,'Species');
+        stSCBeam{1} = vTemp.Name;
     end % if
     if ~isempty(stOpt.Scatter2)
-        stSCBeam{2} = stOpt.Scatter2;
+        vTemp = oData.Translate.Lookup(stOpt.Scatter2,'Species');
+        stSCBeam{2} = vTemp.Name;
     end % if
     
     aSample = [];
@@ -174,7 +247,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         oDN.Slice     = stOpt.Slice;
     end % if
 
-    stData = oDN.Density2D;
+    stData = oDN.Density2D('Density',stOpt.Density,'GridDiag',stOpt.GridDiag);
 
     if isempty(stData)
         fprintf(2, 'Error: No data.\n');
@@ -275,12 +348,8 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     % *******************
     %
     
-    if length(stOLBeam) == 1
-        aCol(1,1:3) = [1.0 1.0 1.0];
-    else
-        aCol(1,1:3) = [1.0 0.7 0.7];
-        aCol(2,1:3) = [0.7 0.7 1.0];
-    end % if
+    aCol(1,1:3) = [1.0 0.7 0.7];
+    aCol(2,1:3) = [0.7 0.7 1.0];
 
     for i=1:length(stOLBeam)
     
@@ -294,7 +363,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
                 oBeam.X2Lim = stOpt.Limits(3:4);
             end % if
         
-            stBeam = oBeam.Density2D;
+            stBeam = oBeam.Density2D('GridDiag',stOpt.GridDiag);
             aProjZ = abs(sum(stBeam.Data));
             aProjZ = 0.15*(aVAxis(end)-aVAxis(1))*aProjZ/max(abs(aProjZ))+aVAxis(1);
             stQTot = oBeam.BeamCharge;
@@ -324,22 +393,36 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
             iA = 3;
         end % if
         
-        oFLD      = Field(oData,stField(i).Name,'Units','SI','X1Scale',oDN.AxisScale{1},'X2Scale','m');
+        if stField(i).Type == 1
+            oFLD = Field(oData,stField(i).Name,'Units','SI','X1Scale',oDN.AxisScale{1},'X2Scale',oDN.AxisScale{2});
+        else
+            oFLD = Field(oData,'e1','Units','SI','X1Scale',oDN.AxisScale{1},'X2Scale',oDN.AxisScale{2});
+        end % if
         oFLD.Time = iTime;
         sFUnit    = oFLD.FieldUnit;
         
         if length(stOpt.Limits) == 4
             oFLD.X1Lim = stOpt.Limits(1:2);
+            oFLD.X2Lim = stOpt.Limits(3:4);
         end % if
 
-        stEF    = oFLD.Lineout(iS,iA);
-        aEFData = 0.15*(aVAxis(end)-aVAxis(1))*stEF.Data/max(abs(stEF.Data));
+        if oData.Config.Simulation.Dimensions == 3
+            oFLD.SliceAxis = stOpt.SliceAxis;
+            oFLD.Slice     = stOpt.Slice;
+        end % if
 
-        [dEne,  sEne]  = fAutoScale(max(abs(stEF.Data)), sFUnit);
-        [dEVal, sUnit] = fAutoScale(stEF.VRange(2), 'm');
-        dSVal          = stEF.VRange(1)*dEVal/stEF.VRange(2);
+        if stField(i).Type == 1
+            stFLD   = oFLD.Lineout(iS,iA);
+        else
+            stFLD   = oFLD.WFLineout(stField(i).Name,iS,iA);
+        end % if
+        aEFData = 0.15*(aVAxis(end)-aVAxis(1))*stFLD.Data/max(abs(stFLD.Data));
+
+        [dEne,  sEne]  = fAutoScale(max(abs(stFLD.Data)), sFUnit);
+        [dEVal, sUnit] = fAutoScale(stFLD.VRange(2)*1e-3, 'm');
+        dSVal          = stFLD.VRange(1)*dEVal/stFLD.VRange(2);
         
-        plot(stEF.HAxis,aEFData,'Color',stField(i).Color);
+        plot(stFLD.HAxis,aEFData,'Color',stField(i).Color);
         stOLLeg{iOLNum} = sprintf('%s^{%.0f–%.0f %s} < %.1f %s',oData.Translate.Lookup(stField(i).Name).Tex,dSVal,dEVal,sUnit,dEne,sEne);
         iOLNum = iOLNum + 1;
         
@@ -357,7 +440,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
         set(h,'TextColor', 'White');
 
         if length(stOLBeam) == 1
-            set(findobj(h, 'type', 'line'), 'visible', 'off')
+            set(findobj(h, 'type', 'line'), 'visible', 'off');
         end % if
 
     end % if
@@ -371,7 +454,7 @@ function stReturn = fPlotPlasmaDensity(oData, sTime, sPlasma, varargin)
     title(sTitle);
     xlabel('\xi [mm]');
     ylabel('r [mm]');
-    title(hCol,'n_{pe}/n_0');
+    title(hCol,'n/n_0');
     
     hold off;
     

@@ -95,7 +95,7 @@ function stReturn = fPlotESigmaMean(oData, sSpecies, varargin)
     xlim([stData.TAxis(1), stData.TAxis(end)]);
 
     if strcmpi(stOpt.HideDump, 'No')
-        sTitle = sprintf('%s Mean Energy (%s #%d)',vSpecies.Full,oData.Config.Name,iTime);
+        sTitle = sprintf('%s Mean Energy (%s)',vSpecies.Full,oData.Config.Name);
     else
         sTitle = sprintf('%s Mean Energy',vSpecies.Full);
     end % if

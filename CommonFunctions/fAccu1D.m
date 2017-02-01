@@ -9,20 +9,30 @@ function [aGrid, aAxis] = fAccu1D(aData, aWeights, iGrid, varargin)
 
     % Parse Input
     oOpt = inputParser;
-    addParameter(oOpt, 'Method', 'Deposit'); % Bins or Deposit
+    addParameter(oOpt, 'Method',   'Deposit'); % Bins or Deposit
+    addParameter(oOpt, 'FixedLim', []);        % Define limits instead of auto-detect
     parse(oOpt, varargin{:});
     stOpt = oOpt.Results;
 
-    dMin = min(aData);
-    dMax = max(aData);
+    if isempty(stOpt.FixedLim)
+        dMin = min(aData);
+        dMax = max(aData);
+    else
+        dMin = stOpt.FixedLim(1);
+        dMax = stOpt.FixedLim(2);
+    end % if
     dDel = (dMax-dMin)/(iGrid-1);
 
     aGrid = zeros(1,iGrid);
     aAxis = linspace(dMin,dMax,iGrid);
     
     if strcmpi(stOpt.Method, 'Deposit')
-        aData = (aData-dMin)/dDel;
+        aData  = (aData-dMin)/dDel;
+        dUpper = (dMax-dMin)/dDel;
         for i=1:length(aData)
+            if aData(i) < 0 || aData(i) > dUpper
+                continue;
+            end % if
             iPos = round(aData(i));
             if isnan(iPos)
                 continue;

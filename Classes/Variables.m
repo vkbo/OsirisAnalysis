@@ -66,7 +66,7 @@ classdef Variables
                          'Axis','Momentum','Angular','Current', ...
                          'EField','BField','EFieldExt','BFieldExt', ...
                          'EFieldPart','BFieldPart','EFieldEnergy','BFieldEnergy', ...
-                         'Field','FieldEnergy','FieldDiv', ...
+                         'Field','FieldEnergy','FieldDiv','Wakefield', ...
                          'Quantity','Flux','Poynting','Ufl','Uth'};
 
 
@@ -101,6 +101,9 @@ classdef Variables
             stMap.Allowed.Poynting     = {'s1','s2','s3'};
             stMap.Allowed.UDist        = {'ufl1','ufl2','ufl3','uth1','uth2','uth3'};
             stMap.Allowed.RawAxis      = {'x1','x2','x3','p1','p2','p3','ene','charge','tag1','tag2'};
+
+            % Calculated quantities (not in Osiris)
+            stMap.Allowed.Wakefield    = {'w1','w2','w3'}; % Calculated from e1, e2, e3, b1 and b3
 
             % Osiris diagnostics options
             stMap.Diag.EMF        = {'e1','e2','e3','b1','b2','b3', ...
@@ -632,7 +635,7 @@ classdef Variables
             stMap.Translate.Quantity(8).Alt   = {};
             stMap.Translate.Quantity(8).Full  = {'Pseudopotential','Pseudopotential'};
             stMap.Translate.Quantity(8).Short = {'Psi','Psi'};
-            stMap.Translate.Quantity(8).Tex   = {'\Psi_{x}','\Psi_{x}'};
+            stMap.Translate.Quantity(8).Tex   = {'\Psi','\Psi'};
             stMap.Translate.Quantity(8).Unit  = {'a.u.','a.u.'};
             stMap.Translate.Quantity(8).Dim   = 0;
 
@@ -748,6 +751,32 @@ classdef Variables
             stMap.Translate.Uth(3).Unit  = {'eV/c','eV/c'};
             stMap.Translate.Uth(3).Dim   = 3;
 
+            % Wakefield
+
+            stMap.Translate.Wakefield(1).Name  = 'w1';
+            stMap.Translate.Wakefield(1).Alt   = {'wz','w_z'};
+            stMap.Translate.Wakefield(1).Full  = {'Longitudinal Wakefield','Longitudinal Wakefield'};
+            stMap.Translate.Wakefield(1).Short = {'Wz','Wz'};
+            stMap.Translate.Wakefield(1).Tex   = {'W_{z}','W_{z}'};
+            stMap.Translate.Wakefield(1).Unit  = {'V/m','V/m'};
+            stMap.Translate.Wakefield(1).Dim   = 1;
+
+            stMap.Translate.Wakefield(2).Name  = 'w2';
+            stMap.Translate.Wakefield(2).Alt   = {'wx','w_x','wr','w_r'};
+            stMap.Translate.Wakefield(2).Full  = {'Radial Wakefield','Horizontal Wakefield'};
+            stMap.Translate.Wakefield(2).Short = {'Wr','Wx'};
+            stMap.Translate.Wakefield(2).Tex   = {'W_{r}','W_{x}'};
+            stMap.Translate.Wakefield(2).Unit  = {'V/m','V/m'};
+            stMap.Translate.Wakefield(2).Dim   = 2;
+
+            stMap.Translate.Wakefield(3).Name  = 'w3';
+            stMap.Translate.Wakefield(3).Alt   = {'wy','w_y','wth','w_th'};
+            stMap.Translate.Wakefield(3).Full  = {'Azimuthal Wakefield','Vertical Wakefield'};
+            stMap.Translate.Wakefield(3).Short = {'Wth','Wy'};
+            stMap.Translate.Wakefield(3).Tex   = {'W_{\theta}','W_{y}'};
+            stMap.Translate.Wakefield(3).Unit  = {'V/m','V/m'};
+            stMap.Translate.Wakefield(3).Dim   = 3;
+            
             % Save map
             obj.Map = stMap;
 
@@ -774,6 +803,21 @@ classdef Variables
             %  vType :: String or cell array of types to scan.
             %           Default: Scans all types.
             %
+            
+            sNum = '';
+            if ~isempty(sVar)
+                if isstrprop(sVar(end),'digit')
+                    sTemp = lower(sVar(1:end-1));
+                    for i=1:size(obj.Map.Translate.Species,2)
+                        stItem = obj.Map.Translate.Species(i);
+                        if strcmpi(stItem.Name,sTemp) || sum(ismember(stItem.Alt,sTemp)) ~= 0
+                            sNum = sVar(end);
+                            sVar = stItem.Name;
+                            break;
+                        end % if
+                    end % for
+                end % if
+            end % if
             
             % Return
             stReturn.Original = sVar;
@@ -852,6 +896,8 @@ classdef Variables
             end % for
             
             % Check
+            
+            % Osiris
             stReturn.isBeam                = (sum(ismember(obj.Map.Allowed.Beam,stReturn.Name)) == 1);
             stReturn.isPlasma              = (sum(ismember(obj.Map.Allowed.Plasma,stReturn.Name)) == 1);
             stReturn.isSpecies             = (sum(ismember(obj.Map.Allowed.Species,stReturn.Name)) == 1);
@@ -874,11 +920,25 @@ classdef Variables
             stReturn.isFlux                = (sum(ismember(obj.Map.Allowed.Flux,stReturn.Name)) == 1);
             stReturn.isPoynting            = (sum(ismember(obj.Map.Allowed.Poynting,stReturn.Name)) == 1);
             stReturn.isUDist               = (sum(ismember(obj.Map.Allowed.UDist,stReturn.Name)) == 1);
+            
+            % Calculated
+            stReturn.isWakefield           = (sum(ismember(obj.Map.Allowed.Wakefield,stReturn.Name)) == 1);
+
+            % Diagnostics
             stReturn.isValidEMFDiag        = (sum(ismember(obj.Map.Diag.EMF,stReturn.Name)) == 1);
             stReturn.isValidSpeciesDiag    = (sum(ismember(obj.Map.Diag.Species,stReturn.Name)) == 1);
             stReturn.isValidPhaseSpaceDiag = (sum(ismember(obj.Map.Diag.PhaseSpace,stReturn.Name)) == 1);
             stReturn.isValidDepositDiag    = (sum(ismember(obj.Map.Diag.Deposit,stReturn.Name)) == 1);
             stReturn.isValidUDistDiag      = (sum(ismember(obj.Map.Diag.UDist,stReturn.Name)) == 1);
+            
+            % Append Number if Present
+            if ~isempty(sNum)
+                stReturn.Original = [stReturn.Original sNum];
+                stReturn.Name     = [stReturn.Name sNum];
+                stReturn.Full     = [stReturn.Full ' ' sNum];
+                stReturn.Short    = [stReturn.Short sNum];
+                stReturn.Tex      = [stReturn.Tex '_{' sNum '}'];
+            end % if
             
         end % function
 
