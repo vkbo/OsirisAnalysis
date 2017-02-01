@@ -37,6 +37,8 @@
   - Momentum.PhaseSpace now accepts Slice and SliceDim as input parameter. The calculation is only made in the region
     defined by these slice parameters.
   - Species names can now have a one digit number appended to them, so ElectronBeam1 and EB1 are valid names.
+  - Some grid diagnostics options are now supported. 2D slices of 3D data is supported throughout, line data is
+    supported in core objects, and so is time and space averages.
 
   Version 1.4.2
   *************
