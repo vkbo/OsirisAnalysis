@@ -525,73 +525,80 @@ classdef OsirisType
 
         end % function
         
-        function stReturn = fParseGridData2D(obj, aData, bSignFlip)
+        function stReturn = fParseGridData2D(obj, aData, varargin)
             
             % Input/Output
             stReturn = {};
             
-            if nargin < 3
-                bSignFlip = false;
+            % Parse input
+            oOpt = inputParser;
+            addParameter(oOpt, 'SignFlip', false);
+            addParameter(oOpt, 'GridDiag', {});
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
+            
+            iDim       = obj.Dim;
+            iSliceAxis = obj.SliceAxis;
+
+            % Check if data is already sliced
+            if numel(stOpt.GridDiag) == 3
+                if strcmpi(stOpt.GridDiag{1},'slice')
+                    iDim       = 2;
+                    iSliceAxis = str2num(stOpt.GridDiag{2}(2));
+                end % if
             end % if
 
-            if ndims(aData) ~= obj.Dim
-                return;
-            end % if
-            
             % Dimensions
 
-            if obj.Dim == 1
+            if ndims(aData) ~= iDim || iDim == 1
                 return;
             end % if
-            
-            if obj.Dim == 2
-                sHAxis = 'x1';
-                sVAxis = 'x2';
-                aHAxis = obj.fGetBoxAxis('x1');
-                aVAxis = obj.fGetBoxAxis('x2');
-                aHLim  = [obj.X1Lim(1)*obj.AxisFac(1), obj.X1Lim(2)*obj.AxisFac(1)];
-                aVLim  = [obj.X2Lim(1)*obj.AxisFac(2), obj.X2Lim(2)*obj.AxisFac(2)];
-            end % if
 
-            if obj.Dim == 3
-                switch obj.SliceAxis
+            switch iSliceAxis
+                case 1
+                    sHAxis = 'x2';
+                    sVAxis = 'x3';
+                    aHAxis = obj.fGetBoxAxis('x2');
+                    aVAxis = obj.fGetBoxAxis('x3');
+                    aHLim  = [obj.X2Lim(1)*obj.AxisFac(2), obj.X2Lim(2)*obj.AxisFac(2)];
+                    aVLim  = [obj.X3Lim(1)*obj.AxisFac(3), obj.X3Lim(2)*obj.AxisFac(3)];
+                case 2
+                    sHAxis = 'x1';
+                    sVAxis = 'x3';
+                    aHAxis = obj.fGetBoxAxis('x1');
+                    aVAxis = obj.fGetBoxAxis('x3');
+                    aHLim  = [obj.X1Lim(1)*obj.AxisFac(1), obj.X1Lim(2)*obj.AxisFac(1)];
+                    aVLim  = [obj.X3Lim(1)*obj.AxisFac(3), obj.X3Lim(2)*obj.AxisFac(3)];
+                case 3
+                    sHAxis = 'x1';
+                    sVAxis = 'x2';
+                    aHAxis = obj.fGetBoxAxis('x1');
+                    aVAxis = obj.fGetBoxAxis('x2');
+                    aHLim  = [obj.X1Lim(1)*obj.AxisFac(1), obj.X1Lim(2)*obj.AxisFac(1)];
+                    aVLim  = [obj.X2Lim(1)*obj.AxisFac(2), obj.X2Lim(2)*obj.AxisFac(2)];
+            end % switch
+
+            if iDim == 3
+                switch iSliceAxis
                     case 1
-                        sHAxis = 'x2';
-                        sVAxis = 'x3';
-                        aHAxis = obj.fGetBoxAxis('x2');
-                        aVAxis = obj.fGetBoxAxis('x3');
                         aData  = squeeze(aData(obj.Slice,:,:));
-                        aHLim  = [obj.X2Lim(1)*obj.AxisFac(2), obj.X2Lim(2)*obj.AxisFac(2)];
-                        aVLim  = [obj.X3Lim(1)*obj.AxisFac(3), obj.X3Lim(2)*obj.AxisFac(3)];
                     case 2
-                        sHAxis = 'x1';
-                        sVAxis = 'x3';
-                        aHAxis = obj.fGetBoxAxis('x1');
-                        aVAxis = obj.fGetBoxAxis('x3');
                         aData  = squeeze(aData(:,obj.Slice,:));
-                        aHLim  = [obj.X1Lim(1)*obj.AxisFac(1), obj.X1Lim(2)*obj.AxisFac(1)];
-                        aVLim  = [obj.X3Lim(1)*obj.AxisFac(3), obj.X3Lim(2)*obj.AxisFac(3)];
                     case 3
-                        sHAxis = 'x1';
-                        sVAxis = 'x2';
-                        aHAxis = obj.fGetBoxAxis('x1');
-                        aVAxis = obj.fGetBoxAxis('x2');
                         aData  = squeeze(aData(:,:,obj.Slice));
-                        aHLim  = [obj.X1Lim(1)*obj.AxisFac(1), obj.X1Lim(2)*obj.AxisFac(1)];
-                        aVLim  = [obj.X2Lim(1)*obj.AxisFac(2), obj.X2Lim(2)*obj.AxisFac(2)];
                 end % switch
             end % if
 
             % Check if cylindrical
             if obj.Cylindrical
-                if bSignFlip
+                if stOpt.SignFlip
                     aData = transpose([-fliplr(aData),aData]);
                 else
                     aData = transpose([ fliplr(aData),aData]);
                 end % if
                 aVAxis = [-fliplr(aVAxis), aVAxis];
             else
-                aData  = transpose(aData);
+                aData = transpose(aData);
             end % if
             
             % Get Limits

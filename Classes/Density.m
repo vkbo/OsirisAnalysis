@@ -62,7 +62,7 @@ classdef Density < OsirisType
     
     methods(Access = 'public')
         
-        function stReturn = Density2D(obj, sDensity)
+        function stReturn = Density2D(obj, sDensity, varargin)
             
             % Input/Output
             stReturn = {};
@@ -70,6 +70,12 @@ classdef Density < OsirisType
             if nargin < 2
                 sDensity = 'charge';
             end % if
+
+            % Parse input
+            oOpt = inputParser;
+            addParameter(oOpt, 'GridDiag', {});
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
             
             % Check that the object is initialised
             if obj.fError
@@ -84,12 +90,12 @@ classdef Density < OsirisType
             end % if
             
             % Get Data and Parse it
-            aData = obj.Data.Data(obj.Time, 'DENSITY', vDensity.Name, obj.Species.Name);
+            aData = obj.Data.Data(obj.Time,'DENSITY',vDensity.Name,obj.Species.Name,'GridDiag',stOpt.GridDiag);
             if isempty(aData)
                 return;
             end % if
-
-            stData = obj.fParseGridData2D(aData);
+            
+            stData = obj.fParseGridData2D(aData,'GridDiag',stOpt.GridDiag);
 
             if isempty(stData)
                 return;

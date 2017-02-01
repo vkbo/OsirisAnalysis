@@ -49,6 +49,7 @@ function stReturn = fPlotParticleDensity(oData, sTime, sSpecies, varargin)
         fprintf('  Limits      :: Axis limits\n');
         fprintf('  Slice       :: 2D slice coordinate for 3D data\n');
         fprintf('  SliceAxis   :: 2D slice axis for 3D data\n');
+        fprintf('  GridDiag    :: Options for grid diagnostics data.\n');
         fprintf('  FigureSize  :: Default [900 500]\n');
         fprintf('  HideDump    :: Default No\n');
         fprintf('  IsSubplot   :: Default No\n');
@@ -68,6 +69,7 @@ function stReturn = fPlotParticleDensity(oData, sTime, sSpecies, varargin)
     addParameter(oOpt, 'Limits',      []);
     addParameter(oOpt, 'Slice',       0.0);
     addParameter(oOpt, 'SliceAxis',   3);
+    addParameter(oOpt, 'GridDiag',    {});
     addParameter(oOpt, 'FigureSize',  [900 500]);
     addParameter(oOpt, 'HideDump',    'No');
     addParameter(oOpt, 'IsSubPlot',   'No');
@@ -99,7 +101,7 @@ function stReturn = fPlotParticleDensity(oData, sTime, sSpecies, varargin)
     end % if
     
     vData  = oData.Translate.Lookup(stOpt.Data);
-    stData = oDN.Density2D(vData.Name);
+    stData = oDN.Density2D(vData.Name,'GridDiag',stOpt.GridDiag);
     
     if isempty(stData)
         fprintf(2, 'Error: No data.\n');
