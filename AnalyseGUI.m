@@ -1281,13 +1281,14 @@ function AnalyseGUI
                     
                     case 'Particle Density'
                         figure(X.Plot(f).Figure); clf;
-                        sData = oVar.Reverse(X.Plot(f).Density,'Full');
+                        [sData,cDiag] = fReverseReport(X.Plot(f).Density,X.Data.Density,X.Data.DenDiag);
                         iMakeSym = 1;
 
                         X.Plot(f).Return = fPlotParticleDensity(oData,X.Time.Dump,X.Plot(f).Data,'Data',sData, ...
                             'IsSubPlot','No','AutoResize','Off','HideDump','Yes','Absolute','Yes','ShowOverlay','Yes', ...
                             'Limits',[aHLim aVLim],'CAxis',X.Plot(f).CAxis, ...
-                            'Slice',X.Plot(f).Slice,'SliceAxis',X.Plot(f).SliceAxis);
+                            'Slice',X.Plot(f).Slice,'SliceAxis',X.Plot(f).SliceAxis, ...
+                            'GridDiag',cDiag);
 
                     case 'Plasma Density'
                         stFLD(3) = struct();
@@ -1321,8 +1322,8 @@ function AnalyseGUI
                         
                     case 'Field Density'
                         figure(X.Plot(f).Figure); clf;
-                        iMakeSym = 1;
                         [sField,cDiag] = fReverseReport(X.Plot(f).Data,X.Data.Field,X.Data.FieldDiag);
+                        iMakeSym = 1;
                         X.Plot(f).Return = fPlotField2D(oData,X.Time.Dump,sField, ...
                             'IsSubPlot','No','AutoResize','Off','HideDump','Yes','Limits',[aHLim aVLim], ...
                             'CAxis',X.Plot(f).CAxis,'Slice',X.Plot(f).Slice,'SliceAxis',X.Plot(f).SliceAxis, ...
