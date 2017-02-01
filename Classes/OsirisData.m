@@ -434,7 +434,7 @@ classdef OsirisData
             
         end % function
 
-        function aReturn = Data(obj, iTime, sType, sSet, sSpecies)
+        function aReturn = Data(obj, iTime, sType, sSet, sSpecies, varargin)
             
             %
             %  Data-extraction function
@@ -471,14 +471,86 @@ classdef OsirisData
                 return;
             end % if
             
+            % Parse input
+            oOpt = inputParser;
+            addParameter(oOpt, 'GridDiag', {});
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
+
             % Convert and check input values
-            sType     = upper(sType); % Type is always upper case
-            sSet      = lower(sSet);  % Set is always lower case
+            sType = upper(sType); % Type is always upper case
+            sSet  = lower(sSet);  % Set is always lower case
             
             % Species translated to standard format, and then to actual file name used
-            sSpecies  = obj.Translate.Lookup(sSpecies).Name;
+            sSpecies = obj.Translate.Lookup(sSpecies).Name;
             if ~isempty(sSpecies)
-                sSpecies  = obj.Config.Particles.Species.(sSpecies).Name;
+                sSpecies = obj.Config.Particles.Species.(sSpecies).Name;
+            end % if
+            
+            iDim  = obj.Config.Simulation.Dimensions;
+            
+            sSetF = sSet; % The type of the set name used in filename
+            sSetV = '';   % The version of the set name used in filename
+            sSetH = sSet; % The version of the set name used as hdf5 label
+            if ~isempty(stOpt.GridDiag)
+
+                nDiag = numel(stOpt.GridDiag);
+                sDiag = stOpt.GridDiag{1};
+                
+                switch(sDiag)
+                    case 'tavg'
+                        sSetF = sprintf('%s-%s',sSet,sDiag);
+                        sSetV = '';
+                        sSetH = sprintf('%s %s',sSet,sDiag);
+                        sSet  = sprintf('%s_%s',sSet,sDiag);
+                    case 'savg'
+                        sSetF = sprintf('%s-%s',sSet,sDiag);
+                        sSetV = '';
+                        sSetH = sprintf('%s %s',sSet,sDiag);
+                        sSet  = sprintf('%s_%s',sSet,sDiag);
+                    case 'senv'
+                        sSetF = sprintf('%s-%s',sSet,sDiag);
+                        sSetV = '';
+                        sSetH = sprintf('%s %s',sSet,sDiag);
+                        sSet  = sprintf('%s_%s',sSet,sDiag);
+                    case 'line'
+                        if iDim < 2
+                            fprintf(2, 'Error: Line grid diagnostics only available in 2D or 3D.\n');
+                            return;
+                        end % if
+                        if nDiag == 3
+                            sAxis = stOpt.GridDiag{2};
+                            iNum  = str2num(stOpt.GridDiag{3});
+                            sSetF = sprintf('%s-%s',sSet,sDiag);
+                            sSetV = sprintf('-%s-%02d',sAxis,iNum);
+                            sSetH = sprintf('%s %s %s',sSet,sAxis,sDiag);
+                            sSet  = sprintf('%s_%s',sSet,sDiag);
+                        else
+                            fprintf(2, 'Error: Line grid diagnostics requires axis and number.\n');
+                            return;
+                        end % if
+                    case 'slice'
+                        if iDim ~= 3
+                            fprintf(2, 'Error: Slice grid diagnostics only available in 3D.\n');
+                            return;
+                        end % if
+                        if nDiag == 3
+                            sAxis = stOpt.GridDiag{2};
+                            iNum  = str2num(stOpt.GridDiag{3});
+                            sSetF = sprintf('%s-%s',sSet,sDiag);
+                            sSetV = sprintf('-%s-%02d',sAxis,iNum);
+                            sSetH = sprintf('%s %s %s',sSet,sAxis,sDiag);
+                            sSet  = sprintf('%s_%s',sSet,sDiag);
+                        else
+                            fprintf(2, 'Error: Slice grid diagnostics requires axis and number.\n');
+                            return;
+                        end % if
+                    otherwise
+                        fprintf(2, 'Error: Grid diagnostics type %s is invalid.\n', sType);
+                        return;
+
+                end % switch
+
             end % if
 
             if isempty(sType)
@@ -505,11 +577,11 @@ classdef OsirisData
 
             switch (sType)
                 case 'DENSITY'
-                    sFile = ['/',sSet,'-',sSpecies,'-',sTimeNExt,'.h5'];
+                    sFile = ['/',sSetF,'-',sSpecies,sSetV,'-',sTimeNExt,'.h5'];
                 case 'UDIST'
-                    sFile = ['/',sSet,'-',sSpecies,'-',sTimeNExt,'.h5'];
+                    sFile = ['/',sSetF,'-',sSpecies,sSetV,'-',sTimeNExt,'.h5'];
                 case 'FLD'
-                    sFile = ['/',sSet,'-',sTimeNExt,'.h5'];
+                    sFile = ['/',sSetF,sSetV,'-',sTimeNExt,'.h5'];
                 case 'PHA'
                     sFile = ['/',sSet,'-',sSpecies,'-',sTimeNExt,'.h5'];
                 case 'RAW'
@@ -605,7 +677,7 @@ classdef OsirisData
 
                     otherwise
 
-                        aReturn = double(h5read(sLoad, ['/',sSet]));
+                        aReturn = double(h5read(sLoad, ['/',sSetH]));
 
                 end % switch
             catch
