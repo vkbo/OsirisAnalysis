@@ -171,7 +171,7 @@ classdef Field < OsirisType
         
         end % function
         
-        function stReturn = Wakefield2D(obj, sWakefield)
+        function stReturn = Wakefield2D(obj, sWakefield, varargin)
             
             % Input/Output
             stReturn = {};
@@ -182,19 +182,25 @@ classdef Field < OsirisType
                 stWF = obj.Translate.Lookup('w1');
             end % if
             
+            % Parse input
+            oOpt = inputParser;
+            addParameter(oOpt, 'GridDiag', {});
+            parse(oOpt, varargin{:});
+            stOpt = oOpt.Results;
+
             % Extract the beta values for the direction of simulation movement
             aMove = obj.Data.Config.Simulation.Moving;
             
             % Extract parallel e-field
             switch(stWF.Name)
                 case 'w1'
-                    aE    = obj.Data.Data(obj.Time, 'FLD', 'e1', '');
+                    aE    = obj.Data.Data(obj.Time,'FLD','e1','','GridDiag',stOpt.GridDiag);
                     bSign = false;
                 case 'w2'
-                    aE    = obj.Data.Data(obj.Time, 'FLD', 'e2', '');
+                    aE    = obj.Data.Data(obj.Time,'FLD','e2','','GridDiag',stOpt.GridDiag);
                     bSign = true;
                 case 'w3'
-                    aE    = obj.Data.Data(obj.Time, 'FLD', 'e3', '');
+                    aE    = obj.Data.Data(obj.Time,'FLD','e3','','GridDiag',stOpt.GridDiag);
                     bSign = true;
             end % switch
             
@@ -210,31 +216,31 @@ classdef Field < OsirisType
             switch(stWF.Name)
                 case 'w1'
                     if aMove(2) ~= 0.0
-                        aB1 = aMove(2) * obj.Data.Data(obj.Time, 'FLD', 'b3', '');
+                        aB1 = aMove(2) * obj.Data.Data(obj.Time,'FLD','b3','','GridDiag',stOpt.GridDiag);
                     end % if
                     if aMove(3) ~= 0.0
-                        aB2 = aMove(3) * obj.Data.Data(obj.Time, 'FLD', 'b2', '');
+                        aB2 = aMove(3) * obj.Data.Data(obj.Time,'FLD','b2','','GridDiag',stOpt.GridDiag);
                     end % if
                 case 'w2'
                     if aMove(3) ~= 0.0
-                        aB1 = aMove(3) * obj.Data.Data(obj.Time, 'FLD', 'b1', '');
+                        aB1 = aMove(3) * obj.Data.Data(obj.Time,'FLD','b1','','GridDiag',stOpt.GridDiag);
                     end % if
                     if aMove(1) ~= 0.0
-                        aB2 = aMove(1) * obj.Data.Data(obj.Time, 'FLD', 'b3', '');
+                        aB2 = aMove(1) * obj.Data.Data(obj.Time,'FLD','b3','','GridDiag',stOpt.GridDiag);
                     end % if
                 case 'w3'
                     if aMove(1) ~= 0.0
-                        aB1 = aMove(1) * obj.Data.Data(obj.Time, 'FLD', 'b2', '');
+                        aB1 = aMove(1) * obj.Data.Data(obj.Time,'FLD','b2','','GridDiag',stOpt.GridDiag);
                     end % if
-                    if aMove(2) ~= 0.o
-                        aB2 = aMove(2) * obj.Data.Data(obj.Time, 'FLD', 'b1', '');
+                    if aMove(2) ~= 0.0
+                        aB2 = aMove(2) * obj.Data.Data(obj.Time,'FLD','b1','','GridDiag',stOpt.GridDiag);
                     end % if
             end % switch
             
             aW = aE + aB1 - aB2;
             
             % Slice the data
-            stData = obj.fParseGridData2D(aW,bSign);
+            stData = obj.fParseGridData2D(aW,'SignFlip',bSign,'GridDiag',stOpt.GridDiag);
             if isempty(stData)
                 return;
             end % if

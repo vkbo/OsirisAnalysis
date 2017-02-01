@@ -687,6 +687,13 @@ classdef OsirisType
             
         end % function
         
+        function dReturn = fGetXPos(obj,sAxis,iIndex)
+            
+            aAxis   = obj.fGetBoxAxis(sAxis);
+            dReturn = aAxis(iIndex);
+            
+        end % function
+        
         function bReturn = fError(obj)
             
             bReturn = false;
