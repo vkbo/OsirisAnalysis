@@ -1057,7 +1057,7 @@ function AnalyseGUI
                     else
                         X.Plot(f).Range = [-1,2];
                     end % if
-                    X.Plot(f).Density    = X.Data.Density{1};
+                    X.Plot(f).Density    = '';
                     X.Plot(f).ScatterOpt = ['Off' X.Data.Beam];
                     X.Plot(f).Scatter    = {'' ''};
                     X.Plot(f).ScatterNum = [2000 2000];
