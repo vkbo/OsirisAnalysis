@@ -1057,10 +1057,11 @@ function AnalyseGUI
                     else
                         X.Plot(f).Range = [-1,2];
                     end % if
+                    X.Plot(f).Density    = X.Data.Density{1};
                     X.Plot(f).ScatterOpt = ['Off' X.Data.Beam];
                     X.Plot(f).Scatter    = {'' ''};
                     X.Plot(f).ScatterNum = [2000 2000];
-                    X.Plot(f).Sample     = [3 3];
+                    X.Plot(f).Sample     = [2 2];
                     X.Plot(f).Settings   = [0 0 0 0 0 0 0 0 0];
                     X.Plot(f).CAxis      = [0.0 5.0];
                     fCtrlPlasmaDensity(f);
@@ -1317,7 +1318,7 @@ function AnalyseGUI
                             'GridDiag',cDiag);
 
                     case 'Plasma Density'
-                        stFLD(3) = struct();
+                        stFLD = struct();
                         for s=1:9
                             stFLD(s).Range = [];
                             if X.Plot(f).Settings(s)
