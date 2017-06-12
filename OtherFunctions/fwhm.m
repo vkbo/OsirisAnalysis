@@ -3,10 +3,10 @@
 %  Full-Width at Half-Maximum (FWHM)
 % ***********************************
 %
-% Based on Rev 1.2, April 2006 (Patrick Egan)
+%  Based on Rev 1.2, April 2006 (Patrick Egan)
 %
 
-function [dW, iPol, iPType] = fwhm(aX, aY)
+function [dW, iCenter, tLead, tTrail] = fwhm(aX, aY)
 
     aY = aY/max(aY);
     nY = length(aY);
