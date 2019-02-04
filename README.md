@@ -19,7 +19,7 @@ As a part of a PhD thesis project connected to the [AWAKE experiment](http://awa
 ### Note as of October 2018
 
 The development of this package was part of my thesis work, and stopped when I finished using Osiris for simulations.
-The code was forked and used to devlop a minimal set of classes for analysing QuickPIC data for my last publication for my thesis. That code is in a separate repository named [QickPICAnalysis](https://github.com/vkbo/QuickPICAnalysis).
+The code was forked and used to devlop a minimal set of classes for analysing QuickPIC data for the last publication for my thesis. That code is in a separate repository named [QuickPICAnalysis](https://github.com/vkbo/QuickPICAnalysis).
 
 This code has been used for two conference papers for [IPAC'15](https://jacowfs.jlab.org/conf/proceedings/IPAC2015/papers/wepwa026.pdf) and [NAPAC'16](http://accelconf.web.cern.ch/AccelConf/napac2016/papers/tua4co03.pdf), and for my [thesis](https://cds.cern.ch/record/2655446?ln=en).
  
