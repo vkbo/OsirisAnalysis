@@ -506,9 +506,9 @@ classdef Momentum < OsirisType
             stReturn.RawCount   = length(aRaw);
 
             % Twiss parameters
-            stReturn.Alpha      = aCov(1,2)/dERMS;
-            stReturn.Beta       = aCov(1,1)/dERMS;
-            stReturn.Gamma      = aCov(2,2)/dERMS;
+            stReturn.Alpha      = -aCov(1,2)/dERMS;
+            stReturn.Beta       =  aCov(1,1)/dERMS;
+            stReturn.Gamma      =  aCov(2,2)/dERMS;
 
             if strcmpi(stOpt.Histogram, 'No')
                 return;
